@@ -1,0 +1,79 @@
+/* ============================================================
+   BASE — reset, body, grain overlay, links, selection
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Hint to UAs that this page supports both color schemes — drives
+     native form-control chrome, scrollbar, and autofill highlight
+     to track the active data-theme. */
+  color-scheme: dark light;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: calc(16px * var(--t-scale));
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Subtle grain — fixed overlay above all content but below modals.
+   SVG and blend mode come from tokens so light theme swaps to dark noise
+   with multiply blend (white-noise overlay only reads on dark surrounds). */
+.grain {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background-image: var(--grain-svg);
+  mix-blend-mode: var(--grain-blend);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

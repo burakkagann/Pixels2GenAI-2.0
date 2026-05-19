@@ -1,0 +1,26 @@
+---
+import { getCollection, render } from 'astro:content';
+import Lesson from '@/layouts/Lesson.astro';
+import Admonition from '@/components/lesson/mdx/Admonition.astro';
+import Figure from '@/components/lesson/mdx/Figure.astro';
+import CodeBlock from '@/components/lesson/mdx/CodeBlock.astro';
+import Dropdown from '@/components/lesson/mdx/Dropdown.astro';
+import Exercise from '@/components/lesson/mdx/Exercise.astro';
+import Download from '@/components/lesson/mdx/Download.astro';
+
+export async function getStaticPaths() {
+  const lessons = await getCollection('lessons');
+  return lessons.map((lesson) => ({
+    params: { slug: lesson.id.replace(/\.mdx?$/, '') },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const slug = lesson.id.replace(/\.mdx?$/, '');
+const { Content, headings } = await render(lesson);
+---
+
+<Lesson slug={slug} frontmatter={lesson.data} headings={headings}>
+  <Content components={{ Admonition, Figure, CodeBlock, Dropdown, Exercise, Download }} />
+</Lesson>

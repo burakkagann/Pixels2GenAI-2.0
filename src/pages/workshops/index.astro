@@ -1,0 +1,193 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/workshops';
+import '@/styles/workshops.css';
+
+const past = PAST_WORKSHOPS[0];
+const next = UPCOMING_WORKSHOPS[0];
+---
+
+<Base
+  title="Workshops · A recurring program"
+  description="The empirical engine of the Pixels2GenAI curriculum. A recurring one-day workshop run with Academis (Kristian Rother). The pilot cohort produced the data behind the /research findings; the next workshop is in planning."
+>
+  <main class="workshops-page">
+    <!-- ========== HERO ========== -->
+    <header class="workshops-head">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span>§ Workshops · Recurring program · Cycle ii</span>
+      </div>
+      <h1>The curriculum, <em>in a room.</em></h1>
+      <p class="lede">
+        A recurring one-day workshop that condenses the curriculum into a
+        single sitting. The first cohort produced the data behind
+        §&nbsp;Research; the next is in planning.
+      </p>
+    </header>
+
+    <!-- ========== § Past · Workshop i ========== -->
+    <section class="workshops-section" id="past">
+      <h2>Workshop&nbsp;{past.ordinal} · <em>{past.date}.</em></h2>
+      <p class="deck">
+        A one-day intensive in {past.city}. Nine participants moved from a
+        single NumPy array to generating images with a small diffusion model
+        — across six lessons of the curriculum.
+      </p>
+
+      <div class="case-study">
+        <div>
+          {past.poster && (
+            <a class="case-poster" href={past.poster} target="_blank" rel="noopener">
+              <img src={past.poster} alt={`Printed poster announcing the ${past.date} workshop in ${past.city}.`} loading="lazy" />
+            </a>
+          )}
+          <div class="case-poster-caption">Poster · {past.date}</div>
+        </div>
+
+        <div class="case-body">
+          <span class="case-eyebrow">Case study</span>
+          <h3 class="case-title">Six modules, <em>in a single sitting.</em></h3>
+
+          <p class="case-narrative">
+            Participants arrived with laptops and beginner-level Python.
+            Six lessons followed in sequence: RGB as array, cellular
+            automata, convolution, fractal squares, a perceptron, and a
+            small DDPM. The transformation lesson was the hardest — NASA-TLX
+            scores peaked there — and the fractal lesson produced the most
+            visible artifacts: nine self-similar plaids, no two alike,
+            shown below. The full set of findings is in <a href="/research">/research</a>.
+          </p>
+
+          <div class="case-meta">
+            <div><b>Date</b><span>{past.date}</span></div>
+            <div><b>Hours</b><span>{past.hours}</span></div>
+            <div><b>Venue</b><span>{past.venue} · {past.station}</span></div>
+            <div><b>Hosted with</b><span>{past.supervisor}</span></div>
+            <div><b>Participants</b><span>{past.participants} (cap. {past.capacity})</span></div>
+          </div>
+
+          <ul class="case-modules">
+            {past.modules.map(m => (
+              <li><b>M&nbsp;{m.idx}</b>{m.title}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== § Participant gallery ========== -->
+    <section class="workshops-section" id="gallery">
+      <h2>Participant outputs · <em>fractal square.</em></h2>
+      <p class="deck">{past.galleryCaption}</p>
+
+      <div class="workshop-gallery">
+        {past.gallery && past.gallery.map((src, i) => (
+          <button type="button" class="g-tile" data-src={src}
+                  aria-label={`Open participant artwork ${i + 1}`}>
+            <img src={src} alt={`Participant fractal output, sample ${i + 1}.`} loading="lazy" />
+          </button>
+        ))}
+      </div>
+
+      <p class="gallery-caption">
+        Module 4.1.1 is a recursive function with two free parameters; the
+        cohort's spread across those parameters is what the grid shows.
+        Click any tile to enlarge. Outputs reproduced with consent.
+      </p>
+
+      <dialog class="gallery-modal" aria-label="Participant artwork">
+        <button type="button" class="g-close" aria-label="Close">×</button>
+        <img alt="" />
+      </dialog>
+
+      <script>
+        const dlg = document.querySelector('.gallery-modal') as HTMLDialogElement | null;
+        const dlgImg = dlg?.querySelector('img') as HTMLImageElement | null;
+        if (dlg && dlgImg) {
+          document.querySelectorAll<HTMLButtonElement>('.g-tile').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const inner = btn.querySelector('img');
+              dlgImg.src = btn.dataset.src ?? '';
+              dlgImg.alt = inner?.alt ?? '';
+              dlg.showModal();
+            });
+          });
+          dlg.querySelector('.g-close')?.addEventListener('click', () => dlg.close());
+          // Click outside the image (on the dialog background) closes the modal.
+          dlg.addEventListener('click', (e) => {
+            const r = dlgImg.getBoundingClientRect();
+            const x = (e as MouseEvent).clientX;
+            const y = (e as MouseEvent).clientY;
+            const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+            if (!inside) dlg.close();
+          });
+        }
+      </script>
+    </section>
+
+    <!-- ========== § Outcomes ========== -->
+    <section class="workshops-section" id="outcomes">
+      <h2>What the cohort moved.</h2>
+
+      <div class="outcomes">
+        <div>
+          <span class="o-eyebrow">Cohort</span>
+          <span class="o-value">9</span>
+          <span class="o-label">Participants · 6 modules · one day</span>
+        </div>
+        <div>
+          <span class="o-eyebrow">Conceptual gain</span>
+          <span class="o-value">d = 1.615</span>
+          <span class="o-label">Cohen's d on the 24-item pre/post instrument.</span>
+        </div>
+        <div>
+          <span class="o-eyebrow">Experience × load</span>
+          <span class="o-value">ρ = −0.857</span>
+          <span class="o-label">Spearman, p = .006. Prior experience predicts lower load.</span>
+        </div>
+      </div>
+
+      <p class="outcomes-link">
+        Full method, instruments, and limitations in <a href="/research">/research</a>.
+      </p>
+    </section>
+
+    <!-- ========== § Upcoming · Workshop ii ========== -->
+    <section class="workshops-section" id="upcoming">
+      <div class="upcoming-card">
+        <div class="u-copy">
+          <h3>
+            Workshop&nbsp;{next.ordinal}
+            <span class="u-status">in planning</span>
+          </h3>
+          <p>Date and venue TBA. One announcement email when it's confirmed.</p>
+        </div>
+        <div class="u-cta">
+          <a class="btn btn-pri" href="/workshops/signup">Register interest →</a>
+          <span class="u-meta">No newsletter · single mail per workshop</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Acknowledgements ========== -->
+    <section class="workshops-ack">
+      <h3>Co-organised with Academis.</h3>
+      <p>
+        Workshops are run jointly with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and
+        Academis, who provides the venue, the cohort recruitment, and the
+        facilitation experience that turns a draft curriculum into a
+        teachable one. The thesis behind the curriculum is supervised
+        independently; the workshop program is shared work.
+      </p>
+      <p>
+        Workshops are part of a Master's thesis project. Anonymous
+        feedback collected during sessions is used for research purposes
+        under the terms participants consent to at sign-in.
+      </p>
+    </section>
+  </main>
+
+  <Footer />
+</Base>

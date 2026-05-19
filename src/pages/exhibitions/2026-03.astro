@@ -1,0 +1,260 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import { EXHIBITION_BY_ID } from '@/data/exhibitions';
+import '@/styles/exhibitions.css';
+
+const ex = EXHIBITION_BY_ID['exhibition-2026-03'];
+
+// Roman lowercase ordinal → zero-padded Arabic ("i" → "01").
+const romanToArabic: Record<string, number> = {
+  i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6,
+};
+const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padStart(2, '0');
+---
+
+<Base
+  title={`Exhibition ${indexDisplay} · ${ex.date}`}
+  description={`Pixels2GenAI · Exhibition ${indexDisplay} — a one-day group show in ${ex.city} on ${ex.date}. Six artists working across printed and code-driven media. Co-organised with Academis.`}
+  ogImage={ex.poster}
+>
+  <main class="exhibition-page">
+    <!-- ========== HEAD ========== -->
+    <header class="exhibition-head">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span>§ Exhibition {ex.ordinal.toUpperCase()} · {ex.date} · {ex.city}</span>
+      </div>
+      <h1>The studio, <em>transformed into a gallery.</em></h1>
+      {ex.statement.map((p) => <p class="lede">{p}</p>)}
+    </header>
+
+    <!-- ========== § Feature · poster + body ========== -->
+    <section class="exhibition-section" id="feature">
+      <h2>Exhibition {ex.ordinal.toUpperCase()} · <em>{ex.date}.</em></h2>
+      <p class="deck">
+        A one-day group show co-organised with
+        <a href={ex.organiserHref} target="_blank" rel="noopener">{ex.organiser}</a>.
+        Six artists. Printed work on the walls; code-driven installations on screens and projection.
+      </p>
+
+      <div class="exhibition-feature">
+        <div>
+          <a class="exhibition-poster" href={ex.posterPdf ?? ex.poster} target="_blank" rel="noopener">
+            <img src={ex.poster} alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.date} · ${ex.city}.`} loading="lazy" />
+          </a>
+          <div class="exhibition-poster-cap">{ex.posterCaption ?? 'Poster'}</div>
+        </div>
+
+        <div class="exhibition-feature-body">
+          <span class="eyebrow">Group show · {ex.artists.length} artists</span>
+          <h3>Six artists, <em>one office, three days.</em></h3>
+          <p class="narrative">
+            The exhibition opened on <em>March 27 at 6pm</em> for press and invited guests, and remained
+            open for the general public on <em>March 28 from 10am to 4pm</em>. The works moved between two
+            registers: printed pieces hung as objects, and code-driven installations running live on
+            screens and projection.
+          </p>
+
+          <div class="exhibition-meta">
+            <div><b>Opening</b><span>{ex.openingHours}</span></div>
+            <div><b>Public</b><span>{ex.publicHours}</span></div>
+            <div><b>Venue</b><span>{ex.venue} · {ex.station}</span></div>
+            <div><b>Address</b><span>{ex.address} · {ex.district ?? ex.city}</span></div>
+            <div><b>Admission</b><span>{ex.admission}</span></div>
+            <div><b>Co-organised</b><span>{ex.organiser}</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== § Artists ========== -->
+    <section class="exhibition-section" id="artists">
+      <h2>Artists · <em>six on view.</em></h2>
+      <p class="deck">
+        Six software developers, working across hand-programmed images, the aesthetics of mathematical
+        rules, and AI as an art-making tool.
+      </p>
+
+      <div class="exhibition-artists">
+        {ex.artists.map((a) => (
+          <div class="exhibition-artist">
+            <b>{a.name}</b>
+            {a.role
+              ? <span>{a.role}</span>
+              : <span class="pending">contributing artist</span>}
+          </div>
+        ))}
+      </div>
+
+      <div class="exhibition-curators-block">
+        <div class="curators-eyebrow"><span>Curators</span></div>
+        <div class="exhibition-curators">
+          {ex.curators.map((c) => (
+            <div class="exhibition-artist exhibition-curator">
+              <b>{c.name}</b>
+              {c.role && <span>{c.role}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== § Plates · printed works ========== -->
+    <section class="exhibition-section" id="prints">
+      <h2>Plates · <em>printed works.</em></h2>
+      <p class="deck">
+        Pieces that resolved into a single frame and went onto paper. {ex.printedWorks.length} works shown
+        below — click a plate to enlarge.
+      </p>
+
+      <div class="exhibition-plates">
+        {ex.printedWorks.map((w, i) => (
+          <button
+            type="button"
+            class="exhibition-plate"
+            data-id={w.id}
+            aria-label={`Open plate ${i + 1}: ${w.title}${w.subtitle ? ' · ' + w.subtitle : ''}`}
+          >
+            <div class="plate-frame">
+              <img src={w.src} alt={`${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} · printed work by ${w.artist}.`} loading="lazy" />
+            </div>
+            <div class="plate-cap">
+              <b>
+                {w.title}
+                {w.subtitle && <em> · {w.subtitle}</em>}
+              </b>
+              <span>{w.technique}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <p class="exhibition-plate-credit">
+        Prints shown here are by Burak Kağan Yılmazer. Works by Sara Maras, Alexander Hendorf, Hansu Kim,
+        Maris Niewenhuis, and Ewa Rother were on view during the exhibition and will be added once
+        consent for online reproduction is collected from each artist.
+      </p>
+
+      <!-- Modal for enlarged plate -->
+      <dialog class="exhibition-modal" id="plate-modal" aria-label="Plate detail">
+        <button type="button" class="exhibition-modal-close" aria-label="Close">×</button>
+        <div class="exhibition-modal-body">
+          <img id="plate-modal-img" alt="" />
+          <div class="exhibition-modal-meta">
+            <h4 id="plate-modal-title"></h4>
+            <span class="artist" id="plate-modal-artist"></span>
+            <span class="technique" id="plate-modal-technique"></span>
+            <p id="plate-modal-desc"></p>
+          </div>
+        </div>
+      </dialog>
+
+      <script define:vars={{ plates: ex.printedWorks }}>
+        const dlg = document.getElementById('plate-modal');
+        const img = document.getElementById('plate-modal-img');
+        const title = document.getElementById('plate-modal-title');
+        const artist = document.getElementById('plate-modal-artist');
+        const tech = document.getElementById('plate-modal-technique');
+        const desc = document.getElementById('plate-modal-desc');
+
+        if (dlg && img && title && artist && tech && desc) {
+          document.querySelectorAll('.exhibition-plate').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const id = btn.getAttribute('data-id');
+              const w = plates.find((p) => p.id === id);
+              if (!w) return;
+              img.src = w.src;
+              img.alt = `${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} by ${w.artist}`;
+              title.innerHTML = `${w.title}${w.subtitle ? ' · <em>' + w.subtitle + '</em>' : ''}`;
+              artist.textContent = w.artist;
+              tech.textContent = w.technique;
+              desc.textContent = w.description ?? '';
+              dlg.showModal();
+            });
+          });
+          dlg.querySelector('.exhibition-modal-close')?.addEventListener('click', () => dlg.close());
+          // Backdrop click closes; clicks on the modal body do not.
+          dlg.addEventListener('click', (e) => {
+            if (e.target === dlg) dlg.close();
+          });
+        }
+      </script>
+    </section>
+
+    <!-- ========== § Animated installations ========== -->
+    <section class="exhibition-section" id="animated">
+      <h2>Animated · <em>installations on view.</em></h2>
+      <p class="deck">
+        Code-driven pieces that ran live during the exhibition. Stills below; the source repositories
+        are linked from each card. Hovering the Neural-Mycelium card cross-fades to a second state;
+        the other two captures are pending.
+      </p>
+
+      <div class="exhibition-anim">
+        {ex.animatedWorks.map((w) => (
+          <a class="exhibition-anim-card" href={w.githubUrl} target="_blank" rel="noopener">
+            {w.stillSrc ? (
+              <div class={`anim-frame${w.hoverSrc ? ' has-hover' : ''}`}>
+                <img class="rest" src={w.stillSrc} alt={`${w.title} · still frame.`} loading="lazy" />
+                {w.hoverSrc && <img class="play" src={w.hoverSrc} alt="" loading="lazy" />}
+                <span class="anim-badge">{w.hoverSrc ? '▶ hover' : '▶ live'}</span>
+              </div>
+            ) : (
+              <div class="anim-frame placeholder">
+                <span class="anim-badge">▶ pending</span>
+              </div>
+            )}
+            <div class="anim-body">
+              <h4>
+                {w.title}
+                {w.subtitle && <em> · {w.subtitle}</em>}
+              </h4>
+              <span class="technique">{w.technique}</span>
+              <p>{w.description}</p>
+              <div class="anim-foot">
+                <span>{w.artist}</span>
+                <span class="repo">GitHub →</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- ========== § Documents ========== -->
+    <section class="exhibition-section" id="documents">
+      <h2>Documents.</h2>
+      <p class="deck">
+        The poster and printed materials produced for the exhibition.
+      </p>
+
+      <div class="exhibition-docs">
+        {ex.posterPdf && (
+          <a class="doc" href={ex.posterPdf} target="_blank" rel="noopener">
+            <span class="kind">PDF</span>
+            Poster · {ex.date}
+          </a>
+        )}
+      </div>
+    </section>
+
+    <!-- ========== Acknowledgements ========== -->
+    <section class="exhibition-ack">
+      <h3>Co-organised with Academis.</h3>
+      <p>
+        The exhibition was run jointly with
+        <a href={ex.organiserHref} target="_blank" rel="noopener">Kristian Rother</a>
+        and Academis, who provided the venue at Steinmetzstrasse 40 and the curatorial framing that
+        connected the works on view.
+      </p>
+      <p>
+        The exhibition is part of the wider Pixels2GenAI project — a Master's thesis exploring how
+        learners move from the basics of pixel manipulation to generative AI. The works shown here are
+        produced by artists working independently; the project provides the shared frame.
+      </p>
+    </section>
+  </main>
+
+  <Footer />
+</Base>

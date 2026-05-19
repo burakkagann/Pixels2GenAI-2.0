@@ -1,0 +1,130 @@
+---
+/**
+ * One workshop rendered as a collapsible <details> specimen card in the
+ * landing § 3 catalog. Closed by default; pass `defaultOpen` to expand.
+ *
+ * Two variants by data shape, not by prop:
+ *   status === 'past'  → completed badge · dimmed poster on the right ·
+ *                        outcome row in the dl · "Read case study" link
+ *   otherwise          → "In planning" badge · dashed poster placeholder ·
+ *                        Register CTA · TBA values throughout the body
+ *
+ * String fields literally equal to 'TBA' render as plain "TBA" text.
+ * `modules: []` renders as a single chip reading "TBA".
+ * `capacity: 0` renders as "TBA" in the cohort line.
+ */
+import type { Workshop } from '@/data/workshops';
+
+interface Props {
+  workshop: Workshop;
+  defaultOpen?: boolean;
+}
+
+const { workshop: w, defaultOpen = false } = Astro.props;
+
+// Roman lowercase ordinal → zero-padded Arabic index ("i" → "01").
+const romanToArabic: Record<string, number> = {
+  i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
+};
+const arabic = romanToArabic[w.ordinal.toLowerCase()] ?? 0;
+const indexDisplay = String(arabic).padStart(2, '0');
+
+const isPast = w.status === 'past';
+
+const cohortLine = isPast
+  ? `${w.participants ?? 'TBA'} participants · 1 day · pixel → diffusion`
+  : `Up to ${w.capacity > 0 ? w.capacity : 'TBA'} participants · 1 day · TBA`;
+
+const identifier = isPast
+  ? 'Pixels2GenAI · one-day intensive'
+  : 'Next workshop · open seats';
+
+const summaryMeta = `${w.city} · ${w.date}`;
+---
+
+<details class="workshop-specimen" open={defaultOpen}>
+  <summary class="specimen-summary">
+    <span class="summary-index">{indexDisplay}</span>
+    <span class={`summary-status ${isPast ? 'completed' : 'planning'}`}>
+      {isPast ? '✓ Completed' : '▌ In planning'}
+    </span>
+    <span class="summary-identifier">Pixels2GenAI · <em>{isPast ? 'one-day intensive' : 'open seats'}</em></span>
+    <span class="summary-meta">{summaryMeta}</span>
+    <span class="summary-chevron" aria-hidden="true">
+      <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="2,2 6,6 10,2"></polyline>
+      </svg>
+    </span>
+  </summary>
+
+  <article class="specimen-body">
+    <div class="specimen-text">
+      <h3 class="specimen-title">{indexDisplay} · <em>{identifier}.</em></h3>
+
+      {isPast ? (
+        <p class="specimen-lede">
+          Six modules, one sitting, in {w.city}. The first cohort produced the data reported in <a href="/research">/research</a>.
+        </p>
+      ) : (
+        <p class="specimen-lede">
+          The next workshop in the recurring program. Same shape as 01: one day, with Academis, up to eight participants once the date and venue land.
+        </p>
+      )}
+
+      <dl class="specimen-dl">
+        <dt>Date</dt>
+        <dd>{w.date}{w.hours && <> · <em>{w.hours}</em></>}</dd>
+
+        <dt>Where</dt>
+        <dd>{w.city} · with <a href={w.supervisorHref} target="_blank" rel="noopener">Academis</a></dd>
+
+        <dt>Cohort</dt>
+        <dd>{cohortLine}</dd>
+
+        <dt>Modules</dt>
+        <dd class="chips">
+          {w.modules.length === 0 ? (
+            <span class="chip">TBA</span>
+          ) : (
+            w.modules.map(m => (
+              <span class="chip"><b>{m.idx}</b>{m.title}</span>
+            ))
+          )}
+        </dd>
+
+        {w.outcome && (
+          <>
+            <dt>Outcome</dt>
+            <dd>{w.outcome}</dd>
+          </>
+        )}
+      </dl>
+
+      {isPast && (
+        <div class="specimen-actions">
+          <a class="btn-ghost" href="/workshops">See the full workshop →</a>
+        </div>
+      )}
+    </div>
+
+    {isPast ? (
+      <div class="specimen-aside">
+        <a class="specimen-poster" href="/workshops" aria-label="Open the workshop case study — poster lifts on hover">
+          <img src={w.poster} alt={`Printed poster announcing Workshop ${indexDisplay} · ${w.city} · ${w.date}.`} loading="lazy" />
+        </a>
+        <div class="specimen-poster-cap">Poster · {w.city}</div>
+      </div>
+    ) : (
+      <div class="specimen-aside specimen-aside--upcoming">
+        <div class="specimen-poster-placeholder">
+          <b>Poster · {indexDisplay}</b>
+          <span>Designed once the date and venue land.</span>
+        </div>
+        <div class="specimen-upcoming-cta">
+          <a class="btn btn-pri" href="/workshops/signup">Register interest →</a>
+          <span class="note">No newsletter · single mail per workshop</span>
+        </div>
+      </div>
+    )}
+  </article>
+</details>

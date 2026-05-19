@@ -1,0 +1,462 @@
+---
+module: "M 12"
+cycle: "III"
+title: "DCGAN Art"
+objective: "Generate abstract art with a Deep Convolutional GAN; explore the learned latent space; train the network from scratch on African fabric patterns."
+framework: "conceptual"
+duration: "35–40 min"
+level: "intermediate-advanced"
+load: "3 architecture concepts"
+prereqs: "PyTorch basics, convolutions"
+prev:
+  slug: "4.1.1"
+  title: "Fractal Square"
+next: null
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lessons/12.1.2/dcgan_fabric_animation.gif"
+  alt="DCGAN generating diverse African fabric patterns through latent space interpolation"
+  caption="A trained DCGAN generating African fabric patterns by walking through latent space."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+Deep Convolutional Generative Adversarial Networks (DCGANs) were introduced by Radford et al. in 2015. They apply convolutional neural network architectures to the GAN framework, producing images with coherent spatial structure where fully-connected GANs produced noise.
+
+In this exercise you will generate abstract art with a pre-trained DCGAN, explore the learned latent space through interpolation, and (optionally) train the network from scratch on a real dataset of African fabric patterns. The narrative arc: in early modules you wrote algorithms to generate patterns by hand; here, you teach a neural network to learn and generate similar patterns autonomously.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Understand why convolutional architectures improve image generation over fully-connected networks.</li>
+  <li>Analyse the Generator and Discriminator components of a DCGAN.</li>
+  <li>Generate novel abstract art by sampling from the learned latent space.</li>
+  <li>Explore latent-space interpolation to create smooth transitions between generated images.</li>
+</ol>
+
+## Quick start — see it in action <a id="quick-start"></a>
+
+Load the pre-trained generator and produce four random art pieces.
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+from dcgan_model import Generator, LATENT_DIM
+import matplotlib.pyplot as plt
+
+# Load pre-trained generator
+generator = Generator()
+generator.load_state_dict(torch.load('exercise3_generator.pth', map_location='cpu'))
+generator.eval()
+
+# Generate 4 random art pieces
+z = torch.randn(4, LATENT_DIM, 1, 1)
+with torch.no_grad():
+    images = generator(z)
+
+# Display the generated art
+images = (images + 1) / 2  # Convert from [-1, 1] to [0, 1]
+fig, axes = plt.subplots(1, 4, figsize=(12, 3))
+for i, ax in enumerate(axes):
+    ax.imshow(images[i].permute(1, 2, 0).numpy())
+    ax.axis('off')
+plt.savefig('quick_start_output.png', dpi=150)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/12.1.2/quick_start_output.png"
+  alt="Four DCGAN-generated abstract art patterns"
+  caption="Four abstract art patterns generated from random 100-dim latent vectors."
+  num={2}
+  role="output"
+/>
+
+<Download href="/lessons/12.1.2/quick-start.py" label="quick-start.py" />
+<Download href="/lessons/12.1.2/exercise3_generator.pth" label="exercise3_generator.pth — pre-trained weights (14 MB)" />
+
+The generator transforms 100-dimensional random noise vectors into 64×64 pixel RGB images. The patterns exhibit smooth gradients, geometric shapes, and colour harmonies learned from training data.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — From fully-connected to convolutional
+
+Traditional GANs using fully-connected layers struggle to generate coherent images because they treat each pixel independently. Consider a 64×64 RGB image: that is 12,288 values the network must generate without any understanding of spatial relationships.
+
+Convolutional Neural Networks (CNNs) solve this by exploiting the spatial structure of images. Three key properties make CNNs effective for image generation:
+
+1. **Local connectivity** — each neuron connects to a small region (receptive field), learning local patterns.
+2. **Weight sharing** — the same filter is applied across the entire image, learning translation-invariant features.
+3. **Hierarchical features** — lower layers detect edges and textures; higher layers combine these into complex patterns.
+
+<Admonition type="dyk">
+The "deep" in DCGAN refers to multiple convolutional layers stacked together. The original paper demonstrated that depth matters: networks with 4–5 layers produced significantly better results than shallower architectures, achieving a balance between capacity and training stability.
+</Admonition>
+
+DCGANs apply these principles to both the generator (which uses *transposed* convolutions to upsample) and the discriminator (which uses standard convolutions to downsample).
+
+### Concept 2 — DCGAN architecture
+
+A DCGAN consists of two competing networks: a **Generator** that creates images from noise, and a **Discriminator** that distinguishes real images from generated ones.
+
+<CodeBlock lang="python" file="dcgan_model.py — Generator">
+```python
+class Generator(nn.Module):
+    def __init__(self, latent_dim=100, img_channels=3, feature_maps=64):
+        super().__init__()
+        self.network = nn.Sequential(
+            # Input: 100 × 1 × 1 latent vector
+            # Layer 1: 100 → 4 × 4 × 512
+            nn.ConvTranspose2d(latent_dim, feature_maps * 8, 4, 1, 0),
+            nn.BatchNorm2d(feature_maps * 8),
+            nn.ReLU(True),
+
+            # Layer 2: 4 × 4 × 512 → 8 × 8 × 256
+            nn.ConvTranspose2d(feature_maps * 8, feature_maps * 4, 4, 2, 1),
+            nn.BatchNorm2d(feature_maps * 4),
+            nn.ReLU(True),
+
+            # Layer 3: 8 × 8 × 256 → 16 × 16 × 128
+            nn.ConvTranspose2d(feature_maps * 4, feature_maps * 2, 4, 2, 1),
+            nn.BatchNorm2d(feature_maps * 2),
+            nn.ReLU(True),
+
+            # Layer 4: 16 × 16 × 128 → 32 × 32 × 64
+            nn.ConvTranspose2d(feature_maps * 2, feature_maps, 4, 2, 1),
+            nn.BatchNorm2d(feature_maps),
+            nn.ReLU(True),
+
+            # Layer 5: 32 × 32 × 64 → 64 × 64 × 3
+            nn.ConvTranspose2d(feature_maps, img_channels, 4, 2, 1),
+            nn.Tanh()  # Output in [-1, 1]
+        )
+```
+</CodeBlock>
+
+- The first layer expands the latent vector to a 4×4 spatial grid with 512 channels.
+- Each subsequent layer doubles the spatial resolution while halving the channels.
+- The final layer produces a 3-channel RGB image with Tanh activation.
+
+The discriminator mirrors the generator, using strided convolutions to downsample from 64×64 to a single scalar.
+
+<Figure
+  src="/lessons/12.1.2/dcgan_architecture.png"
+  alt="Side-by-side diagram showing Generator upsampling and Discriminator downsampling"
+  caption="DCGAN architecture. Generator (left) upsamples a latent vector to a 64×64 image; Discriminator (right) downsamples an image to a single real/fake scalar."
+  num={3}
+  role="architecture"
+/>
+
+**Architectural guidelines** from the DCGAN paper:
+
+1. Replace pooling with strided convolutions (discriminator) and transposed convolutions (generator).
+2. Use Batch Normalisation in both networks (except discriminator input and generator output).
+3. Use ReLU in the generator (except the output, which uses Tanh).
+4. Use LeakyReLU in the discriminator to prevent sparse gradients.
+
+### Concept 3 — Latent space and art generation
+
+The **latent space** is the 100-dimensional space from which the generator samples input vectors. Each point in this space corresponds to a unique generated image; nearby points produce visually similar images.
+
+This property enables creative applications. **Interpolation**: by smoothly transitioning between two latent vectors, we morph one image into another.
+
+<CodeBlock lang="python">
+```python
+def interpolate(z1, z2, steps=10):
+    """Generate images along a path between two latent points."""
+    images = []
+    for t in range(steps):
+        alpha = t / (steps - 1)
+        z = (1 - alpha) * z1 + alpha * z2  # Linear interpolation
+        z = z.view(1, 100, 1, 1)
+        img = generator(z)
+        images.append(img)
+    return images
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/12.1.2/interpolation_strip.png"
+  alt="Eight images showing gradual transition from one pattern to another"
+  caption="Linear interpolation path through latent space. The patterns smoothly transform — evidence that the generator has learned a structured representation."
+  num={4}
+  role="comparison"
+/>
+
+<Admonition type="dyk">
+Latent spaces are fundamental to many generative models, not just GANs. Variational Autoencoders (VAEs) and diffusion models also use latent representations, though they organise and sample from these spaces differently. Understanding latent spaces in DCGANs provides a foundation for those more advanced architectures.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Observe DCGAN generation">
+
+Run the pre-trained generator to see how DCGANs create abstract art from random noise vectors. The script produces a 4×4 grid of unique patterns.
+
+<Download href="/lessons/12.1.2/exercise1_observe.py" label="exercise1_observe.py" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise1_observe.py
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/12.1.2/exercise1_output.png"
+  alt="4x4 grid of DCGAN-generated abstract art"
+  caption="Generated abstract-art grid (4×4). Your output will differ slightly because of the random seed."
+  num={5}
+/>
+
+**Reflection**
+
+1. How does the latent vector size (100 dimensions) affect the diversity of generated art?
+2. What common visual patterns do you observe across samples?
+3. Why does the generator use Tanh activation in the output layer?
+
+<Dropdown summary="Discussion">
+
+1. The 100-dimensional latent space provides enough capacity for the generator to learn diverse patterns. Smaller dimensions (like 50) would limit variety; larger dimensions (like 200) would increase training difficulty without much benefit.
+2. You should observe smooth colour gradients, geometric shapes (circles, stripes), and harmonious palettes. These reflect the procedural patterns in the training dataset.
+3. Tanh outputs values in `[-1, 1]`, matching the normalised range of training images. This bounded output prevents extreme pixel values and ensures stable gradients during training.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Explore parameters and interpolation">
+
+Experiment with generation parameters: larger grids, more interpolation steps, and different random seeds.
+
+<Download href="/lessons/12.1.2/exercise2_explore.py" label="exercise2_explore.py" />
+
+The script demonstrates two explorations:
+
+1. **Larger grid** — generates a 6×6 grid (36 samples) to see more variation.
+2. **Latent interpolation** — creates smooth transitions between two random latent vectors.
+
+<Figure
+  src="/lessons/12.1.2/exercise2_grid_6x6.png"
+  alt="6x6 grid of generated abstract art patterns"
+  caption="6×6 grid showing greater variety in generated patterns."
+  num={6}
+/>
+
+<Figure
+  src="/lessons/12.1.2/exercise2_interpolation.png"
+  alt="Eight-step interpolation between two abstract patterns"
+  caption="Latent-space interpolation: an 8-step smooth transition between two patterns."
+  num={7}
+/>
+
+**Try these modifications**
+
+- Change the random seed to generate different sample sets.
+- Modify grid size (try 8×8 or 10×10).
+- Increase interpolation steps to 16 or 32 for smoother transitions.
+- Compare linear interpolation at different points in latent space.
+
+<Dropdown summary="Tips">
+
+- **Memory** — when generating many images, the script uses `torch.no_grad()` to save memory.
+- **Interpolation smoothness** — more steps create smoother transitions but take longer to generate.
+- **Random seeds** — different seeds explore different regions of the latent space.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="TRAIN" title="Train on African fabric patterns">
+
+Train a DCGAN from scratch on African fabric patterns from Kaggle. Demonstrates the complete training process from dataset preparation through 100 epochs of adversarial training.
+
+**Time commitment**
+
+- Dataset setup: 5–10 min (one-time)
+- Training: 20–30 min on GPU, 60–90 min on CPU
+- Observation: 10 min
+
+<Admonition type="note">
+This exercise requires downloading a dataset from Kaggle (free account needed). If you prefer to skip the setup, observe the pre-generated results below and proceed to the challenge extensions.
+</Admonition>
+
+<Dropdown summary="Dataset setup — download and preprocess">
+
+Use the African Fabric dataset from Kaggle (~1,059 images, vibrant textile patterns).
+
+**Step 1 — Download**: visit <a href="https://www.kaggle.com/datasets/mikuns/african-fabric" target="_blank" rel="noopener">kaggle.com/datasets/mikuns/african-fabric</a>, download, and extract to `african_fabric_dataset/` inside the lesson directory.
+
+**Step 2 — Preprocess** — run `preprocess_african_fabric.py` to resize to 64×64, convert to RGB, and save to `african_fabric_processed/`.
+
+<Download href="/lessons/12.1.2/preprocess_african_fabric.py" label="preprocess_african_fabric.py" />
+
+</Dropdown>
+
+<Dropdown summary="Training configuration & execution">
+
+Hyperparameters:
+
+- Epochs: 100
+- Batch size: 64
+- Learning rate: 0.0002 (both networks)
+- Optimiser: Adam, β₁=0.5, β₂=0.999
+- Loss: Binary Cross-Entropy (BCE)
+- Dataset: 1,059 fabric patterns (64×64 RGB)
+
+<Download href="/lessons/12.1.2/exercise3_train.py" label="exercise3_train.py" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise3_train.py
+```
+</CodeBlock>
+
+The script will:
+
+1. Load the dataset from `african_fabric_processed/`.
+2. Initialise the Generator and Discriminator.
+3. Train for 100 epochs with per-epoch progress updates.
+4. Save checkpoints at epochs 10, 30, 50, 70, and 100.
+5. Save the final trained model as `exercise3_generator.pth`.
+
+**What to observe during training**
+
+- Loss oscillation — both G and D losses fluctuate significantly (this is normal).
+- Occasional spikes — sudden jumps are expected in GAN training.
+- No clear convergence — unlike supervised learning, GAN losses don't smoothly decrease to zero.
+
+</Dropdown>
+
+### Training results — 100 epochs of learning <a id="training-results"></a>
+
+<Figure
+  src="/lessons/12.1.2/exercise3_training_progress.png"
+  alt="Training loss curves over 100 epochs"
+  caption="Generator (blue) vs Discriminator (red) losses over 100 epochs. The oscillating pattern is healthy adversarial competition."
+  num={8}
+  role="training-log"
+/>
+
+Watch the generator's visual progression across checkpoints:
+
+<Figure
+  src="/lessons/12.1.2/exercise3_epoch_10.png"
+  alt="Generated samples at epoch 10"
+  caption="Epoch 10 — noisy attempts with basic colours and rough shapes."
+  num={9}
+/>
+
+<Figure
+  src="/lessons/12.1.2/exercise3_epoch_30.png"
+  alt="Generated samples at epoch 30"
+  caption="Epoch 30 — geometric elements emerge: stripes, bands, blocky shapes reminiscent of Kente cloth."
+  num={10}
+/>
+
+<Figure
+  src="/lessons/12.1.2/exercise3_epoch_70.png"
+  alt="Generated samples at epoch 70"
+  caption="Epoch 70 — intricate designs with sharp colour boundaries and complex motif arrangements."
+  num={11}
+/>
+
+<Figure
+  src="/lessons/12.1.2/exercise3_epoch_100.png"
+  alt="Generated samples at epoch 100"
+  caption="Epoch 100 — diverse, fabric-like patterns with rich geometric detail."
+  num={12}
+/>
+
+<Figure
+  src="/lessons/12.1.2/exercise3_final_samples.png"
+  alt="16-sample grid from the trained generator"
+  caption="16 unique patterns from the trained generator — each from a different random noise vector."
+  num={13}
+  role="output"
+/>
+
+</Exercise>
+
+## Implementation note <a id="implementation-note"></a>
+
+<Admonition type="note">
+
+The DCGAN implementation in this module is adapted from the official PyTorch DCGAN tutorial, which implements the architecture described in Radford et al. (2015). The code has been simplified for educational purposes and modified to generate abstract art rather than faces.
+
+- **Original source**: <a href="https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html" target="_blank" rel="noopener">pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html</a>
+- **License**: BSD-3-Clause (PyTorch)
+
+</Admonition>
+
+## Challenge extensions <a id="challenges"></a>
+
+<Dropdown summary="Hyperparameter exploration">
+
+- Learning-rate sensitivity — change `LEARNING_RATE` to `0.0001` or `0.0005` and compare.
+- Batch-size effects — try 32 or 128 (if GPU memory allows).
+- Deeper networks — add extra convolutional layers to `dcgan_model.py`.
+- Hypothesis: which hyperparameter has the greatest impact on pattern quality?
+
+</Dropdown>
+
+<Dropdown summary="Extended training">
+
+Train for 200 epochs and observe whether quality continues improving after epoch 100. Hypothesis: does the generator reach a quality plateau, or keep refining indefinitely?
+
+</Dropdown>
+
+<Dropdown summary="Transfer learning">
+
+Start with the pre-trained generator and fine-tune on a different but related dataset (modern abstract patterns, batik, tartan). Compare quality vs. training from scratch.
+
+</Dropdown>
+
+<Admonition type="note" title="Cultural context — African textile patterns">
+
+African textiles carry deep cultural significance, with patterns representing social status, spiritual beliefs, and historical events. By training a GAN on these patterns, we are exploring how AI can learn and generate variations of culturally meaningful designs.
+
+Generated patterns are AI interpretations, not authentic cultural artifacts. This exercise is educational; respect the cultural origins when discussing or sharing generated designs.
+
+</Admonition>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+- **Convolutional architectures** preserve spatial structure in images, making them far superior to fully-connected networks for image generation.
+- The **Generator** uses transposed convolutions to upsample from a small feature map to the final image.
+- The **Discriminator** uses strided convolutions to downsample images to a real/fake classification.
+- **Batch Normalisation** and specific activations (ReLU, LeakyReLU, Tanh) are critical for stable training.
+- The **latent space** is a learned representation where nearby points produce similar images.
+- **Interpolation** through latent space creates smooth transitions between generated images.
+
+</Admonition>
+
+**Common pitfalls**
+
+- **Mode collapse** — generator produces limited variety. Adjust learning rates or use minibatch discrimination.
+- **Checkerboard artifacts** — caused by transposed convolutions. Use resize-convolution instead.
+- **Training instability** — monitor both losses; if one dominates, adjust learning rates.
+- **Wrong output range** — forgetting Tanh or input normalisation causes divergence.
+- **Dimension mismatches** — latent vectors must have shape `(batch, latent_dim, 1, 1)`, not `(batch, latent_dim)`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Radford, A., Metz, L. & Chintala, S. (2015). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. *arXiv preprint*. <a href="https://arxiv.org/abs/1511.06434" target="_blank" rel="noopener">arxiv:1511.06434</a></li>
+    <li><span class="tag">[2]</span> Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A. & Bengio, Y. (2014). Generative Adversarial Nets. *Advances in Neural Information Processing Systems*, 27.</li>
+    <li><span class="tag">[3]</span> Goodfellow, I., Bengio, Y. & Courville, A. (2016). *Deep Learning*. MIT Press. ISBN 978-0-262-03561-3.</li>
+    <li><span class="tag">[4]</span> LeCun, Y., Bengio, Y. & Hinton, G. (2015). Deep learning. *Nature*, 521(7553), 436–444.</li>
+    <li><span class="tag">[5]</span> Ioffe, S. & Szegedy, C. (2015). Batch Normalization. *arXiv preprint*. <a href="https://arxiv.org/abs/1502.03167" target="_blank" rel="noopener">arxiv:1502.03167</a></li>
+    <li><span class="tag">[6]</span> Kingma, D. P. & Welling, M. (2014). Auto-Encoding Variational Bayes. *arXiv preprint*. <a href="https://arxiv.org/abs/1312.6114" target="_blank" rel="noopener">arxiv:1312.6114</a></li>
+    <li><span class="tag">[7]</span> Odena, A., Dumoulin, V. & Olah, C. (2016). Deconvolution and Checkerboard Artifacts. *Distill*. <a href="https://distill.pub/2016/deconv-checkerboard/" target="_blank" rel="noopener">distill.pub/2016/deconv-checkerboard/</a></li>
+    <li><span class="tag">[8]</span> PyTorch Contributors. (2024). DCGAN Tutorial. <a href="https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html" target="_blank" rel="noopener">pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html</a></li>
+  </ol>
+</section>

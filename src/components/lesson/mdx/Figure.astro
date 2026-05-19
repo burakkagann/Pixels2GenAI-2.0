@@ -1,0 +1,84 @@
+---
+/**
+ * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical).
+ *
+ * PRINCIPLE: reading-first. A figure should support the prose, not
+ * interrupt it. Most NumPy/PIL outputs are square — at full column
+ * width they dominate the page. The `role` prop picks a sensible
+ * size for the common cases; the rare hero moment is the only place
+ * you'd reach for size="bleed" explicitly.
+ *
+ * Role → default size:
+ *   role="output"        wide    520 → 620 px. The "look at this" punchline.
+ *   role="diagram"       wide    Conceptual sketch (RGB cube, recursion tree).
+ *   role="gif"           default Square / 4:3 animation — 520 px is plenty.
+ *   role="training-log"  wide    Loss curves, training-time visualisations.
+ *   role="comparison"    wide    Grid of variants, interpolation strip.
+ *   role="architecture"  wide    Network / system diagram. Bump to bleed
+ *                                manually if the diagram genuinely won't fit.
+ *   role="reference"     small   360 px supporting thumb.
+ *   (none)               default 520 px reading-first inset.
+ *
+ * Explicit `size` always overrides the role. Resolution order:
+ *   explicit size → role's implicit size → default (520 px).
+ *
+ * Figures nested inside <Exercise> or <Dropdown> auto-shrink to 360 px
+ * via context-aware CSS in prose.css — opt back up with role/size.
+ *
+ * Sizes (see prose.css ".fig" block):
+ *   small   360 px       default  520 px
+ *   wide    620 px       bleed    extends past column into the gutter
+ */
+type FigureRole =
+  | 'output'
+  | 'diagram'
+  | 'gif'
+  | 'training-log'
+  | 'comparison'
+  | 'architecture'
+  | 'reference';
+
+type FigureSize = 'small' | 'default' | 'wide' | 'bleed';
+
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  /** Figure number — renders as a small mono label before the caption. */
+  num?: number | string;
+  /** Semantic role. Picks the right default size for the common cases. */
+  role?: FigureRole;
+  /** Physical size tier. Overrides role's implicit size if both are set. */
+  size?: FigureSize;
+  /** Optional explicit width hint for browser layout reservation. */
+  width?: number;
+}
+
+const ROLE_SIZE: Record<FigureRole, FigureSize> = {
+  'output':        'wide',
+  'diagram':       'wide',
+  'gif':           'default',
+  'training-log':  'wide',
+  'comparison':    'wide',
+  'architecture':  'wide',     // bleed is opt-in only — most architectures fit at 620 px
+  'reference':     'small',
+};
+
+const { src, alt, caption, num, role, size, width } = Astro.props;
+
+// Resolve effective size: explicit size > role's implicit size > default.
+const effectiveSize: FigureSize = size ?? (role ? ROLE_SIZE[role] : 'default');
+const sizeClass = effectiveSize !== 'default' ? effectiveSize : null;
+---
+
+<figure class:list={['fig', sizeClass, role && `role-${role}`]}>
+  <div class="frame">
+    <img src={src} alt={alt} width={width} loading="lazy" />
+  </div>
+  {(caption || num !== undefined) && (
+    <figcaption>
+      {num !== undefined && <span class="fnum">Fig. {num}</span>}
+      {caption}
+    </figcaption>
+  )}
+</figure>

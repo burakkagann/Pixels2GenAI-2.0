@@ -1,0 +1,1542 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>§ 3 Workshops · design exploration · Pixels2GenAI</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Plus+Jakarta+Sans:wght@300..700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap"
+  />
+
+  <style>
+    /* ============================================================
+       TOKENS · inlined subset of src/styles/tokens.css so this
+       prototype is self-contained (no Vite/Astro pipeline needed).
+       Edits to the real tokens.css won't update this file — that's
+       intentional: a prototype is a snapshot.
+       ============================================================ */
+    :root {
+      --bg:       #110D16;
+      --bg-2:     #17131E;
+      --bg-3:     #1E1928;
+      --bg-4:     #251F30;
+      --bg-deep:  #0C0913;
+      --bg-warm-1: #1E1A14;
+      --bg-warm-2: #271F18;
+
+      --fg:   #F0E7D8;
+      --fg-2: #ABA294;
+      --fg-3: #8A8273;
+      --fg-4: #443F38;
+
+      --line:   #2B2536;
+      --line-2: #3B344A;
+
+      --c1:      #9AC07A;
+      --c2:      #66B8FF;
+      --c3:      #B585E8;
+      --c3-soft: #966AC8;
+      --c3-dim:  #5C3F82;
+
+      --studio:      #F4669A;
+      --studio-soft: #D24E80;
+      --studio-dim:  #862E54;
+      --studio-tint: rgba(244, 102, 154, 0.10);
+
+      --highlight: #F0C26B;
+
+      --accent: var(--c3);
+
+      --serif: "Literata", "Iowan Old Style", Georgia, serif;
+      --sans:  "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --maxw: 1320px;
+      --pad-x: clamp(20px, 4vw, 56px);
+    }
+
+    /* ============================================================
+       BASE
+       ============================================================ */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ============================================================
+       PROTOTYPE CHROME — page header, sticky tabs, intro
+       ============================================================ */
+    .proto-head {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px var(--pad-x);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .proto-head .mark {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+    }
+    .proto-head .mark .x {
+      color: var(--studio);
+      font-style: italic;
+    }
+    .proto-head .mark .sub {
+      color: var(--fg-3);
+      font-style: italic;
+      margin-left: 10px;
+      font-size: 13px;
+    }
+
+    .proto-tabs {
+      display: flex;
+      gap: 18px;
+      justify-content: flex-end;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+    .proto-tabs a {
+      color: var(--fg-2);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: color .15s, border-bottom-color .15s;
+    }
+    .proto-tabs a:hover {
+      color: var(--studio);
+      border-bottom-color: var(--studio);
+    }
+
+    .proto-intro {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: clamp(40px, 6vh, 72px) var(--pad-x) 24px;
+    }
+    .proto-intro h1 {
+      font-family: var(--serif);
+      font-size: clamp(36px, 5vw, 52px);
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0 0 18px;
+      max-width: 22ch;
+    }
+    .proto-intro h1 em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .proto-intro p {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--fg-2);
+      line-height: 1.55;
+      max-width: 64ch;
+      margin: 0 0 12px;
+    }
+    .proto-intro .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 18px;
+    }
+
+    /* ============================================================
+       OPTION-BLOCK WRAPPER — one per option
+       ============================================================ */
+    .option-block {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 48px var(--pad-x) 64px;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 96px;
+    }
+    .option-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      margin-bottom: 12px;
+    }
+    .option-chip .num {
+      color: var(--studio);
+      font-weight: 600;
+    }
+    .option-chip .dot {
+      width: 5px; height: 5px;
+      background: var(--studio);
+      border-radius: 50%;
+    }
+    .option-title {
+      font-family: var(--serif);
+      font-size: clamp(26px, 3.4vw, 36px);
+      font-weight: 400;
+      line-height: 1.05;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    .option-title em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .option-rationale {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 17px;
+      color: var(--fg-2);
+      margin: 0 0 36px;
+      max-width: 60ch;
+    }
+    .option-render {
+      margin: 0 0 24px;
+    }
+    .option-tradeoffs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 20px 22px;
+      border: 1px dashed var(--line-2);
+      background: var(--bg-2);
+      margin-top: 32px;
+    }
+    @media (max-width: 720px) {
+      .option-tradeoffs { grid-template-columns: 1fr; }
+    }
+    .option-tradeoffs .col b {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .option-tradeoffs .col p {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg-2);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* ============================================================
+       SHARED SECTION CHROME — mirrors landing.css .section
+       ============================================================ */
+    .section {
+      padding: 0;
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 40px;
+      margin-bottom: 36px;
+      align-items: baseline;
+    }
+    @media (max-width: 720px) {
+      .section-head { grid-template-columns: 1fr; gap: 12px; }
+    }
+    .section-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+      padding-top: 6px;
+    }
+    .section-num span { color: var(--fg-3); }
+    .section-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(28px, 3.6vw, 40px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin: 0 0 12px;
+      max-width: 22ch;
+      text-wrap: balance;
+    }
+    .section-title em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .section-desc {
+      color: var(--fg-2);
+      max-width: 60ch;
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .section-desc a {
+      color: var(--studio);
+      border-bottom: 1px solid var(--studio-dim);
+      padding-bottom: 1px;
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-pri {
+      background: var(--studio);
+      color: var(--bg);
+      border-color: var(--studio);
+    }
+    .btn-pri:hover {
+      background: transparent;
+      color: var(--studio);
+    }
+    .btn-sec {
+      background: transparent;
+      color: var(--fg);
+      border-color: var(--line-2);
+    }
+    .btn-sec:hover { border-color: var(--fg); }
+
+    /* Shared eyebrow / meta atoms used across options */
+    .eb {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .eb.pink { color: var(--studio); }
+
+    /* ============================================================
+       OPTION 1 · Asymmetric weight (60 / 40)
+       ============================================================ */
+    .opt1-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .opt1-grid { grid-template-columns: 1fr; }
+    }
+    .opt1-past, .opt1-upcoming {
+      background: var(--bg-2);
+      padding: 32px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .opt1-upcoming {
+      background: color-mix(in srgb, var(--bg-2) 90%, var(--studio) 10%);
+      gap: 22px;
+    }
+    .opt1-past .poster {
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid var(--line-2);
+      transition: border-color .2s;
+    }
+    .opt1-past .poster:hover { border-color: var(--studio); }
+    .opt1-past .poster img { width: 100%; height: auto; display: block; }
+    .opt1-past h3 {
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 400;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .opt1-past dl {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 6px 14px;
+      margin: 0;
+      align-items: baseline;
+    }
+    .opt1-past dt {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      font-weight: 500;
+    }
+    .opt1-past dd {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg);
+      font-style: italic;
+    }
+    .opt1-past .outcome {
+      font-family: var(--serif);
+      font-size: 14px;
+      font-style: italic;
+      color: var(--fg-2);
+      margin: 0;
+    }
+    .opt1-past .outcome a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--line-2);
+      padding-bottom: 1px;
+    }
+    .opt1-past .cta { align-self: flex-start; margin-top: auto; }
+
+    .opt1-upcoming .invite {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: var(--fg);
+      max-width: 18ch;
+    }
+    .opt1-upcoming .invite em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .opt1-upcoming .sub {
+      font-family: var(--serif);
+      font-style: italic;
+      color: var(--fg-2);
+      font-size: 17px;
+      line-height: 1.5;
+      margin: 0;
+      max-width: 32ch;
+    }
+    .opt1-upcoming .format {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--fg-3);
+      padding-top: 18px;
+      border-top: 1px solid var(--line-2);
+    }
+    .opt1-upcoming .cta { align-self: flex-start; margin-top: 4px; }
+
+    /* ============================================================
+       OPTION 2 · Upcoming as "A typical workshop day"
+       ============================================================ */
+    .opt2-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .opt2-grid { grid-template-columns: 1fr; }
+    }
+    .opt2-past, .opt2-upcoming {
+      background: var(--bg-2);
+      padding: 32px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .opt2-upcoming {
+      background: color-mix(in srgb, var(--bg-2) 92%, var(--studio) 8%);
+    }
+    .opt2-past .poster { width: 100%; max-width: 260px; border: 1px solid var(--line-2); }
+    .opt2-past .poster img { width: 100%; display: block; }
+    .opt2-past h3 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 400;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .opt2-past dl { display: grid; grid-template-columns: 100px 1fr; gap: 6px 14px; margin: 0; }
+    .opt2-past dt {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3); font-weight: 500;
+    }
+    .opt2-past dd {
+      margin: 0; font-family: var(--serif); font-size: 14px;
+      color: var(--fg); font-style: italic;
+    }
+    .opt2-past .outcome {
+      font-family: var(--serif); font-style: italic;
+      font-size: 14px; color: var(--fg-2); margin: 0;
+    }
+    .opt2-past .outcome a {
+      color: var(--fg); border-bottom: 1px solid var(--line-2);
+    }
+    .opt2-past .cta { align-self: flex-start; margin-top: auto; }
+
+    .opt2-upcoming h3 {
+      font-family: var(--serif);
+      font-size: 24px;
+      font-weight: 400;
+      font-style: italic;
+      margin: 0 0 6px;
+      color: var(--studio);
+    }
+    .opt2-upcoming .lede {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-style: italic;
+      color: var(--fg-2);
+      margin: 0 0 8px;
+      max-width: 38ch;
+    }
+    .opt2-schedule {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .opt2-schedule li {
+      display: grid;
+      grid-template-columns: 64px 70px 1fr;
+      gap: 12px;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px dotted var(--line-2);
+    }
+    .opt2-schedule li:last-child { border-bottom: none; }
+    .opt2-schedule li.lunch { color: var(--fg-3); font-style: italic; }
+    .opt2-schedule .time {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--studio);
+      letter-spacing: 0.04em;
+    }
+    .opt2-schedule .mod {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-3);
+      letter-spacing: 0.04em;
+    }
+    .opt2-schedule .title {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg);
+      font-style: italic;
+    }
+    .opt2-upcoming .footnote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--fg-3);
+      margin: 14px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      max-width: 36ch;
+    }
+    .opt2-upcoming .cta { align-self: flex-start; margin-top: 10px; }
+
+    /* ============================================================
+       OPTION 3 · Upcoming with fractal backdrop
+       ============================================================ */
+    .opt3-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .opt3-grid { grid-template-columns: 1fr; }
+    }
+    .opt3-past {
+      background: var(--bg-2);
+      padding: 32px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .opt3-past .poster { width: 100%; max-width: 280px; border: 1px solid var(--line-2); }
+    .opt3-past .poster img { width: 100%; display: block; }
+    .opt3-past h3 { font-family: var(--serif); font-size: 26px; font-weight: 400; margin: 0; }
+    .opt3-past dl { display: grid; grid-template-columns: 100px 1fr; gap: 6px 14px; margin: 0; }
+    .opt3-past dt {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3); font-weight: 500;
+    }
+    .opt3-past dd {
+      margin: 0; font-family: var(--serif); font-size: 14px;
+      color: var(--fg); font-style: italic;
+    }
+    .opt3-past .outcome {
+      font-family: var(--serif); font-style: italic;
+      font-size: 14px; color: var(--fg-2); margin: 0;
+    }
+    .opt3-past .outcome a { color: var(--fg); border-bottom: 1px solid var(--line-2); }
+    .opt3-past .cta { align-self: flex-start; margin-top: auto; }
+
+    .opt3-upcoming {
+      position: relative;
+      background: var(--bg-2);
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .opt3-upcoming::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url(/workshops/gallery/fractal-01.png) center / cover no-repeat;
+      filter: saturate(0.6) blur(1.5px);
+      opacity: 0.18;
+      z-index: -2;
+    }
+    .opt3-upcoming::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--studio) 12%, transparent), transparent 60%),
+        linear-gradient(0deg, color-mix(in srgb, var(--bg-2) 60%, transparent), transparent);
+      z-index: -1;
+    }
+    .opt3-upcoming h3 {
+      font-family: var(--serif);
+      font-size: 30px;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--studio);
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .opt3-upcoming .pitch {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.5;
+      color: var(--fg);
+      margin: 0;
+      max-width: 32ch;
+    }
+    .opt3-upcoming .pitch em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .opt3-upcoming .format {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--fg-2);
+      text-transform: uppercase;
+      padding: 8px 12px;
+      border: 1px solid var(--studio-dim);
+      align-self: flex-start;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+    }
+    .opt3-upcoming .cta { align-self: flex-start; margin-top: auto; }
+    .opt3-upcoming .credit {
+      position: absolute;
+      bottom: 10px; right: 14px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      color: var(--fg-4);
+      text-transform: uppercase;
+    }
+
+    /* ============================================================
+       OPTION 4 · Whole-section restructure · Proof above · Promise below
+       ============================================================ */
+    .opt4-proof {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 32px;
+      align-items: start;
+      padding: 28px;
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+    }
+    @media (max-width: 720px) {
+      .opt4-proof { grid-template-columns: 1fr; gap: 22px; }
+    }
+    .opt4-proof .poster { border: 1px solid var(--line-2); }
+    .opt4-proof .poster img { width: 100%; display: block; }
+    .opt4-proof .body { display: flex; flex-direction: column; gap: 14px; }
+    .opt4-proof .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+    }
+    .opt4-proof p {
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.55;
+      color: var(--fg);
+      margin: 0;
+      max-width: 60ch;
+    }
+    .opt4-proof p a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--line-2);
+    }
+    .opt4-proof .cta { align-self: flex-start; margin-top: 4px; }
+
+    .opt4-promise {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      margin-top: 16px;
+    }
+    @media (max-width: 720px) {
+      .opt4-promise { grid-template-columns: 1fr; }
+    }
+    .opt4-promise > div {
+      background: color-mix(in srgb, var(--bg-2) 90%, var(--studio) 10%);
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 180px;
+    }
+    .opt4-promise .promise-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--studio);
+      text-transform: uppercase;
+    }
+    .opt4-promise h4 {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.1;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .opt4-promise h4 em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .opt4-promise p {
+      font-family: var(--serif);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--fg-2);
+      margin: 0;
+    }
+    .opt4-cta-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-top: none;
+      background: var(--bg-deep);
+      flex-wrap: wrap;
+    }
+    .opt4-cta-row .note {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--fg-3);
+    }
+
+    /* ============================================================
+       OPTION 5 · Single-column editorial reflow
+       ============================================================ */
+    .opt5-manifesto {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-style: italic;
+      color: var(--fg);
+      max-width: 56ch;
+      margin: 0 0 26px;
+      line-height: 1.45;
+      letter-spacing: -0.005em;
+    }
+    .opt5-manifesto em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .opt5-strip {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      gap: 28px;
+      align-items: center;
+      padding: 24px;
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+      margin-bottom: 1px;
+    }
+    @media (max-width: 720px) {
+      .opt5-strip {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+    }
+    .opt5-strip .poster { border: 1px solid var(--line-2); }
+    .opt5-strip .poster img { width: 100%; display: block; }
+    .opt5-strip .body { display: flex; flex-direction: column; gap: 8px; }
+    .opt5-strip .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+    }
+    .opt5-strip h4 {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .opt5-strip h4 em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .opt5-strip p {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg-2);
+      margin: 0;
+      line-height: 1.5;
+      max-width: 56ch;
+    }
+    .opt5-strip p a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--line-2);
+    }
+
+    .opt5-gallery {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) 220px;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-top: none;
+      margin-bottom: 1px;
+    }
+    @media (max-width: 860px) {
+      .opt5-gallery {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .opt5-gallery .label {
+        grid-column: 1 / -1;
+        order: 1;
+      }
+    }
+    @media (max-width: 540px) {
+      .opt5-gallery { grid-template-columns: repeat(2, 1fr); }
+    }
+    .opt5-gallery figure {
+      margin: 0;
+      background: var(--bg-deep);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+    }
+    .opt5-gallery figure img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .opt5-gallery .label {
+      background: var(--bg-2);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+    .opt5-gallery .label b {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--studio);
+      font-weight: 500;
+    }
+    .opt5-gallery .label span {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--fg-2);
+      line-height: 1.45;
+    }
+
+    .opt5-next {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 18px 24px;
+      border: 1px solid var(--studio-dim);
+      background: color-mix(in srgb, var(--bg-2) 88%, var(--studio) 12%);
+      flex-wrap: wrap;
+    }
+    .opt5-next .copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .opt5-next .copy b {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--studio);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .opt5-next .copy span {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-style: italic;
+      color: var(--fg);
+    }
+
+    /* ============================================================
+       COMPARISON TABLE
+       ============================================================ */
+    .compare {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 80px var(--pad-x) 60px;
+      border-top: 1px solid var(--line);
+    }
+    .compare h2 {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 400;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    .compare h2 em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .compare p.lede {
+      font-family: var(--serif);
+      font-style: italic;
+      color: var(--fg-2);
+      font-size: 16px;
+      margin: 0 0 28px;
+      max-width: 64ch;
+    }
+    .compare table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .compare th, .compare td {
+      background: var(--bg-2);
+      padding: 14px 16px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare th {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      font-weight: 500;
+    }
+    .compare td {
+      font-family: var(--serif);
+      color: var(--fg);
+    }
+    .compare td.label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--studio);
+      text-transform: uppercase;
+    }
+    .compare td em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .compare .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid var(--line-2);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .compare .badge.low    { color: var(--c1); border-color: color-mix(in srgb, var(--c1) 50%, transparent); }
+    .compare .badge.med    { color: var(--highlight); border-color: color-mix(in srgb, var(--highlight) 50%, transparent); }
+    .compare .badge.high   { color: var(--studio); border-color: color-mix(in srgb, var(--studio) 60%, transparent); }
+    .compare .badge.vhigh  { color: var(--studio); border-color: var(--studio); background: var(--studio-tint); }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .proto-foot {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 32px var(--pad-x) 64px;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-3);
+      letter-spacing: 0.06em;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .proto-foot a {
+      color: var(--fg-2);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 1px;
+    }
+    .proto-foot a:hover { color: var(--studio); border-bottom-color: var(--studio); }
+
+    /* Smooth scroll for anchor jumps */
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       PROTOTYPE CHROME
+       ============================================================ -->
+  <header class="proto-head">
+    <div class="mark">
+      Pixels<span class="x">2</span>GenAI
+      <span class="sub">§ 3 Workshops · design exploration</span>
+    </div>
+    <nav class="proto-tabs" aria-label="Option tabs">
+      <a href="#opt1">Option 1</a>
+      <a href="#opt2">Option 2</a>
+      <a href="#opt3">Option 3</a>
+      <a href="#opt4">Option 4</a>
+      <a href="#opt5">Option 5</a>
+      <a href="#compare">Compare</a>
+    </nav>
+  </header>
+
+  <div class="proto-intro">
+    <h1>Five ways to make <em>§ 3 Workshops</em> carry its own weight.</h1>
+    <p>
+      The current landing-page § 3 uses a 50/50 past · upcoming split. The
+      past side is rich; the upcoming side is sparse — because workshop ii
+      has no date, venue, or modules yet. The asymmetry reads as emptiness.
+      Below are five directions for fixing it, rendered with the same brand
+      tokens, fonts, and real assets as the live site.
+    </p>
+    <p>
+      Scroll through, jump between options with the tabs above, and use the
+      comparison table at the bottom to weigh the trade-offs. The decision
+      is yours; once you pick one (or a hybrid, or request a sixth), it
+      gets ported into the real <code>src/pages/index.astro</code>.
+    </p>
+    <div class="meta">Prototype only · not deployed · no source files edited</div>
+  </div>
+
+  <!-- ============================================================
+       OPTION 1 · Asymmetric weight
+       ============================================================ -->
+  <section class="option-block" id="opt1">
+    <div class="option-chip">
+      <span class="dot"></span>
+      <span><span class="num">Option 1</span> · Asymmetric weight</span>
+    </div>
+    <h2 class="option-title">Past expands, <em>upcoming becomes a sidebar.</em></h2>
+    <p class="option-rationale">
+      Keep the two-column structure but rebalance widths to 60 / 40. The
+      slimmer right column carries one strong invitation instead of sparse
+      meta in a square card. Smallest delta from current code.
+    </p>
+
+    <div class="option-render">
+      <section class="section">
+        <div class="section-head">
+          <div class="section-num">§ 3 · <span>Workshops</span></div>
+          <div>
+            <h2 class="section-title">The empirical engine, <em>in person.</em></h2>
+            <p class="section-desc">
+              A recurring one-day workshop, co-organised with
+              <a href="#">Kristian Rother</a> and Academis. The pilot
+              cohort produced the data behind § 4 Research; the next
+              workshop is in planning.
+            </p>
+          </div>
+        </div>
+
+        <div class="opt1-grid">
+          <article class="opt1-past">
+            <span class="eb">Past · Workshop i</span>
+            <a class="poster" href="#"><img src="/workshops/poster-2026-02.jpg" alt="Poster for Workshop i, February 12, 2026." loading="lazy" /></a>
+            <h3>February 12, 2026</h3>
+            <dl>
+              <dt>Venue</dt><dd>Berlin · Steinmetzstrasse 40</dd>
+              <dt>Hosted with</dt><dd>Kristian Rother · Academis</dd>
+              <dt>Participants</dt><dd>9 · 6 modules covered</dd>
+            </dl>
+            <p class="outcome">Findings reported in <a href="/research">/research</a>.</p>
+            <a class="btn btn-sec cta" href="/workshops">Read the full case study →</a>
+          </article>
+
+          <article class="opt1-upcoming">
+            <span class="eb pink">Upcoming · Workshop ii</span>
+            <p class="invite">
+              When the next workshop has a date, <em>you'll be the first to know.</em>
+            </p>
+            <p class="sub">
+              One day · 8 seats · Berlin · co-organised with Academis.
+              Same shape as the first cohort.
+            </p>
+            <div class="format">No newsletter · single mail per workshop</div>
+            <a class="btn btn-pri cta" href="/workshops/signup">Register interest →</a>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>Gains</b>
+        <p>Smallest code delta. Empty space becomes deliberate copy space rather than unfilled meta. Easy to keep in sync once workshop ii fills.</p>
+      </div>
+      <div class="col">
+        <b>Loses</b>
+        <p>Still two columns of the same kind. The right side stays visually quieter than the left even with stronger copy.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION 2 · A typical workshop day
+       ============================================================ -->
+  <section class="option-block" id="opt2">
+    <div class="option-chip">
+      <span class="dot"></span>
+      <span><span class="num">Option 2</span> · A typical workshop day</span>
+    </div>
+    <h2 class="option-title">Upcoming becomes <em>a schedule, not a stub.</em></h2>
+    <p class="option-rationale">
+      Past stays unchanged. Upcoming column shows what a typical workshop
+      day looks like — module by module, hour by hour, drawn from the
+      cohort that actually ran. Concrete without faking date specifics.
+    </p>
+
+    <div class="option-render">
+      <section class="section">
+        <div class="section-head">
+          <div class="section-num">§ 3 · <span>Workshops</span></div>
+          <div>
+            <h2 class="section-title">The empirical engine, <em>in person.</em></h2>
+            <p class="section-desc">
+              A recurring one-day workshop, co-organised with
+              <a href="#">Kristian Rother</a> and Academis. Six modules, a
+              single sitting, up to eight participants.
+            </p>
+          </div>
+        </div>
+
+        <div class="opt2-grid">
+          <article class="opt2-past">
+            <span class="eb">Past · Workshop i</span>
+            <a class="poster" href="#"><img src="/workshops/poster-2026-02.jpg" alt="Poster for Workshop i, February 12, 2026." loading="lazy" /></a>
+            <h3>February 12, 2026</h3>
+            <dl>
+              <dt>Venue</dt><dd>Berlin · Steinmetzstrasse 40</dd>
+              <dt>Hosted with</dt><dd>Kristian Rother · Academis</dd>
+              <dt>Participants</dt><dd>9 · 6 modules covered</dd>
+            </dl>
+            <p class="outcome">Findings reported in <a href="/research">/research</a>.</p>
+            <a class="btn btn-sec cta" href="/workshops">Read the full case study →</a>
+          </article>
+
+          <article class="opt2-upcoming">
+            <span class="eb pink">A workshop, in shape</span>
+            <h3>What a day looks like.</h3>
+            <p class="lede">Six modules, paced across one day. Same shape every cohort.</p>
+            <ol class="opt2-schedule">
+              <li><span class="time">09:00</span><span class="mod">Setup</span><span class="title">Arrival · coffee · environment check</span></li>
+              <li><span class="time">10:00</span><span class="mod">M 1.1.1</span><span class="title">RGB Basics</span></li>
+              <li><span class="time">11:00</span><span class="mod">M 1.2.2</span><span class="title">Cellular Automata</span></li>
+              <li class="lunch"><span class="time">12:00</span><span class="mod">Break</span><span class="title">Lunch · snacks · informal Q&amp;A</span></li>
+              <li><span class="time">13:00</span><span class="mod">M 3.4.1</span><span class="title">Convolution</span></li>
+              <li><span class="time">14:00</span><span class="mod">M 4.1.1</span><span class="title">Fractal Square</span></li>
+              <li><span class="time">15:00</span><span class="mod">M 9.1.1</span><span class="title">Perceptron</span></li>
+              <li><span class="time">16:00</span><span class="mod">M 12.3.1</span><span class="title">DDPM Basics</span></li>
+            </ol>
+            <p class="footnote">Workshop ii's date is TBA. Register interest to be notified.</p>
+            <a class="btn btn-pri cta" href="/workshops/signup">Register interest →</a>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>Gains</b>
+        <p>High information density. Mirrors the curriculum register already on the page. Reusable template — swap modules in when workshop ii's set is chosen.</p>
+      </div>
+      <div class="col">
+        <b>Loses</b>
+        <p>Schedule looks aspirational if workshop ii ships different modules. Reads as "same workshop again" unless the heading explicitly generalises.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION 3 · Fractal backdrop
+       ============================================================ -->
+  <section class="option-block" id="opt3">
+    <div class="option-chip">
+      <span class="dot"></span>
+      <span><span class="num">Option 3</span> · Fractal backdrop</span>
+    </div>
+    <h2 class="option-title">Atmosphere does the talking, <em>copy stays short.</em></h2>
+    <p class="option-rationale">
+      A participant fractal lives behind the upcoming card as a
+      desaturated, pink-tinted backdrop. The visual hook is "this is what
+      you'll make"; the copy can stay short and inviting.
+    </p>
+
+    <div class="option-render">
+      <section class="section">
+        <div class="section-head">
+          <div class="section-num">§ 3 · <span>Workshops</span></div>
+          <div>
+            <h2 class="section-title">The empirical engine, <em>in person.</em></h2>
+            <p class="section-desc">
+              A recurring one-day workshop, co-organised with
+              <a href="#">Kristian Rother</a> and Academis. The pilot
+              cohort produced the data behind § 4 Research; the next
+              workshop is in planning.
+            </p>
+          </div>
+        </div>
+
+        <div class="opt3-grid">
+          <article class="opt3-past">
+            <span class="eb">Past · Workshop i</span>
+            <a class="poster" href="#"><img src="/workshops/poster-2026-02.jpg" alt="Poster for Workshop i, February 12, 2026." loading="lazy" /></a>
+            <h3>February 12, 2026</h3>
+            <dl>
+              <dt>Venue</dt><dd>Berlin · Steinmetzstrasse 40</dd>
+              <dt>Hosted with</dt><dd>Kristian Rother · Academis</dd>
+              <dt>Participants</dt><dd>9 · 6 modules covered</dd>
+            </dl>
+            <p class="outcome">Findings reported in <a href="/research">/research</a>.</p>
+            <a class="btn btn-sec cta" href="/workshops">Read the full case study →</a>
+          </article>
+
+          <article class="opt3-upcoming">
+            <span class="eb pink">Upcoming · Workshop ii</span>
+            <h3>In planning.</h3>
+            <p class="pitch">
+              Build a self-similar fractal, a cellular automaton, and a
+              small neural network — <em>all in a single day.</em>
+            </p>
+            <div class="format">One day · 8 seats · Berlin · with Academis</div>
+            <a class="btn btn-pri cta" href="/workshops/signup">Register interest →</a>
+            <span class="credit">Backdrop · participant output · M 4.1.1</span>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>Gains</b>
+        <p>Strong visual hook. Participant work does double duty as proof and pitch. Cheapest way to add atmosphere without inventing content.</p>
+      </div>
+      <div class="col">
+        <b>Loses</b>
+        <p>Background image can fight the brand's restrained editorial register if opacity drifts. Accessibility risk if contrast slips below the foreground text.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION 4 · Proof above · Promise below
+       ============================================================ -->
+  <section class="option-block" id="opt4">
+    <div class="option-chip">
+      <span class="dot"></span>
+      <span><span class="num">Option 4</span> · Proof above · promise below</span>
+    </div>
+    <h2 class="option-title">Drop the past / upcoming split — <em>past is proof, promise is evergreen.</em></h2>
+    <p class="option-rationale">
+      Whole-section restructure. Top strip = the past workshop as
+      citation. Bottom row = three promise tiles describing the program
+      regardless of date. One register CTA at the bottom.
+    </p>
+
+    <div class="option-render">
+      <section class="section">
+        <div class="section-head">
+          <div class="section-num">§ 3 · <span>Workshops</span></div>
+          <div>
+            <h2 class="section-title">A recurring program, <em>not a one-off event.</em></h2>
+            <p class="section-desc">
+              Pixels2GenAI workshops are a recurring one-day program
+              co-organised with <a href="#">Kristian Rother</a> and Academis.
+              One has run; the next is in planning. Below: the proof, then
+              the promise.
+            </p>
+          </div>
+        </div>
+
+        <div class="opt4-proof">
+          <a class="poster" href="#"><img src="/workshops/poster-2026-02.jpg" alt="Poster for Workshop i, Feb 12 2026, Berlin." loading="lazy" /></a>
+          <div class="body">
+            <span class="label">Past · Workshop i · Berlin · Feb 2026</span>
+            <p>
+              Nine participants moved from a single NumPy array to
+              generating images with a small diffusion model, in a single
+              day. Findings reported in <a href="/research">/research</a>.
+            </p>
+            <a class="btn btn-sec cta" href="/workshops">Read the full case study →</a>
+          </div>
+        </div>
+
+        <div class="opt4-promise">
+          <div>
+            <span class="promise-num">01 · One day</span>
+            <h4>Six modules, <em>pixel to diffusion.</em></h4>
+            <p>From RGB arrays through a Perceptron to a small DDPM, paced for the single-day intensive format.</p>
+          </div>
+          <div>
+            <span class="promise-num">02 · Small cohort</span>
+            <h4>Up to eight <em>participants.</em></h4>
+            <p>Peer-to-peer, hands-on, taught at a pace beginner-level Python can keep up with.</p>
+          </div>
+          <div>
+            <span class="promise-num">03 · Academis-hosted</span>
+            <h4>Co-organised with <em>Kristian Rother.</em></h4>
+            <p>Academis provides the venue, the cohort recruitment, and the facilitation experience that turns a draft curriculum into a teachable one.</p>
+          </div>
+        </div>
+
+        <div class="opt4-cta-row">
+          <a class="btn btn-pri" href="/workshops/signup">Register interest for the next workshop →</a>
+          <span class="note">No newsletter — single email per workshop.</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>Gains</b>
+        <p>Resolves the asymmetry entirely. The right column problem disappears because there is no right column. Promise tiles are evergreen and don't decay between workshops.</p>
+      </div>
+      <div class="col">
+        <b>Loses</b>
+        <p>Structurally furthest from current code. "Workshop ii" labelling lives only inside the CTA copy unless added back as a sub-header above the promise row.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION 5 · Single-column editorial reflow
+       ============================================================ -->
+  <section class="option-block" id="opt5">
+    <div class="option-chip">
+      <span class="dot"></span>
+      <span><span class="num">Option 5</span> · Single-column editorial reflow</span>
+    </div>
+    <h2 class="option-title">A vertical narrative — <em>manifesto, proof, gallery, next.</em></h2>
+    <p class="option-rationale">
+      Whole-section restructure into a single vertical column. One-line
+      manifesto, past-workshop strip, four-tile fractal preview as visual
+      proof, thin "next workshop" strip. Reads as editorial rhythm rather
+      than comparison.
+    </p>
+
+    <div class="option-render">
+      <section class="section">
+        <div class="section-head">
+          <div class="section-num">§ 3 · <span>Workshops</span></div>
+          <div>
+            <h2 class="section-title">A recurring program, <em>told as a story.</em></h2>
+            <p class="section-desc">
+              Workshops are how the curriculum stops being a draft and
+              starts being load-bearing. Co-organised with
+              <a href="#">Kristian Rother</a> and Academis.
+            </p>
+          </div>
+        </div>
+
+        <p class="opt5-manifesto">
+          A one-day workshop is the unit of work. Participants arrive with a
+          laptop and beginner-level Python; they leave having built
+          something they can show. <em>The curriculum on this site is
+          built and refined by running it.</em>
+        </p>
+
+        <div class="opt5-strip">
+          <a class="poster" href="#"><img src="/workshops/poster-2026-02.jpg" alt="Poster for Workshop i, Feb 12 2026." loading="lazy" /></a>
+          <div class="body">
+            <span class="label">Past · Workshop i</span>
+            <h4>Berlin · February 12, 2026 · <em>with Academis.</em></h4>
+            <p>
+              Nine participants · six modules · one day. Findings reported in
+              <a href="/research">/research</a>.
+            </p>
+          </div>
+          <a class="btn btn-sec" href="/workshops">Read the case study →</a>
+        </div>
+
+        <div class="opt5-gallery">
+          <figure><img src="/workshops/gallery/fractal-01.png" alt="Participant fractal output 1." loading="lazy" /></figure>
+          <figure><img src="/workshops/gallery/fractal-02.png" alt="Participant fractal output 2." loading="lazy" /></figure>
+          <figure><img src="/workshops/gallery/fractal-03.png" alt="Participant fractal output 3." loading="lazy" /></figure>
+          <figure><img src="/workshops/gallery/fractal-04.png" alt="Participant fractal output 4." loading="lazy" /></figure>
+          <div class="label">
+            <b>What participants made</b>
+            <span>Four of nine outputs from Module 4.1.1 · Fractal Square.</span>
+          </div>
+        </div>
+
+        <div class="opt5-next">
+          <div class="copy">
+            <b>Upcoming · Workshop ii</b>
+            <span>In planning · Berlin · register to be notified when the date lands.</span>
+          </div>
+          <a class="btn btn-pri" href="/workshops/signup">Register interest →</a>
+        </div>
+      </section>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>Gains</b>
+        <p>Strongest visual narrative. Fractals do double duty as proof and decoration. Matches /research's editorial register most closely. Reads as a recurring program rather than a one-off.</p>
+      </div>
+      <div class="col">
+        <b>Loses</b>
+        <p>Most code to write. Section becomes taller — may push § 4 Research below the fold on shorter viewports. Furthest from the current shipping state.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       COMPARISON TABLE
+       ============================================================ -->
+  <section class="compare" id="compare">
+    <h2>Compare <em>at a glance.</em></h2>
+    <p class="lede">
+      Four axes worth weighing: code delta (how much work to ship),
+      content reuse (how well does the template hold up when workshop ii
+      details land), visual hook (how much it draws the eye), template fit
+      (how well the layout survives across many future workshops).
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Code Δ</th>
+          <th>Content reuse</th>
+          <th>Visual hook</th>
+          <th>Template fit</th>
+          <th>Best when</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label">Opt 1 · Asymmetric</td>
+          <td><span class="badge low">Low</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><span class="badge low">Low</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><em>You want to ship today and revisit when ii lands.</em></td>
+        </tr>
+        <tr>
+          <td class="label">Opt 2 · Day schedule</td>
+          <td><span class="badge med">Medium</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><em>You want the upcoming side to communicate concrete substance.</em></td>
+        </tr>
+        <tr>
+          <td class="label">Opt 3 · Fractal bg</td>
+          <td><span class="badge low">Low</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><em>You want atmosphere over information density.</em></td>
+        </tr>
+        <tr>
+          <td class="label">Opt 4 · Proof / promise</td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><span class="badge vhigh">Very high</span></td>
+          <td><em>Workshops are the most important reason people come to the site.</em></td>
+        </tr>
+        <tr>
+          <td class="label">Opt 5 · Editorial reflow</td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge high">High</span></td>
+          <td><span class="badge vhigh">Very high</span></td>
+          <td><span class="badge med">Medium</span></td>
+          <td><em>You want § 3 to read like a /research-style story.</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer class="proto-foot">
+    <span>Pixels2GenAI · prototype · not deployed · public/explorations/</span>
+    <span><a href="/">← back to landing</a> · <a href="/workshops">/workshops</a> · <a href="/research">/research</a></span>
+  </footer>
+
+</body>
+</html>

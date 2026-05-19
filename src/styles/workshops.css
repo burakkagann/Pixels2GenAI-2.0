@@ -1,0 +1,1149 @@
+/* ============================================================
+   WORKSHOPS — landing § 3 catalog, /workshops route, /workshops/signup.
+   Reads as part of the studio identity (fluoro pink --studio is the
+   workshop accent), but pink is used sparingly: In planning badge,
+   Register CTA, and link hover states only.
+
+   Layered on:
+     - tokens.css → palette, typography, spacing
+     - landing.css → .section, .section-head, .section-num,
+                     .section-title, .section-desc, .btn family
+   This file adds:
+     - .workshops-archive (landing § 3 catalog container)
+     - .archive-head (mono ruled-line sub-header)
+     - .workshop-specimen (each collapsible workshop row)
+     - .workshops-page (/workshops route)
+     - .workshop-gallery (3×3 fractal grid)
+     - .signup-form (Netlify form on /workshops/signup)
+   ============================================================ */
+
+/* ---------- Landing § 3 catalog (collapsible specimens) ---------- */
+.workshops-archive {
+  border: 1px solid var(--line);
+}
+
+.archive-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 22px;
+  align-items: baseline;
+  padding: 10px 22px;
+  border-top: 2px solid var(--fg);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.archive-head .archive-org {
+  color: var(--fg);
+  letter-spacing: 0.22em;
+}
+
+.archive-head .archive-count {
+  color: var(--fg-3);
+}
+
+/* ---------- Workshop specimen: collapsible <details> ---------- */
+.workshop-specimen {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  transition: background 0.2s ease;
+}
+
+.workshop-specimen:last-child {
+  border-bottom: none;
+}
+
+.specimen-summary {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto 16px;
+  gap: 18px;
+  align-items: center;
+  padding: 14px 22px;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.specimen-summary::-webkit-details-marker { display: none; }
+.specimen-summary::marker { content: ""; }
+
+.specimen-summary:hover {
+  background: color-mix(in srgb, var(--bg-2) 92%, var(--studio) 8%);
+}
+
+.workshop-specimen[open] > .specimen-summary {
+  background: color-mix(in srgb, var(--bg-2) 88%, var(--studio) 12%);
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-index {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.summary-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.summary-status.completed {
+  color: var(--c1);
+  border-color: color-mix(in srgb, var(--c1) 50%, transparent);
+  background: color-mix(in srgb, var(--c1) 6%, transparent);
+}
+
+.summary-status.planning {
+  color: var(--studio);
+  border-color: var(--studio-dim);
+  background: var(--studio-tint);
+}
+
+.summary-identifier {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--fg);
+  line-height: 1.3;
+}
+
+.summary-identifier em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.summary-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.summary-chevron {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-3);
+  transition: color 0.2s ease;
+}
+
+.summary-chevron svg {
+  width: 12px;
+  height: 8px;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.specimen-summary:hover .summary-chevron { color: var(--studio); }
+
+.workshop-specimen[open] > .specimen-summary .summary-chevron {
+  color: var(--studio);
+}
+
+.workshop-specimen[open] > .specimen-summary .summary-chevron svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 720px) {
+  .specimen-summary {
+    grid-template-columns: auto 1fr 16px;
+    gap: 10px 14px;
+  }
+  .summary-status { grid-column: 1 / span 2; justify-self: start; }
+  .summary-identifier { grid-column: 1 / span 2; }
+  .summary-meta { grid-column: 1 / span 2; }
+  .summary-chevron { grid-column: 3; grid-row: 1; align-self: start; margin-top: 3px; }
+}
+
+/* ---------- Specimen body (2-column when open) ---------- */
+.specimen-body {
+  display: grid;
+  grid-template-columns: 1.5fr 200px;
+  gap: 28px;
+  align-items: start;
+  padding: 24px 26px 28px;
+}
+
+@media (max-width: 720px) {
+  .specimen-body {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+
+.specimen-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.specimen-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.specimen-title em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.specimen-lede {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.specimen-lede a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  font-style: normal;
+  transition: border-bottom-color 0.15s ease;
+}
+
+.specimen-lede a:hover { border-bottom-color: var(--studio); }
+
+.specimen-dl {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 6px 16px;
+  margin: 6px 0 0;
+  align-items: baseline;
+}
+
+.specimen-dl dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.specimen-dl dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.specimen-dl dd em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.specimen-dl dd a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: border-bottom-color 0.15s ease;
+}
+
+.specimen-dl dd a:hover { border-bottom-color: var(--studio); }
+
+/* Module chips row */
+.specimen-dl dd.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.specimen-dl .chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border: 1px solid var(--line-2);
+  background: color-mix(in srgb, var(--bg-2) 60%, var(--bg-deep) 40%);
+  color: var(--fg-2);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.specimen-dl .chip b {
+  color: var(--fg);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.specimen-actions {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+
+.specimen-actions .btn-ghost {
+  background: transparent;
+  color: var(--fg-2);
+  border: none;
+  padding: 6px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+
+.specimen-actions .btn-ghost:hover { color: var(--studio); }
+
+/* ---------- Aside: dimmed poster (past) or placeholder + CTA (upcoming) ---------- */
+.specimen-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Dimmed-by-default poster · hover (or focus) lifts to full colour. */
+.specimen-poster {
+  position: relative;
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+
+.specimen-poster img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0.34;
+  filter: saturate(0.6);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.specimen-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--bg-deep) 70%, transparent));
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.specimen-poster:hover { border-color: var(--line-2); }
+.specimen-poster:hover img { opacity: 1; filter: saturate(1); }
+.specimen-poster:hover::after { opacity: 0; }
+
+.specimen-poster:focus-visible {
+  outline: 1px solid var(--studio);
+  outline-offset: 2px;
+}
+.specimen-poster:focus-visible img { opacity: 1; filter: saturate(1); }
+.specimen-poster:focus-visible::after { opacity: 0; }
+
+.specimen-poster-cap {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  line-height: 1.5;
+}
+
+.specimen-poster-cap em {
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--fg-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .specimen-poster img,
+  .specimen-poster::after { transition: none; }
+}
+
+/* Upcoming aside: dashed placeholder + Register CTA */
+.specimen-aside--upcoming {
+  gap: 14px;
+}
+
+.specimen-poster-placeholder {
+  border: 1px dashed var(--studio-dim);
+  padding: 22px 14px;
+  background: color-mix(in srgb, var(--bg-deep) 70%, var(--studio-tint));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.specimen-poster-placeholder b {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--studio);
+  font-weight: 500;
+}
+
+.specimen-poster-placeholder span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  max-width: 22ch;
+}
+
+.specimen-upcoming-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.specimen-upcoming-cta .btn-pri {
+  --card-accent: var(--studio);
+  width: 100%;
+  justify-content: center;
+}
+
+.specimen-upcoming-cta .note {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  text-align: center;
+}
+
+/* ---------- /workshops route — page hero & sections ---------- */
+.workshops-page {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(48px, 7vh, 88px) var(--pad-x) 80px;
+}
+
+.workshops-head {
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 48px;
+  max-width: 68ch;
+}
+
+.workshops-head .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 22px;
+}
+
+.workshops-head .eyebrow .dot {
+  width: 5px;
+  height: 5px;
+  background: var(--studio);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.workshops-head h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 26px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.workshops-head h1 em {
+  font-style: italic;
+  color: var(--studio);
+  font-weight: 500;
+}
+
+.workshops-head .lede {
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--fg);
+  margin: 0;
+  max-width: 60ch;
+  letter-spacing: -0.005em;
+  font-weight: 400;
+}
+
+.workshops-head .lede::first-letter {
+  font-family: var(--serif);
+  font-style: normal;
+  font-size: 3em;
+  line-height: 0.85;
+  float: left;
+  margin: 6px 10px 0 0;
+  color: var(--highlight);
+  font-weight: 500;
+}
+
+/* ---------- Workshops page · section divider ---------- */
+.workshops-section {
+  padding: 56px 0;
+  border-top: 1px solid var(--line);
+}
+
+.workshops-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.workshops-section h2 {
+  font-family: var(--serif);
+  font-size: clamp(28px, 3.8vw, 40px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.workshops-section h2 em {
+  font-style: italic;
+  color: var(--studio);
+  font-weight: 400;
+}
+
+.workshops-section .deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--fg-2);
+  margin: 0 0 32px;
+  max-width: 60ch;
+  line-height: 1.5;
+}
+
+/* ---------- /workshops · Past workshop case study ---------- */
+.case-study {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .case-study {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.case-poster {
+  border: 1px solid var(--line-2);
+  background: var(--bg-deep);
+  display: block;
+  transition: border-color .2s;
+}
+
+.case-poster:hover {
+  border-color: var(--studio);
+}
+
+.case-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.case-poster-caption {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-top: 10px;
+  text-align: right;
+}
+
+.case-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.case-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--studio);
+}
+
+.case-title {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.case-title em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.case-narrative {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg);
+  margin: 0;
+  max-width: 56ch;
+}
+
+.case-narrative em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.case-narrative a {
+  color: var(--studio);
+  border-bottom: 1px solid var(--studio-dim);
+  padding-bottom: 1px;
+  transition: border-bottom-color .15s;
+}
+
+.case-narrative a:hover {
+  border-bottom-color: var(--studio);
+}
+
+.case-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.case-meta > div {
+  background: var(--bg);
+  padding: 12px 14px;
+}
+
+.case-meta b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--fg-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.case-meta span {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--fg);
+  font-style: italic;
+}
+
+/* ---------- /workshops · Modules covered (chip row) ---------- */
+.case-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.case-modules li {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-2);
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+}
+
+.case-modules li b {
+  color: var(--studio);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* ---------- /workshops · Participant gallery ----------
+   Compact 3-column grid (max 150px per tile). Each tile is a <button>
+   that opens a <dialog>-based lightbox modal — keeps the at-a-glance
+   view of all nine while saving vertical space. */
+.workshop-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 150px));
+  gap: 10px;
+  justify-content: start;
+  margin: 0;
+}
+
+@media (max-width: 540px) {
+  .workshop-gallery {
+    grid-template-columns: repeat(3, minmax(0, 110px));
+  }
+}
+
+.workshop-gallery .g-tile {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: border-color .2s, transform .2s;
+}
+
+.workshop-gallery .g-tile:hover {
+  border-color: var(--studio);
+  transform: translateY(-1px);
+}
+
+.workshop-gallery .g-tile:focus-visible {
+  outline: 1px solid var(--studio);
+  outline-offset: 2px;
+}
+
+.workshop-gallery .g-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* ---------- /workshops · Gallery lightbox (native <dialog>) ---------- */
+.gallery-modal {
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0;
+  max-width: min(86vw, 720px);
+  max-height: 86vh;
+  width: auto;
+}
+
+.gallery-modal::backdrop {
+  background: rgba(8, 6, 12, 0.78);
+}
+
+.gallery-modal img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 86vh;
+  object-fit: contain;
+}
+
+.gallery-modal .g-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #F0E7D8;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background .15s, color .15s;
+}
+
+.gallery-modal .g-close:hover {
+  background: var(--studio);
+  color: var(--bg);
+}
+
+.gallery-caption {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--fg-2);
+  margin: 18px 0 0;
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+/* ---------- /workshops · Outcomes row ---------- */
+.outcomes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.outcomes > div {
+  background: var(--bg-2);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.outcomes .o-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--studio);
+}
+
+.outcomes .o-value {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 28px;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+.outcomes .o-label {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--fg-2);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.outcomes-link {
+  margin: 22px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--fg-2);
+}
+
+.outcomes-link a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: color .15s, border-bottom-color .15s;
+}
+
+.outcomes-link a:hover {
+  color: var(--studio);
+  border-bottom-color: var(--studio);
+}
+
+/* ---------- /workshops · Upcoming card ----------
+   The card carries the full identity (was: section h2 + deck + pink block).
+   De-pinked: --bg-2 background, --line hairline border. Pink kept only on
+   the status pill and the CTA button — two intentional pink moments. */
+.upcoming-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+  padding: 32px 32px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+}
+
+@media (max-width: 720px) {
+  .upcoming-card {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 26px;
+  }
+}
+
+.upcoming-card .u-copy h3 {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upcoming-card .u-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  color: var(--studio);
+  border: 1px solid var(--studio-dim);
+  background: var(--studio-tint);
+}
+
+.upcoming-card .u-copy p {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--fg-2);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 50ch;
+}
+
+.upcoming-card .u-cta {
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .upcoming-card .u-cta { text-align: left; }
+}
+
+.upcoming-card .u-cta .btn { --card-accent: var(--studio); }
+
+.upcoming-card .u-meta {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- /workshops · Acknowledgements ---------- */
+.workshops-ack {
+  padding-top: 56px;
+  margin-top: 56px;
+  border-top: 1px solid var(--line);
+}
+
+.workshops-ack h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0 0 14px;
+  color: var(--fg);
+}
+
+.workshops-ack p {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  margin: 0 0 8px;
+  max-width: 64ch;
+}
+
+.workshops-ack a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: color .15s, border-bottom-color .15s;
+}
+
+.workshops-ack a:hover {
+  color: var(--studio);
+  border-bottom-color: var(--studio);
+}
+
+/* ---------- /workshops/signup · form ---------- */
+.signup-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vh, 96px) var(--pad-x) 96px;
+}
+
+.signup-page .eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--studio);
+  margin-bottom: 18px;
+  display: block;
+}
+
+.signup-page h1 {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5vw, 52px);
+  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 22px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.signup-page h1 em {
+  font-style: italic;
+  color: var(--studio);
+}
+
+.signup-page .lede {
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  margin: 0 0 36px;
+  max-width: 56ch;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+}
+
+.signup-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.signup-form label .req {
+  color: var(--studio);
+  font-style: normal;
+}
+
+.signup-form input,
+.signup-form textarea {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  padding: 12px 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: border-color .15s;
+}
+
+.signup-form input:focus,
+.signup-form textarea:focus {
+  outline: none;
+  border-color: var(--studio);
+}
+
+.signup-form textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: var(--serif);
+}
+
+.signup-form .honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.signup-form .submit-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.signup-form button {
+  --card-accent: var(--studio);
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signup-form .privacy {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--fg-3);
+  line-height: 1.45;
+  margin: 0;
+  max-width: 40ch;
+}
+
+/* ---------- /workshops/thanks · confirmation ---------- */
+.thanks-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: clamp(60px, 12vh, 160px) var(--pad-x) 96px;
+  text-align: center;
+}
+
+.thanks-page .mark-pink {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--studio);
+  border-radius: 50%;
+  margin-bottom: 22px;
+}
+
+.thanks-page h1 {
+  font-family: var(--serif);
+  font-size: clamp(34px, 5vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+  line-height: 1.05;
+}
+
+.thanks-page h1 em {
+  font-style: italic;
+  color: var(--studio);
+}
+
+.thanks-page p {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  margin: 0 0 30px;
+}
+
+.thanks-page .btn {
+  --card-accent: var(--studio);
+}

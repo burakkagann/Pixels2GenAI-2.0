@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>§ 3 Workshops · three fresh directions · Pixels2GenAI</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Plus+Jakarta+Sans:wght@300..700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap"
+  />
+
+  <style>
+    /* ============================================================
+       TOKENS (inlined subset of tokens.css for self-containment)
+       ============================================================ */
+    :root {
+      --bg:       #110D16;
+      --bg-2:     #17131E;
+      --bg-3:     #1E1928;
+      --bg-4:     #251F30;
+      --bg-deep:  #0C0913;
+      --bg-warm-1: #1E1A14;
+      --bg-warm-2: #271F18;
+
+      --fg:   #F0E7D8;
+      --fg-2: #ABA294;
+      --fg-3: #8A8273;
+      --fg-4: #443F38;
+
+      --line:   #2B2536;
+      --line-2: #3B344A;
+
+      --c1:      #9AC07A;
+      --c3:      #B585E8;
+      --c3-dim:  #5C3F82;
+
+      --studio:      #F4669A;
+      --studio-soft: #D24E80;
+      --studio-dim:  #862E54;
+      --studio-tint: rgba(244, 102, 154, 0.10);
+
+      --highlight: #F0C26B;
+
+      --serif: "Literata", "Iowan Old Style", Georgia, serif;
+      --sans:  "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --maxw: 1320px;
+      --pad-x: clamp(20px, 4vw, 56px);
+    }
+
+    /* ============================================================
+       BASE
+       ============================================================ */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ============================================================
+       PROTOTYPE CHROME — top bar, intro, option wrapper
+       ============================================================ */
+    .proto-head {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px var(--pad-x);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+    .proto-head .mark {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+    }
+    .proto-head .mark .x { color: var(--studio); font-style: italic; }
+    .proto-head .mark .sub {
+      color: var(--fg-3);
+      font-style: italic;
+      margin-left: 10px;
+      font-size: 13px;
+    }
+    .proto-tabs {
+      display: flex;
+      gap: 22px;
+      justify-content: flex-end;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+    .proto-tabs a {
+      color: var(--fg-2);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: color .15s, border-bottom-color .15s;
+    }
+    .proto-tabs a:hover {
+      color: var(--studio);
+      border-bottom-color: var(--studio);
+    }
+
+    .proto-intro {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: clamp(40px, 6vh, 72px) var(--pad-x) 16px;
+    }
+    .proto-intro .kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+      margin-bottom: 18px;
+    }
+    .proto-intro h1 {
+      font-family: var(--serif);
+      font-size: clamp(34px, 4.8vw, 52px);
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0 0 22px;
+      max-width: 24ch;
+    }
+    .proto-intro h1 em { font-style: italic; color: var(--studio); }
+    .proto-intro p {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--fg-2);
+      line-height: 1.6;
+      max-width: 62ch;
+      margin: 0 0 14px;
+    }
+    .proto-intro p em { font-style: italic; color: var(--fg); }
+    .proto-intro .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 22px;
+    }
+
+    .option-block {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 64px var(--pad-x) 72px;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 96px;
+    }
+    .option-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .option-meta .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+      font-weight: 500;
+    }
+    .option-meta .quiet {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .option-title {
+      font-family: var(--serif);
+      font-size: clamp(26px, 3.4vw, 36px);
+      font-weight: 400;
+      line-height: 1.05;
+      margin: 0 0 10px;
+      letter-spacing: -0.01em;
+      max-width: 28ch;
+    }
+    .option-title em { font-style: italic; color: var(--fg-2); }
+    .option-rationale {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 17px;
+      color: var(--fg-2);
+      margin: 0 0 44px;
+      max-width: 64ch;
+      line-height: 1.55;
+    }
+    .option-render { margin: 0; }
+    .option-tradeoffs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 22px 24px;
+      border: 1px dashed var(--line-2);
+      background: var(--bg-2);
+      margin-top: 40px;
+    }
+    @media (max-width: 720px) {
+      .option-tradeoffs { grid-template-columns: 1fr; }
+    }
+    .option-tradeoffs .col b {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .option-tradeoffs .col p {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg-2);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* Shared section anchor styling (used inside each option) */
+    .section-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .section-num span { color: var(--fg-3); }
+
+    /* Buttons */
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 13px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-pri {
+      background: var(--studio);
+      color: var(--bg);
+      border-color: var(--studio);
+    }
+    .btn-pri:hover { background: transparent; color: var(--studio); }
+    .btn-sec {
+      background: transparent;
+      color: var(--fg);
+      border-color: var(--line-2);
+    }
+    .btn-sec:hover { border-color: var(--fg); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg-2);
+      border: none;
+      padding: 8px 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .btn-ghost:hover { color: var(--studio); }
+
+    /* ============================================================
+       ALT A · MOMENT
+       Editorial spread. Poster as anchor. Copy as caption.
+       Grand whitespace. Trust the type.
+       ============================================================ */
+    .alt-a {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: clamp(40px, 6vw, 88px);
+      align-items: start;
+      padding: 24px 0 8px;
+    }
+    @media (max-width: 860px) {
+      .alt-a { grid-template-columns: 1fr; gap: 44px; }
+    }
+    .alt-a .poster-frame {
+      position: relative;
+      display: block;
+    }
+    .alt-a .poster-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6);
+    }
+    .alt-a .poster-tag {
+      position: absolute;
+      bottom: -22px;
+      left: 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--fg-3);
+      text-transform: uppercase;
+      background: var(--bg);
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+    }
+    .alt-a .body {
+      padding-top: 8px;
+    }
+    .alt-a .pre {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--studio);
+      margin-bottom: 22px;
+    }
+    .alt-a h2 {
+      font-family: var(--serif);
+      font-size: clamp(40px, 5.6vw, 76px);
+      line-height: 0.98;
+      font-weight: 400;
+      letter-spacing: -0.025em;
+      margin: 0 0 28px;
+      max-width: 14ch;
+      text-wrap: balance;
+    }
+    .alt-a h2 em {
+      font-style: italic;
+      color: var(--studio);
+      font-weight: 400;
+    }
+    .alt-a .lede {
+      font-family: var(--serif);
+      font-size: 21px;
+      line-height: 1.55;
+      color: var(--fg);
+      max-width: 38ch;
+      margin: 0 0 18px;
+      font-weight: 400;
+    }
+    .alt-a .lede em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .alt-a .sub {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 17px;
+      color: var(--fg-2);
+      max-width: 42ch;
+      margin: 0 0 36px;
+      line-height: 1.55;
+    }
+    .alt-a .sub a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--studio-dim);
+      padding-bottom: 1px;
+    }
+    .alt-a .actions {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 56px;
+    }
+    .alt-a .signature {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 18px;
+      row-gap: 4px;
+      align-items: baseline;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      max-width: 38ch;
+    }
+    .alt-a .signature dt {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .alt-a .signature dd {
+      margin: 0;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--fg);
+    }
+    .alt-a .signature dd a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--line-2);
+    }
+
+    /* ============================================================
+       ALT B · ROLL CALL
+       Section IS the cohort. 3×3 grid of fractals as anonymous
+       participant portraits. Numbered i–ix. Yearbook / installation
+       guestbook register.
+       ============================================================ */
+    .alt-b {
+      padding: 8px 0;
+    }
+    .alt-b .head {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 40px;
+      align-items: end;
+      padding: 0 0 32px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 26px;
+    }
+    @media (max-width: 720px) {
+      .alt-b .head { grid-template-columns: 1fr; gap: 16px; }
+    }
+    .alt-b .head h2 {
+      font-family: var(--serif);
+      font-size: clamp(30px, 4vw, 46px);
+      font-weight: 400;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      margin: 0;
+      max-width: 24ch;
+      text-wrap: balance;
+    }
+    .alt-b .head h2 em { font-style: italic; color: var(--studio); }
+    .alt-b .head .right {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      text-align: right;
+      line-height: 1.8;
+    }
+    @media (max-width: 720px) { .alt-b .head .right { text-align: left; } }
+    .alt-b .head .right b {
+      color: var(--studio);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+    }
+    .alt-b .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 720px) {
+      .alt-b .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .alt-b .grid { grid-template-columns: 1fr; }
+    }
+    .alt-b figure {
+      margin: 0;
+      position: relative;
+      background: var(--bg-deep);
+      border: 1px solid var(--line);
+      transition: border-color .2s, transform .2s;
+      overflow: hidden;
+    }
+    .alt-b figure:hover {
+      border-color: var(--studio);
+      transform: translateY(-2px);
+    }
+    .alt-b figure img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+    .alt-b figure figcaption {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      color: var(--fg);
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      padding: 4px 9px;
+      border: 1px solid color-mix(in srgb, var(--studio) 70%, transparent);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .alt-b figure figcaption b {
+      color: var(--studio);
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .alt-b .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      padding-top: 28px;
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+    }
+    .alt-b .foot .invite {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-style: italic;
+      color: var(--fg);
+      max-width: 36ch;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .alt-b .foot .invite em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .alt-b .foot .cta-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .alt-b .foot .cta-stack .note {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--fg-3);
+      text-transform: uppercase;
+    }
+    @media (max-width: 720px) {
+      .alt-b .foot .cta-stack { align-items: flex-start; }
+    }
+
+    /* ============================================================
+       ALT C · SPECIMEN
+       Archival research-catalog register. Specimen 001 (past),
+       Specimen 002 (in planning). Workshop reified as scientific
+       record. Mono-heavy, ruled lines, exit-ticket quote.
+       ============================================================ */
+    .alt-c {
+      padding: 4px 0;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--fg);
+    }
+    .alt-c .archive-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 28px;
+      align-items: baseline;
+      padding: 14px 22px;
+      border-top: 2px solid var(--fg);
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+      background: var(--bg-2);
+    }
+    .alt-c .archive-head .index {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-style: italic;
+      color: var(--studio);
+      letter-spacing: -0.01em;
+      text-transform: none;
+      line-height: 1;
+    }
+    .alt-c .archive-head .archival {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      color: var(--fg);
+    }
+    .alt-c .archive-head .status {
+      color: var(--c1);
+    }
+
+    .alt-c .specimen {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-top: none;
+    }
+    @media (max-width: 860px) {
+      .alt-c .specimen { grid-template-columns: 1fr; }
+    }
+    .alt-c .specimen .col {
+      background: var(--bg-2);
+      padding: 28px 26px;
+    }
+    .alt-c .specimen .title {
+      font-family: var(--serif);
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 1.05;
+      color: var(--fg);
+      margin: 0 0 18px;
+      letter-spacing: -0.01em;
+      text-wrap: balance;
+    }
+    .alt-c .specimen .title em {
+      font-style: italic;
+      color: var(--studio);
+    }
+    .alt-c .specimen .blurb {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 16px;
+      color: var(--fg-2);
+      line-height: 1.5;
+      margin: 0 0 24px;
+      max-width: 42ch;
+    }
+    .alt-c dl.taxonomy {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 8px 18px;
+      margin: 0 0 24px;
+      align-items: baseline;
+      font-size: 12px;
+    }
+    .alt-c dl.taxonomy dt {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .alt-c dl.taxonomy dd {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--fg);
+    }
+    .alt-c dl.taxonomy dd em {
+      font-style: italic;
+      color: var(--fg-2);
+    }
+    .alt-c .modules {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .alt-c .modules li {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 5px 8px;
+      border: 1px solid var(--line-2);
+      color: var(--fg-2);
+    }
+    .alt-c .modules li b {
+      color: var(--studio);
+      margin-right: 5px;
+      font-weight: 600;
+    }
+
+    .alt-c .evidence-head {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .alt-c .evidence {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 560px) {
+      .alt-c .evidence { grid-template-columns: 1fr; }
+    }
+    .alt-c .exhibit {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .alt-c .exhibit .plate {
+      border: 1px solid var(--line-2);
+      background: var(--bg-deep);
+      overflow: hidden;
+      aspect-ratio: 4 / 5;
+      position: relative;
+    }
+    .alt-c .exhibit .plate img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .alt-c .exhibit .plate.tlx {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .alt-c .exhibit .plate.tlx svg {
+      width: 100%;
+      height: 100%;
+      max-height: 200px;
+    }
+    .alt-c .exhibit .cap {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--fg-3);
+      line-height: 1.5;
+      text-transform: uppercase;
+    }
+    .alt-c .exhibit .cap b {
+      color: var(--studio);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+    }
+
+    .alt-c .quote {
+      padding: 22px 26px;
+      border-top: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg-2) 92%, var(--studio) 8%);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 720px) {
+      .alt-c .quote { grid-template-columns: 1fr; }
+    }
+    .alt-c .quote blockquote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 20px;
+      line-height: 1.4;
+      color: var(--fg);
+      margin: 0;
+      max-width: 50ch;
+      letter-spacing: -0.005em;
+    }
+    .alt-c .quote blockquote::before {
+      content: "\201C";
+      color: var(--studio);
+      font-size: 1.4em;
+      line-height: 0;
+      vertical-align: -0.15em;
+      margin-right: 2px;
+    }
+    .alt-c .quote blockquote::after {
+      content: "\201D";
+      color: var(--studio);
+      font-size: 1.4em;
+      line-height: 0;
+      vertical-align: -0.15em;
+      margin-left: 2px;
+    }
+    .alt-c .quote cite {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      font-style: normal;
+      display: block;
+      margin-top: 8px;
+    }
+
+    /* Specimen 002 — pending */
+    .alt-c .pending {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 22px;
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .alt-c .pending { grid-template-columns: 1fr; text-align: left; }
+    }
+    .alt-c .pending .index {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-style: italic;
+      color: var(--studio);
+      line-height: 1;
+    }
+    .alt-c .pending .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .alt-c .pending .label b {
+      color: var(--studio);
+      font-weight: 600;
+      letter-spacing: 0.22em;
+    }
+    .alt-c .pending .copy {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--fg-2);
+      margin-top: 4px;
+    }
+
+    /* ============================================================
+       COMPARISON STRIP — short, three options doesn't need a table
+       ============================================================ */
+    .compare-strip {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 64px var(--pad-x) 36px;
+      border-top: 1px solid var(--line);
+    }
+    .compare-strip h2 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 400;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    .compare-strip h2 em { font-style: italic; color: var(--studio); }
+    .compare-strip p.lede {
+      font-family: var(--serif);
+      font-style: italic;
+      color: var(--fg-2);
+      font-size: 16px;
+      margin: 0 0 28px;
+      max-width: 60ch;
+    }
+    .compare-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 720px) {
+      .compare-row { grid-template-columns: 1fr; }
+    }
+    .compare-row > div {
+      background: var(--bg-2);
+      padding: 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .compare-row .name {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--studio);
+    }
+    .compare-row .pitch {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.35;
+      color: var(--fg);
+      margin: 0;
+      letter-spacing: -0.005em;
+    }
+    .compare-row .pitch em { font-style: italic; color: var(--fg-2); }
+    .compare-row .risk {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--fg-3);
+      margin: 0;
+      line-height: 1.5;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    .proto-foot {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 28px var(--pad-x) 56px;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-3);
+      letter-spacing: 0.06em;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .proto-foot a {
+      color: var(--fg-2);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 1px;
+    }
+    .proto-foot a:hover { color: var(--studio); border-bottom-color: var(--studio); }
+
+  </style>
+</head>
+<body>
+
+  <header class="proto-head">
+    <div class="mark">
+      Pixels<span class="x">2</span>GenAI
+      <span class="sub">§ 3 Workshops · three fresh directions</span>
+    </div>
+    <nav class="proto-tabs" aria-label="Option tabs">
+      <a href="#alt-a">A · Moment</a>
+      <a href="#alt-b">B · Roll call</a>
+      <a href="#alt-c">C · Specimen</a>
+      <a href="#compare">Compare</a>
+    </nav>
+  </header>
+
+  <div class="proto-intro">
+    <div class="kicker">Clean slate · prior five discarded</div>
+    <h1>Three directions, <em>each its own register.</em></h1>
+    <p>
+      The earlier five options were variations on one metaphor — rectangle next to
+      rectangle, past card meets upcoming card. Same skeleton dressed differently.
+      Below are three directions that throw that skeleton out and commit to a
+      different visual idea each.
+    </p>
+    <p>
+      <em>A</em> treats the workshop as a moment photographed, with the poster as anchor and
+      copy as caption. <em>B</em> treats the section as the cohort itself — nine fractals
+      as anonymous participant portraits. <em>C</em> treats the workshop as a scientific
+      specimen in an archival record, with workshop ii as <em>Specimen 002 · in planning</em>.
+    </p>
+    <div class="meta">Same brand tokens · same real assets · no source files edited</div>
+  </div>
+
+  <!-- ============================================================
+       ALT A · MOMENT
+       ============================================================ -->
+  <section class="option-block" id="alt-a">
+    <div class="option-meta">
+      <span class="label">Alt A · Moment</span>
+      <span class="quiet">Editorial spread · poster as anchor</span>
+    </div>
+    <h2 class="option-title">The workshop is a <em>moment, photographed.</em></h2>
+    <p class="option-rationale">
+      Strip out every container. The poster takes the left half of the section
+      like a magazine ad. Copy floats right in editorial whitespace. No card, no
+      dl, no grid — just type and one image, trusting the brand to carry it. The
+      workshop becomes a thing that <em>happened</em>, not a thing being explained.
+    </p>
+
+    <div class="option-render">
+      <div class="section-num" style="margin-bottom: 32px;">§ 3 · <span>Workshops</span></div>
+
+      <div class="alt-a">
+        <a class="poster-frame" href="/workshops" aria-label="Read the workshop case study">
+          <img src="/workshops/poster-2026-02.jpg" alt="Workshop i poster · Berlin · February 12, 2026" loading="lazy" />
+          <span class="poster-tag">Workshop i · Berlin · Feb 2026</span>
+        </a>
+
+        <div class="body">
+          <div class="pre">Pixels2GenAI workshops · a recurring program</div>
+          <h2>Once a year — give or take — <em>a room.</em></h2>
+          <p class="lede">
+            Nine people, one day, six modules — pixel to diffusion. They built
+            a fractal, a perceptron, and a small neural network. <em>Then they went
+            home.</em>
+          </p>
+          <p class="sub">
+            The pilot ran in February. Its data is the <a href="/research">research that
+            sits one section below</a>. The next workshop is in planning — same shape,
+            different room.
+          </p>
+          <div class="actions">
+            <a class="btn btn-pri" href="/workshops/signup">Register for the next →</a>
+            <a class="btn-ghost" href="/workshops">Read the case study →</a>
+          </div>
+          <dl class="signature">
+            <dt>Held</dt><dd>February 12, 2026 · Berlin</dd>
+            <dt>Hosted</dt><dd>with <a href="https://www.academis.eu">Kristian Rother · Academis</a></dd>
+            <dt>Findings</dt><dd>n = 9 · d = 1.615 · in <a href="/research">/research</a></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>Visual confidence over information density. The poster is the section's anchor; copy is editorial caption around it. No card chrome, no two-column comparison. Tall and quiet.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>The "upcoming workshop" gets only one short line — there's no dedicated space for workshop ii once details land. When ii ships, copy will need to grow back. Best read as a snapshot, not a program calendar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ALT B · ROLL CALL
+       ============================================================ -->
+  <section class="option-block" id="alt-b">
+    <div class="option-meta">
+      <span class="label">Alt B · Roll call</span>
+      <span class="quiet">The section is the cohort</span>
+    </div>
+    <h2 class="option-title">The cohort, <em>not the workshop.</em></h2>
+    <p class="option-rationale">
+      Reframe entirely. The section is no longer a description of an event — it's
+      a portrait of the people who came. Nine fractals become nine anonymous
+      participants, numbered i–ix like a yearbook or an installation guestbook.
+      One sentence above, one CTA below. The artifact is the argument.
+    </p>
+
+    <div class="option-render">
+      <div class="alt-b">
+        <div class="head">
+          <h2>Nine people came to a one-day workshop in Berlin. <em>This is what they made.</em></h2>
+          <div class="right">
+            <span class="section-num">§ 3 · <span>Workshops</span></span><br/>
+            <b>Workshop i</b><br/>
+            Feb 12, 2026 · Berlin<br/>
+            with Academis
+          </div>
+        </div>
+
+        <div class="grid">
+          <figure><img src="/workshops/gallery/fractal-01.png" alt="Participant i · Module 4.1.1 output" loading="lazy" /><figcaption><b>i</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-02.png" alt="Participant ii · Module 4.1.1 output" loading="lazy" /><figcaption><b>ii</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-03.png" alt="Participant iii · Module 4.1.1 output" loading="lazy" /><figcaption><b>iii</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-04.png" alt="Participant iv · Module 4.1.1 output" loading="lazy" /><figcaption><b>iv</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-05.png" alt="Participant v · Module 4.1.1 output" loading="lazy" /><figcaption><b>v</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-06.png" alt="Participant vi · Module 4.1.1 output" loading="lazy" /><figcaption><b>vi</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-07.png" alt="Participant vii · Module 4.1.1 output" loading="lazy" /><figcaption><b>vii</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-08.png" alt="Participant viii · Module 4.1.1 output" loading="lazy" /><figcaption><b>viii</b></figcaption></figure>
+          <figure><img src="/workshops/gallery/fractal-09.png" alt="Participant ix · Module 4.1.1 output" loading="lazy" /><figcaption><b>ix</b></figcaption></figure>
+        </div>
+
+        <div class="foot">
+          <p class="invite">Be one of the <em>next nine.</em> Workshop ii is in planning.</p>
+          <div class="cta-stack">
+            <a class="btn btn-pri" href="/workshops/signup">Register interest →</a>
+            <span class="note">Read the case study · <a href="/workshops" style="border-bottom:1px solid var(--line-2);">/workshops</a> · or the findings · <a href="/research" style="border-bottom:1px solid var(--line-2);">/research</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>Humans over logistics. The section reads as a portrait of who came rather than what was taught. Uses the existing nine fractals at full weight — the asset becomes the argument. Genuinely warm and visually arresting.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>"Upcoming" is reduced to one foot-line. Date, fee, venue, modules are gone from § 3 — the reader who wants logistics has to click through to /workshops. Also: locks the section to nine portraits — when workshop ii runs it'll need its own grid.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ALT C · SPECIMEN
+       ============================================================ -->
+  <section class="option-block" id="alt-c">
+    <div class="option-meta">
+      <span class="label">Alt C · Specimen</span>
+      <span class="quiet">Archival research catalog</span>
+    </div>
+    <h2 class="option-title">The workshop as a <em>specimen in the record.</em></h2>
+    <p class="option-rationale">
+      Lean into the thesis register. The workshop is reified as a scientific
+      specimen with an archival number: <em>WORKSHOP–001</em>. Taxonomic fact
+      sheet on the left, three evidence exhibits on the right (poster, output,
+      load curve), one exit-ticket quote at the bottom. Workshop ii enters the
+      catalog as <em>Specimen 002 · in planning</em> — its absence becomes
+      anticipation, not emptiness.
+    </p>
+
+    <div class="option-render">
+      <div class="alt-c">
+        <div class="archive-head">
+          <span class="archival">P2GA · Workshop archive</span>
+          <span class="index">01 / <em>Specimen</em></span>
+          <span class="status">▌ Recorded</span>
+        </div>
+
+        <div class="specimen">
+          <div class="col">
+            <h3 class="title">Pixels2GenAI · <em>one-day intensive.</em></h3>
+            <p class="blurb">
+              First workshop in the recurring program. Six modules from the foundations
+              and pixel-fundamentals tiers, run in Berlin in a single sitting.
+              Co-organised with Academis.
+            </p>
+
+            <div class="evidence-head">Taxonomy</div>
+            <dl class="taxonomy">
+              <dt>Archive id</dt><dd>WORKSHOP–001</dd>
+              <dt>Held</dt><dd>February 12, 2026</dd>
+              <dt>Hours</dt><dd><em>9:00 — 16:00</em></dd>
+              <dt>City</dt><dd>Berlin</dd>
+              <dt>Venue</dt><dd><em>Steinmetzstrasse 40 · U Kleistpark</em></dd>
+              <dt>Cohort</dt><dd>9 participants <em>(cap 8)</em></dd>
+              <dt>Modules</dt><dd>6 · listed below</dd>
+              <dt>Format</dt><dd>One-day intensive</dd>
+              <dt>Fee</dt><dd><em>10 € · drinks &amp; snacks included</em></dd>
+              <dt>Host</dt><dd><a href="https://www.academis.eu" style="border-bottom:1px solid var(--studio-dim);">Kristian Rother · Academis</a></dd>
+              <dt>Findings</dt><dd><a href="/research" style="border-bottom:1px solid var(--studio-dim);">/research</a> · d = 1.615 · ρ = −0.857</dd>
+            </dl>
+
+            <div class="evidence-head">Modules covered</div>
+            <ul class="modules">
+              <li><b>1.1.1</b>RGB</li>
+              <li><b>1.2.2</b>Cellular Automata</li>
+              <li><b>3.4.1</b>Convolution</li>
+              <li><b>4.1.1</b>Fractal Square</li>
+              <li><b>9.1.1</b>Perceptron</li>
+              <li><b>12.3.1</b>DDPM</li>
+            </ul>
+          </div>
+
+          <div class="col">
+            <div class="evidence-head">Evidence</div>
+            <div class="evidence">
+              <div class="exhibit">
+                <div class="plate"><img src="/workshops/poster-2026-02.jpg" alt="Workshop poster" loading="lazy" /></div>
+                <div class="cap"><b>Exh. A</b>Printed poster · Berlin distribution</div>
+              </div>
+              <div class="exhibit">
+                <div class="plate"><img src="/workshops/gallery/fractal-01.png" alt="Participant output, Module 4.1.1" loading="lazy" /></div>
+                <div class="cap"><b>Exh. B</b>Participant output · M 4.1.1 fractal</div>
+              </div>
+              <div class="exhibit">
+                <div class="plate tlx" aria-label="NASA-TLX trajectory across the six modules, peaking at Convolution (M 3.4.1)">
+                  <!-- Inverted-U sparkline for the six TLX module averages.
+                       Hardcoded coordinates; the shape is illustrative, not exact. -->
+                  <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TLX inverted-U trajectory">
+                    <defs>
+                      <linearGradient id="tlxGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#F4669A" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="#F4669A" stop-opacity="0"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- Axes -->
+                    <line x1="20" y1="20" x2="20" y2="130" stroke="#3B344A" stroke-width="1"/>
+                    <line x1="20" y1="130" x2="190" y2="130" stroke="#3B344A" stroke-width="1"/>
+                    <!-- Ticks on x-axis: 6 modules -->
+                    <g font-family="JetBrains Mono, monospace" font-size="8" fill="#8A8273" letter-spacing="0.05em">
+                      <text x="32"  y="144" text-anchor="middle">1.1.1</text>
+                      <text x="62"  y="144" text-anchor="middle">1.2.2</text>
+                      <text x="92"  y="144" text-anchor="middle">3.4.1</text>
+                      <text x="122" y="144" text-anchor="middle">4.1.1</text>
+                      <text x="152" y="144" text-anchor="middle">9.1.1</text>
+                      <text x="180" y="144" text-anchor="middle">12.3.1</text>
+                    </g>
+                    <!-- Filled inverted-U -->
+                    <path
+                      d="M 32 110 L 62 88 L 92 50 L 122 70 L 152 92 L 180 105 L 180 130 L 32 130 Z"
+                      fill="url(#tlxGrad)"
+                    />
+                    <!-- Line -->
+                    <polyline
+                      points="32,110 62,88 92,50 122,70 152,92 180,105"
+                      fill="none" stroke="#F4669A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+                    />
+                    <!-- Peak marker -->
+                    <circle cx="92" cy="50" r="3.5" fill="#F4669A"/>
+                    <text x="98" y="46" font-family="JetBrains Mono, monospace" font-size="8" fill="#F0E7D8" letter-spacing="0.06em">PEAK</text>
+                    <!-- Y-axis label -->
+                    <text x="12" y="80" font-family="JetBrains Mono, monospace" font-size="8" fill="#8A8273" letter-spacing="0.06em" transform="rotate(-90 12 80)">NASA-TLX</text>
+                  </svg>
+                </div>
+                <div class="cap"><b>Exh. C</b>TLX trajectory · peak at convolution</div>
+              </div>
+            </div>
+
+            <div class="evidence-head">Exit ticket · representative</div>
+            <div class="quote">
+              <blockquote>
+                The rotation lesson — the first interesting one.
+              </blockquote>
+              <cite>Anonymous · post-workshop exit ticket</cite>
+            </div>
+          </div>
+        </div>
+
+        <div class="pending">
+          <span class="index">02 / <em>Specimen</em></span>
+          <div>
+            <div class="label">WORKSHOP–002 · <b>in planning</b></div>
+            <div class="copy">Berlin · one day · with Academis · date and module set TBA.</div>
+          </div>
+          <a class="btn btn-pri" href="/workshops/signup">Register for 002 →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>The thesis register, fully. Mono-heavy, archival, ruled lines, taxonomic data. Workshop ii is no longer an empty "upcoming" container — it's the next entry in the catalog. The absence reads as anticipation. Strong identity, hard to mistake for any other section.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Furthest from the friendly register of § 1 / § 2. Reads as scholarly; visitors who came for "art with code" may bounce off the catalog framing. Also: the SVG TLX chart is a fixed illustration — if it diverges from the real findings later it'll need updating.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       COMPARISON STRIP
+       ============================================================ -->
+  <section class="compare-strip" id="compare">
+    <h2>Compare <em>at a glance.</em></h2>
+    <p class="lede">
+      Each direction commits to a different visual idea. The right pick depends
+      less on layout and more on what § 3 should <em>feel like</em> sitting between
+      § 2 Curriculum and § 4 Research.
+    </p>
+
+    <div class="compare-row">
+      <div>
+        <span class="name">Alt A · Moment</span>
+        <p class="pitch">A magazine ad with the poster as anchor. <em>Loud quiet.</em></p>
+        <p class="risk">Risk: upcoming workshop barely exists in this layout — it's a snapshot, not a program.</p>
+      </div>
+      <div>
+        <span class="name">Alt B · Roll call</span>
+        <p class="pitch">A 3×3 portrait of the people who came. <em>Humans over logistics.</em></p>
+        <p class="risk">Risk: locks the section to nine portraits — when workshop ii runs, the grid will need its own treatment.</p>
+      </div>
+      <div>
+        <span class="name">Alt C · Specimen</span>
+        <p class="pitch">The workshop as a record in a research archive. <em>The thesis register, fully.</em></p>
+        <p class="risk">Risk: reads as scholarly — may push casual visitors away if § 3 is the first thing they care about.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="proto-foot">
+    <span>Pixels2GenAI · fresh exploration · public/explorations/workshops-fresh.html</span>
+    <span><a href="/">← back to landing</a> · <a href="/workshops">/workshops</a> · <a href="/research">/research</a></span>
+  </footer>
+
+</body>
+</html>

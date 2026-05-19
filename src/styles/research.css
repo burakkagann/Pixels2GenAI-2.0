@@ -1,0 +1,592 @@
+/* ============================================================
+   /research PAGE — composes on top of lesson-layout.css and
+   prose.css. The page lives ABOVE the cycle layer of the
+   curriculum, so it carries the neutral violet accent (--c3)
+   via --accent rather than setting data-cycle on .page.
+
+   Layered on:
+     - lesson-layout.css → .page two-column grid + sticky .col-right
+     - prose.css         → .lesson typography + side-rail markers
+   This file only adds:
+     - .research-head (page hero)
+     - .research-figure / .slope-chart (editorial figure shells)
+     - .stat-callout / .stat-row
+     - .research-colophon
+   ============================================================ */
+
+/* ---------- Page hero ---------- */
+.research-head {
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+
+.research-head .research-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 22px;
+}
+
+.research-head .research-eyebrow .dot {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.research-main.lesson h1 {
+  font-size: calc(58px * var(--t-scale));
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 26px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.research-main.lesson h1 em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.research-lede {
+  font-family: var(--serif);
+  font-size: calc(21px * var(--t-scale));
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--fg);
+  margin: 0 0 32px;
+  max-width: 60ch;
+  letter-spacing: -0.005em;
+  font-weight: 400;
+}
+
+/* Drop cap on the first letter of the lede. Warm yellow per the
+   editorial palette — used elsewhere only for eyebrows. */
+.research-lede::first-letter {
+  font-family: var(--serif);
+  font-style: normal;
+  font-size: 3em;
+  line-height: 0.85;
+  float: left;
+  margin: 6px 10px 0 0;
+  color: var(--highlight);
+  font-weight: 500;
+}
+
+.research-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 0;
+}
+
+.research-meta > div {
+  background: var(--bg);
+  padding: 14px 16px;
+}
+
+.research-meta b {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.research-meta span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 640px) {
+  .research-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .research-main.lesson h1 {
+    font-size: calc(40px * var(--t-scale));
+  }
+  .research-lede {
+    font-size: calc(18px * var(--t-scale));
+  }
+}
+
+/* ---------- Editorial figure shell ----------
+   Used by both SlopeChart (inline SVG) and ResearchFigure (PNG).
+   Visually identical chrome so the typography unifies across
+   redrawn and reframed figures. */
+.research-figure {
+  margin: 32px 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: 24px 24px 20px;
+}
+
+.research-figure .figure-eyebrow {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 8px;
+}
+
+.research-figure .figure-eyebrow .fig-num {
+  color: var(--accent-soft);
+}
+
+.research-figure .figure-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin: 0 0 4px;
+  line-height: 1.25;
+}
+
+.research-figure .figure-deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--fg-2);
+  line-height: 1.55;
+  margin: 0 0 18px;
+  max-width: 62ch;
+}
+
+.research-figure .figure-plate {
+  /* Theme-invariant dark plate. The plate carries an inline SVG
+     (SlopeChart) whose strokes/fills reference cycle, --accent, --line,
+     --fg-* — those tokens are re-shadowed to dark values below so the
+     chart renders against its tuned dark surround regardless of the
+     surrounding page theme. */
+  background: var(--figure-frame-bg);
+  border: 1px solid var(--figure-frame-line);
+  padding: 10px;
+  margin: 0;
+
+  /* Re-shadow the tokens the inline SVG inside .figure-plate consumes. */
+  --bg-2:        #17131E;
+  --line:        #2B2536;
+  --line-2:      #3B344A;
+  --fg:          #F0E7D8;
+  --fg-2:        #ABA294;
+  --fg-3:        #8A8273;
+  --accent:      #B585E8;
+  --accent-soft: #966AC8;
+  --accent-dim:  #5C3F82;
+  --highlight:   #F0C26B;
+}
+
+.research-figure .figure-plate.plate-img {
+  padding: 0;
+  border: 1px solid var(--figure-frame-line);
+  background: var(--figure-frame-bg);
+}
+
+.research-figure .figure-plate svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.research-figure .figure-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.research-figure .figure-source {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.research-figure .figure-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.research-figure .figure-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.research-figure .figure-stats b {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-weight: 500;
+}
+
+.research-figure .figure-stats span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+/* ---------- SlopeChart SVG styling ----------
+   The chart is drawn with brand tokens. All visual styling lives
+   here so the SVG markup stays declarative. */
+.slope-chart svg .grid line { stroke: var(--line); stroke-width: 0.6; }
+.slope-chart svg .axis { stroke: var(--line-2); stroke-width: 1; }
+
+.slope-chart svg .axis-ticks text,
+.slope-chart svg .axis-labels text {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--fg-3);
+  letter-spacing: 0.10em;
+}
+
+.slope-chart svg .axis-labels text {
+  fill: var(--fg-2);
+  letter-spacing: 0.18em;
+}
+
+.slope-chart svg .participants line {
+  stroke: var(--accent-dim);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.55;
+}
+
+.slope-chart svg .endpoints circle {
+  fill: var(--fg-3);
+}
+
+.slope-chart svg .mean-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.slope-chart svg .mean-dot {
+  fill: var(--accent);
+}
+
+.slope-chart svg .mean-labels text {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--accent);
+}
+
+.slope-chart svg .effect text {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  fill: var(--highlight);
+}
+
+.slope-chart svg .effect line {
+  stroke: var(--highlight);
+  stroke-width: 0.6;
+}
+
+/* ---------- Stat callout ----------
+   Editorial pull-quote for a single number. Group inside .stat-row
+   for two- or three-column layouts. */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 24px 0;
+}
+
+.stat-callout {
+  background: var(--bg);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-callout .eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.stat-callout .value {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+.stat-callout .label {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--fg-2);
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+/* ---------- Colophon ---------- */
+.research-colophon {
+  margin: 80px 0 0;
+  padding: 40px 0 8px;
+  border-top: 1px solid var(--accent-dim);
+  position: relative;
+}
+
+.research-colophon::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 64px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.research-colophon h3 {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 22px;
+}
+
+.research-colophon h3 em {
+  font-style: normal;
+  color: var(--fg-3);
+  font-weight: 400;
+}
+
+.research-colophon h4 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+
+.colophon-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.supervisors {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px 16px;
+  margin: 0 0 24px;
+}
+
+.supervisors dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  padding-top: 4px;
+}
+
+.supervisors dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  color: var(--fg);
+  font-style: italic;
+  letter-spacing: -0.005em;
+}
+
+.supervisors dd a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  transition: color .15s, border-color .15s;
+}
+
+.supervisors dd a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.supervisors dd .arr {
+  color: var(--fg-3);
+  font-style: normal;
+  margin-left: 2px;
+  font-size: 0.9em;
+}
+
+.citation {
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  margin: 0;
+  padding: 16px 18px;
+  background: var(--bg-2);
+  border-left: 2px solid var(--accent-dim);
+}
+
+.citation em {
+  color: var(--fg);
+  font-style: italic;
+}
+
+.citation .cit-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 8px;
+  font-style: normal;
+}
+
+.docs-blurb {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--fg-2);
+  margin: 0 0 14px;
+}
+
+.docs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.docs .dl {
+  margin: 0;
+}
+
+.docs-foot {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+@media (max-width: 900px) {
+  .colophon-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .supervisors {
+    grid-template-columns: 120px 1fr;
+  }
+}
+
+/* ---------- Section-level adjustments ----------
+   The lesson side-rail markers (prose.css :163-242) auto-apply to
+   sections wrapped by remarkSectionize. Two small overrides for the
+   research register: tighter top margin on the first section so the
+   lede doesn't feel orphaned, and a slightly larger h2 since this
+   page lives at a higher level than lessons. */
+.research-main.lesson .lesson-section:first-of-type {
+  margin-top: 56px;
+}
+
+.research-main.lesson .lesson-section > h2 {
+  font-size: calc(32px * var(--t-scale));
+  letter-spacing: -0.02em;
+}
+
+/* The numbered Roman prefix on each section heading — opt-in via
+   <h2><span class="rom">I</span> Title</h2> in MDX. Lives in this
+   file so it doesn't pollute the lesson scope. */
+.research-main.lesson .lesson-section > h2 .rom {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  background: var(--bg-warm-2);
+  padding: 3px 8px;
+  border: 1px solid var(--line-warm-2);
+  font-weight: 500;
+  margin-right: 14px;
+  vertical-align: middle;
+  position: relative;
+  top: -3px;
+}
+
+/* RQ chip — small RQ-number tag inside an RQ section heading.
+   Used inline like <span class="rq">RQ 1</span> next to the topic. */
+.research-main.lesson .rq-chip {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-tint);
+  padding: 3px 8px;
+  border: 1px solid var(--accent-dim);
+  font-weight: 500;
+  margin-right: 12px;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+/* Inline em treatment specific to research prose — make em's a touch
+   more present than they are in lessons (the research register leans
+   on italicised numbers and concepts). */
+.research-main.lesson p em.lit {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 500;
+}

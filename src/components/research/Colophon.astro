@@ -1,0 +1,60 @@
+---
+/**
+ * Page-foot colophon for /research. Quiet acknowledgement block
+ * naming both supervisors, a suggested citation, and the Pattern β
+ * PDF download row (full thesis + executive summary).
+ *
+ * SRH Berlin is intentionally not named — per user direction the
+ * site's identity is studio-led; the institutional context lives
+ * in the thesis document itself.
+ */
+
+import Download from '@/components/lesson/mdx/Download.astro';
+---
+
+<section class="research-colophon" id="colophon-research">
+  <div class="colophon-grid">
+    <div class="colophon-left">
+      <h3>Acknowledgements <em>·</em> Citation</h3>
+
+      <dl class="supervisors">
+        <dt>First supervisor</dt>
+        <dd>
+          <a href="https://www.academis.eu" target="_blank" rel="noopener">
+            Kristian Rother <span class="arr">↗</span>
+          </a>
+        </dd>
+        <dt>Second supervisor</dt>
+        <dd>Dr.-Ing. Joel Dokmegang</dd>
+        <dt>Author</dt>
+        <dd>
+          <a href="https://burakkagan.dev" target="_blank" rel="noopener">
+            Burak Kağan Yılmazer <span class="arr">↗</span>
+          </a>
+        </dd>
+      </dl>
+
+      <p class="citation">
+        <span class="cit-label">Suggested citation</span>
+        Yılmazer, B. K. (2026). <em>From arrays to art: Design and evaluation
+        of a progressive curriculum for generative AI education through
+        visual-first pedagogy</em> [Master's thesis]. Pixels2GenAI.
+      </p>
+    </div>
+
+    <div class="colophon-right">
+      <h4>Documents</h4>
+      <p class="docs-blurb">
+        The page above is the executive presentation of the study.
+        Receipts stand behind it.
+      </p>
+      <div class="docs">
+        <Download href="/research/thesis.pdf" label="Full thesis · PDF" />
+        <Download href="/research/evaluation-summary.pdf" label="Evaluation summary · PDF" />
+      </div>
+      <p class="docs-foot">
+        Released 2026 · CC-BY 4.0 (text) · MIT (code)
+      </p>
+    </div>
+  </div>
+</section>

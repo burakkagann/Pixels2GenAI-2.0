@@ -1,0 +1,54 @@
+---
+/**
+ * Wraps a fenced code block in the Nocturne `.code` chrome.
+ * MDX usage:
+ *   <CodeBlock lang="python" file="fractal_square.py">
+ *   ```python
+ *   def fractal_square(...):
+ *     ...
+ *   ```
+ *   </CodeBlock>
+ *
+ * The inner fenced block is highlighted by Astro's built-in Shiki.
+ */
+
+interface Props {
+  lang?: string;
+  file?: string;
+}
+
+const { lang = 'python', file } = Astro.props;
+const label = file ? `${lang} · ${file}` : lang;
+---
+
+<div class="code">
+  <div class="chrome">
+    <span class="lang">{label}</span>
+    <button type="button" class="copy" data-copy-btn>Copy</button>
+  </div>
+  <slot />
+</div>
+
+<script>
+  // Wire the Copy button on every code block. Safe to re-run on view transitions.
+  function setupCopyButtons() {
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-btn]').forEach((btn) => {
+      if (btn.dataset.copyWired) return;
+      btn.dataset.copyWired = 'true';
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code')?.querySelector('pre');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.innerText);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          window.setTimeout(() => { btn.textContent = orig; }, 1200);
+        } catch {
+          /* clipboard blocked — ignore */
+        }
+      });
+    });
+  }
+  setupCopyButtons();
+  document.addEventListener('astro:page-load', setupCopyButtons);
+</script>

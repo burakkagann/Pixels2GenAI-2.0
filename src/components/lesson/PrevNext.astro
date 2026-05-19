@@ -1,0 +1,44 @@
+---
+interface NeighborLink {
+  slug: string;
+  title: string;
+}
+
+interface Props {
+  prev: NeighborLink | null;
+  next: NeighborLink | null;
+  backLink?: { href: string; label: string };
+}
+
+const {
+  prev,
+  next,
+  backLink = { href: '/#curriculum', label: 'Back to Curriculum' },
+} = Astro.props;
+---
+
+<nav class="prev-next" aria-label="Adjacent lessons">
+  {prev ? (
+    <a class="pn" href={`/lessons/${prev.slug}`}>
+      <span class="arr">←</span>
+      <span>
+        <span class="lbl">Previous</span>
+        <span class="ix">{prev.slug}</span>
+        <span class="ttl">{prev.title}</span>
+      </span>
+    </a>
+  ) : <span class="pn" aria-hidden="true" style="visibility: hidden"></span>}
+
+  <a class="back-link" href={backLink.href}>{backLink.label}</a>
+
+  {next ? (
+    <a class="pn next" href={`/lessons/${next.slug}`}>
+      <span>
+        <span class="lbl">Next</span>
+        <span class="ix">{next.slug}</span>
+        <span class="ttl">{next.title}</span>
+      </span>
+      <span class="arr">→</span>
+    </a>
+  ) : <span class="pn next" aria-hidden="true" style="visibility: hidden"></span>}
+</nav>

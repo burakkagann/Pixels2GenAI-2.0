@@ -1,0 +1,453 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Fractal Square"
+objective: "Build a self-similar geometric figure with three nested calls. Watch recursion run."
+framework: "hybrid"
+duration: "20–25 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "NumPy basics, Python functions"
+prev:
+  slug: "1.1.1"
+  title: "Images as Arrays & RGB"
+next:
+  slug: "12.1.2"
+  title: "DCGAN Art"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Fractals are geometric patterns that repeat at large and small scales, creating infinitely complex structures from a set of simple rules. In this exercise you will generate a classic fractal using recursive square subdivision: each square contains four smaller copies of itself in its corners.
+
+The fractal square introduces the fundamental concept of recursion in generative art — a few lines of code produce visually impressive, self-similar patterns. It is the canonical entry point before exploring more complex fractals like the Mandelbrot set.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Understand recursive function structure with base cases and recursive cases.</li>
+  <li>Apply divide-and-conquer to generate fractal patterns.</li>
+  <li>Visualise how recursion depth affects pattern complexity.</li>
+  <li>Create variations by modifying recursion parameters.</li>
+</ol>
+
+<Admonition type="note" title="Implementation note">
+
+Inspired by classical fractal-geometry references:
+
+- Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*, W. H. Freeman — self-similar fractals and fractional dimensions.
+- Barnsley, M. F. (1988). *Fractals Everywhere*, Academic Press — Iterated Function Systems.
+- Peitgen, H.-O. & Richter, P. H. (1986). *The Beauty of Fractals*, Springer-Verlag — visual construction techniques.
+- Peitgen, H.-O., Jurgens, H. & Saupe, D. (1992). *Fractals for the Classroom*, Springer/NCTM — educational exercises.
+
+</Admonition>
+
+## Quick start — see it in action <a id="quick-start"></a>
+
+Run this code: a pattern of nested green squares appears. Zoom into any corner and the same structure recurs.
+
+<CodeBlock lang="python" file="fractal_square.py">
+```python
+import numpy as np
+from PIL import Image
+
+def draw_fractal_square(canvas, x_min, x_max, y_min, y_max, depth):
+    # Divide the region into a 3x3 grid
+    x_third = (x_max - x_min) // 3
+    y_third = (y_max - y_min) // 3
+
+    # Locate the center square within the grid
+    center_x_start = x_min + x_third
+    center_x_end   = x_min + 2 * x_third
+    center_y_start = y_min + y_third
+    center_y_end   = y_min + 2 * y_third
+
+    # Fill the center square with green (+32 per recursion level)
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+
+    # Recurse into the four corner regions until depth reaches 0
+    if depth > 0:
+        draw_fractal_square(canvas, x_min,          center_x_end, y_min,          center_y_end, depth - 1)
+        draw_fractal_square(canvas, center_x_start, x_max,        y_min,          center_y_end, depth - 1)
+        draw_fractal_square(canvas, x_min,          center_x_end, center_y_start, y_max,        depth - 1)
+        draw_fractal_square(canvas, center_x_start, x_max,        center_y_start, y_max,        depth - 1)
+
+canvas = np.zeros((800, 800, 3), dtype=np.uint8)
+draw_fractal_square(canvas, 0, 800, 0, 800, 3)
+Image.fromarray(canvas).save("quickstart_fractal.png")
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.1/fractal_square.png"
+  alt="Fractal square pattern showing nested green squares with increasing brightness at intersections"
+  caption="Depth = 3 — four levels of detail, where overlapping recursion levels accumulate brightness."
+  num={1}
+  role="output"
+/>
+
+The pattern emerges by applying a simple rule repeatedly. Divide a region into nine parts, fill the center, then repeat on the four corners. Each iteration adds more detail, creating the characteristic self-similar structure.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — What are fractals?
+
+A **fractal** is a geometric shape that exhibits self-similarity at different scales. When you zoom into a fractal, you see smaller copies of the same pattern repeating indefinitely. This is what makes fractals fundamentally different from ordinary shapes like circles or triangles.
+
+Fractals appear throughout nature in surprisingly diverse forms:
+
+- **Fern leaves** — each leaflet resembles the whole fern.
+- **Coastlines** — bays contain smaller bays, which contain even smaller bays.
+- **Lightning bolts** — branches split into smaller branches.
+- **Snowflakes** — six-fold symmetry repeats at microscopic levels.
+
+The mathematical study of fractals began with Benoit Mandelbrot's work in 1975. He coined the term from the Latin *fractus*, meaning broken or fragmented. Fractals occupy a fractional dimension between traditional geometric dimensions. Michael Barnsley later developed the Iterated Function System (IFS) approach; Peitgen and Richter popularised fractal art through their visualisations.
+
+<Admonition type="dyk">
+Recursive geometric patterns like the fractal square appear in architecture and visual media. The Infinity Castle in the anime *Kimetsu no Yaiba* (Demon Slayer) uses similar principles of impossible, self-referential geometry to create a disorienting, labyrinthine environment.
+</Admonition>
+
+### Concept 2 — Recursion fundamentals
+
+**Recursion** is a programming technique where a function calls itself to solve smaller instances of the same problem. Every recursive algorithm has two essential components:
+
+1. **Base case** — the condition that stops the recursion.
+2. **Recursive case** — the part where the function calls itself with modified parameters.
+
+Consider our fractal-square algorithm:
+
+<CodeBlock lang="python" file="anatomy.py">
+```python
+def draw_fractal_square(canvas, x_min, x_max, y_min, y_max, depth):
+    # Divide the region into a 3x3 grid
+    x_third = (x_max - x_min) // 3
+    y_third = (y_max - y_min) // 3
+
+    center_x_start = x_min + x_third
+    center_x_end   = x_min + 2 * x_third
+    center_y_start = y_min + y_third
+    center_y_end   = y_min + 2 * y_third
+
+    # Action performed at each level — fill the centre
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+
+    # Base case
+    if depth > 0:
+        # Recursive case: one call per corner
+        draw_fractal_square(canvas, x_min,          center_x_end, y_min,          center_y_end, depth - 1)
+        draw_fractal_square(canvas, center_x_start, x_max,        y_min,          center_y_end, depth - 1)
+        draw_fractal_square(canvas, x_min,          center_x_end, center_y_start, y_max,        depth - 1)
+        draw_fractal_square(canvas, center_x_start, x_max,        center_y_start, y_max,        depth - 1)
+```
+</CodeBlock>
+
+The `depth` parameter acts as a countdown. Each recursive call decrements it by one; when it reaches zero, the function stops calling itself. This prevents infinite recursion and lets you control the level of detail in the final image.
+
+<Figure
+  src="/lessons/4.1.1/recursion_diagram.png"
+  alt="Diagram showing how the canvas is divided into a 3x3 grid with the center filled and corners recursively processed"
+  caption="Fractal-square recursive division. The canvas is split into a 3×3 grid, the centre is filled, and the process repeats on each corner."
+  num={2}
+  role="diagram"
+/>
+
+### Concept 3 — The fractal-square algorithm
+
+The algorithm follows a divide-and-conquer strategy. Three steps:
+
+**Step 1 — Divide the region.** The current region is divided into a 3×3 grid of nine equal rectangles. Calculate the boundaries at one-third and two-thirds of the width and height.
+
+<CodeBlock lang="python">
+```python
+x_third = (x_max - x_min) // 3
+y_third = (y_max - y_min) // 3
+
+center_x_start = x_min + x_third
+center_x_end   = x_min + 2 * x_third
+center_y_start = y_min + y_third
+center_y_end   = y_min + 2 * y_third
+```
+</CodeBlock>
+
+**Step 2 — Fill the centre.** Use `+=` instead of `=` to create an accumulation effect. Overlapping regions become brighter because colour values stack.
+
+<CodeBlock lang="python">
+```python
+# +32 on green channel — overlapping regions get brighter with each layer
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+```
+</CodeBlock>
+
+The value `32` is added to the green channel of each pixel. Areas filled by multiple recursion levels accumulate more colour, revealing the recursive structure visually.
+
+**Step 3 — Recurse on corners.** Each corner region overlaps with the centre — this overlap creates the characteristic fractal pattern.
+
+- **Top-left** — `(x_min, y_min)` to `(center_x_end, center_y_end)`.
+- **Top-right** — `(center_x_start, y_min)` to `(x_max, center_y_end)`.
+- **Bottom-left** — `(x_min, center_y_start)` to `(center_x_end, y_max)`.
+- **Bottom-right** — `(center_x_start, center_y_start)` to `(x_max, y_max)`.
+
+<Figure
+  src="/lessons/4.1.1/fractal_square_frames.gif"
+  alt="Animation showing the fractal square being built frame by frame"
+  caption="Step-by-step construction across recursion levels."
+  num={3}
+  role="gif"
+/>
+
+<Admonition type="important">
+The corner regions overlap with the centre. This overlap is intentional — it produces the nested appearance. Each corner contains **two-thirds** of the parent region in each dimension, not just one-third.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Run and observe">
+
+Run the complete script (`fractal_square.py`, downloadable below) and answer:
+
+1. How many distinct brightness levels can you observe in the image?
+2. What is the relationship between recursion depth and the number of visible squares?
+3. Why do some areas appear brighter than others?
+
+<Download href="/lessons/4.1.1/fractal_square.py" label="fractal_square.py" />
+
+<Dropdown summary="Answers & explanation">
+
+1. **Brightness levels** — four distinct levels corresponding to depths 0 through 3. The brightest areas are where all four recursion levels overlap.
+2. **Number of squares** — at depth `n`, the total centre squares filled is `(4^(n+1) − 1) / 3`. At depth 3, that's 85 centre squares (many overlap).
+3. **Brightness variation** — areas where multiple recursion levels overlap accumulate colour. The image centre has the most overlaps because it falls within the centre region of every recursion level. Each overlap adds 32 to the green channel; maximum-brightness areas are filled 4 times (32 × 4 = 128).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Vary the depth and colour">
+
+**Goal 1 — Generate fractals at different recursion depths**
+
+<CodeBlock lang="python">
+```python
+# Reset canvas between runs!
+draw_fractal_square(canvas, 0, 800, 0, 800, 0)  # Single center square
+draw_fractal_square(canvas, 0, 800, 0, 800, 1)  # Minimal detail
+draw_fractal_square(canvas, 0, 800, 0, 800, 2)  # Moderate detail
+draw_fractal_square(canvas, 0, 800, 0, 800, 3)  # Clear nested structure
+draw_fractal_square(canvas, 0, 800, 0, 800, 4)  # High detail
+draw_fractal_square(canvas, 0, 800, 0, 800, 5)  # Maximum detail
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.1/exercise2_depth_0.png"
+  alt="Fractal square at depth 0 — a single center square"
+  caption="Depth 0 — single centre square."
+  num={4}
+/>
+
+<Figure
+  src="/lessons/4.1.1/exercise2_depth_2.png"
+  alt="Fractal square at depth 2 — emerging nested structure"
+  caption="Depth 2 — emerging nested structure."
+  num={5}
+/>
+
+<Figure
+  src="/lessons/4.1.1/exercise2_depth_4.png"
+  alt="Fractal square at depth 4 — dense detail"
+  caption="Depth 4 — dense fractal detail."
+  num={6}
+/>
+
+**Goal 2 — Change the colour channel**
+
+<CodeBlock lang="python">
+```python
+# Green (original)
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+
+# Red
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 0] += 32
+
+# Blue
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 2] += 32
+
+# All three at once (grayscale)
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, :] += 32
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — multi-colour fractal">
+
+Add different amounts to different channels:
+
+<CodeBlock lang="python">
+```python
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 0] += 20  # Red
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32  # Green
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 2] += 16  # Blue
+```
+</CodeBlock>
+
+</Dropdown>
+
+**Goal 3 — Change the increment value**
+
+<CodeBlock lang="python">
+```python
+# Lower → subtler, darker pattern
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 16
+
+# Higher → brighter, higher contrast
+canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 64
+```
+</CodeBlock>
+
+</Exercise>
+
+<Exercise n={3} kicker="RE-CODE" title="Implement it yourself">
+
+Complete the starter code below. The core structure is provided — fill in the four recursive calls.
+
+**Requirements**
+
+- Each corner covers a 2/3 × 2/3 region of the parent.
+- The corners must overlap with the centre square.
+
+<Download href="/lessons/4.1.1/square.py" label="square.py — starter code" />
+
+<CodeBlock lang="python" file="square.py (starter)">
+```python
+import numpy as np
+from PIL import Image
+
+canvas = np.zeros((800, 800, 3), dtype=np.uint8)
+
+def square(canvas, x_min, x_max, y_min, y_max, depth):
+    center_x_start = x_min + (x_max - x_min) // 3
+    center_x_end   = x_min + (x_max - x_min) * 2 // 3
+    center_y_start = y_min + (y_max - y_min) // 3
+    center_y_end   = y_min + (y_max - y_min) * 2 // 3
+
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+
+    if depth > 0:
+        # TODO: Add four recursive calls — one per corner.
+        square(canvas, ..., ..., ..., ..., depth - 1)
+        ...
+
+square(canvas, 0, 800, 0, 800, 3)
+Image.fromarray(canvas).save("exercise3_fractal.png")
+```
+</CodeBlock>
+
+<Dropdown summary="Complete solution">
+
+<Download href="/lessons/4.1.1/square_solution.py" label="square_solution.py" />
+
+<CodeBlock lang="python" file="square_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+canvas = np.zeros((800, 800, 3), dtype=np.uint8)
+
+def square(canvas, x_min, x_max, y_min, y_max, depth):
+    center_x_start = x_min + (x_max - x_min) // 3
+    center_x_end   = x_min + (x_max - x_min) * 2 // 3
+    center_y_start = y_min + (y_max - y_min) // 3
+    center_y_end   = y_min + (y_max - y_min) * 2 // 3
+
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] += 32
+
+    if depth > 0:
+        square(canvas, x_min,          center_x_end, y_min,          center_y_end, depth - 1)  # Top-left
+        square(canvas, x_min,          center_x_end, center_y_start, y_max,        depth - 1)  # Bottom-left
+        square(canvas, center_x_start, x_max,        y_min,          center_y_end, depth - 1)  # Top-right
+        square(canvas, center_x_start, x_max,        center_y_start, y_max,        depth - 1)  # Bottom-right
+
+square(canvas, 0, 800, 0, 800, 3)
+Image.fromarray(canvas).save("exercise3_fractal.png")
+```
+</CodeBlock>
+
+</Dropdown>
+
+<Dropdown summary="Challenge — depth-based gradient">
+
+Modify the colour based on the recursion depth so deeper levels have different colours.
+
+<CodeBlock lang="python">
+```python
+def square_with_depth_color(canvas, x_min, x_max, y_min, y_max, depth, max_depth):
+    center_x_start = x_min + (x_max - x_min) // 3
+    center_x_end   = x_min + (x_max - x_min) * 2 // 3
+    center_y_start = y_min + (y_max - y_min) // 3
+    center_y_end   = y_min + (y_max - y_min) * 2 // 3
+
+    level = max_depth - depth
+    red   = 32 * level            # Red increases with depth
+    green = 255 - 32 * level      # Green decreases with depth
+    blue  = 128                   # Blue constant
+
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 0] = np.minimum(
+        canvas[center_y_start:center_y_end, center_x_start:center_x_end, 0] + red,   255)
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] = np.minimum(
+        canvas[center_y_start:center_y_end, center_x_start:center_x_end, 1] + green, 255)
+    canvas[center_y_start:center_y_end, center_x_start:center_x_end, 2] = np.minimum(
+        canvas[center_y_start:center_y_end, center_x_start:center_x_end, 2] + blue,  255)
+
+    if depth > 0:
+        square_with_depth_color(canvas, x_min,          center_x_end, y_min,          center_y_end, depth - 1, max_depth)
+        square_with_depth_color(canvas, x_min,          center_x_end, center_y_start, y_max,        depth - 1, max_depth)
+        square_with_depth_color(canvas, center_x_start, x_max,        y_min,          center_y_end, depth - 1, max_depth)
+        square_with_depth_color(canvas, center_x_start, x_max,        center_y_start, y_max,        depth - 1, max_depth)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.1/challenge_output.png"
+  alt="Fractal square with depth-based color gradient"
+  caption="Fractal square with depth-based colour gradient."
+  num={7}
+/>
+
+</Dropdown>
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+- **Fractals** are self-similar geometric patterns that repeat at every scale.
+- **Recursion** is a technique where a function calls itself with modified parameters.
+- Every recursive algorithm needs a **base case** to prevent infinite loops.
+- The **depth** parameter controls the level of detail.
+- **Colour accumulation** with `+=` reveals the recursive structure through brightness.
+- The fractal square uses a **divide-and-conquer** strategy across four overlapping corners.
+
+</Admonition>
+
+**Common pitfalls**
+
+- **Infinite recursion** — forgetting the base case or not decrementing `depth`.
+- **Colour overflow** — adding too much to a channel can exceed 255 and wrap.
+- **Wrong corner boundaries** — each corner must cover 2/3 of the parent, not 1/3.
+- **Array index order** — NumPy arrays use `[y, x]`, not `[x, y]`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[2]</span> Barnsley, M. F. (1988). *Fractals Everywhere*. Academic Press. ISBN 978-0-12-079062-9.</li>
+    <li><span class="tag">[3]</span> Peitgen, H.-O. & Richter, P. H. (1986). *The Beauty of Fractals*. Springer-Verlag. ISBN 978-3-540-15851-6.</li>
+    <li><span class="tag">[4]</span> Peitgen, H.-O., Jürgens, H. & Saupe, D. (1992). *Fractals for the Classroom: Part One — Introduction to Fractals and Chaos*. Springer-Verlag. ISBN 978-0-387-97041-8.</li>
+    <li><span class="tag">[5]</span> Cormen, T. H., Leiserson, C. E., Rivest, R. L. & Stein, C. (2009). *Introduction to Algorithms* (3rd ed.). MIT Press. ISBN 978-0-262-03384-8.</li>
+    <li><span class="tag">[6]</span> Sweller, J. (1988). Cognitive load during problem solving: effects on learning. *Cognitive Science*, 12(2), 257–285.</li>
+    <li><span class="tag">[7]</span> Bransford, J. D., Brown, A. L. & Cocking, R. R. (Eds.). (2000). *How People Learn*. National Academy Press. ISBN 978-0-309-07036-2.</li>
+  </ol>
+</section>

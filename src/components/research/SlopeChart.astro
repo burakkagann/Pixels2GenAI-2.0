@@ -1,0 +1,121 @@
+---
+/**
+ * Brand-native slope chart for the pre/post knowledge-gain finding.
+ * Eight participant lines (n=8 for tests; one of the nine workshop
+ * participants did not complete both administrations), plus a mean
+ * line drawn in --accent. Cohen's d annotation in --highlight.
+ *
+ * Real data from workshop_data_processing/output/phase1/test_scores_gains.csv:
+ *   participants 1, 2, 3, 5, 6, 7, 8, 9 (participant 4 missing).
+ *   pre  = [5, 5, 9, 1, 2, 1, 2, 4]   M = 3.625
+ *   post = [18, 24, 14, 8, 6, 11, 6, 10]   M = 12.125
+ *
+ * Score range 0–24 (Sections A–D, 6 items each).
+ */
+
+// y for score v on a 280 px plot (top y=36, bottom y=316):
+//   y = 316 - (v / 24) * 280
+const yFor = (v: number) => 316 - (v / 24) * 280;
+
+const pairs = [
+  { pre: 5, post: 18 },
+  { pre: 5, post: 24 },
+  { pre: 9, post: 14 },
+  { pre: 1, post: 8 },
+  { pre: 2, post: 6 },
+  { pre: 1, post: 11 },
+  { pre: 2, post: 6 },
+  { pre: 4, post: 10 },
+];
+
+const meanPre = pairs.reduce((s, p) => s + p.pre, 0) / pairs.length;
+const meanPost = pairs.reduce((s, p) => s + p.post, 0) / pairs.length;
+---
+
+<figure class="research-figure slope-chart" id="fig-slope">
+  <div class="figure-eyebrow">
+    <span class="fig-num">Fig. 1</span>
+    <span>Pre → Post knowledge gain · pilot n=8</span>
+  </div>
+  <h4 class="figure-title">Every participant gained ground.</h4>
+  <p class="figure-deck">
+    Connecting lines show individual movement on the 24-item conceptual
+    instrument (Sections A–D). The accent line marks the group mean.
+  </p>
+
+  <div class="figure-plate">
+    <svg viewBox="0 0 880 360" role="img"
+         aria-label="Slope chart of pre and post test scores for eight participants showing gains from a mean of 3.6 to 12.1 out of 24.">
+
+      <!-- Y-axis ticks -->
+      <g class="axis-ticks">
+        <text x="148" y="40"  text-anchor="end">24</text>
+        <text x="148" y="110" text-anchor="end">18</text>
+        <text x="148" y="180" text-anchor="end">12</text>
+        <text x="148" y="250" text-anchor="end">6</text>
+        <text x="148" y="320" text-anchor="end">0</text>
+      </g>
+
+      <!-- Horizontal guides -->
+      <g class="grid">
+        <line x1="160" y1="36"  x2="720" y2="36"/>
+        <line x1="160" y1="106" x2="720" y2="106"/>
+        <line x1="160" y1="176" x2="720" y2="176"/>
+        <line x1="160" y1="246" x2="720" y2="246"/>
+        <line x1="160" y1="316" x2="720" y2="316"/>
+      </g>
+
+      <!-- Column axes -->
+      <line class="axis" x1="200" y1="36" x2="200" y2="316"/>
+      <line class="axis" x1="680" y1="36" x2="680" y2="316"/>
+
+      <!-- Column labels -->
+      <g class="axis-labels">
+        <text x="200" y="338" text-anchor="middle">PRE</text>
+        <text x="680" y="338" text-anchor="middle">POST</text>
+        <text x="200" y="20"  text-anchor="middle">SCORE OUT OF 24</text>
+      </g>
+
+      <!-- Individual participant lines -->
+      <g class="participants">
+        {pairs.map(p => (
+          <line x1="200" y1={yFor(p.pre)} x2="680" y2={yFor(p.post)}/>
+        ))}
+      </g>
+
+      <!-- Endpoint dots -->
+      <g class="endpoints">
+        {pairs.map(p => <circle cx="200" cy={yFor(p.pre)}  r="2.5"/>)}
+        {pairs.map(p => <circle cx="680" cy={yFor(p.post)} r="2.5"/>)}
+      </g>
+
+      <!-- Mean line -->
+      <line class="mean-line" x1="200" y1={yFor(meanPre)} x2="680" y2={yFor(meanPost)}/>
+      <circle class="mean-dot" cx="200" cy={yFor(meanPre)}  r="5"/>
+      <circle class="mean-dot" cx="680" cy={yFor(meanPost)} r="5"/>
+
+      <!-- Mean labels -->
+      <g class="mean-labels">
+        <text x="186" y={yFor(meanPre) + 4}  text-anchor="end">M = {meanPre.toFixed(1)}</text>
+        <text x="694" y={yFor(meanPost) + 4} text-anchor="start">M = {meanPost.toFixed(1)}</text>
+      </g>
+
+      <!-- Effect-size annotation -->
+      <g class="effect">
+        <line x1="328" y1="146" x2="416" y2="146"/>
+        <text x="440" y="150" text-anchor="middle">+8.5 POINTS · COHEN'S d = 1.615</text>
+        <line x1="464" y1="146" x2="552" y2="146"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="figure-stats">
+    <div><b>Cohen's d</b><span>1.615</span></div>
+    <div><b>Mean gain</b><span>+8.5</span></div>
+    <div><b>Norm. gain</b><span>g = 0.43</span></div>
+  </div>
+
+  <figcaption class="figure-source">
+    Wilcoxon signed-rank, pilot n=8. Effect size hedged as exploratory.
+  </figcaption>
+</figure>

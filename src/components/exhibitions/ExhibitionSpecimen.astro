@@ -1,0 +1,187 @@
+---
+/**
+ * One exhibition rendered as a collapsible <details> specimen card in the
+ * landing § 4 catalog. Mirrors the WorkshopSpecimen pattern.
+ *
+ * v1 constraint: past/completed exhibitions only. No upcoming variant —
+ * the catalog has exactly one row and doesn't promise the next show.
+ *
+ * The plate strip below the body reads from `exhibition.landingPlates`
+ * (an ordered list of work `id`s mixing printedWorks and animatedWorks).
+ * When undefined, it auto-derives a sensible default.
+ */
+import type { Exhibition, ExhibitionPrintedWork, ExhibitionAnimatedWork } from '@/data/exhibitions';
+
+interface Props {
+  exhibition: Exhibition;
+  defaultOpen?: boolean;
+}
+
+const { exhibition: ex, defaultOpen = false } = Astro.props;
+
+// Roman lowercase ordinal → zero-padded Arabic ("i" → "01").
+const romanToArabic: Record<string, number> = {
+  i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
+};
+const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padStart(2, '0');
+
+// `exhibition-2026-03` → `2026-03` for use in the route href.
+const slug = ex.id.replace(/^exhibition-/, '');
+const route = `/exhibitions/${slug}`;
+
+// Lookup maps for landingPlates resolution.
+const printedById: Record<string, ExhibitionPrintedWork> = Object.fromEntries(
+  ex.printedWorks.map((w) => [w.id, w])
+);
+const animatedById: Record<string, ExhibitionAnimatedWork> = Object.fromEntries(
+  ex.animatedWorks.map((w) => [w.id, w])
+);
+
+// Fallback when no landingPlates curation is provided: first three prints,
+// first animated with a still, first capture-pending.
+const fallback = [
+  ...ex.printedWorks.slice(0, 3).map((w) => w.id),
+  ...ex.animatedWorks.filter((w) => !!w.stillSrc).slice(0, 1).map((w) => w.id),
+  ...ex.animatedWorks.filter((w) => w.status === 'capture-pending').slice(0, 1).map((w) => w.id),
+];
+
+type Plate =
+  | { kind: 'print';    href: string; src: string; alt: string; label: string }
+  | { kind: 'animated'; href: string; src: string; alt: string; label: string }
+  | { kind: 'text';     href: string; title: string; note: string };
+
+const plateIds = ex.landingPlates ?? fallback;
+
+const plates: Plate[] = plateIds
+  .map((id): Plate | null => {
+    if (printedById[id]) {
+      const p = printedById[id];
+      const label = p.subtitle ? `${p.title} · ${p.subtitle}` : p.title;
+      return {
+        kind: 'print',
+        href: route,
+        src: p.src,
+        alt: `${label} · printed work by ${p.artist}.`,
+        label,
+      };
+    }
+    if (animatedById[id]) {
+      const a = animatedById[id];
+      const label = a.subtitle ? `${a.title} · ${a.subtitle}` : a.title;
+      if (a.stillSrc) {
+        return {
+          kind: 'animated',
+          href: a.githubUrl,
+          src: a.stillSrc,
+          alt: `${a.title} · live preview · still frame.`,
+          label,
+        };
+      }
+      return {
+        kind: 'text',
+        href: a.githubUrl,
+        title: a.title,
+        note: 'capture pending · GitHub →',
+      };
+    }
+    return null; // typo in landingPlates id
+  })
+  .filter((p): p is Plate => p !== null);
+
+const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
+---
+
+<details class="exhibition-specimen" open={defaultOpen}>
+  <summary class="exhibition-specimen-summary">
+    <span class="summary-index">{indexDisplay}</span>
+    <span class="summary-status completed">✓ Completed</span>
+    <span class="summary-identifier">
+      Pixels2GenAI · <em>group show in {ex.artists.length} artists</em>
+    </span>
+    <span class="summary-meta">{ex.city} · {ex.date}</span>
+    <span class="summary-chevron" aria-hidden="true">
+      <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="2,2 6,6 10,2"></polyline>
+      </svg>
+    </span>
+  </summary>
+
+  <article class="exhibition-specimen-body">
+    <div class="exhibition-specimen-text">
+      <h3>{indexDisplay} · <em>Pixels2GenAI · the first group show.</em></h3>
+      <p class="lede">
+        {ex.artists.length} artists turned the {ex.venue} office in {ex.district ?? ex.city} into a
+        gallery for three days. Printed works on the walls, code-driven installations on screens and
+        projection. Equations, algorithms, and generative models, arranged as objects you could walk
+        between.
+      </p>
+
+      <dl class="exhibition-specimen-dl">
+        <dt>Date</dt>
+        <dd>
+          {ex.date} · <em>{ex.openingHours.replace(/^[^·]+·\s*/, '')}</em> · public {ex.publicHours.replace(/^[^·]+·\s*/, '')}
+        </dd>
+
+        <dt>Where</dt>
+        <dd>{ex.venue} · {ex.address} · <em>{ex.station}</em> · {ex.city}</dd>
+
+        <dt>Artists</dt>
+        <dd>{ex.artists.map((a) => a.name).join(', ')}</dd>
+
+        <dt>Format</dt>
+        <dd>Prints + animated installations · <em>admission {ex.admission.toLowerCase()}</em></dd>
+
+        <dt>Co-organised</dt>
+        <dd>With <a href={ex.organiserHref} target="_blank" rel="noopener">{ex.organiser}</a></dd>
+      </dl>
+    </div>
+
+    <aside class="exhibition-specimen-aside">
+      <a class="exhibition-specimen-poster" href={route} aria-label="Open the exhibition catalog — poster lifts on hover">
+        <img
+          src={ex.poster}
+          alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.city} · ${ex.date}.`}
+          loading="lazy"
+        />
+      </a>
+      <div class="exhibition-specimen-poster-cap">Poster · {ex.city} · <em>hover to lift</em></div>
+    </aside>
+
+    <div class="exhibition-plate-strip">
+      <div class="exhibition-plate-strip-head">
+        <span><b>Plates</b> · {plates.length} works on view (of ~{totalWorks})</span>
+        <span>Curated · prints by {ex.artists[0]?.name ?? 'B.K. Yılmazer'}</span>
+      </div>
+      <div class="exhibition-plate-strip-grid">
+        {plates.map((p) => {
+          if (p.kind === 'text') {
+            return (
+              <a class="exhibition-plate is-text" href={p.href} target="_blank" rel="noopener">
+                <span>
+                  {p.title}
+                  <small>{p.note}</small>
+                </span>
+              </a>
+            );
+          }
+          const isAnimated = p.kind === 'animated';
+          return (
+            <a
+              class={`exhibition-plate${isAnimated ? ' is-animated' : ''}`}
+              href={p.href}
+              {...(isAnimated ? { target: '_blank', rel: 'noopener' } : {})}
+              aria-label={p.label}
+            >
+              <img src={p.src} alt={p.alt} loading="lazy" />
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </article>
+
+  <div class="exhibition-specimen-actions">
+    <a class="btn-ghost" href={route}>Open the exhibition catalog →</a>
+    <span class="right">{plates.length} of ~{totalWorks} works shown · catalog forthcoming</span>
+  </div>
+</details>

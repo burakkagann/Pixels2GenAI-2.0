@@ -1,0 +1,43 @@
+---
+interface Props {
+  slug: string;
+  module: string;
+  title: string;
+  objective: string;
+  framework: 'hands-on' | 'conceptual' | 'hybrid' | 'project';
+  duration: string;
+  level: string;
+  load?: string;
+  prereqs?: string;
+}
+
+const { slug, module, title, objective, framework, duration, level, load, prereqs } = Astro.props;
+
+const frameworkLabel: Record<Props['framework'], string> = {
+  'hands-on': 'hands-on',
+  conceptual: 'conceptual',
+  hybrid: 'hybrid',
+  project: 'project',
+};
+---
+
+<header class="lesson-head">
+  <div class="lesson-eyebrow">
+    <span class="ix">{module}</span>
+    <span class="sep">·</span>
+    <span>{slug}</span>
+    <span class="sep">·</span>
+    <span>{frameworkLabel[framework]}</span>
+  </div>
+  <h1>
+    <span class="num">{slug}</span>
+    {title}
+  </h1>
+  <p class="objective">{objective}</p>
+  <div class="meta-strip">
+    <div><b>Duration</b><span>{duration}</span></div>
+    <div><b>Level</b><span>{level}</span></div>
+    <div><b>Load</b><span>{load ?? '—'}</span></div>
+    <div><b>Prereqs</b><span>{prereqs ?? '—'}</span></div>
+  </div>
+</header>

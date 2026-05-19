@@ -1,0 +1,2003 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>§ Exhibition · option iterations · Pixels2GenAI</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Plus+Jakarta+Sans:wght@300..700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap"
+  />
+
+  <style>
+    /* ============================================================
+       TOKENS (inlined subset · dark only)
+       ============================================================ */
+    :root {
+      --bg:       #110D16;
+      --bg-2:     #17131E;
+      --bg-3:     #1E1928;
+      --bg-4:     #251F30;
+      --bg-deep:  #0C0913;
+      --bg-warm-1:#1E1A14;
+
+      --fg:   #F0E7D8;
+      --fg-2: #ABA294;
+      --fg-3: #8A8273;
+      --fg-4: #443F38;
+
+      --line:   #2B2536;
+      --line-2: #3B344A;
+
+      --c1:      #9AC07A;
+      --c2:      #66B8FF;
+      --c3:      #B585E8;
+
+      --studio:      #F4669A;
+      --studio-soft: #D24E80;
+      --studio-dim:  #862E54;
+      --studio-tint: rgba(244, 102, 154, 0.10);
+      --studio-glow: rgba(244, 102, 154, 0.45);
+
+      --highlight: #F0C26B;
+
+      --serif: "Literata", "Iowan Old Style", Georgia, serif;
+      --sans:  "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --maxw: 1320px;
+      --pad-x: clamp(20px, 4vw, 56px);
+    }
+
+    /* ============================================================
+       BASE
+       ============================================================ */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ============================================================
+       PROTOTYPE CHROME (matches workshops-catalog.html register)
+       ============================================================ */
+    .proto-head {
+      position: sticky; top: 0; z-index: 50;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px var(--pad-x);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+    .proto-head .mark {
+      font-family: var(--serif); font-size: 17px; font-weight: 500;
+      letter-spacing: -0.005em;
+    }
+    .proto-head .mark .x { color: var(--studio); font-style: italic; }
+    .proto-head .mark .sub {
+      color: var(--fg-3); font-style: italic; margin-left: 10px; font-size: 13px;
+    }
+    .proto-tabs {
+      display: flex; gap: 22px; justify-content: flex-end;
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+    .proto-tabs a {
+      color: var(--fg-2); border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: color .15s, border-bottom-color .15s;
+    }
+    .proto-tabs a:hover { color: var(--studio); border-bottom-color: var(--studio); }
+
+    .proto-intro {
+      max-width: var(--maxw); margin: 0 auto;
+      padding: clamp(36px, 5vh, 60px) var(--pad-x) 8px;
+    }
+    .proto-intro .kicker {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--studio); margin-bottom: 16px;
+    }
+    .proto-intro h1 {
+      font-family: var(--serif); font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.04; font-weight: 500;
+      letter-spacing: -0.02em; margin: 0 0 18px;
+      max-width: 28ch;
+    }
+    .proto-intro h1 em { font-style: italic; color: var(--studio); }
+    .proto-intro p {
+      font-family: var(--serif); font-size: 17px;
+      color: var(--fg-2); line-height: 1.55;
+      max-width: 68ch; margin: 0 0 10px;
+    }
+    .proto-intro p em { font-style: italic; color: var(--fg); }
+    .proto-intro .meta {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--fg-3); letter-spacing: 0.06em;
+      text-transform: uppercase; margin-top: 18px;
+    }
+    .proto-intro .pill {
+      display: inline-block; padding: 3px 8px;
+      border: 1px solid var(--studio-dim);
+      color: var(--studio); margin-right: 8px;
+      letter-spacing: 0.12em;
+    }
+
+    /* ============================================================
+       OPTION BLOCK
+       ============================================================ */
+    .option-block {
+      max-width: var(--maxw); margin: 0 auto;
+      padding: 56px var(--pad-x) 64px;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 90px;
+    }
+    .option-meta {
+      display: flex; align-items: baseline; gap: 16px;
+      margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .option-meta .label {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--studio); font-weight: 500;
+    }
+    .option-meta .quiet {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .option-title {
+      font-family: var(--serif);
+      font-size: clamp(24px, 2.8vw, 30px); font-weight: 400;
+      line-height: 1.1; margin: 0 0 8px;
+      letter-spacing: -0.01em; max-width: 30ch;
+    }
+    .option-title em { font-style: italic; color: var(--fg-2); }
+    .option-rationale {
+      font-family: var(--serif); font-style: italic;
+      font-size: 15px; color: var(--fg-2);
+      margin: 0 0 32px; max-width: 70ch; line-height: 1.55;
+    }
+    .option-stage {
+      /* The rendered Exhibition section lives in here. Slight
+         inset/frame so each option reads as a separate artifact. */
+      border: 1px solid var(--line);
+      background: var(--bg);
+      padding: 0;
+    }
+    .option-tradeoffs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 22px; padding: 18px 20px;
+      border: 1px dashed var(--line-2);
+      background: var(--bg-2); margin-top: 28px;
+      font-size: 13px;
+    }
+    @media (max-width: 720px) { .option-tradeoffs { grid-template-columns: 1fr; } }
+    .option-tradeoffs .col b {
+      display: block; font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--studio); margin-bottom: 6px; font-weight: 500;
+    }
+    .option-tradeoffs .col p {
+      font-family: var(--serif); font-size: 13px;
+      color: var(--fg-2); line-height: 1.55; margin: 0;
+    }
+    .option-tradeoffs .col p + p { margin-top: 6px; }
+
+    /* ============================================================
+       SHARED · section frame (mirrors landing.css .section)
+       Used inside each .option-stage so options read like real sections.
+       ============================================================ */
+    .stage-section {
+      padding: clamp(40px, 5vh, 60px) clamp(22px, 3.4vw, 44px);
+    }
+    .stage-section .section-head {
+      display: grid; grid-template-columns: 180px 1fr;
+      gap: 30px; margin-bottom: 36px; align-items: baseline;
+    }
+    @media (max-width: 760px) {
+      .stage-section .section-head { grid-template-columns: 1fr; gap: 10px; }
+    }
+    .stage-section .section-num {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-2); padding-top: 4px;
+    }
+    .stage-section .section-num span { color: var(--fg-3); }
+    .stage-section .section-title {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(28px, 3.4vw, 40px); line-height: 1.04;
+      letter-spacing: -0.02em; margin: 0 0 12px;
+      max-width: 22ch; text-wrap: balance;
+    }
+    .stage-section .section-title em {
+      font-style: italic; color: var(--fg-2); font-weight: 400;
+    }
+    .stage-section .section-desc {
+      color: var(--fg-2); max-width: 60ch;
+      font-family: var(--serif); font-size: 17px; line-height: 1.55;
+    }
+    .stage-section .section-desc a {
+      color: var(--fg);
+      border-bottom: 1px solid var(--line-2);
+      padding-bottom: 1px;
+      transition: border-bottom-color .15s;
+    }
+    .stage-section .section-desc a:hover { border-bottom-color: var(--studio); }
+
+    /* Buttons (shared) */
+    .btn {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 10px 14px; border: 1px solid;
+      cursor: pointer; display: inline-flex;
+      align-items: center; gap: 10px;
+      transition: all .2s; text-decoration: none;
+    }
+    .btn-pri { background: var(--studio); color: var(--bg); border-color: var(--studio); }
+    .btn-pri:hover { background: transparent; color: var(--studio); }
+    .btn-sec { background: transparent; color: var(--fg); border-color: var(--line-2); }
+    .btn-sec:hover { border-color: var(--fg); }
+    .btn-ghost {
+      background: transparent; color: var(--fg-2);
+      border: none; padding: 6px 0;
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      transition: color .15s;
+    }
+    .btn-ghost:hover { color: var(--studio); }
+
+    /* ============================================================
+       OPTION A · Specimen + plate strip
+       (Workshops-shared vocabulary)
+       ============================================================ */
+    .a-archive-head {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 22px; align-items: baseline;
+      padding: 10px 22px;
+      border-top: 2px solid var(--fg);
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-2);
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .a-archive-head .org { color: var(--fg); letter-spacing: 0.22em; }
+    .a-archive-head .count { color: var(--fg-3); }
+
+    .a-specimen {
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+    }
+    .a-specimen-summary {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto 16px;
+      gap: 18px; align-items: center;
+      padding: 14px 22px; cursor: pointer;
+      list-style: none; user-select: none;
+      transition: background 0.2s ease;
+    }
+    .a-specimen-summary::-webkit-details-marker { display: none; }
+    .a-specimen-summary::marker { content: ""; }
+    .a-specimen-summary:hover {
+      background: color-mix(in srgb, var(--bg-2) 92%, var(--studio) 8%);
+    }
+    .a-specimen[open] > .a-specimen-summary {
+      background: color-mix(in srgb, var(--bg-2) 88%, var(--studio) 12%);
+      border-bottom: 1px solid var(--line);
+    }
+    .a-summary-index {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--fg-2); white-space: nowrap;
+    }
+    .a-summary-status {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 3px 9px; border: 1px solid;
+      color: var(--c1);
+      border-color: color-mix(in srgb, var(--c1) 50%, transparent);
+      background: color-mix(in srgb, var(--c1) 6%, transparent);
+      white-space: nowrap;
+    }
+    .a-summary-identifier {
+      font-family: var(--serif); font-size: 15px;
+      color: var(--fg); line-height: 1.3;
+    }
+    .a-summary-identifier em { font-style: italic; color: var(--fg-2); }
+    .a-summary-meta {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3); white-space: nowrap;
+    }
+    .a-chev {
+      width: 14px; height: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--fg-3); transition: color 0.2s;
+    }
+    .a-chev svg { width: 12px; height: 8px; transition: transform 0.25s; }
+    .a-specimen[open] > .a-specimen-summary .a-chev { color: var(--studio); }
+    .a-specimen[open] > .a-specimen-summary .a-chev svg { transform: rotate(180deg); }
+    @media (max-width: 760px) {
+      .a-specimen-summary { grid-template-columns: auto 1fr 16px; gap: 10px 14px; }
+      .a-summary-status { grid-column: 1 / span 2; justify-self: start; }
+      .a-summary-identifier { grid-column: 1 / span 2; }
+      .a-summary-meta { grid-column: 1 / span 2; }
+      .a-chev { grid-column: 3; grid-row: 1; align-self: start; margin-top: 3px; }
+    }
+    .a-specimen-body {
+      display: grid; grid-template-columns: 1.5fr 220px;
+      gap: 28px; align-items: start;
+      padding: 24px 26px 8px;
+    }
+    @media (max-width: 760px) {
+      .a-specimen-body { grid-template-columns: 1fr; gap: 22px; }
+    }
+    .a-text { display: flex; flex-direction: column; gap: 14px; }
+    .a-text h3 {
+      font-family: var(--serif); font-size: 24px; font-weight: 400;
+      line-height: 1.1; letter-spacing: -0.01em; margin: 0;
+    }
+    .a-text h3 em { font-style: italic; color: var(--fg-2); }
+    .a-text .lede {
+      font-family: var(--serif); font-style: italic; font-size: 14px;
+      color: var(--fg-2); line-height: 1.5; margin: 0; max-width: 64ch;
+    }
+    .a-dl {
+      display: grid; grid-template-columns: 90px 1fr;
+      gap: 7px 16px; margin: 4px 0 0; align-items: baseline;
+    }
+    .a-dl dt {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3);
+    }
+    .a-dl dd {
+      margin: 0; font-family: var(--serif); font-size: 13px; color: var(--fg);
+    }
+    .a-dl dd em { font-style: italic; color: var(--fg-2); }
+    .a-dl dd a {
+      color: var(--fg); border-bottom: 1px solid var(--line-2);
+      padding-bottom: 1px;
+      transition: border-bottom-color .15s;
+    }
+    .a-dl dd a:hover { border-bottom-color: var(--studio); }
+    .a-aside { display: flex; flex-direction: column; gap: 8px; }
+    .a-poster {
+      position: relative; display: block;
+      border: 1px solid var(--line);
+      background: var(--bg-deep); overflow: hidden;
+      transition: border-color .25s;
+    }
+    .a-poster img {
+      width: 100%; height: auto; display: block;
+      opacity: 0.34; filter: saturate(0.6);
+      transition: opacity .4s, filter .4s;
+    }
+    .a-poster::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--bg-deep) 70%, transparent));
+      opacity: 1; transition: opacity .4s;
+      pointer-events: none;
+    }
+    .a-poster:hover img { opacity: 1; filter: saturate(1); }
+    .a-poster:hover::after { opacity: 0; }
+    .a-poster-cap {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3); line-height: 1.5;
+    }
+    .a-poster-cap em { font-style: italic; letter-spacing: 0.04em; text-transform: none; color: var(--fg-4); }
+
+    /* A · plate strip (5 thumbnails along bottom of specimen body) */
+    .a-plates {
+      grid-column: 1 / -1;
+      margin-top: 18px; padding-top: 18px;
+      border-top: 1px dotted var(--line-2);
+    }
+    .a-plates-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 12px;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .a-plates-head b { color: var(--fg-2); font-weight: 500; }
+    .a-plates-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 860px) { .a-plates-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 540px) { .a-plates-grid { grid-template-columns: repeat(2, 1fr); } }
+    .a-plate {
+      position: relative; display: block;
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      transition: border-color .2s;
+      aspect-ratio: 1 / 1; overflow: hidden;
+    }
+    .a-plate:hover { border-color: var(--studio); }
+    .a-plate img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .4s, filter .4s;
+      filter: saturate(0.85);
+    }
+    .a-plate:hover img { transform: scale(1.03); filter: saturate(1); }
+    .a-plate.is-animated::after {
+      content: "▶ live";
+      position: absolute; top: 8px; right: 8px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 6px; background: rgba(0,0,0,0.6);
+      color: var(--studio); border: 1px solid var(--studio-dim);
+    }
+    .a-plate.is-text {
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 14px;
+    }
+    .a-plate.is-text span {
+      font-family: var(--serif); font-style: italic;
+      font-size: 13px; color: var(--fg-2); line-height: 1.35;
+    }
+    .a-plate.is-text small {
+      display: block; margin-top: 6px;
+      font-family: var(--mono); font-style: normal;
+      font-size: 9px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--studio);
+    }
+    .a-specimen-actions {
+      padding: 16px 26px 22px;
+      border-top: 1px solid var(--line);
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .a-specimen-actions .right {
+      margin-left: auto;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+
+    /* ============================================================
+       OPTION B · Editorial hero · poster-led
+       ============================================================ */
+    .b-hero {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 44px;
+      align-items: center;
+      padding: 8px 4px 0;
+    }
+    @media (max-width: 860px) {
+      .b-hero { grid-template-columns: 1fr; gap: 30px; }
+    }
+    .b-poster-wrap {
+      position: relative;
+      border: 1px solid var(--line-2);
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+    .b-poster-wrap img {
+      display: block; width: 100%; height: auto;
+      transition: transform .6s ease;
+    }
+    .b-poster-wrap:hover img { transform: scale(1.02); }
+    .b-poster-tag {
+      position: absolute; left: 0; top: 0;
+      padding: 8px 12px;
+      background: color-mix(in srgb, var(--bg-deep) 80%, transparent);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--studio);
+    }
+    .b-stack { display: flex; flex-direction: column; gap: 22px; }
+    .b-eyebrow {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--studio);
+      display: flex; gap: 14px; align-items: center;
+    }
+    .b-eyebrow .dot {
+      width: 5px; height: 5px;
+      background: var(--studio); border-radius: 50%;
+    }
+    .b-stack h3 {
+      font-family: var(--serif); font-size: clamp(30px, 3.6vw, 42px);
+      font-weight: 400; line-height: 1.04;
+      letter-spacing: -0.02em; margin: 0;
+      max-width: 16ch; text-wrap: balance;
+    }
+    .b-stack h3 em { font-style: italic; color: var(--studio); }
+    .b-stack .lede {
+      font-family: var(--serif); font-size: 18px;
+      font-style: italic; color: var(--fg-2);
+      line-height: 1.55; margin: 0; max-width: 42ch;
+    }
+    .b-stack .lede em { font-style: normal; color: var(--fg); }
+    .b-dl {
+      display: grid; grid-template-columns: 90px 1fr;
+      gap: 7px 16px; margin: 2px 0 0; align-items: baseline;
+    }
+    .b-dl dt {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3);
+    }
+    .b-dl dd {
+      margin: 0; font-family: var(--serif); font-size: 14px; color: var(--fg);
+    }
+    .b-dl dd em { font-style: italic; color: var(--fg-2); }
+    .b-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* B · contact sheet below the hero */
+    .b-contact {
+      margin-top: 44px; padding-top: 28px;
+      border-top: 1px dashed var(--line);
+    }
+    .b-contact-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 16px;
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .b-contact-head b { color: var(--fg-2); font-weight: 500; letter-spacing: 0.18em; }
+    .b-contact-strip {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(140px, 1fr));
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    @media (max-width: 1100px) {
+      .b-contact-strip { grid-auto-flow: column; grid-template-columns: repeat(7, 180px); }
+    }
+    .b-frame {
+      position: relative; border: 1px solid var(--line);
+      background: var(--bg-deep);
+      aspect-ratio: 3 / 4; overflow: hidden;
+      display: block;
+      transition: border-color .2s;
+    }
+    .b-frame:hover { border-color: var(--studio); }
+    .b-frame img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: saturate(0.85);
+      transition: filter .35s, transform .4s;
+    }
+    .b-frame:hover img { filter: saturate(1); transform: scale(1.04); }
+    .b-frame.is-animated::after {
+      content: "▶ on hover";
+      position: absolute; bottom: 8px; left: 8px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 6px;
+      background: rgba(0,0,0,0.65);
+      color: var(--studio);
+      border: 1px solid var(--studio-dim);
+    }
+    .b-frame.is-text {
+      display: flex; flex-direction: column;
+      justify-content: center; padding: 14px;
+      text-align: left; aspect-ratio: 3 / 4;
+    }
+    .b-frame.is-text b {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--studio); margin-bottom: 8px;
+    }
+    .b-frame.is-text span {
+      font-family: var(--serif); font-style: italic;
+      font-size: 14px; line-height: 1.35;
+      color: var(--fg-2);
+    }
+    .b-frame.is-text small {
+      display: block; margin-top: auto;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .b-frame-cap {
+      display: block; padding: 6px 4px 0;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+
+    /* ============================================================
+       OPTION C · Diptych register (Printed | Animated)
+       ============================================================ */
+    .c-banner {
+      position: relative;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-deep);
+      overflow: hidden;
+      height: 240px;
+    }
+    .c-banner img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 36%;
+      opacity: 0.28; filter: saturate(0.5);
+      transition: opacity .5s, filter .5s;
+    }
+    .c-banner:hover img { opacity: 0.55; filter: saturate(0.8); }
+    .c-banner-overlay {
+      position: absolute; inset: 0;
+      padding: 28px 32px;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      background: linear-gradient(90deg,
+        var(--bg) 0%,
+        color-mix(in srgb, var(--bg) 60%, transparent) 38%,
+        color-mix(in srgb, var(--bg) 80%, transparent) 100%);
+      pointer-events: none;
+    }
+    .c-banner-overlay .tag {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--studio);
+    }
+    .c-banner-overlay h3 {
+      font-family: var(--serif); font-size: clamp(28px, 3.4vw, 38px);
+      font-weight: 400; line-height: 1.05;
+      margin: 0; letter-spacing: -0.02em;
+      max-width: 24ch; text-wrap: balance;
+    }
+    .c-banner-overlay h3 em { font-style: italic; color: var(--studio); }
+    .c-banner-overlay .meta {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .c-banner-overlay .meta em { color: var(--fg); font-style: normal; letter-spacing: 0.06em; }
+
+    .c-diptych {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .c-diptych { grid-template-columns: 1fr; }
+    }
+    .c-half {
+      padding: 30px 28px;
+    }
+    .c-half + .c-half {
+      border-left: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .c-half + .c-half { border-left: none; border-top: 1px solid var(--line); }
+    }
+    .c-half-head {
+      display: flex; gap: 14px; align-items: baseline;
+      margin-bottom: 18px;
+    }
+    .c-half-head .roman {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--studio); padding-top: 2px;
+    }
+    .c-half-head h4 {
+      font-family: var(--serif); font-size: 22px;
+      font-weight: 400; margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .c-half-head h4 em { font-style: italic; color: var(--fg-2); }
+    .c-half-lede {
+      font-family: var(--serif); font-style: italic;
+      font-size: 14px; color: var(--fg-2);
+      line-height: 1.5; margin: 0 0 18px; max-width: 38ch;
+    }
+
+    /* C · Printed grid */
+    .c-print-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 8px;
+    }
+    .c-print {
+      position: relative; aspect-ratio: 1 / 1;
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .c-print:hover { border-color: var(--line-2); }
+    .c-print img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: saturate(0.85);
+      transition: filter .4s, transform .5s;
+    }
+    .c-print:hover img { filter: saturate(1); transform: scale(1.04); }
+    .c-print.feature {
+      grid-column: 1 / -1; aspect-ratio: 16 / 9;
+    }
+    .c-print-cap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 8px 10px;
+      background: linear-gradient(0deg,
+        rgba(0,0,0,0.78), rgba(0,0,0,0));
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg);
+      transform: translateY(40%); opacity: 0;
+      transition: transform .25s, opacity .25s;
+    }
+    .c-print:hover .c-print-cap { transform: translateY(0); opacity: 1; }
+
+    /* C · Animated list */
+    .c-anim-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .c-anim {
+      position: relative; display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 14px; padding: 8px;
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      transition: border-color .2s, background .2s;
+    }
+    .c-anim:hover {
+      border-color: var(--studio-dim);
+      background: color-mix(in srgb, var(--bg-deep) 88%, var(--studio) 12%);
+    }
+    .c-anim .thumb {
+      position: relative; aspect-ratio: 1 / 1;
+      background: var(--bg); overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .c-anim .thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: saturate(0.7);
+      transition: filter .4s, transform .5s;
+    }
+    .c-anim:hover .thumb img { filter: saturate(1.05); transform: scale(1.06); }
+    .c-anim .thumb.placeholder {
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 22px; color: var(--fg-4);
+      background:
+        repeating-linear-gradient(45deg,
+          transparent, transparent 6px,
+          color-mix(in srgb, var(--studio) 8%, transparent) 6px,
+          color-mix(in srgb, var(--studio) 8%, transparent) 7px);
+    }
+    .c-anim .body {
+      display: flex; flex-direction: column; gap: 4px;
+      justify-content: center;
+    }
+    .c-anim .body .name {
+      font-family: var(--serif); font-size: 15px;
+      color: var(--fg); line-height: 1.2;
+    }
+    .c-anim .body .name em { font-style: italic; color: var(--fg-2); }
+    .c-anim .body .desc {
+      font-family: var(--serif); font-style: italic;
+      font-size: 12px; color: var(--fg-2);
+      line-height: 1.4; margin: 0;
+    }
+    .c-anim .body .links {
+      margin-top: 4px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .c-anim .body .links a {
+      color: var(--studio); border-bottom: 1px solid var(--studio-dim);
+      padding-bottom: 1px;
+      transition: border-bottom-color .15s;
+    }
+    .c-anim .body .links a:hover { border-bottom-color: var(--studio); }
+    .c-anim .play-marker {
+      position: absolute; top: 6px; right: 8px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-4);
+      transition: color .2s;
+    }
+    .c-anim:hover .play-marker { color: var(--studio); }
+
+    /* ============================================================
+       OPTION D · Specimen sheet · taxonomy
+       ============================================================ */
+    .d-head-row {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 36px; align-items: start;
+      padding: 8px 4px 24px;
+    }
+    @media (max-width: 760px) {
+      .d-head-row { grid-template-columns: 1fr; }
+    }
+    .d-head-text {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .d-head-text h3 {
+      font-family: var(--serif); font-size: clamp(26px, 3vw, 34px);
+      font-weight: 400; line-height: 1.04;
+      letter-spacing: -0.02em; margin: 0;
+      max-width: 22ch;
+    }
+    .d-head-text h3 em { font-style: italic; color: var(--fg-2); }
+    .d-head-text .lede {
+      font-family: var(--serif); font-style: italic;
+      font-size: 15px; color: var(--fg-2);
+      line-height: 1.55; margin: 0; max-width: 56ch;
+    }
+    .d-head-meta {
+      display: grid; grid-template-columns: 88px 1fr;
+      gap: 6px 12px; align-items: baseline;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .d-head-meta dt { color: var(--fg-3); }
+    .d-head-meta dd { margin: 0; color: var(--fg-2); }
+    .d-head-poster {
+      position: relative; align-self: end;
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      overflow: hidden; max-width: 200px;
+    }
+    .d-head-poster img {
+      width: 100%; height: auto; display: block;
+      opacity: 0.42; filter: saturate(0.7);
+      transition: opacity .4s, filter .4s;
+    }
+    .d-head-poster:hover img { opacity: 1; filter: saturate(1); }
+    .d-head-poster-cap {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3); margin-top: 6px;
+    }
+
+    .d-sheet {
+      border-top: 2px solid var(--fg);
+      border-bottom: 1px solid var(--line);
+    }
+    .d-sheet-header {
+      display: grid;
+      grid-template-columns: 72px 1.6fr 1.2fr 1.2fr 0.9fr 0.7fr;
+      gap: 12px; align-items: baseline;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-2);
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .d-row {
+      display: grid;
+      grid-template-columns: 72px 1.6fr 1.2fr 1.2fr 0.9fr 0.7fr;
+      gap: 12px; align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-2);
+      transition: background .2s;
+    }
+    .d-row:last-child { border-bottom: none; }
+    .d-row:hover { background: var(--bg-3); }
+    .d-plate {
+      position: relative; width: 60px; height: 60px;
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+    .d-plate img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: saturate(0.7);
+      transition: filter .3s, transform .4s;
+    }
+    .d-plate:hover img { filter: saturate(1); transform: scale(1.08); }
+    .d-plate.is-animated::after {
+      content: "▶";
+      position: absolute; bottom: 2px; right: 3px;
+      font-family: var(--mono); font-size: 9px;
+      color: var(--studio);
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
+    .d-plate.empty {
+      display: flex; align-items: center; justify-content: center;
+      background: repeating-linear-gradient(45deg,
+        var(--bg-deep) 0 6px, var(--bg) 6px 7px);
+      color: var(--fg-4);
+      font-family: var(--mono); font-size: 14px;
+    }
+    .d-title {
+      font-family: var(--serif); font-size: 15px;
+      color: var(--fg); line-height: 1.25;
+    }
+    .d-title em { font-style: italic; color: var(--fg-2); }
+    .d-artist {
+      font-family: var(--serif); font-style: italic;
+      font-size: 13px; color: var(--fg-2);
+    }
+    .d-technique {
+      font-family: var(--serif); font-size: 13px;
+      color: var(--fg-2);
+    }
+    .d-format {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .d-format.printed { color: var(--c1); }
+    .d-format.animated { color: var(--studio); }
+    .d-link {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .d-link a {
+      color: var(--fg-2);
+      border-bottom: 1px solid var(--line-2);
+      padding-bottom: 1px;
+      transition: color .15s, border-bottom-color .15s;
+    }
+    .d-link a:hover { color: var(--studio); border-bottom-color: var(--studio); }
+    @media (max-width: 860px) {
+      .d-sheet-header { display: none; }
+      .d-row {
+        grid-template-columns: 72px 1fr;
+        grid-template-areas:
+          "plate title"
+          "plate artist"
+          "plate technique"
+          "format link";
+        row-gap: 4px;
+      }
+      .d-row .d-plate { grid-area: plate; }
+      .d-title { grid-area: title; }
+      .d-artist { grid-area: artist; }
+      .d-technique { grid-area: technique; }
+      .d-format { grid-area: format; grid-column: 1; }
+      .d-link { grid-area: link; }
+    }
+    .d-foot {
+      padding: 14px 14px 0;
+      display: flex; gap: 18px; justify-content: space-between;
+      align-items: baseline; flex-wrap: wrap;
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .d-foot a {
+      color: var(--studio); border-bottom: 1px solid var(--studio-dim);
+      padding-bottom: 1px;
+    }
+    .d-foot a:hover { border-bottom-color: var(--studio); }
+
+    /* ============================================================
+       OPTION E · Floorplan / room schematic
+       ============================================================ */
+    .e-frame {
+      display: grid; grid-template-columns: 1.4fr 1fr;
+      gap: 28px; align-items: start;
+      padding: 6px 4px 0;
+    }
+    @media (max-width: 980px) {
+      .e-frame { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .e-map-wrap {
+      position: relative;
+      border: 1px solid var(--line);
+      background:
+        repeating-linear-gradient(0deg,
+          transparent 0 24px,
+          color-mix(in srgb, var(--line) 50%, transparent) 24px 25px),
+        repeating-linear-gradient(90deg,
+          transparent 0 24px,
+          color-mix(in srgb, var(--line) 50%, transparent) 24px 25px),
+        var(--bg-deep);
+      padding: 18px;
+      min-height: 420px;
+    }
+    .e-map-svg { display: block; width: 100%; height: auto; }
+    .e-map-cap {
+      position: absolute; left: 18px; bottom: 12px;
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .e-side {
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .e-side h3 {
+      font-family: var(--serif); font-size: clamp(24px, 2.8vw, 30px);
+      font-weight: 400; line-height: 1.04;
+      letter-spacing: -0.02em; margin: 0;
+      max-width: 18ch;
+    }
+    .e-side h3 em { font-style: italic; color: var(--studio); }
+    .e-side .lede {
+      font-family: var(--serif); font-style: italic;
+      font-size: 15px; color: var(--fg-2);
+      line-height: 1.55; margin: 0; max-width: 40ch;
+    }
+    .e-side .lede em { font-style: normal; color: var(--fg); }
+    .e-side .meta {
+      display: grid; grid-template-columns: 80px 1fr;
+      gap: 4px 14px; align-items: baseline;
+    }
+    .e-side .meta dt {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3);
+    }
+    .e-side .meta dd {
+      margin: 0; font-family: var(--serif); font-size: 13px; color: var(--fg);
+    }
+    .e-side .meta dd em { font-style: italic; color: var(--fg-2); }
+    .e-side .legend {
+      margin-top: 4px;
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 12px 14px;
+      border: 1px dashed var(--line-2);
+      background: var(--bg-2);
+    }
+    .e-side .legend b {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3); font-weight: 500;
+    }
+    .e-side .legend span {
+      font-family: var(--serif); font-style: italic;
+      font-size: 12.5px; color: var(--fg-2); line-height: 1.45;
+    }
+    .e-side .legend span .dot {
+      display: inline-block; width: 8px; height: 8px;
+      margin-right: 6px; vertical-align: middle;
+    }
+    .e-side .legend .dot.print { background: var(--c1); }
+    .e-side .legend .dot.anim  { background: var(--studio); }
+    .e-side .legend .dot.poster { background: var(--highlight); border: 1px solid var(--bg); }
+
+    .e-pin {
+      cursor: pointer;
+      transition: transform .2s;
+    }
+    .e-pin circle {
+      transition: r .2s, fill .2s, stroke .2s;
+    }
+    .e-pin:hover circle { stroke: var(--fg); }
+    .e-pin .pin-label {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      fill: var(--fg-2);
+      pointer-events: none;
+    }
+    .e-pin:hover .pin-label { fill: var(--fg); }
+    .e-wall {
+      stroke: var(--fg-3); stroke-width: 1.5;
+      fill: none;
+    }
+    .e-wall-label {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      fill: var(--fg-4);
+    }
+
+    /* E · expandable card revealed below the schematic on pin click */
+    .e-card {
+      display: none;
+      margin-top: 18px;
+      grid-template-columns: 240px 1fr;
+      gap: 22px; align-items: start;
+      padding: 16px;
+      border: 1px solid var(--studio-dim);
+      background: color-mix(in srgb, var(--bg-2) 88%, var(--studio) 12%);
+    }
+    .e-card.active { display: grid; }
+    @media (max-width: 540px) {
+      .e-card { grid-template-columns: 1fr; }
+    }
+    .e-card .thumb {
+      border: 1px solid var(--line);
+      background: var(--bg-deep);
+      aspect-ratio: 1 / 1; overflow: hidden;
+    }
+    .e-card .thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .e-card .meta b {
+      display: block; font-family: var(--mono);
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--studio); margin-bottom: 8px;
+    }
+    .e-card .meta h5 {
+      font-family: var(--serif); font-size: 20px;
+      font-weight: 400; margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    .e-card .meta h5 em { font-style: italic; color: var(--fg-2); }
+    .e-card .meta p {
+      font-family: var(--serif); font-size: 13.5px;
+      color: var(--fg-2); line-height: 1.55; margin: 0 0 10px;
+    }
+    .e-card .meta .links {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .e-card .meta .links a {
+      color: var(--studio); border-bottom: 1px solid var(--studio-dim);
+      padding-bottom: 1px;
+    }
+
+    /* E · fallback flat list */
+    .e-list {
+      margin-top: 26px; padding-top: 22px;
+      border-top: 1px dashed var(--line);
+    }
+    .e-list h4 {
+      font-family: var(--mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg-3); margin: 0 0 12px;
+    }
+    .e-list ol {
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 6px 22px;
+    }
+    @media (max-width: 720px) { .e-list ol { grid-template-columns: 1fr; } }
+    .e-list li {
+      display: flex; gap: 12px; align-items: baseline;
+      padding: 6px 0; border-bottom: 1px dotted var(--line);
+      font-family: var(--serif); font-size: 13px;
+    }
+    .e-list li .num {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.1em; color: var(--fg-3); min-width: 36px;
+    }
+    .e-list li .title { color: var(--fg); flex: 1; }
+    .e-list li .title em { font-style: italic; color: var(--fg-2); }
+    .e-list li .fmt {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-3);
+    }
+    .e-list li .fmt.printed { color: var(--c1); }
+    .e-list li .fmt.animated { color: var(--studio); }
+
+    /* ============================================================
+       COMPARE STRIP
+       ============================================================ */
+    .compare-strip {
+      max-width: var(--maxw); margin: 0 auto;
+      padding: 64px var(--pad-x) 40px;
+      border-top: 1px solid var(--line);
+    }
+    .compare-strip h2 {
+      font-family: var(--serif); font-size: 26px;
+      font-weight: 400; margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+    .compare-strip h2 em { font-style: italic; color: var(--studio); }
+    .compare-strip p.lede {
+      font-family: var(--serif); font-style: italic;
+      color: var(--fg-2); font-size: 15px;
+      margin: 0 0 28px; max-width: 62ch;
+    }
+    .compare-row {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 1px; background: var(--line);
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 1100px) { .compare-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 720px)  { .compare-row { grid-template-columns: 1fr; } }
+    .compare-row > div {
+      background: var(--bg-2); padding: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .compare-row .name {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--studio);
+    }
+    .compare-row .pitch {
+      font-family: var(--serif); font-size: 16px;
+      line-height: 1.35; color: var(--fg); margin: 0;
+      letter-spacing: -0.005em;
+    }
+    .compare-row .pitch em { font-style: italic; color: var(--fg-2); }
+    .compare-row .risk {
+      font-family: var(--serif); font-style: italic;
+      font-size: 12px; color: var(--fg-3);
+      margin: 0; line-height: 1.5;
+      padding-top: 6px; border-top: 1px solid var(--line);
+    }
+    .compare-row .recap {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--fg-4);
+    }
+
+    .proto-foot {
+      max-width: var(--maxw); margin: 0 auto;
+      padding: 26px var(--pad-x) 56px;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono); font-size: 11px;
+      color: var(--fg-3); letter-spacing: 0.06em;
+      display: flex; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+    }
+    .proto-foot a {
+      color: var(--fg-2);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 1px;
+    }
+    .proto-foot a:hover { color: var(--studio); border-bottom-color: var(--studio); }
+  </style>
+</head>
+<body>
+
+  <header class="proto-head">
+    <div class="mark">
+      Pixels<span class="x">2</span>GenAI
+      <span class="sub">§ Exhibition · option iterations</span>
+    </div>
+    <nav class="proto-tabs" aria-label="Option tabs">
+      <a href="#a">A · Specimen + plates</a>
+      <a href="#b">B · Editorial hero</a>
+      <a href="#c">C · Diptych register</a>
+      <a href="#d">D · Specimen sheet</a>
+      <a href="#e">E · Floorplan</a>
+      <a href="#compare">Compare</a>
+    </nav>
+  </header>
+
+  <div class="proto-intro">
+    <div class="kicker">Iteration · five visual commitments</div>
+    <h1>Five ways to make <em>§ Exhibition</em> a section, not a press release.</h1>
+    <p>
+      The exhibition was a one-day group show in Schöneberg on March 27, 2026 — six artists, three days, prints and code-driven installations side by side. The brief: surface that on the landing page without overpromising a recurring program. Pink discipline holds — <em>badge, CTA, hover only</em>, the way § 3 Workshops uses it.
+    </p>
+    <p>
+      Each option commits to a different visual idea. <em>A</em> reads as a sibling of § 3. <em>B</em> lets the poster carry the section. <em>C</em> splits by medium. <em>D</em> renders the show as a museum table. <em>E</em> draws the room. None of these are skins of the same skeleton — pick one (or a hybrid) and the live port begins.
+    </p>
+    <div class="meta">
+      <span class="pill">§ 4 · pushes Research → § 5</span>
+      Hybrid catalog · one specimen · no upcoming placeholder · GIF-on-hover · poster dimmed by default
+    </div>
+  </div>
+
+  <!-- ============================================================
+       OPTION A · Specimen + plate strip
+       ============================================================ -->
+  <section class="option-block" id="a">
+    <div class="option-meta">
+      <span class="label">Option A</span>
+      <span class="quiet">Shares § 3 Workshops vocabulary · safest extension</span>
+    </div>
+    <h2 class="option-title">Specimen + <em>plate strip.</em></h2>
+    <p class="option-rationale">
+      One collapsible specimen row, same shape as § 3 Workshops, with the dimmed poster on the right and a 5-up plate strip tucked into the body. The exhibition reads as a sibling of the workshops archive — same archive-head bar, same Completed badge, same hover-lift on the poster. Pink stays disciplined: badge, hover, and the "▶ live" marker on animated plates.
+    </p>
+
+    <div class="option-stage">
+      <div class="stage-section">
+        <div class="section-head">
+          <div class="section-num">§ 4 · <span>Exhibition</span></div>
+          <div>
+            <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
+            <p class="section-desc">A one-day exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis. Six artists working across printed and code-driven pieces. The archive begins below; the next exhibition is not yet scheduled.</p>
+          </div>
+        </div>
+
+        <div class="a-archive-head" style="border:1px solid var(--line); border-bottom:none;">
+          <span class="org">P2GA · Exhibition archive</span>
+          <span class="count">▌ 01 completed</span>
+        </div>
+
+        <details class="a-specimen" style="border:1px solid var(--line); border-top:none;" open>
+          <summary class="a-specimen-summary">
+            <span class="a-summary-index">01 / Specimen</span>
+            <span class="a-summary-status">✓ Completed</span>
+            <span class="a-summary-identifier">Pixels2GenAI · <em>group show in six artists</em></span>
+            <span class="a-summary-meta">Berlin · March 27, 2026</span>
+            <span class="a-chev" aria-hidden="true">
+              <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,2 6,6 10,2"></polyline>
+              </svg>
+            </span>
+          </summary>
+
+          <article class="a-specimen-body">
+            <div class="a-text">
+              <h3>01 / Specimen · <em>Pixels2GenAI · the first group show.</em></h3>
+              <p class="lede">
+                Six artists turned the IT studio Academis office in Schöneberg into a gallery for three days. Printed works on the walls, code-driven installations on screens and projection. Equations, algorithms, and generative models, all arranged as objects you could walk between.
+              </p>
+              <dl class="a-dl">
+                <dt>Date</dt>
+                <dd>March 27, 2026 · <em>6pm opening</em> · public March 28, 10–4</dd>
+
+                <dt>Where</dt>
+                <dd>IT studio Academis · Steinmetzstrasse 40 · <em>U Kleistpark</em> · Berlin</dd>
+
+                <dt>Artists</dt>
+                <dd>Burak Kağan Yılmazer, Sara Maras, Alexander Hendorf, Hansu Kim, Maris Niewenhuis, Ewa Rother</dd>
+
+                <dt>Format</dt>
+                <dd>Prints + animated installations · <em>admission free</em></dd>
+
+                <dt>Co-organised</dt>
+                <dd>With <a href="https://www.academis.eu" target="_blank" rel="noopener">Academis</a> · Kristian Rother</dd>
+              </dl>
+            </div>
+
+            <aside class="a-aside">
+              <a class="a-poster" href="/exhibitions/2026-03" aria-label="Open the exhibition case study — poster lifts on hover">
+                <img src="/exhibitions/poster-2026-03.png" alt="Printed poster announcing Pixels2GenAI · Berlin · March 27, 2026." loading="lazy" />
+              </a>
+              <div class="a-poster-cap">Poster · Berlin · <em>hover to lift</em></div>
+            </aside>
+
+            <div class="a-plates">
+              <div class="a-plates-head">
+                <span><b>Plates</b> · five works on view (of ~20)</span>
+                <span>Curated · prints by B.K. Yılmazer</span>
+              </div>
+              <div class="a-plates-grid">
+                <a class="a-plate" href="#" aria-label="Array Zero · void">
+                  <img src="/exhibitions/prints/array-zero-01-void.jpg" alt="Array Zero · void · print" loading="lazy" />
+                </a>
+                <a class="a-plate" href="#" aria-label="Array Zero · bloom">
+                  <img src="/exhibitions/prints/array-zero-03-bloom.jpg" alt="Array Zero · bloom · print" loading="lazy" />
+                </a>
+                <a class="a-plate" href="#" aria-label="Fractal Square · carpet">
+                  <img src="/exhibitions/prints/fractal-square-carpet.jpg" alt="Fractal Square · paper-cut carpet" loading="lazy" />
+                </a>
+                <a class="a-plate is-animated" href="https://github.com/burakkagann/mycelium-metabolic-rate" target="_blank" rel="noopener" aria-label="Neural-Mycelium · live preview">
+                  <img src="/exhibitions/animated/mycelium-bonded.jpg" alt="Neural-Mycelium · still frame · GPU-driven Hebbian growth" loading="lazy" />
+                </a>
+                <a class="a-plate is-text" href="https://github.com/burakkagann/selection-pressure" target="_blank" rel="noopener">
+                  <span>Selection Pressure<small>capture pending · GitHub →</small></span>
+                </a>
+              </div>
+            </div>
+          </article>
+
+          <div class="a-specimen-actions">
+            <a class="btn-ghost" href="/exhibitions/2026-03">Open the exhibition catalog →</a>
+            <span class="right">5 of ~20 works shown · catalog forthcoming</span>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>Visual consistency with § 3. The "specimen" vocabulary, the dimmed-poster aside, the archive-head bar — all carry over. Adding Exhibition 02 later is one row.</p>
+        <p>The plate strip handles the "two registers" challenge by mixing print and animated thumbnails in one row; the "▶ live" marker keeps the medium distinction legible.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Adjacent to § 3 Workshops, the two sections will look like twins. The exhibition has its own identity — the mandala poster, the group-show frame — and this option doesn't claim it.</p>
+        <p>The plate strip is tight (5 cells); curating it across 20+ works will hurt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION B · Editorial hero · poster-led
+       ============================================================ -->
+  <section class="option-block" id="b">
+    <div class="option-meta">
+      <span class="label">Option B</span>
+      <span class="quiet">Poster as identity · second hero on the page</span>
+    </div>
+    <h2 class="option-title">Editorial hero <em>· poster-led.</em></h2>
+    <p class="option-rationale">
+      The mandala poster goes large on the left at full saturation — it is the exhibition's identity, and dimming it would waste it. The right side stacks title, italic lede, and dl meta. A contact-sheet strip of works runs below the hero. The section is a moment, not a row. Reads more like a magazine spread or a museum landing than a catalog.
+    </p>
+
+    <div class="option-stage">
+      <div class="stage-section">
+        <div class="section-head">
+          <div class="section-num">§ 4 · <span>Exhibition</span></div>
+          <div>
+            <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
+            <p class="section-desc">One day in Schöneberg, six artists, prints and code-driven installations. Co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Academis</a>.</p>
+          </div>
+        </div>
+
+        <div class="b-hero">
+          <a class="b-poster-wrap" href="/exhibitions/2026-03" aria-label="Open the exhibition case study">
+            <span class="b-poster-tag">Exhibition 01</span>
+            <img src="/exhibitions/poster-2026-03.png" alt="Printed poster: Pixels2GenAI Exhibition · March 27 · 6pm · IT studio Academis · Steinmetzstrasse 40, Berlin." loading="lazy" />
+          </a>
+          <div class="b-stack">
+            <div class="b-eyebrow"><span class="dot"></span>i · Group show · 27 March 2026</div>
+            <h3>Six artists, one office, <em>three days.</em></h3>
+            <p class="lede">
+              At the end of March 2026 the office of IT studio Academis became a gallery. <em>Equations, algorithms, and AI models as art-making tools</em>; printed pieces beside live installations.
+            </p>
+            <dl class="b-dl">
+              <dt>Date</dt>
+              <dd>March 27 opening · <em>6pm</em> · public March 28, 10–4</dd>
+              <dt>Where</dt>
+              <dd>Steinmetzstrasse 40 · <em>U Kleistpark</em> · Berlin</dd>
+              <dt>Artists</dt>
+              <dd>B.K. Yılmazer, S. Maras, A. Hendorf, H. Kim, M. Niewenhuis, E. Rother</dd>
+              <dt>Admission</dt>
+              <dd><em>free</em></dd>
+            </dl>
+            <div class="b-actions">
+              <a class="btn btn-pri" href="/exhibitions/2026-03">Read the case study →</a>
+              <a class="btn btn-sec" href="/exhibitions/poster-2026-03.png" target="_blank" rel="noopener">Poster (PDF)</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-contact">
+          <div class="b-contact-head">
+            <span><b>Contact sheet</b> · works on view</span>
+            <span>5 of ~20 · prints by B.K. Yılmazer · animated · all artists</span>
+          </div>
+          <div class="b-contact-strip">
+            <figure class="b-frame" style="margin:0">
+              <img src="/exhibitions/prints/array-zero-01-void.jpg" alt="Array Zero · void" loading="lazy" />
+              <span class="b-frame-cap">001 · Array Zero · void</span>
+            </figure>
+            <figure class="b-frame" style="margin:0">
+              <img src="/exhibitions/prints/array-zero-03-bloom.jpg" alt="Array Zero · bloom" loading="lazy" />
+              <span class="b-frame-cap">003 · Array Zero · bloom</span>
+            </figure>
+            <figure class="b-frame" style="margin:0">
+              <img src="/exhibitions/prints/fractal-square-carpet.jpg" alt="Fractal Square · paper-cut carpet" loading="lazy" />
+              <span class="b-frame-cap">004 · Fractal Square</span>
+            </figure>
+            <figure class="b-frame" style="margin:0">
+              <img src="/exhibitions/prints/tectonic-threshold-relu.jpg" alt="Tectonic Threshold · ReLU" loading="lazy" />
+              <span class="b-frame-cap">005 · Threshold · ReLU</span>
+            </figure>
+            <figure class="b-frame is-animated" style="margin:0">
+              <img src="/exhibitions/animated/mycelium-bonded.jpg" alt="Neural-Mycelium · still" loading="lazy" />
+              <span class="b-frame-cap">006 · Neural-Mycelium</span>
+            </figure>
+            <figure class="b-frame is-text" style="margin:0">
+              <b>Animated · 02</b>
+              <span>Selection Pressure · <em>flocking evolves under gravitational predation</em>.</span>
+              <small>GitHub →</small>
+            </figure>
+            <figure class="b-frame is-text" style="margin:0">
+              <b>Animated · 03</b>
+              <span>Dissolution · <em>webcam dissolved into ControlNet-guided portraits</em>.</span>
+              <small>GitHub →</small>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>The poster carries the section. The mandala is iconic enough to do that — leaving it dimmed throws away the strongest visual asset on the landing page.</p>
+        <p>Distinguishes Exhibition from Workshops by register, not by accent — both use studio pink, but the layouts read as different artifact types.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Second hero on the landing. The cover already does heavy visual work; this one might fight for attention. Anchoring it below § 3 helps but doesn't fix that.</p>
+        <p>Doesn't scale gracefully to Exhibition 02 — a second hero would force a layout decision (stack? alternate? carousel?) that isn't here yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION C · Diptych register
+       ============================================================ -->
+  <section class="option-block" id="c">
+    <div class="option-meta">
+      <span class="label">Option C</span>
+      <span class="quiet">Bifurcates by medium · poster as banner</span>
+    </div>
+    <h2 class="option-title">Diptych register · <em>printed | animated.</em></h2>
+    <p class="option-rationale">
+      The dual register is the section's organising idea. The poster runs above as a dimmed banner; below, two labelled halves — <em>i / Printed</em> on the left, <em>ii / Animated</em> on the right — sit side by side, divided by a hairline. Printed works are static and grid-laid; animated works are listed with hover-to-play stills. Honest about what's a still and what's alive.
+    </p>
+
+    <div class="option-stage">
+      <div class="stage-section" style="padding: 0;">
+        <div class="c-banner">
+          <img src="/exhibitions/poster-2026-03.png" alt="Pixels2GenAI poster banner · mandala identity." loading="lazy" />
+          <div class="c-banner-overlay">
+            <div>
+              <div class="tag">§ 4 · Exhibition 01 · Berlin</div>
+            </div>
+            <div>
+              <h3>The studio, <em>transformed into a gallery.</em></h3>
+              <div class="meta"><em>27 March 2026</em> · Steinmetzstrasse 40 · with <em>Academis</em> · six artists · prints + animated</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="c-diptych">
+          <section class="c-half">
+            <div class="c-half-head">
+              <span class="roman">i / Printed</span>
+              <h4>Stills, <em>captured once.</em></h4>
+            </div>
+            <p class="c-half-lede">Pieces that resolved into a single frame and went onto paper. Prints by B.K. Yılmazer; other artists' prints pending consent.</p>
+            <div class="c-print-grid">
+              <a class="c-print feature" href="#">
+                <img src="/exhibitions/prints/array-zero-03-bloom.jpg" alt="Array Zero · bloom · radial composition" loading="lazy" />
+                <span class="c-print-cap">001 · Array Zero · bloom · B.K. Yılmazer</span>
+              </a>
+              <a class="c-print" href="#">
+                <img src="/exhibitions/prints/fractal-square-carpet.jpg" alt="Fractal Square · paper-cut carpet" loading="lazy" />
+                <span class="c-print-cap">002 · Fractal Square · carpet</span>
+              </a>
+              <a class="c-print" href="#">
+                <img src="/exhibitions/prints/array-zero-01-void.jpg" alt="Array Zero · void" loading="lazy" />
+                <span class="c-print-cap">003 · Array Zero · void</span>
+              </a>
+              <a class="c-print" href="#">
+                <img src="/exhibitions/prints/tectonic-threshold-relu.jpg" alt="Tectonic Threshold · ReLU" loading="lazy" />
+                <span class="c-print-cap">004 · Threshold · ReLU</span>
+              </a>
+              <a class="c-print" href="#">
+                <img src="/exhibitions/prints/tectonic-threshold-sigmoid.jpg" alt="Tectonic Threshold · sigmoid" loading="lazy" />
+                <span class="c-print-cap">005 · Threshold · sigmoid</span>
+              </a>
+            </div>
+          </section>
+
+          <section class="c-half">
+            <div class="c-half-head">
+              <span class="roman">ii / Animated</span>
+              <h4>Stills that <em>wake on hover.</em></h4>
+            </div>
+            <p class="c-half-lede">Code-driven installations that ran live on the wall. Static frames here; hover plays the captured loop. Three pieces by B.K. Yılmazer.</p>
+            <div class="c-anim-list">
+              <a class="c-anim" href="https://github.com/burakkagann/mycelium-metabolic-rate" target="_blank" rel="noopener">
+                <div class="thumb"><img src="/exhibitions/animated/mycelium-bonded.jpg" alt="Neural-Mycelium · bonded state" loading="lazy" /></div>
+                <div class="body">
+                  <span class="name">Neural-Mycelium <em>· hebbian + physarum</em></span>
+                  <p class="desc">Slime-mold deposits + synaptic plasticity, driven live by the GPU's thermal and clock state.</p>
+                  <span class="links">GitHub · capture available</span>
+                </div>
+                <span class="play-marker">▶ hover to play</span>
+              </a>
+              <a class="c-anim" href="https://github.com/burakkagann/selection-pressure" target="_blank" rel="noopener">
+                <div class="thumb placeholder">⋯</div>
+                <div class="body">
+                  <span class="name">Selection Pressure <em>· emergent flocking</em></span>
+                  <p class="desc">~800 boid stars evolve survival strategies under gravitational predation. Reynolds 1987 + tournament selection.</p>
+                  <span class="links">GitHub · capture pending</span>
+                </div>
+                <span class="play-marker">▶ hover to play</span>
+              </a>
+              <a class="c-anim" href="https://github.com/burakkagann/dissolution" target="_blank" rel="noopener">
+                <div class="thumb placeholder">⋯</div>
+                <div class="body">
+                  <span class="name">Dissolution <em>· DDPM + ControlNet</em></span>
+                  <p class="desc">Webcam frames dissolve into Gaussian noise and re-emerge as ControlNet-guided anime portraits.</p>
+                  <span class="links">GitHub · capture pending</span>
+                </div>
+                <span class="play-marker">▶ hover to play</span>
+              </a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>The medium register is the organising idea. The page makes the print/animated distinction explicit and resolves the "two kinds of work" challenge in layout, not just in captions.</p>
+        <p>The animated half is honest about what's a finished capture and what's a stub. Hover affordance is consistent across all three pieces.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Foregrounds medium over the group-show frame. The six-artist roster lives in the banner meta and the captions — easy to miss at a glance.</p>
+        <p>Doesn't scale: a second exhibition's diptych would need either a second diptych below (heavy), or a tabbed switcher (chrome).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION D · Specimen sheet · taxonomy
+       ============================================================ -->
+  <section class="option-block" id="d">
+    <div class="option-meta">
+      <span class="label">Option D</span>
+      <span class="quiet">Museum catalog table · mono-heavy · scalable</span>
+    </div>
+    <h2 class="option-title">Specimen sheet · <em>taxonomy table.</em></h2>
+    <p class="option-rationale">
+      The exhibition rendered as a rigid museum-catalog table: each row is a work, columns are plate, title, artist, technique, format, and link. Mono-typography in the header, serif in the rows, small thumbnails in the plate column. The poster floats next to the section head as a small dimmed thumbnail. Cold, archival, and scales unmodified to 20 works or 200.
+    </p>
+
+    <div class="option-stage">
+      <div class="stage-section">
+        <div class="section-head">
+          <div class="section-num">§ 4 · <span>Exhibition</span></div>
+          <div>
+            <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
+            <p class="section-desc">A specimen sheet of the works on view. Six artists, two registers, one day at Steinmetzstrasse 40.</p>
+          </div>
+        </div>
+
+        <div class="d-head-row">
+          <div class="d-head-text">
+            <h3>01 / Exhibition · <em>Pixels2GenAI · Berlin · 2026-03-27.</em></h3>
+            <p class="lede">One opening, one public day, six artists, an office reading as a gallery. The sheet below is the complete inventory of what was on the walls and the screens — listed for the record.</p>
+            <dl class="d-head-meta">
+              <dt>Opening</dt><dd>27.03.2026 · 18:00</dd>
+              <dt>Public</dt><dd>28.03.2026 · 10:00–16:00</dd>
+              <dt>Venue</dt><dd>IT Studio Academis · Steinmetzstr. 40 · Berlin</dd>
+              <dt>Organised</dt><dd>Academis · Kristian Rother</dd>
+            </dl>
+          </div>
+          <a class="d-head-poster" href="/exhibitions/poster-2026-03.png" target="_blank" rel="noopener">
+            <img src="/exhibitions/poster-2026-03.png" alt="Pixels2GenAI poster" loading="lazy" />
+            <div class="d-head-poster-cap">Poster · hover to lift</div>
+          </a>
+        </div>
+
+        <div class="d-sheet">
+          <div class="d-sheet-header">
+            <span>Plate</span>
+            <span>Title</span>
+            <span>Artist</span>
+            <span>Technique</span>
+            <span>Format</span>
+            <span>Link</span>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate" href="#"><img src="/exhibitions/prints/array-zero-01-void.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Array Zero · <em>void</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">NumPy · gradient field, printed</div>
+            <div class="d-format printed">Printed</div>
+            <div class="d-link"><a href="#">view →</a></div>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate" href="#"><img src="/exhibitions/prints/array-zero-03-bloom.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Array Zero · <em>bloom</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">NumPy · radial bloom, printed</div>
+            <div class="d-format printed">Printed</div>
+            <div class="d-link"><a href="#">view →</a></div>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate" href="#"><img src="/exhibitions/prints/fractal-square-carpet.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Fractal Square · <em>carpet</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">Sierpinski recursion · 3D paper-cut</div>
+            <div class="d-format printed">Printed</div>
+            <div class="d-link"><a href="#">view →</a></div>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate" href="#"><img src="/exhibitions/prints/tectonic-threshold-relu.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Tectonic Threshold · <em>ReLU</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">Activation function as terrain</div>
+            <div class="d-format printed">Printed</div>
+            <div class="d-link"><a href="#">view →</a></div>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate" href="#"><img src="/exhibitions/prints/tectonic-threshold-sigmoid.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Tectonic Threshold · <em>sigmoid</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">Activation function as terrain</div>
+            <div class="d-format printed">Printed</div>
+            <div class="d-link"><a href="#">view →</a></div>
+          </div>
+
+          <div class="d-row">
+            <a class="d-plate is-animated" href="https://github.com/burakkagann/mycelium-metabolic-rate" target="_blank" rel="noopener"><img src="/exhibitions/animated/mycelium-bonded.jpg" alt="" loading="lazy" /></a>
+            <div class="d-title">Neural-Mycelium · <em>hebbian + physarum</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">GPU-thermal-driven slime-mold simulation</div>
+            <div class="d-format animated">Animated · live</div>
+            <div class="d-link"><a href="https://github.com/burakkagann/mycelium-metabolic-rate" target="_blank" rel="noopener">GitHub →</a></div>
+          </div>
+
+          <div class="d-row">
+            <div class="d-plate empty">⋯</div>
+            <div class="d-title">Selection Pressure · <em>emergent flocking</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">Boid evolution under gravitational predation</div>
+            <div class="d-format animated">Animated · live</div>
+            <div class="d-link"><a href="https://github.com/burakkagann/selection-pressure" target="_blank" rel="noopener">GitHub →</a></div>
+          </div>
+
+          <div class="d-row">
+            <div class="d-plate empty">⋯</div>
+            <div class="d-title">Dissolution · <em>noise → portrait</em></div>
+            <div class="d-artist">B.K. Yılmazer</div>
+            <div class="d-technique">DDPM forward + ControlNet guidance</div>
+            <div class="d-format animated">Animated · live</div>
+            <div class="d-link"><a href="https://github.com/burakkagann/dissolution" target="_blank" rel="noopener">GitHub →</a></div>
+          </div>
+
+          <div class="d-foot">
+            <span>Sheet 01/01 · 8 of ~20 works listed · other artists pending consent</span>
+            <a href="/exhibitions/2026-03">Read the case study →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>An archival, museum-catalog register. The exhibition reads as a documented event, not an upcoming spectacle. Scales unmodified to any number of works.</p>
+        <p>Treats prints and animated pieces symmetrically — they're rows of the same table, differentiated only by the Format column and the play marker on the plate.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Dry on first read. The table demands you scan before anything inviting arrives. The mandala poster shrinks to a thumbnail — the strongest visual asset is sidelined.</p>
+        <p>Sits uneasily between § 3 Workshops (warm catalog) and § 5 Research (research-quiet) — it doesn't borrow from either, which can make it feel like a third visual register on one page.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       OPTION E · Floorplan / room schematic
+       ============================================================ -->
+  <section class="option-block" id="e">
+    <div class="option-meta">
+      <span class="label">Option E</span>
+      <span class="quiet">SVG schematic · "the office, as a gallery"</span>
+    </div>
+    <h2 class="option-title">Floorplan · <em>the office, as a gallery.</em></h2>
+    <p class="option-rationale">
+      The poster text says the office "transformed into a gallery" — this option draws the room. An SVG schematic shows walls, the entrance, the projection corner, the print walls. Works are pins on the walls at scale. Click a pin → an inline card appears below the schematic with image, title, artist, and link. A flat fallback list lives below for accessibility and SEO. The most experimental of the five.
+    </p>
+
+    <div class="option-stage">
+      <div class="stage-section">
+        <div class="section-head">
+          <div class="section-num">§ 4 · <span>Exhibition</span></div>
+          <div>
+            <h2 class="section-title">Walk the room, <em>by clicking the pins.</em></h2>
+            <p class="section-desc">A schematic of the IT studio Academis office, hung as a gallery for one day. Hover or click a pin to see the work.</p>
+          </div>
+        </div>
+
+        <div class="e-frame">
+          <div>
+            <div class="e-map-wrap">
+              <svg class="e-map-svg" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg" aria-label="Schematic of the exhibition room with pinned works">
+                <!-- Room walls -->
+                <rect class="e-wall" x="60" y="40" width="480" height="340" />
+                <!-- Entrance gap on south wall -->
+                <line class="e-wall" x1="240" y1="380" x2="300" y2="380" stroke="var(--bg-deep)" stroke-width="6" />
+                <text class="e-wall-label" x="240" y="402">↑ entrance · poster wall</text>
+
+                <!-- Wall labels -->
+                <text class="e-wall-label" x="68" y="30" text-anchor="start">north wall · prints</text>
+                <text class="e-wall-label" x="532" y="30" text-anchor="end">east wall · prints</text>
+                <text class="e-wall-label" x="68" y="396" text-anchor="start">west wall · animated</text>
+
+                <!-- Projection corner indicator -->
+                <rect x="60" y="40" width="120" height="120" fill="none"
+                      stroke="var(--studio-dim)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+                <text class="e-wall-label" x="68" y="50" fill="var(--studio)">projection corner</text>
+
+                <!-- Pins -->
+                <!-- Poster (entrance) -->
+                <g class="e-pin" data-pin="poster" tabindex="0" role="button" aria-label="Poster · entrance wall">
+                  <circle cx="270" cy="380" r="7" fill="var(--highlight)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="270" y="362" text-anchor="middle">poster</text>
+                </g>
+
+                <!-- North wall prints -->
+                <g class="e-pin" data-pin="array-void" tabindex="0" role="button" aria-label="Array Zero · void">
+                  <circle cx="230" cy="48" r="6" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="230" y="68" text-anchor="middle">001</text>
+                </g>
+                <g class="e-pin" data-pin="array-bloom" tabindex="0" role="button" aria-label="Array Zero · bloom">
+                  <circle cx="330" cy="48" r="6" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="330" y="68" text-anchor="middle">002</text>
+                </g>
+                <g class="e-pin" data-pin="fractal" tabindex="0" role="button" aria-label="Fractal Square · carpet">
+                  <circle cx="430" cy="48" r="6" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="430" y="68" text-anchor="middle">003</text>
+                </g>
+
+                <!-- East wall prints -->
+                <g class="e-pin" data-pin="relu" tabindex="0" role="button" aria-label="Tectonic Threshold · ReLU">
+                  <circle cx="540" cy="160" r="6" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="522" y="164" text-anchor="end">004</text>
+                </g>
+                <g class="e-pin" data-pin="sigmoid" tabindex="0" role="button" aria-label="Tectonic Threshold · sigmoid">
+                  <circle cx="540" cy="260" r="6" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="522" y="264" text-anchor="end">005</text>
+                </g>
+
+                <!-- West wall animated -->
+                <g class="e-pin" data-pin="mycelium" tabindex="0" role="button" aria-label="Neural-Mycelium">
+                  <circle cx="60" cy="180" r="7" fill="var(--studio)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="78" y="184" text-anchor="start">006</text>
+                </g>
+                <g class="e-pin" data-pin="selection" tabindex="0" role="button" aria-label="Selection Pressure">
+                  <circle cx="60" cy="260" r="7" fill="var(--studio)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="78" y="264" text-anchor="start">007</text>
+                </g>
+                <g class="e-pin" data-pin="dissolution" tabindex="0" role="button" aria-label="Dissolution">
+                  <circle cx="120" cy="100" r="7" fill="var(--studio)" stroke="var(--bg)" stroke-width="2"/>
+                  <text class="pin-label" x="138" y="104" text-anchor="start">008 · projection</text>
+                </g>
+              </svg>
+              <div class="e-map-cap">Schematic · not to scale · click a pin</div>
+            </div>
+
+            <!-- Inline card shown when a pin is clicked -->
+            <div class="e-card" id="e-card">
+              <div class="thumb"><img id="e-card-img" src="/exhibitions/prints/array-zero-01-void.jpg" alt="" /></div>
+              <div class="meta">
+                <b id="e-card-tag">001 · Printed</b>
+                <h5 id="e-card-title">Array Zero · <em>void</em></h5>
+                <p id="e-card-desc">A gradient field that resolves into a near-empty canvas — the zero state of the Array Zero series.</p>
+                <span class="links" id="e-card-link">B.K. Yılmazer</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="e-side">
+            <h3>Walk the room · <em>eight pins.</em></h3>
+            <p class="lede">The office <em>at Steinmetzstrasse 40</em> was hung for a day. Prints on north and east, animated on west, projection in the corner, poster at the entrance.</p>
+            <dl class="meta">
+              <dt>Date</dt><dd>March 27, 2026 · <em>opening 6pm</em></dd>
+              <dt>Public</dt><dd>March 28 · 10–4 · free</dd>
+              <dt>Where</dt><dd>Steinmetzstrasse 40 · Berlin</dd>
+              <dt>Organised</dt><dd>With Academis</dd>
+            </dl>
+            <div class="legend">
+              <b>Legend</b>
+              <span><span class="dot poster"></span>poster · entrance</span>
+              <span><span class="dot print"></span>printed work</span>
+              <span><span class="dot anim"></span>animated installation</span>
+            </div>
+          </aside>
+        </div>
+
+        <div class="e-list">
+          <h4>Works on view · flat list</h4>
+          <ol>
+            <li><span class="num">001</span><span class="title">Array Zero · <em>void</em></span><span class="fmt printed">Printed</span></li>
+            <li><span class="num">002</span><span class="title">Array Zero · <em>bloom</em></span><span class="fmt printed">Printed</span></li>
+            <li><span class="num">003</span><span class="title">Fractal Square · <em>carpet</em></span><span class="fmt printed">Printed</span></li>
+            <li><span class="num">004</span><span class="title">Threshold · <em>ReLU</em></span><span class="fmt printed">Printed</span></li>
+            <li><span class="num">005</span><span class="title">Threshold · <em>sigmoid</em></span><span class="fmt printed">Printed</span></li>
+            <li><span class="num">006</span><span class="title">Neural-Mycelium · <em>hebbian + physarum</em></span><span class="fmt animated">Animated</span></li>
+            <li><span class="num">007</span><span class="title">Selection Pressure · <em>emergent flocking</em></span><span class="fmt animated">Animated</span></li>
+            <li><span class="num">008</span><span class="title">Dissolution · <em>noise → portrait</em></span><span class="fmt animated">Animated</span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-tradeoffs">
+      <div class="col">
+        <b>What this commits to</b>
+        <p>Leans hard into the "office → gallery" line from the poster. The section is itself a small artifact — memorable, photographable, distinct from everything else on the landing page.</p>
+        <p>Honest about animated/printed by colour-coding pins. The flat list below keeps it accessible if the SVG fails or the visitor doesn't want to interact.</p>
+      </div>
+      <div class="col">
+        <b>What it gives up</b>
+        <p>Interaction cost: nothing is visible until you click a pin. Slower than a list for scanning the works.</p>
+        <p>Doesn't scale to Exhibition 02 — each exhibition would need its own floorplan, and floorplans don't stack like rows do. Beautiful, but bespoke.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       COMPARE STRIP
+       ============================================================ -->
+  <section class="compare-strip" id="compare">
+    <h2>Five visual commitments, <em>compared.</em></h2>
+    <p class="lede">
+      One pitch and one risk per option. Hybrids are allowed — most likely candidates are A's specimen scaffold with C's diptych body inside it, or B's poster hero with D's table below.
+    </p>
+    <div class="compare-row">
+      <div>
+        <span class="name">A · Specimen + plates</span>
+        <p class="pitch">A sibling of § 3. Same vocabulary, plate strip handles the dual register.</p>
+        <p class="risk">Risk: <em>twins § 3 visually.</em> The mandala poster sits dimmed, never claims the page.</p>
+        <span class="recap">Catalog · scales · safe</span>
+      </div>
+      <div>
+        <span class="name">B · Editorial hero</span>
+        <p class="pitch">The poster is the section. Confident, photographic, magazine-shaped.</p>
+        <p class="risk">Risk: <em>second hero on the landing.</em> Fights the cover for attention.</p>
+        <span class="recap">Hero · poster-led · doesn't stack</span>
+      </div>
+      <div>
+        <span class="name">C · Diptych register</span>
+        <p class="pitch">Printed on the left, animated on the right. Layout commits to the medium split.</p>
+        <p class="risk">Risk: <em>medium over identity.</em> The six-artist roster hides in captions.</p>
+        <span class="recap">Diptych · medium-first</span>
+      </div>
+      <div>
+        <span class="name">D · Specimen sheet</span>
+        <p class="pitch">A museum-catalog table. One row per work. Scales to 200 without redesign.</p>
+        <p class="risk">Risk: <em>dry.</em> Demands scanning before anything inviting arrives.</p>
+        <span class="recap">Table · archival · symmetric</span>
+      </div>
+      <div>
+        <span class="name">E · Floorplan</span>
+        <p class="pitch">The room, drawn. Walks the visitor through the gallery via SVG pins.</p>
+        <p class="risk">Risk: <em>interaction cost.</em> Bespoke per exhibition; doesn't scale gracefully.</p>
+        <span class="recap">SVG · experimental · memorable</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="proto-foot">
+    <span>Prototype · /explorations/exhibitions-options · not linked from production</span>
+    <span>
+      Live workshop reference: <a href="/explorations/workshops-catalog.html">workshops-catalog</a> ·
+      Brand tokens: src/styles/tokens.css ·
+      Reference component: src/components/workshops/WorkshopSpecimen.astro
+    </span>
+  </footer>
+
+  <script>
+    // Option E · pin click → swap the inline card content.
+    (function () {
+      const PIN_DATA = {
+        'poster':       { tag: 'P · entrance',       title: 'Poster · <em>Pixels2GenAI</em>',                      desc: 'The mandala identity printed and hung at the studio entrance. PDF in /exhibitions.',         img: '/exhibitions/poster-2026-03.png',                            linkText: 'Open the PDF →',     href: '/exhibitions/poster-2026-03.png' },
+        'array-void':   { tag: '001 · Printed',      title: 'Array Zero · <em>void</em>',                          desc: 'A gradient field that resolves into a near-empty canvas — the zero state of the Array Zero series.', img: '/exhibitions/prints/array-zero-01-void.jpg',                 linkText: 'B.K. Yılmazer',     href: '#' },
+        'array-bloom':  { tag: '002 · Printed',      title: 'Array Zero · <em>bloom</em>',                         desc: 'Radial bloom built from cumulative array operations. Final frame in the void → spark → bloom arc.', img: '/exhibitions/prints/array-zero-03-bloom.jpg',                linkText: 'B.K. Yılmazer',     href: '#' },
+        'fractal':      { tag: '003 · Printed',      title: 'Fractal Square · <em>carpet</em>',                    desc: 'Sierpinski recursion lifted into a 3D paper-cut. Six iterations, eight folds.',                    img: '/exhibitions/prints/fractal-square-carpet.jpg',              linkText: 'B.K. Yılmazer',     href: '#' },
+        'relu':         { tag: '004 · Printed',      title: 'Threshold · <em>ReLU</em>',                           desc: 'The ReLU activation function plotted as terrain — the kink at zero becomes a geological seam.',   img: '/exhibitions/prints/tectonic-threshold-relu.jpg',            linkText: 'B.K. Yılmazer',     href: '#' },
+        'sigmoid':      { tag: '005 · Printed',      title: 'Threshold · <em>sigmoid</em>',                        desc: 'The same operation under sigmoid — the seam smooths into a soft ridge instead of a fault.',       img: '/exhibitions/prints/tectonic-threshold-sigmoid.jpg',         linkText: 'B.K. Yılmazer',     href: '#' },
+        'mycelium':     { tag: '006 · Animated',     title: 'Neural-Mycelium · <em>hebbian + physarum</em>',       desc: 'Slime-mold deposits + synaptic plasticity, driven live by the host GPU thermal/clock state.',     img: '/exhibitions/animated/mycelium-bonded.jpg',                  linkText: 'GitHub →',          href: 'https://github.com/burakkagann/mycelium-metabolic-rate' },
+        'selection':    { tag: '007 · Animated',     title: 'Selection Pressure · <em>emergent flocking</em>',     desc: '~800 boid stars evolve survival strategies under gravitational predation. Reynolds 1987 + tournament selection.', img: '/exhibitions/animated/mycelium-early.jpg',          linkText: 'GitHub →',          href: 'https://github.com/burakkagann/selection-pressure' },
+        'dissolution':  { tag: '008 · Animated',     title: 'Dissolution · <em>noise → portrait</em>',             desc: 'Webcam frames dissolve into Gaussian noise and re-emerge as ControlNet-guided anime portraits.',   img: '/exhibitions/animated/mycelium-early.jpg',                   linkText: 'GitHub →',          href: 'https://github.com/burakkagann/dissolution' },
+      };
+
+      const card  = document.getElementById('e-card');
+      const img   = document.getElementById('e-card-img');
+      const tag   = document.getElementById('e-card-tag');
+      const title = document.getElementById('e-card-title');
+      const desc  = document.getElementById('e-card-desc');
+      const link  = document.getElementById('e-card-link');
+
+      document.querySelectorAll('.e-pin').forEach((pin) => {
+        const open = () => {
+          const k = pin.getAttribute('data-pin');
+          const d = PIN_DATA[k];
+          if (!d) return;
+          img.src        = d.img;
+          img.alt        = d.title.replace(/<[^>]+>/g, '');
+          tag.textContent = d.tag;
+          title.innerHTML = d.title;
+          desc.textContent = d.desc;
+          link.innerHTML = '<a href="' + d.href + (d.href.startsWith('http') ? '" target="_blank" rel="noopener' : '') + '">' + d.linkText + '</a>';
+          card.classList.add('active');
+        };
+        pin.addEventListener('click', open);
+        pin.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      });
+    })();
+  </script>
+</body>
+</html>

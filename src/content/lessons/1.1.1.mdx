@@ -1,0 +1,413 @@
+---
+module: "M 01"
+cycle: "I"
+title: "Images as Arrays & RGB"
+objective: "Treat every digital image as a NumPy array of intensity values; build colour from scratch by writing red, green, and blue channels by hand."
+framework: "hands-on"
+duration: "20–25 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "Basic Python"
+prev: null
+next:
+  slug: "4.1.1"
+  title: "Fractal Square"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Digital images are arrays of numbers. A single 4K image contains 26 million pixels. Three integers per pixel, each specifying the intensity of the red, green, and blue channels. Manipulating these arrays directly opens every technique from vintage photo filters to training convolutional networks.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Understand that images are 2D arrays of numerical values (grayscale).</li>
+  <li>Recognise the relationship between array values (0–255) and brightness.</li>
+  <li>Extend to 3D NumPy arrays with RGB channels for colour images.</li>
+  <li>Grasp the additive colour model and why computers use RGB.</li>
+</ol>
+
+## Quick start — your first colourful image <a id="quick-start"></a>
+
+Run this code to create a simple image:
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Create a 200x200 image with 3 color channels (RGB)
+image = np.zeros((200, 200, 3), dtype=np.uint8)
+
+# Top half: cyan
+image[:100, :, 1] = 255  # Green channel
+image[:100, :, 2] = 255  # Blue channel
+
+# Bottom half: magenta
+image[100:, :, 0] = 255  # Red channel
+image[100:, :, 2] = 255  # Blue channel
+
+# Convert to PIL and save
+pil_image = Image.fromarray(image)
+pil_image.save('cyan_magenta.png')
+```
+</CodeBlock>
+
+<Admonition type="tip">
+The shape of the image is `(200, 200, 3)` — read as **(height, width, channels)**. The channels dimension holds the red, green, and blue values. Height and width are the dimensions of the image, and channels is the number of colour components per pixel.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Grayscale, the foundation
+
+Before diving into colour, the simplest digital image: grayscale.
+
+A grayscale image is a 2D grid of pixels, where each pixel has a brightness value:
+
+- **0** = black (no light)
+- **255** = white (maximum light)
+- **128** = medium gray (half intensity)
+
+<CodeBlock lang="python" file="grayscale.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Create a 200x200 array filled with medium gray
+array = np.zeros((200, 200), dtype=np.uint8)
+array += 128
+
+# PIL interprets 2D arrays as grayscale automatically
+image = Image.fromarray(array)
+image.save('gray.png')
+```
+</CodeBlock>
+
+The `Image.fromarray()` function from Pillow converts NumPy arrays into displayable images.
+
+#### The `uint8` data type
+
+The `dtype=np.uint8` parameter is required for image arrays:
+
+- **u** = unsigned (no negative numbers)
+- **int** = integer (whole numbers only)
+- **8** = 8 bits per value (range: 0 to 255)
+
+<CodeBlock lang="python">
+```python
+# Correct: uint8 for standard images
+array = np.zeros((100, 100), dtype=np.uint8)
+
+# Wrong: without dtype specification
+array = np.zeros((100, 100))   # Defaults to float64 — PIL expects uint8 for 0-255 images
+```
+</CodeBlock>
+
+#### Array shape and coordinates
+
+NumPy arrays use **[row, column]** indexing:
+
+- **row** = y-coordinate (vertical position, 0 at top)
+- **column** = x-coordinate (horizontal position, 0 at left)
+- **Shape**: `(height, width)` — height (rows) comes first.
+
+<CodeBlock lang="python">
+```python
+array = np.zeros((200, 300), dtype=np.uint8)  # 200 tall, 300 wide
+
+# Set pixel at row 50, column 100 to white
+array[50, 100] = 255
+
+# Set bottom-right corner
+array[199, 299] = 128
+```
+</CodeBlock>
+
+<Admonition type="tip">
+Remember: `array[y, x]` not `array[x, y]`. NumPy uses row-major indexing that matches mathematical matrix notation — the first index selects the row and the second selects the column. This is opposite to the `(x, y)` convention used in many graphics systems.
+</Admonition>
+
+### Concept 2 — Understanding digital images
+
+An RGB image is a **3D array of numbers**. Each number represents the intensity of light for one colour channel at one pixel location. In NumPy, an RGB image has shape `(height, width, 3)`. The three channels represent red, green, and blue intensities.
+
+<CodeBlock lang="python">
+```python
+# RGB array: height × width × 3 channels
+image = np.zeros((100, 150, 3), dtype=np.uint8)
+# Shape: (height=100, width=150, channels=3)
+
+# Access a specific pixel's RGB values
+pixel = image[50, 75, :]  # Returns [R, G, B]
+
+# Access just the red channel
+red_channel = image[:, :, 0]
+```
+</CodeBlock>
+
+<Admonition type="important">
+Array indexing uses `image[y, x, channel]`. The `y` (row) comes first, then `x` (column). This follows matrix notation, where the origin `(0, 0)` is at the **top-left corner**.
+</Admonition>
+
+<Admonition type="dyk" title="Technical note · display subpixels">
+This RGB encoding mirrors your display's physical structure. Each screen pixel contains three subpixels (red, green, blue) so small that your eye blends their light into perceived colour.
+</Admonition>
+
+### Concept 3 — The RGB colour model
+
+RGB is an **additive colour model**: start with darkness (black) and add colored light.
+
+- **Red `(255, 0, 0)`** → pure red light
+- **Green `(0, 255, 0)`** → pure green light
+- **Blue `(0, 0, 255)`** → pure blue light
+- **White `(255, 255, 255)`** → all three at maximum
+- **Black `(0, 0, 0)`** → no light
+
+Each channel stores values from **0 to 255** (8 bits = 256 possible values), giving **16,777,216 total colours** (256³). This is called "24-bit true colour" and exceeds the ~10 million colours the human eye can discriminate.
+
+<Figure
+  src="/lessons/1.1.1/rgb_additive_mixing_local.png"
+  alt="Diagram showing RGB additive colour mixing — three overlapping circles producing cyan, magenta, yellow, and white"
+  caption="RGB additive colour mixing: overlapping light creates secondary colours."
+  num={1}
+  role="diagram"
+/>
+
+<Admonition type="note">
+RGB is fundamentally different from mixing paint. Paint uses **subtractive colour** (CMYK): you start with white paper and pigments *subtract* wavelengths by absorbing them. That is why mixing red and green **light** creates yellow, but mixing red and green **paint** creates brown.
+</Admonition>
+
+#### Common RGB colour patterns
+
+- **Primary colours**: one channel at 255, others at 0.
+- **Secondary colours**: two channels at 255, one at 0.
+  - Cyan `(0, 255, 255)` = green + blue.
+  - Magenta `(255, 0, 255)` = red + blue.
+  - Yellow `(255, 255, 0)` = red + green.
+- **Grayscale**: all three channels equal `(N, N, N)`.
+- **Pastels**: high values across all channels (light colours).
+- **Dark colours**: low values across all channels.
+
+<Admonition type="dyk" title="Technical note · trichromatic vision">
+The human eye has three types of cone cells for colour vision, but they are not actually "red," "green," and "blue" receptors. The L-cones peak around 559 nm (yellow-green), M-cones around 530 nm (green), and S-cones around 420 nm (blue-violet). RGB is a computational convenience that *approximately* matches this trichromatic system.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three progressively challenging exercises, each building on the previous using the **Execute → Modify → Create** approach.
+
+<Exercise n={1} kicker="EXECUTE" title="Run and predict">
+
+Run the following code and observe the output. Try to predict what colour you will see before running it.
+
+<CodeBlock lang="python" file="exercise1.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Create a 150x150 image
+image = np.zeros((150, 150, 3), dtype=np.uint8)
+
+# Set all pixels to the same color
+image[:, :, 0] = 255  # Red channel
+image[:, :, 1] = 128  # Green channel
+image[:, :, 2] = 0    # Blue channel
+
+# Save and inspect
+Image.fromarray(image).save('exercise1_color.png')
+```
+</CodeBlock>
+
+**Reflection questions**
+
+- What colour appears? Why?
+- What would happen if you set all three channels to 255?
+- What would `(0, 0, 0)` look like?
+
+<Dropdown summary="Solution & explanation">
+
+**Answer:** Orange (or orange-red).
+
+**Why:** Red at maximum (255), green at half intensity (128), and blue absent (0) creates an orange hue. The colour `(255, 128, 0)` sits between pure red `(255, 0, 0)` and yellow `(255, 255, 0)`.
+
+- Setting all channels to 255 → **white** (all light).
+- Setting all channels to 0 → **black** (no light).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Hit specific colours">
+
+Modify the code from Exercise 1 to produce each of these colours. Change only the three channel values.
+
+<Dropdown summary="Goals">
+
+1. Create pure cyan (hint: which two colours of light make cyan?).
+2. Create a medium gray.
+3. Create a dark purple.
+
+</Dropdown>
+
+<Dropdown summary="Solutions">
+
+**1. Pure cyan**
+
+<CodeBlock lang="python">
+```python
+image[:, :, 0] = 0    # Red: off
+image[:, :, 1] = 255  # Green: full
+image[:, :, 2] = 255  # Blue: full
+# Result: (0, 255, 255)
+```
+</CodeBlock>
+
+Cyan is a **secondary colour** formed by combining green and blue light.
+
+**2. Medium gray**
+
+<CodeBlock lang="python">
+```python
+image[:, :, 0] = 128
+image[:, :, 1] = 128
+image[:, :, 2] = 128
+# Result: (128, 128, 128)
+```
+</CodeBlock>
+
+Grayscale occurs when **all three channels are equal**. The value determines brightness.
+
+**3. Dark purple**
+
+<CodeBlock lang="python">
+```python
+image[:, :, 0] = 64   # Red: low
+image[:, :, 1] = 0    # Green: off
+image[:, :, 2] = 96   # Blue: medium-low
+# Result: (64, 0, 96)
+```
+</CodeBlock>
+
+Purple combines red and blue. Keep values low for a dark shade.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build a gradient from scratch">
+
+Create something from scratch: a horizontal colour gradient that transitions smoothly from one colour to another.
+
+**Goal**: a 200×200 image that transitions from pure red on the left to pure blue on the right.
+
+<Dropdown summary="Hints">
+
+- Use a `for` loop over columns.
+- The red channel should decrease from left to right.
+- The blue channel should increase from left to right.
+- Calculate values proportionally: `value = column * 255 // width`.
+
+</Dropdown>
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Create image
+height, width = 200, 200
+image = np.zeros((height, width, 3), dtype=np.uint8)
+
+# Your code here: fill the image with a gradient.
+# Loop over columns and set red and blue channels.
+
+Image.fromarray(image).save('gradient.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+height, width = 200, 200
+image = np.zeros((height, width, 3), dtype=np.uint8)
+
+# Create gradient from red (left) to blue (right)
+for col in range(width):
+    image[:, col, 0] = 255 - (col * 255 // width)  # Red decreases
+    image[:, col, 2] = col * 255 // width          # Blue increases
+    # Green channel stays 0
+
+Image.fromarray(image).save('red_to_blue_gradient.png')
+```
+</CodeBlock>
+
+**How it works**
+
+- `col * 255 // width` calculates a proportion: when `col=0` (left edge), value is 0; when `col=width-1` (right edge), value is ~255.
+- Red channel: `255 - proportion` starts at 255 (left) and decreases to 0 (right).
+- Blue channel: `proportion` starts at 0 (left) and increases to 255 (right).
+- The result is a smooth transition through purples in the middle where red and blue overlap.
+
+**Extension**: try a **vertical** gradient, or one from yellow to cyan.
+
+</Dropdown>
+
+<Dropdown summary="Challenge — diagonal gradient">
+
+Create a gradient that runs diagonally from **red at top-left** to **blue at bottom-right**.
+
+**Hints**
+
+- Consider both the row (y) and column (x) position.
+- One approach: calculate a "progress" value from `(row + col) / (height + width - 2)`.
+- Red should be maximum at `(0, 0)` and minimum at `(height-1, width-1)`. Blue is the opposite.
+
+This extends the horizontal gradient by requiring you to think in two dimensions simultaneously.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/1.1.1/rgb.py" label="rgb.py — combined script" />
+<Download href="/lessons/1.1.1/rgb_additive_mixing_diagram.py" label="rgb_additive_mixing_diagram.py — diagram generator" />
+
+## Summary <a id="summary"></a>
+
+In 15–20 minutes, three core concepts: grayscale, RGB, and array indexing.
+
+<Admonition title="Key takeaways">
+
+An RGB image is a 3D NumPy array with shape `(height, width, 3)`. Each pixel holds three intensity values ranging from 0 to 255, one per colour channel, and additive mixing determines the perceived colour. The indexing convention `image[y, x, channel]` places rows before columns, matching matrix notation rather than typical graphics `(x, y)` coordinates. When all three channel values are equal, the result is grayscale; unequal values produce colours. You can generate images entirely through array operations, without loading external image files.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Don't confuse RGB (additive / light) with CMYK (subtractive / paint).
+- Remember: `image[row, column]` — not `image[x, y]`.
+- Always use `dtype=np.uint8` for standard 0–255 image data.
+- Different libraries may use BGR instead of RGB (OpenCV in particular).
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Foley, J. D., van Dam, A., Feiner, S. K., and Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley. ISBN 0-201-12110-7.</li>
+    <li><span class="tag">[2]</span> Gonzalez, R. C. and Woods, R. E. (2007). *Digital Image Processing* (3rd ed.). Pearson.</li>
+    <li><span class="tag">[3]</span> Hunt, R. W. G. (2004). *The Reproduction of Colour* (6th ed.). Wiley. ISBN 0-470-02425-9.</li>
+    <li><span class="tag">[4]</span> Mayer, R. E. (2020). *Multimedia Learning* (3rd ed.). Cambridge University Press.</li>
+    <li><span class="tag">[5]</span> Sweller, J. and Cooper, G. (1985). The use of worked examples as a substitute for problem solving in learning algebra. *Cognition and Instruction*, 2(1), 59–89.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+    <li><span class="tag">[7]</span> Clark, A. (2015). *Pillow (PIL Fork) Documentation*. <a href="https://pillow.readthedocs.io/" target="_blank" rel="noopener">pillow.readthedocs.io</a></li>
+  </ol>
+</section>

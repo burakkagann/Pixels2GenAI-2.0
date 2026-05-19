@@ -1,0 +1,27 @@
+{
+  "name": "pixels2genai-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "copy-assets": "node scripts/copy-v1-assets.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/mdx": "^4.0.3",
+    "@astrojs/react": "^4.1.2",
+    "astro": "^5.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "shiki": "^1.24.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,58 @@
+---
+import Base from './Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import ResearchTOC from '@/components/research/ResearchTOC.astro';
+import ResearchHead from '@/components/research/ResearchHead.astro';
+import '@/styles/prose.css';
+import '@/styles/lesson-layout.css';
+import '@/styles/research.css';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description?: string;
+    eyebrow?: string;
+    headline: string;
+    headlineEm?: string;   // italic span inside h1
+    lede: string;          // manuscript-register opener (~200 words)
+    sample: string;        // "9 participants · DBR pilot · 2026"
+    method: string;        // e.g. "DBR · Cycle ii"
+    instruments: string;   // e.g. "Pre/post · NASA-TLX · Exit tickets"
+    analysis: string;      // e.g. "Mixed-methods"
+  };
+  headings: Heading[];
+}
+
+const { frontmatter, headings } = Astro.props;
+const f = frontmatter;
+---
+
+<Base title={f.title} description={f.description ?? f.lede.slice(0, 160)}>
+  <main class="page research-page">
+    <article class="col-main lesson research-main">
+      <ResearchHead
+        eyebrow={f.eyebrow ?? '§ Research · DBR pilot study'}
+        headline={f.headline}
+        headlineEm={f.headlineEm}
+        lede={f.lede}
+        sample={f.sample}
+        method={f.method}
+        instruments={f.instruments}
+        analysis={f.analysis}
+      />
+      <slot />
+    </article>
+
+    <aside class="col-right">
+      <ResearchTOC headings={headings} />
+    </aside>
+  </main>
+
+  <Footer />
+</Base>

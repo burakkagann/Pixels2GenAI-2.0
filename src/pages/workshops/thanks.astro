@@ -1,0 +1,24 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import '@/styles/workshops.css';
+---
+
+<Base
+  title="Thanks · Workshops"
+  description="Your interest in the next Pixels2GenAI workshop has been recorded. We'll email you when a date and venue are confirmed."
+>
+  <main class="thanks-page">
+    <span class="mark-pink" aria-hidden="true"></span>
+    <h1>Noted. <em>Thanks.</em></h1>
+    <p>
+      Your details are on the list. We'll email you when the next
+      workshop has a date and a venue — and only then. In the meantime,
+      the curriculum lives at the home page; the pilot study lives at
+      <a href="/research">/research</a>.
+    </p>
+    <a class="btn btn-pri" href="/workshops">Back to workshops →</a>
+  </main>
+
+  <Footer />
+</Base>

@@ -1,0 +1,40 @@
+---
+interface Props {
+  /** Exercise number — rendered as a roman numeral. */
+  n: number;
+  /** Short title, e.g. "Modify Parameters". */
+  title: string;
+  /** Optional kicker label, e.g. "EXECUTE", "MODIFY", "RE-CODE", "ARCHITECT". */
+  kicker?: string;
+}
+
+const { n, title, kicker } = Astro.props;
+
+const roman = (num: number): string => {
+  const map: Array<[number, string]> = [
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+  ];
+  let out = '';
+  let v = num;
+  for (const [val, sym] of map) {
+    while (v >= val) {
+      out += sym;
+      v -= val;
+    }
+  }
+  return out;
+};
+---
+
+<article class="ex" id={`ex${n}`}>
+  <header class="ex-head">
+    <div class="ex-roman">
+      {kicker && <span class="num">{kicker}</span>}
+      {roman(n)}.
+    </div>
+    <h3 class="ex-title">{title}</h3>
+  </header>
+  <div class="ex-body">
+    <slot />
+  </div>
+</article>

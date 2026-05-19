@@ -1,0 +1,23 @@
+---
+/**
+ * Small in-line statistic block. Reads as an editorial pull-quote
+ * for a single number: eyebrow + big italic value + descriptive label.
+ *
+ * Group two or three side-by-side inside <div class="stat-row">…</div>
+ * (rule defined in research.css).
+ */
+
+interface Props {
+  eyebrow: string;
+  value: string;
+  label?: string;
+}
+
+const { eyebrow, value, label } = Astro.props;
+---
+
+<div class="stat-callout">
+  <span class="eyebrow">{eyebrow}</span>
+  <span class="value">{value}</span>
+  {label && <span class="label">{label}</span>}
+</div>

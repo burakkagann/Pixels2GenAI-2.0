@@ -1,0 +1,234 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+---
+
+<Base
+  title="Imprint"
+  description="Publisher identification and editorial responsibility for Pixels2GenAI."
+>
+  <main class="imprint-page">
+    <article class="imprint">
+      <header class="imprint-head">
+        <div class="imprint-eyebrow">
+          <span class="dot" aria-hidden="true"></span>
+          <span>§ Imprint · Publisher identification</span>
+        </div>
+        <h1>Imprint <em>·</em> editorial responsibility.</h1>
+        <p class="imprint-lede">
+          The page below identifies the publisher of this site and the
+          party responsible for its editorial content, as required for
+          public-facing publications under EU law.
+        </p>
+      </header>
+
+      <section>
+        <h2>Publisher</h2>
+        <dl class="imprint-meta">
+          <dt>Name</dt>
+          <dd>Burak Kağan Yılmazer</dd>
+          <dt>Postal address</dt>
+          <dd></dd>
+          <dt>Email</dt>
+          <dd>
+            <a href="mailto:burak.kagan@protonmail.com">burak.kagan@protonmail.com</a>
+          </dd>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Editorial responsibility</h2>
+        <p>
+          Burak Kağan Yılmazer is responsible for the editorial content of
+          this site under §18 (2) MStV (Medienstaatsvertrag). All claims,
+          analyses, and recommendations published here reflect the author's
+          research and views.
+        </p>
+      </section>
+
+      <section>
+        <h2>Dispute resolution</h2>
+        <p>
+          The European Commission provides an online dispute resolution
+          platform at
+          <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">
+            ec.europa.eu/consumers/odr <span class="arr">↗</span>
+          </a>.
+          We are neither obliged nor willing to participate in dispute
+          resolution proceedings before a consumer arbitration board.
+        </p>
+      </section>
+
+      <section>
+        <h2>Liability for content and links</h2>
+        <p>
+          Content on this site is offered under
+          <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">
+            CC-BY 4.0 <span class="arr">↗</span>
+          </a>
+          for text and the
+          <a href="https://opensource.org/license/mit" target="_blank" rel="noopener">
+            MIT License <span class="arr">↗</span>
+          </a>
+          for code. External links lead to third-party sites whose content
+          is the sole responsibility of those operators; we accept no
+          liability for material reached through such links.
+        </p>
+      </section>
+
+      <p class="imprint-foot">
+        Last revised 2026 · Pixels2GenAI · Pressmark P2GA-r
+      </p>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .imprint-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px var(--pad-x) 96px;
+  }
+
+  .imprint-head {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+
+  .imprint-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 22px;
+  }
+
+  .imprint-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .imprint h1 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 48px);
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    margin: 0 0 24px;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+
+  .imprint h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .imprint-lede {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--fg);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .imprint section {
+    margin: 0 0 36px;
+  }
+
+  .imprint h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+    color: var(--fg);
+  }
+
+  .imprint p {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--fg-2);
+    margin: 0 0 12px;
+    max-width: 62ch;
+  }
+
+  .imprint-meta {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px 24px;
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+
+  .imprint-meta dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    align-self: center;
+  }
+
+  .imprint-meta dd {
+    margin: 0;
+    color: var(--fg);
+  }
+
+  .imprint a {
+    color: var(--link, var(--accent));
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    transition: border-color .15s;
+  }
+
+  .imprint a:hover {
+    border-bottom-color: currentColor;
+  }
+
+  .imprint .arr {
+    font-size: 0.85em;
+    color: var(--fg-3);
+    margin-left: 2px;
+  }
+
+  .imprint-foot {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin: 48px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 640px) {
+    .imprint-meta {
+      grid-template-columns: 1fr;
+      gap: 4px 0;
+    }
+    .imprint-meta dt {
+      margin-top: 12px;
+    }
+    .imprint-meta dt:first-of-type {
+      margin-top: 0;
+    }
+  }
+</style>

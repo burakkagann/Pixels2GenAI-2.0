@@ -1,0 +1,70 @@
+---
+import Base from './Base.astro';
+import LessonHead from '@/components/lesson/LessonHead.astro';
+import OnThisPage from '@/components/lesson/OnThisPage.astro';
+import ContinueInModule from '@/components/lesson/ContinueInModule.astro';
+import PrevNext from '@/components/lesson/PrevNext.astro';
+import StageTracker from '@/components/lesson/StageTracker.astro';
+import '@/styles/prose.css';
+import '@/styles/lesson-layout.css';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface NeighborLink {
+  slug: string;
+  title: string;
+}
+
+interface Props {
+  slug: string;
+  frontmatter: {
+    module: string;
+    cycle: 'I' | 'II' | 'III';
+    title: string;
+    objective: string;
+    framework: 'hands-on' | 'conceptual' | 'hybrid' | 'project';
+    duration: string;
+    level: string;
+    load?: string;
+    prereqs?: string;
+    prev: NeighborLink | null;
+    next: NeighborLink | null;
+    backLink?: { href: string; label: string };
+  };
+  headings: Heading[];
+}
+
+const { slug, frontmatter, headings } = Astro.props;
+const f = frontmatter;
+---
+
+<Base title={`${slug} ${f.title}`} description={f.objective}>
+  <StageTracker currentModule={f.module} cycle={f.cycle} />
+
+  <main class="page" data-cycle={f.cycle}>
+    <article class="col-main lesson">
+      <LessonHead
+        slug={slug}
+        module={f.module}
+        title={f.title}
+        objective={f.objective}
+        framework={f.framework}
+        duration={f.duration}
+        level={f.level}
+        load={f.load}
+        prereqs={f.prereqs}
+      />
+      <slot />
+      <PrevNext prev={f.prev} next={f.next} backLink={f.backLink} />
+    </article>
+
+    <aside class="col-right">
+      <OnThisPage headings={headings} slug={slug} cycle={f.cycle} />
+      <ContinueInModule slug={slug} currentModule={f.module} />
+    </aside>
+  </main>
+</Base>

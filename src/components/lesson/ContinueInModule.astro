@@ -1,0 +1,46 @@
+---
+/**
+ * Right-rail "Continue in M XX" card — lists all leaves in the
+ * current module so the reader can move sideways without going back
+ * to the landing-page Curriculum. Renders only when the module has
+ * more than one leaf (the capstone has only one — guard hides it).
+ */
+import { leavesFor } from '@/data/subtopics';
+import { moduleIndexFromLabel } from '@/data/modules';
+
+interface Props {
+  /** Current lesson slug, e.g. "4.1.1" */
+  slug: string;
+  /** Frontmatter `module` field, e.g. "M 04" */
+  currentModule: string;
+}
+
+const { slug, currentModule } = Astro.props;
+const idx = String(moduleIndexFromLabel(currentModule)).padStart(2, '0');
+const leaves = leavesFor(idx);
+---
+
+{leaves.length > 1 && (
+  <nav class="continue-card" aria-label={`Other lessons in ${currentModule}`}>
+    <h4>Continue in <b>{currentModule}</b></h4>
+    <ul>
+      {leaves.map(l => {
+        const isCur = l.lessonSlug === slug || l.id === slug;
+        const href = l.lessonSlug ? `/lessons/${l.lessonSlug}` : null;
+        return (
+          <li>
+            {href ? (
+              <a class={isCur ? 'cur' : ''} href={href}>
+                <span class="k">{l.id}</span><span class="ttl">{l.title}</span>
+              </a>
+            ) : (
+              <span class="soon">
+                <span class="k">{l.id}</span><span class="ttl">{l.title}</span>
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}

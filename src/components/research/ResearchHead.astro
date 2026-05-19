@@ -1,0 +1,35 @@
+---
+interface Props {
+  eyebrow: string;
+  headline: string;
+  headlineEm?: string;
+  lede: string;
+  sample: string;
+  method: string;
+  instruments: string;
+  analysis: string;
+}
+
+const { eyebrow, headline, headlineEm, lede, sample, method, instruments, analysis } = Astro.props;
+---
+
+<header class="research-head">
+  <div class="research-eyebrow">
+    <span class="dot" aria-hidden="true"></span>
+    <span>{eyebrow}</span>
+  </div>
+
+  <h1>
+    {headline}
+    {headlineEm && <> <em>{headlineEm}</em></>}
+  </h1>
+
+  <p class="research-lede">{lede}</p>
+
+  <div class="research-meta">
+    <div><b>Method</b><span>{method}</span></div>
+    <div><b>Sample</b><span>{sample}</span></div>
+    <div><b>Instruments</b><span>{instruments}</span></div>
+    <div><b>Analysis</b><span>{analysis}</span></div>
+  </div>
+</header>

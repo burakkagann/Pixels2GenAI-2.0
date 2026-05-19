@@ -1,0 +1,81 @@
+---
+/**
+ * Sticky horizontal stage tracker — dynamic 8-of-16 sliding window
+ * centred on the current lesson's module. Each tick is statically
+ * tinted by its own cycle (`.c1`/`.c2`/`.c3`); the current tick lights
+ * up in the lesson's cycle accent via the `data-cycle` attribute.
+ *
+ * Layout: single left marker (cycle dot + italic short name + small
+ * cycle long-name) divided from the ticks by a 1 px vertical line.
+ * No right-side endpoints — those duplicated the landing-page Cube.
+ *
+ * Non-shipped ticks render as anchors with `href="#"` — visually
+ * identical, just not navigable.
+ */
+import { MODULES, windowAround, moduleIndexFromLabel } from '@/data/modules';
+
+interface Props {
+  /** Frontmatter `module` field, e.g. "M 04". */
+  currentModule: string;
+  /** Frontmatter `cycle` field. */
+  cycle: 'I' | 'II' | 'III';
+}
+
+const { currentModule, cycle } = Astro.props;
+const curIdx = moduleIndexFromLabel(currentModule);
+const win = windowAround(curIdx, 8);
+
+// Marker labels for the left-of-ticks section.
+const cycleShort: Record<Props['cycle'], string> = {
+  'I':   'Path i',
+  'II':  'Path ii',
+  'III': 'Path iii',
+};
+const cycleLong: Record<Props['cycle'], string> = {
+  'I':   'Foundations',
+  'II':  'Continuum',
+  'III': 'Generative',
+};
+
+// Short labels for tick body. Falls back to MODULES[i].title if missing.
+const shortTitles: Record<string, string> = {
+  '00': 'Foundations', '01': 'Pixels',        '02': 'Geometry',
+  '03': 'Transforms',  '04': 'Fractals',      '05': 'Simulation',
+  '06': 'Noise',       '07': 'Classical ML',  '08': 'Animation',
+  '09': 'Neural',      '10': 'TouchDesigner', '11': 'Interactive',
+  '12': 'Generative AI', '13': 'AI + TD',     '14': 'Data',         '15': 'Capstone',
+};
+
+const cycleClass: Record<'I' | 'II' | 'III', string> = { 'I': 'c1', 'II': 'c2', 'III': 'c3' };
+---
+
+<div class="stage" data-cycle={cycle}>
+  <div class="stage-inner">
+    <div class="marker" aria-label={`Currently in ${cycleShort[cycle]} ${cycleLong[cycle]}`}>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="short">{cycleShort[cycle]}</span>
+      <span class="long">{cycleLong[cycle]}</span>
+    </div>
+    <div class="ticks" role="navigation" aria-label="Curriculum position">
+      {win.map(m => {
+        const i = parseInt(m.idx, 10);
+        const cls = ['tick', cycleClass[m.cycle]];
+        if (i < curIdx) cls.push('past');
+        if (i === curIdx) cls.push('cur');
+        if (!m.firstLesson) cls.push('soon');
+        const href = m.firstLesson ? `/lessons/${m.firstLesson}` : '#';
+        const label = shortTitles[m.idx] ?? m.title;
+        return (
+          <a
+            class={cls.join(' ')}
+            href={href}
+            aria-current={i === curIdx ? 'step' : undefined}
+            aria-label={`Module ${m.idx} · ${label}`}
+          >
+            <b>M {m.idx}</b>{label}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</div>

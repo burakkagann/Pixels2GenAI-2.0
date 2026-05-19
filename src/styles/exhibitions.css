@@ -1,0 +1,1306 @@
+/* ============================================================
+   EXHIBITIONS — landing § 4 catalog AND per-show route.
+   Layered on:
+     - tokens.css → palette, typography, spacing
+     - landing.css → .section, .btn family
+
+   Two registers in one stylesheet, mirroring how workshops.css
+   holds both the landing § 3 .workshops-archive AND the
+   /workshops route:
+     1. Landing § 4   → .exhibitions-archive, .exhibition-specimen,
+                        .exhibition-plate-strip, .exhibition-plate, …
+     2. Route page    → .exhibition-page, .exhibition-head,
+                        .exhibition-section, .exhibition-plate, …
+   Each block has its own comment header below.
+
+   Pink discipline matches § 3 Workshops: badge + CTA + hover only.
+   Inner classes (.summary-index, .summary-status.completed,
+   .summary-identifier, .summary-meta, .summary-chevron) are
+   intentionally shared with the workshop sibling for typographic
+   parity, but every rule below is scoped under
+   .exhibition-specimen-summary so styles never leak to a page that
+   imports only exhibitions.css.
+   ============================================================ */
+
+/* ============================================================
+   LANDING § 4 — Exhibition specimen + plate strip
+   The whole catalog wraps in .exhibitions-archive (plural,
+   matching .workshops-archive).
+   ============================================================ */
+
+.exhibitions-archive {
+  border: 1px solid var(--line);
+}
+
+/* ---------- Archive head bar (mono ruled-line sub-header) ---------- */
+.exhibition-archive-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 22px;
+  align-items: baseline;
+  padding: 10px 22px;
+  border-top: 2px solid var(--fg);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.exhibition-archive-head .archive-org {
+  color: var(--fg);
+  letter-spacing: 0.22em;
+}
+
+.exhibition-archive-head .archive-count {
+  color: var(--fg-3);
+}
+
+/* ---------- Specimen · collapsible <details> ---------- */
+.exhibition-specimen {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  transition: background 0.2s ease;
+}
+
+.exhibition-specimen:last-child {
+  border-bottom: none;
+}
+
+.exhibition-specimen-summary {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto 16px;
+  gap: 18px;
+  align-items: center;
+  padding: 14px 22px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.exhibition-specimen-summary::-webkit-details-marker { display: none; }
+.exhibition-specimen-summary::marker { content: ""; }
+
+.exhibition-specimen-summary:hover {
+  background: color-mix(in srgb, var(--bg-2) 92%, var(--studio) 8%);
+}
+
+.exhibition-specimen[open] > .exhibition-specimen-summary {
+  background: color-mix(in srgb, var(--bg-2) 88%, var(--studio) 12%);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Inner names — scoped so they never leak. */
+.exhibition-specimen-summary .summary-index {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.exhibition-specimen-summary .summary-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.exhibition-specimen-summary .summary-status.completed {
+  color: var(--c1);
+  border-color: color-mix(in srgb, var(--c1) 50%, transparent);
+  background: color-mix(in srgb, var(--c1) 6%, transparent);
+}
+
+.exhibition-specimen-summary .summary-identifier {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--fg);
+  line-height: 1.3;
+}
+
+.exhibition-specimen-summary .summary-identifier em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-specimen-summary .summary-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.exhibition-specimen-summary .summary-chevron {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-3);
+  transition: color 0.2s ease;
+}
+
+.exhibition-specimen-summary .summary-chevron svg {
+  width: 12px;
+  height: 8px;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.exhibition-specimen-summary:hover .summary-chevron { color: var(--studio); }
+
+.exhibition-specimen[open] > .exhibition-specimen-summary .summary-chevron {
+  color: var(--studio);
+}
+
+.exhibition-specimen[open] > .exhibition-specimen-summary .summary-chevron svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 720px) {
+  .exhibition-specimen-summary {
+    grid-template-columns: auto 1fr 16px;
+    gap: 10px 14px;
+  }
+  .exhibition-specimen-summary .summary-status { grid-column: 1 / span 2; justify-self: start; }
+  .exhibition-specimen-summary .summary-identifier { grid-column: 1 / span 2; }
+  .exhibition-specimen-summary .summary-meta { grid-column: 1 / span 2; }
+  .exhibition-specimen-summary .summary-chevron { grid-column: 3; grid-row: 1; align-self: start; margin-top: 3px; }
+}
+
+/* ---------- Specimen body (2-col when open) ---------- */
+.exhibition-specimen-body {
+  display: grid;
+  grid-template-columns: 1.5fr 220px;
+  gap: 28px;
+  align-items: start;
+  padding: 24px 26px 8px;
+}
+
+@media (max-width: 720px) {
+  .exhibition-specimen-body {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+
+.exhibition-specimen-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.exhibition-specimen-text h3 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.exhibition-specimen-text h3 em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-specimen-text .lede {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 64ch;
+}
+
+.exhibition-specimen-text .lede a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  font-style: normal;
+  transition: border-bottom-color 0.15s ease;
+}
+
+.exhibition-specimen-text .lede a:hover { border-bottom-color: var(--studio); }
+
+.exhibition-specimen-dl {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 7px 16px;
+  margin: 4px 0 0;
+  align-items: baseline;
+}
+
+.exhibition-specimen-dl dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-specimen-dl dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.exhibition-specimen-dl dd em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-specimen-dl dd a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: border-bottom-color 0.15s ease;
+}
+
+.exhibition-specimen-dl dd a:hover { border-bottom-color: var(--studio); }
+
+/* ---------- Specimen aside · dimmed poster, hover lifts ---------- */
+.exhibition-specimen-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exhibition-specimen-poster {
+  position: relative;
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+
+.exhibition-specimen-poster img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0.34;
+  filter: saturate(0.6);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.exhibition-specimen-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--bg-deep) 70%, transparent));
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.exhibition-specimen-poster:hover { border-color: var(--line-2); }
+.exhibition-specimen-poster:hover img { opacity: 1; filter: saturate(1); }
+.exhibition-specimen-poster:hover::after { opacity: 0; }
+
+.exhibition-specimen-poster:focus-visible {
+  outline: 1px solid var(--studio);
+  outline-offset: 2px;
+}
+.exhibition-specimen-poster:focus-visible img { opacity: 1; filter: saturate(1); }
+.exhibition-specimen-poster:focus-visible::after { opacity: 0; }
+
+.exhibition-specimen-poster-cap {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  line-height: 1.5;
+}
+
+.exhibition-specimen-poster-cap em {
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--fg-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exhibition-specimen-poster img,
+  .exhibition-specimen-poster::after,
+  .exhibition-plate img {
+    transition: none;
+  }
+}
+
+/* ---------- Plate strip (5 thumbnails along bottom of specimen body) ---------- */
+.exhibition-plate-strip {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dotted var(--line-2);
+}
+
+.exhibition-plate-strip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-plate-strip-head b { color: var(--fg-2); font-weight: 500; }
+
+.exhibition-plate-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .exhibition-plate-strip-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 540px) {
+  .exhibition-plate-strip-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.exhibition-plate {
+  position: relative;
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  transition: border-color 0.2s;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.exhibition-plate:hover { border-color: var(--studio); }
+
+.exhibition-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s, filter 0.4s;
+  filter: saturate(0.85);
+}
+
+.exhibition-plate:hover img { transform: scale(1.03); filter: saturate(1); }
+
+.exhibition-plate.is-animated::after {
+  content: "▶ live";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--studio);
+  border: 1px solid var(--studio-dim);
+}
+
+.exhibition-plate.is-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px;
+}
+
+.exhibition-plate.is-text span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--fg-2);
+  line-height: 1.35;
+}
+
+.exhibition-plate.is-text small {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--studio);
+}
+
+/* ---------- Specimen actions row (catalog CTA + meta note) ---------- */
+.exhibition-specimen-actions {
+  padding: 16px 26px 22px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.exhibition-specimen-actions .btn-ghost {
+  background: transparent;
+  color: var(--fg-2);
+  border: none;
+  padding: 6px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+
+.exhibition-specimen-actions .btn-ghost:hover { color: var(--studio); }
+
+.exhibition-specimen-actions .right {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* ============================================================
+   ROUTE PAGE — per-show /exhibitions/<id> (e.g. /exhibitions/2026-03)
+   Mirrors /workshops route's typographic register but with its own
+   visual identity: poster prominent rather than dimmed, plate gallery
+   instead of outcomes, artist roster card row.
+   ============================================================ */
+
+/* ---------- Page wrapper ---------- */
+.exhibition-page {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(48px, 7vh, 88px) var(--pad-x) 80px;
+}
+
+/* ---------- Head (eyebrow with pink dot, h1 with italic em, drop-cap lede) ---------- */
+.exhibition-head {
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 48px;
+  max-width: 68ch;
+}
+
+.exhibition-head .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 22px;
+}
+
+.exhibition-head .eyebrow .dot {
+  width: 5px;
+  height: 5px;
+  background: var(--studio);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.exhibition-head h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 26px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.exhibition-head h1 em {
+  font-style: italic;
+  color: var(--studio);
+  font-weight: 500;
+}
+
+.exhibition-head .lede {
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--fg);
+  margin: 0;
+  max-width: 60ch;
+  letter-spacing: -0.005em;
+  font-weight: 400;
+}
+
+.exhibition-head .lede + .lede {
+  margin-top: 18px;
+}
+
+/* Only the first paragraph carries the drop-cap. */
+.exhibition-head .lede:first-of-type::first-letter {
+  font-family: var(--serif);
+  font-style: normal;
+  font-size: 3em;
+  line-height: 0.85;
+  float: left;
+  margin: 6px 10px 0 0;
+  color: var(--highlight);
+  font-weight: 500;
+}
+
+/* ---------- Section divider (mirrors .workshops-section) ---------- */
+.exhibition-section {
+  padding: 56px 0;
+  border-top: 1px solid var(--line);
+}
+
+.exhibition-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.exhibition-section h2 {
+  font-family: var(--serif);
+  font-size: clamp(28px, 3.8vw, 40px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.exhibition-section h2 em {
+  font-style: italic;
+  color: var(--fg-2);
+  font-weight: 400;
+}
+
+.exhibition-section .deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--fg-2);
+  margin: 0 0 32px;
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+.exhibition-section .deck a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  font-style: normal;
+  transition: border-bottom-color .15s;
+}
+
+.exhibition-section .deck a:hover {
+  border-bottom-color: var(--studio);
+}
+
+/* ---------- Feature · poster + body (poster NOT dimmed — this is the page) ---------- */
+.exhibition-feature {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .exhibition-feature {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.exhibition-poster {
+  position: relative;
+  display: block;
+  border: 1px solid var(--line-2);
+  background: var(--bg-deep);
+  overflow: hidden;
+  transition: border-color .2s, transform .35s;
+}
+
+.exhibition-poster:hover {
+  border-color: var(--studio-dim);
+  transform: translateY(-2px);
+}
+
+.exhibition-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.exhibition-poster-cap {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-top: 10px;
+  text-align: right;
+}
+
+.exhibition-feature-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.exhibition-feature-body .eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-feature-body h3 {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.01em;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+
+.exhibition-feature-body h3 em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-feature-body .narrative {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg);
+  margin: 0;
+  max-width: 56ch;
+}
+
+.exhibition-feature-body .narrative em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-feature-body .narrative a {
+  color: var(--studio);
+  border-bottom: 1px solid var(--studio-dim);
+  padding-bottom: 1px;
+  transition: border-bottom-color .15s;
+}
+
+.exhibition-feature-body .narrative a:hover {
+  border-bottom-color: var(--studio);
+}
+
+/* meta dl */
+.exhibition-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.exhibition-meta > div {
+  background: var(--bg);
+  padding: 12px 14px;
+}
+
+.exhibition-meta b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--fg-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.exhibition-meta span {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--fg);
+  font-style: italic;
+}
+
+/* ---------- Plate gallery (printed works — compact 5-col contact sheet) ---------- */
+.exhibition-plates {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .exhibition-plates {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .exhibition-plates {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .exhibition-plates {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.exhibition-plate {
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  overflow: hidden;
+  transition: border-color .2s, transform .25s;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+.exhibition-plate:hover {
+  border-color: var(--studio);
+  transform: translateY(-2px);
+}
+
+.exhibition-plate:focus-visible {
+  outline: 1px solid var(--studio);
+  outline-offset: 2px;
+}
+
+.exhibition-plate .plate-frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.exhibition-plate .plate-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85);
+  transition: filter .3s, transform .4s;
+}
+
+.exhibition-plate:hover .plate-frame img {
+  filter: saturate(1);
+  transform: scale(1.04);
+}
+
+.exhibition-plate .plate-cap {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--bg-2);
+}
+
+.exhibition-plate .plate-cap b {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+}
+
+.exhibition-plate .plate-cap b em {
+  font-style: italic;
+  color: var(--fg-2);
+  font-weight: 400;
+}
+
+.exhibition-plate .plate-cap span {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.exhibition-plate-credit {
+  margin: 22px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--fg-3);
+  line-height: 1.5;
+  max-width: 70ch;
+}
+
+/* ---------- Animated works grid (3-card · hover-to-play) ---------- */
+.exhibition-anim {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 980px) {
+  .exhibition-anim {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exhibition-anim-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  overflow: hidden;
+  transition: border-color .2s, transform .25s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.exhibition-anim-card:hover {
+  border-color: var(--studio);
+  transform: translateY(-2px);
+}
+
+.exhibition-anim-card .anim-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+.exhibition-anim-card .anim-frame .rest,
+.exhibition-anim-card .anim-frame .play {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exhibition-anim-card .anim-frame .rest {
+  filter: saturate(0.75);
+  opacity: 1;
+  transition: opacity .4s, filter .4s, transform .5s;
+}
+
+.exhibition-anim-card .anim-frame .play {
+  opacity: 0;
+  transition: opacity .4s;
+}
+
+/* Frame with both stills present — cross-fade on hover. */
+.exhibition-anim-card:hover .anim-frame.has-hover .rest {
+  opacity: 0;
+}
+
+.exhibition-anim-card:hover .anim-frame.has-hover .play {
+  opacity: 1;
+}
+
+/* Frame with only one still — saturate + scale, don't fade. */
+.exhibition-anim-card:hover .anim-frame:not(.has-hover):not(.placeholder) .rest {
+  filter: saturate(1);
+  transform: scale(1.04);
+}
+
+/* Placeholder frame for capture-pending pieces. */
+.exhibition-anim-card .anim-frame.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(45deg,
+      var(--bg-deep) 0 8px,
+      color-mix(in srgb, var(--studio) 8%, var(--bg-deep)) 8px 9px);
+  color: var(--fg-4);
+}
+
+.exhibition-anim-card .anim-frame.placeholder::after {
+  content: "capture pending";
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-anim-card .anim-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--studio);
+  border: 1px solid var(--studio-dim);
+}
+
+.exhibition-anim-card .anim-body {
+  padding: 18px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.exhibition-anim-card .anim-body h4 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.exhibition-anim-card .anim-body h4 em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.exhibition-anim-card .anim-body .technique {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 0;
+}
+
+.exhibition-anim-card .anim-body p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.exhibition-anim-card .anim-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dotted var(--line-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-anim-card .anim-foot .repo {
+  color: var(--studio);
+  border-bottom: 1px solid var(--studio-dim);
+  padding-bottom: 1px;
+}
+
+/* ---------- Artists row (6 cards · names + role) ---------- */
+.exhibition-artists {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 720px) {
+  .exhibition-artists {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .exhibition-artists {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exhibition-artist {
+  background: var(--bg-2);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: background .2s;
+}
+
+.exhibition-artist:hover {
+  background: var(--bg-3);
+}
+
+.exhibition-artist b {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+}
+
+.exhibition-artist span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--fg-2);
+  line-height: 1.45;
+}
+
+.exhibition-artist .pending {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-style: normal;
+}
+
+/* ---------- Curators sub-block ----------
+   Layout-demoted sibling of the Artists grid (2 cols vs 3). Cells inherit
+   .exhibition-artist styling for visual unity; the "Curators" eyebrow above
+   marks them as a credit rather than the main subject. */
+.exhibition-curators-block {
+  margin-top: 28px;
+}
+
+.exhibition-curators-block .curators-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.exhibition-curators {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 480px) {
+  .exhibition-curators {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Documents row ---------- */
+.exhibition-docs {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.exhibition-docs .doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+  transition: border-color .2s, color .2s;
+}
+
+.exhibition-docs .doc:hover {
+  border-color: var(--studio);
+  color: var(--studio);
+}
+
+.exhibition-docs .doc .kind {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--studio);
+  padding-right: 12px;
+  border-right: 1px solid var(--line-2);
+}
+
+/* ---------- Acknowledgements ---------- */
+.exhibition-ack {
+  padding-top: 56px;
+  margin-top: 56px;
+  border-top: 1px solid var(--line);
+}
+
+.exhibition-ack h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0 0 14px;
+  color: var(--fg);
+}
+
+.exhibition-ack p {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  margin: 0 0 10px;
+  max-width: 64ch;
+}
+
+.exhibition-ack a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: color .15s, border-bottom-color .15s;
+}
+
+.exhibition-ack a:hover {
+  color: var(--studio);
+  border-bottom-color: var(--studio);
+}
+
+/* ---------- Modal for enlarged plate ---------- */
+.exhibition-modal {
+  border: 1px solid var(--line-2);
+  background: var(--bg-deep);
+  padding: 0;
+  max-width: 92vw;
+  max-height: 92vh;
+  color: var(--fg);
+}
+
+.exhibition-modal::backdrop {
+  background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.exhibition-modal-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 0;
+  max-width: 1200px;
+  max-height: 88vh;
+}
+
+@media (max-width: 720px) {
+  .exhibition-modal-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+}
+
+.exhibition-modal-body img {
+  display: block;
+  width: 100%;
+  max-height: 88vh;
+  object-fit: contain;
+  background: var(--bg-deep);
+}
+
+.exhibition-modal-meta {
+  padding: 24px 26px;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+@media (max-width: 720px) {
+  .exhibition-modal-meta {
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+}
+
+.exhibition-modal-meta h4 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.exhibition-modal-meta h4 em {
+  font-style: italic;
+  color: var(--fg-2);
+  font-weight: 400;
+}
+
+.exhibition-modal-meta .artist {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--fg-2);
+}
+
+.exhibition-modal-meta .technique {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.exhibition-modal-meta p {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--fg-2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.exhibition-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  transition: background .2s, color .2s;
+  z-index: 1;
+}
+
+.exhibition-modal-close:hover {
+  background: var(--studio);
+  color: var(--bg);
+}

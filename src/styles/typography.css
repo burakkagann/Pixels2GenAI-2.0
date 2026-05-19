@@ -1,0 +1,58 @@
+/* ============================================================
+   TYPOGRAPHY — font loading happens in Base.astro <head> via
+   Google Fonts. This file holds prose-agnostic helpers only;
+   lesson-prose rules live in prose.css.
+   ============================================================ */
+
+/* Default headings (used outside .lesson scope, e.g. landing page) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+strong {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+em {
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+code, pre, kbd, samp {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+/* Eyebrow — mono uppercase label preceded by an accent rule */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--highlight);
+}
+
+.eyebrow b {
+  font-weight: 500;
+  color: var(--highlight);
+}

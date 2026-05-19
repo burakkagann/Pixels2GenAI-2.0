@@ -1,0 +1,61 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import '@/styles/workshops.css';
+---
+
+<Base
+  title="Register interest · Workshops"
+  description="Register your interest to be notified when the next Pixels2GenAI workshop is scheduled. One announcement email per workshop, no newsletter."
+>
+  <main class="signup-page">
+    <span class="eyebrow">§ Workshops · Register interest</span>
+    <h1>Tell us you'd like to <em>come.</em></h1>
+    <p class="lede">
+      Workshops are announced once a date and venue are confirmed. Leave
+      your name, an email we can reach you at, and (optionally) a sentence
+      about what you'd want to learn — that last field actually shapes the
+      module selection for the next workshop. One mail per workshop, no
+      newsletter, opt out any time.
+    </p>
+
+    <form
+      name="workshop-interest"
+      method="POST"
+      action="/workshops/thanks"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+      class="signup-form"
+    >
+      <input type="hidden" name="form-name" value="workshop-interest" />
+      <p class="honeypot">
+        <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+      </p>
+
+      <label>
+        Name <span class="req">*</span>
+        <input type="text" name="name" required autocomplete="name" />
+      </label>
+
+      <label>
+        Email <span class="req">*</span>
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+
+      <label>
+        What would you want to learn from a workshop?
+        <textarea name="interests" rows="4" placeholder="Optional — one or two sentences. Examples: 'I want to understand how diffusion models actually work', 'I'd like to make generative art with code'."></textarea>
+      </label>
+
+      <div class="submit-row">
+        <button type="submit" class="btn btn-pri">Register interest →</button>
+        <p class="privacy">
+          Your details are stored only to notify you about the next
+          workshop. We won't share them.
+        </p>
+      </div>
+    </form>
+  </main>
+
+  <Footer />
+</Base>

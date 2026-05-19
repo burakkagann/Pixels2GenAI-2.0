@@ -1,0 +1,15 @@
+---
+interface Props {
+  /** Visible label, e.g. "Solution" or "Hint". */
+  summary: string;
+}
+
+const { summary } = Astro.props;
+---
+
+<details class="dropdown">
+  <summary>{summary}</summary>
+  <div class="dropdown-body">
+    <slot />
+  </div>
+</details>

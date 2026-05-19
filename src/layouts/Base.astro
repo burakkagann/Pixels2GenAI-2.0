@@ -1,0 +1,96 @@
+---
+import '@/styles/tokens.css';
+import '@/styles/base.css';
+import '@/styles/typography.css';
+import '@/styles/landing.css';
+import GrainOverlay from '@/components/chrome/GrainOverlay.astro';
+import FrameTop from '@/components/chrome/FrameTop.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  onLanding?: boolean;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = 'An open curriculum that takes a learner from a single array element to building, training, and reasoning about modern generative models.',
+  onLanding = false,
+  ogImage,
+} = Astro.props;
+
+const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  {/* No-flash theme: runs before stylesheets paint. Reads localStorage
+      ['p2g-theme'] (explicit 'light' | 'dark') or falls back to
+      prefers-color-scheme; defaults to dark. */}
+  <script is:inline>
+    (() => {
+      try {
+        const stored = localStorage.getItem('p2g-theme');
+        const theme = stored
+          ? stored
+          : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Plus+Jakarta+Sans:wght@300..700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap"
+  />
+</head>
+<body>
+  <GrainOverlay />
+  <FrameTop onLanding={onLanding} />
+
+  <slot />
+
+  <script>
+    // Smooth scroll for in-page anchor links
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a[href^="#"]') as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const id = anchor.getAttribute('href')?.slice(1);
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', `#${id}`);
+    });
+
+    // When no explicit theme choice is stored, track OS preference live.
+    // The no-flash <script is:inline> in <head> handles first paint; this
+    // handles changes while a tab is open.
+    const mq = matchMedia('(prefers-color-scheme: light)');
+    const applySystem = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (localStorage.getItem('p2g-theme')) return;
+      document.documentElement.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+    };
+    mq.addEventListener('change', applySystem);
+  </script>
+</body>
+</html>

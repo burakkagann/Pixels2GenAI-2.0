@@ -1,0 +1,336 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import JourneyCube from '@/components/cube/JourneyCube.tsx';
+import WorkshopSpecimen from '@/components/workshops/WorkshopSpecimen.astro';
+import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
+import { MODULES } from '@/data/modules';
+import { SUBTOPICS, countLeaves } from '@/data/subtopics';
+import { PATHS } from '@/data/paths';
+import { RQS, CYCLES } from '@/data/research';
+import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/workshops';
+import { PAST_EXHIBITIONS } from '@/data/exhibitions';
+import '@/styles/workshops.css';
+import '@/styles/exhibitions.css';
+---
+
+<Base title="Pixels2GenAI · From pixels to generative AI" onLanding={true}>
+  <!-- ========== COVER ========== -->
+  <header class="cover">
+    <div>
+      <div class="eyebrow"><b>MA Thesis</b> · Design-Based Research · Cycle ii · 2026</div>
+      <h1 class="cover-title">
+        <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
+        one continuous thread.
+      </h1>
+      <p class="cover-lead">
+        An open curriculum that takes a learner from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
+      </p>
+      <div class="cover-meta">
+        <div><b>Modules</b><span>15 + Capstone</span></div>
+        <div><b>Method</b><span>DBR · 3 cycles</span></div>
+        <div><b>Theory / Practice</b><span>40 / 60</span></div>
+        <div><b>License</b><span>MIT · CC-BY</span></div>
+      </div>
+      <div class="cover-actions">
+        <a class="btn btn-pri" href="#paths">Find your path</a>
+        <a class="btn btn-sec" href="#curriculum">See the curriculum</a>
+      </div>
+    </div>
+
+    <!-- CUBE — React island -->
+    <div>
+      <JourneyCube client:load />
+    </div>
+  </header>
+
+  <!-- ========== PATHS ========== -->
+  <section class="section" id="paths">
+    <div class="section-head">
+      <div class="section-num">§ 1 · <span>Paths</span></div>
+      <div>
+        <h2 class="section-title">Three ways through <em>the same material.</em></h2>
+        <p class="section-desc">The curriculum is linear by design but structured to support multiple entry points. Choose the path that matches your starting point.</p>
+      </div>
+    </div>
+
+    <div class="paths">
+      {PATHS.map(path => {
+        const surface =
+          path.cycle === 'c1'
+            ? 'var(--bg-warm-1)'
+            : path.cycle === 'c3'
+              ? 'color-mix(in srgb, var(--bg-2) 88%, var(--c3) 12%)'
+              : 'var(--bg-2)';
+        const cardStyle = `--card-accent: var(--${path.cycle}); --card-bg: ${surface};`;
+        return (
+          <a
+            class="path"
+            href={`#station-${path.cycle}`}
+            data-persona={path.persona}
+            data-cycle={path.cycle}
+            style={cardStyle}
+          >
+            <span class="axis"></span>
+            {path.persona === 'painter' && (
+              <svg class="ornament" viewBox="0 0 60 10" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M2,5 Q12,1 22,5 T42,5 T58,5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.9" />
+              </svg>
+            )}
+            {path.persona === 'engineer' && (
+              <svg class="ornament" viewBox="0 0 40 10" aria-hidden="true">
+                <g fill="currentColor">
+                  <rect x="0"  y="3" width="3" height="3" />
+                  <rect x="8"  y="3" width="3" height="3" />
+                  <rect x="16" y="3" width="3" height="3" />
+                  <rect x="24" y="3" width="3" height="3" />
+                  <rect x="32" y="3" width="3" height="3" />
+                </g>
+              </svg>
+            )}
+            {path.persona === 'architect' && (
+              <svg class="ornament" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M1,6 L1,1 L6,1 M12,1 L17,1 L17,6 M17,12 L17,17 L12,17 M6,17 L1,17 L1,12"
+                      stroke="currentColor" stroke-width="1" fill="none" />
+              </svg>
+            )}
+            <div class="tag">{path.tag}</div>
+            <h3>{path.title} <em>· {path.em}</em></h3>
+            <p>{path.description}</p>
+            <ol>
+              {path.steps.map(step => (
+                <li><span class="ix">{step.ix}</span><span class="lb">{step.label}</span></li>
+              ))}
+            </ol>
+            <div class="meta-row">
+              {path.meta.map(m => <span>{m}</span>)}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- ========== SPECIMEN — three cycle stations ========== -->
+  <section class="section" id="curriculum">
+    <div class="section-head">
+      <div class="section-num">§ 2 · <span>Curriculum</span></div>
+      <div>
+        <h2 class="section-title">From pixels, <em>to inference.</em></h2>
+        <p class="section-desc">The curriculum is composed in three cycles. Each cycle holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. Open a module to see its anatomy.</p>
+      </div>
+    </div>
+
+    {CYCLES.map(cy => {
+      const cyc = cy.cycle === 'c1' ? 'I' : cy.cycle === 'c2' ? 'II' : 'III';
+      const mods = MODULES.filter(m => m.cycle === cyc);
+      const totals = mods.reduce(
+        (acc, m) => {
+          const c = countLeaves(m.idx);
+          acc.leaves += c.leaves;
+          return acc;
+        },
+        { leaves: 0 }
+      );
+      return (
+        <div class="station" id={`station-${cy.cycle}`} style={`--cycle: var(--${cy.cycle});`}>
+          <div class="station-head">
+            <div class="station-left">
+              <span class="station-label">Path {cyc}</span>
+              <h3 class="station-title">{cy.name}<em>.</em></h3>
+              <p class="station-pitch">{cy.pitch}</p>
+            </div>
+            <div class="station-right">
+              <span><b>{mods.length}</b> modules</span>
+              <span><b>{totals.leaves}</b> lessons</span>
+            </div>
+          </div>
+
+          <div class="station-cards">
+            {mods.map(m => {
+              const c = countLeaves(m.idx);
+              return (
+                <button
+                  type="button"
+                  class="mod-card"
+                  data-m={m.idx}
+                  aria-expanded="false"
+                  aria-controls={`panel-${m.idx}`}
+                >
+                  <div class="card-top">
+                    <b>M {m.idx}</b>
+                    <span class="card-fw">{m.fw}</span>
+                  </div>
+                  <h4>{m.title}<br /><em>{m.em}</em></h4>
+                  <div class="card-meta">{c.subs} sub · {c.leaves} lessons</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div class="station-panels">
+            {mods.map(m => {
+              const subs = SUBTOPICS[m.idx] ?? [];
+              const c = countLeaves(m.idx);
+              return (
+                <div class="station-panel" id={`panel-${m.idx}`} data-m={m.idx} hidden>
+                  <div class="panel-head">
+                    <span class="panel-num">M {m.idx}</span>
+                    <h5>{m.title} <em>{m.em}</em></h5>
+                    <span class="panel-fw">{m.fw} · {c.subs} sub-topics · {c.leaves} lessons</span>
+                  </div>
+                  <div class="panel-subs">
+                    {subs.map(s => (
+                      <div class="sub">
+                        <h6><span class="snum">{s.id}</span>{s.title}</h6>
+                        {s.leaves.map(l => (
+                          l.lessonSlug
+                            ? <a class="leaf" href={`/lessons/${l.lessonSlug}`}>
+                                <span class="lnum">{l.id}</span><span>{l.title}</span>
+                              </a>
+                            : <span class="leaf soon">
+                                <span class="lnum">{l.id}</span><span>{l.title}</span>
+                              </span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </section>
+
+  <script is:inline>
+    // § 2 Curriculum — station accordion. One panel open per station; clicking
+    // an already-active card closes it.
+    document.querySelectorAll('.station').forEach((station) => {
+      const cards = station.querySelectorAll('.mod-card');
+      const panels = station.querySelectorAll('.station-panel');
+      cards.forEach((card) => {
+        card.addEventListener('click', () => {
+          const idx = card.getAttribute('data-m');
+          const wasActive = card.classList.contains('active');
+          cards.forEach((c) => {
+            c.classList.remove('active');
+            c.setAttribute('aria-expanded', 'false');
+          });
+          panels.forEach((p) => {
+            p.classList.remove('open');
+            p.setAttribute('hidden', '');
+          });
+          if (!wasActive) {
+            card.classList.add('active');
+            card.setAttribute('aria-expanded', 'true');
+            const panel = station.querySelector('.station-panel[data-m="' + idx + '"]');
+            if (panel) {
+              panel.classList.add('open');
+              panel.removeAttribute('hidden');
+            }
+          }
+        });
+      });
+    });
+  </script>
+
+  <script is:inline>
+    // § 1 Paths → § 2 Curriculum — clicking a path card scrolls to the
+    // matching cycle station (handled by the global anchor-scroll handler
+    // in Base.astro) AND auto-opens the first module's accordion panel
+    // so the user arrives at a concrete next step rather than a list.
+    //
+    // Respects user intent: if a module in the destination station is
+    // already open, we leave it untouched and just scroll.
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.path[data-cycle]');
+      if (!card) return;
+      const cycle = card.getAttribute('data-cycle');
+      const station = document.getElementById('station-' + cycle);
+      if (!station) return;
+      if (station.querySelector('.mod-card.active')) return;
+      const firstMod = station.querySelector('.mod-card');
+      if (firstMod) firstMod.click();
+    });
+  </script>
+
+  <!-- ========== WORKSHOPS — recurring program archive ========== -->
+  <section class="section" id="workshops">
+    <div class="section-head">
+      <div class="section-num">§ 3 · <span>Workshops</span></div>
+      <div>
+        <h2 class="section-title">The empirical engine, <em>in person.</em></h2>
+        <p class="section-desc">A recurring one-day workshop that condenses the curriculum into a single sitting. The archive begins with the first cohort below; the next workshop is in planning.</p>
+      </div>
+    </div>
+
+    <div class="workshops-archive">
+      <div class="archive-head">
+        <span class="archive-org">P2GA · Workshop archive</span>
+        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {UPCOMING_WORKSHOPS.length} in planning</span>
+      </div>
+
+      {PAST_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} />)}
+      {UPCOMING_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} defaultOpen={true} />)}
+    </div>
+  </section>
+
+  <!-- ========== EXHIBITION — one-off group show archive ========== -->
+  <section class="section" id="exhibition">
+    <div class="section-head">
+      <div class="section-num">§ 4 · <span>Exhibition</span></div>
+      <div>
+        <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
+        <p class="section-desc">A one-day exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis. Six artists working across printed and code-driven pieces. The archive begins below; the next exhibition is not yet scheduled.</p>
+      </div>
+    </div>
+
+    <div class="exhibitions-archive">
+      <div class="exhibition-archive-head">
+        <span class="archive-org">P2GA · Exhibition archive</span>
+        <span class="archive-count">▌ {String(PAST_EXHIBITIONS.length).padStart(2, '0')} completed</span>
+      </div>
+
+      {PAST_EXHIBITIONS.map(ex => <ExhibitionSpecimen exhibition={ex} defaultOpen={true} />)}
+    </div>
+  </section>
+
+  <!-- ========== RESEARCH ========== -->
+  <section class="section" id="research">
+    <div class="section-head">
+      <div class="section-num">§ 5 · <span>Research</span></div>
+      <div>
+        <h2 class="section-title">Five questions, <em>three cycles.</em></h2>
+        <p class="section-desc">The curriculum is the empirical artifact of a design-based research thesis. Each cycle iterates on the same five questions; this is the third.</p>
+      </div>
+    </div>
+
+    <div class="rqs">
+      {RQS.map(rq => (
+        <div class="rq">
+          <div class="tag">{rq.tag}</div>
+          <h4>{rq.title}</h4>
+          <p>{rq.question}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="cycles">
+      {CYCLES.map(c => (
+        <div class="cyc" style={`--card-accent: var(--${c.cycle});`}>
+          <b>{c.label}</b>
+          <span>{c.modules}</span>
+        </div>
+      ))}
+    </div>
+
+    <div class="research-cta">
+      <a class="btn btn-sec" href="/research">Read the full study →</a>
+      <span class="research-cta-meta">DBR pilot · n = 9 · Cohen's d = 1.615 · ρ = −0.857</span>
+    </div>
+  </section>
+
+  <Footer />
+</Base>

@@ -1,0 +1,192 @@
+/* ============================================================
+   PIXELS2GENAI · DESIGN TOKENS · TWO-INK PALETTE
+   Single source of truth for design tokens. No hex values
+   should appear outside this file.
+
+   :root holds the dark palette (canonical identity).
+   [data-theme="light"] (below) is an additive override layer
+   for the light theme. The data-theme attribute is set on
+   <html> by the no-flash script in Base.astro before first
+   paint, reading either localStorage['p2g-theme'] or
+   prefers-color-scheme.
+   ============================================================ */
+
+:root {
+  /* ---------- Base — violet-tinted near-black ---------- */
+  --bg:    #110D16;
+  --bg-2:  #17131E;
+  --bg-3:  #1E1928;
+  --bg-4:  #251F30;
+  --bg-deep: #0C0913;
+
+  /* ---------- Warm pockets (paper-cream tints — .ad.dyk, .ex bg, code chrome) ---------- */
+  --bg-warm-1: #1E1A14;
+  --bg-warm-2: #271F18;
+  --bg-warm-3: #322823;
+
+  /* ---------- Cool / archival pockets (.ad.note, left rail, refs) ---------- */
+  --bg-cool-1: #17131E;
+  --bg-cool-2: #1E1928;
+  --bg-cool-3: #0C0913;
+
+  /* ---------- Foreground — warm paper ---------- */
+  --fg:   #F0E7D8;
+  --fg-2: #ABA294;
+  --fg-3: #8A8273;
+  --fg-4: #443F38;
+
+  /* ---------- Lines ---------- */
+  --line:        #2B2536;
+  --line-2:      #3B344A;
+  --line-warm:   #2A241F;
+  --line-warm-2: #3C3329;
+
+  /* ---------- Foundations — Lichen Green (pixels pole) ---------- */
+  --c1:      #9AC07A;
+  --c1-soft: #7AA45F;
+  --c1-dim:  #4D6B3B;
+  --c1-tint: rgba(154, 192, 122, 0.10);
+  --c1-wash: rgba(154, 192, 122, 0.04);
+
+  /* ---------- Machine Learning — Electric Blue (mid pole) ---------- */
+  --c2:      #66B8FF;
+  --c2-soft: #4A95D8;
+  --c2-dim:  #2A5F8E;
+  --c2-tint: rgba(102, 184, 255, 0.10);
+  --c2-wash: rgba(102, 184, 255, 0.04);
+
+  /* ---------- Generative AI — Violet (genai pole) ---------- */
+  --c3:      #B585E8;
+  --c3-soft: #966AC8;
+  --c3-dim:  #5C3F82;
+  --c3-tint: rgba(181, 133, 232, 0.10);
+  --c3-wash: rgba(181, 133, 232, 0.04);
+
+  /* ---------- Studio Ink — Fluoro Pink (brand identity: wordmark, exhibition, workshops) ---------- */
+  --studio:      #F4669A;
+  --studio-soft: #D24E80;
+  --studio-dim:  #862E54;
+  --studio-tint: rgba(244, 102, 154, 0.10);
+  --studio-glow: rgba(244, 102, 154, 0.45);
+
+  /* ---------- Highlight — Warm Yellow (editorial only — eyebrows, drop caps) ---------- */
+  --highlight: #F0C26B;
+
+  /* ---------- Semantic aliases ---------- */
+  --accent:      var(--c3);          /* primary action = violet */
+  --accent-soft: var(--c3-soft);
+  --accent-dim:  var(--c3-dim);
+  --accent-tint: var(--c3-tint);
+  --accent-glow: rgba(181, 133, 232, 0.45);
+  --link:        var(--c2);          /* explicit electric blue — NOT --c1 (cascade trap) */
+  --link-hover:  #8FC8FF;
+  --warn:        #E0A674;            /* amber — shifted from dusty pink to avoid --studio collision */
+
+  /* ---------- Admonition · note (promoted from prose.css hardcodes) ---------- */
+  --note-border: #5d6878;
+  --note-title:  #8a95a5;
+
+  /* ---------- Grain overlay (white noise, overlay blend) ---------- */
+  --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.08'/></svg>");
+  --grain-blend: overlay;
+
+  /* ---------- Always-dark figure frame ----------
+     Powers the per-figure dark wrapper that stays dark in BOTH themes.
+     Lesson outputs and research PNGs are rendered against dark surrounds;
+     these tokens are intentionally NOT overridden under [data-theme="light"]. */
+  --figure-frame-bg:   #17131E;
+  --figure-frame-line: #2B2536;
+  --figure-frame-fg:   #F0E7D8;
+
+  /* ---------- Typography ---------- */
+  --serif: "Literata", "Iowan Old Style", Georgia, serif;
+  --sans:  "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---------- Layout ---------- */
+  --maxw: 1320px;
+  --pad-x: clamp(20px, 4vw, 56px);
+  --read-w: 72ch;
+  --t-scale: 1;
+}
+
+/* ============================================================
+   LIGHT THEME — additive override layer
+   Applied when <html data-theme="light">. Layout, typography,
+   and the brand pink (--studio) stay invariant. Cycle accents
+   (--c1/c2/c3) are re-saturated and darker to read on cream.
+   The dark figure-frame tokens are intentionally NOT overridden
+   here so figures stay walled off from theme switching.
+   ============================================================ */
+
+[data-theme="light"] {
+  /* ---------- Base — warm paper-cream ---------- */
+  --bg:      #F5F1E8;
+  --bg-2:    #ECE6D8;
+  --bg-3:    #E3DCC9;
+  --bg-4:    #D6CEB8;
+  --bg-deep: #FFFCF3;
+
+  /* ---------- Warm pockets (.ad.dyk, .ex bg, code chrome) — peachy cream ---------- */
+  --bg-warm-1: #F1E7D4;
+  --bg-warm-2: #ECDFC4;
+  --bg-warm-3: #E5D3B0;
+
+  /* ---------- Cool / archival pockets (.ad.note, left rail, refs) — pale archival ---------- */
+  --bg-cool-1: #ECEAE3;
+  --bg-cool-2: #E3E1DA;
+  --bg-cool-3: #F8F5EE;
+
+  /* ---------- Foreground — deep violet-ink ---------- */
+  --fg:   #15101C;
+  --fg-2: #3A3340;
+  --fg-3: #5C5564;
+  --fg-4: #8C8694;
+
+  /* ---------- Lines — warm-gray hairlines ---------- */
+  --line:        #CFC7B5;
+  --line-2:      #B8B19E;
+  --line-warm:   #D9CCB2;
+  --line-warm-2: #C2B596;
+
+  /* ---------- Foundations — deeper lichen green ---------- */
+  --c1:      #4D7A2F;
+  --c1-soft: #5E8F3E;
+  --c1-dim:  #2F5018;
+  --c1-tint: rgba(77, 122, 47, 0.14);
+  --c1-wash: rgba(77, 122, 47, 0.06);
+
+  /* ---------- Machine Learning — deep electric blue ---------- */
+  --c2:      #1E6FBF;
+  --c2-soft: #2E83D2;
+  --c2-dim:  #134A82;
+  --c2-tint: rgba(30, 111, 191, 0.14);
+  --c2-wash: rgba(30, 111, 191, 0.06);
+
+  /* ---------- Generative AI — deep violet ---------- */
+  --c3:      #6B3FAA;
+  --c3-soft: #7F52C0;
+  --c3-dim:  #482675;
+  --c3-tint: rgba(107, 63, 170, 0.14);
+  --c3-wash: rgba(107, 63, 170, 0.06);
+
+  /* ---------- Studio Ink — brand pink invariant. Alpha variants bumped for cream. ---------- */
+  --studio-tint: rgba(244, 102, 154, 0.16);
+  --studio-glow: rgba(244, 102, 154, 0.55);
+
+  /* ---------- Highlight — deep amber (drop caps, eyebrows) ---------- */
+  --highlight: #B57B17;
+
+  /* ---------- Semantic aliases — accent-glow needs explicit re-derivation ---------- */
+  --accent-glow: rgba(107, 63, 170, 0.45);
+  --link-hover: #155299;
+  --warn:       #A85F1F;
+
+  /* ---------- Admonition note ---------- */
+  --note-border: #6F7A8C;
+  --note-title:  #4A5566;
+
+  /* ---------- Grain overlay — dark noise + multiply blend on cream ---------- */
+  --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.10'/></svg>");
+  --grain-blend: multiply;
+}

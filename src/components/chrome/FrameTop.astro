@@ -1,0 +1,192 @@
+---
+interface Props {
+  /** When true, section anchors (#paths, #curriculum, …) are in-page links.
+   *  When false (lesson pages), they prepend a "/" to navigate back to the
+   *  landing page first. */
+  onLanding?: boolean;
+}
+
+const { onLanding = false } = Astro.props;
+const prefix = onLanding ? '' : '/';
+
+const navItems = [
+  { label: 'Paths', href: `${prefix}#paths` },
+  { label: 'Curriculum', href: `${prefix}#curriculum` },
+  { label: 'Workshops', href: `${prefix}#workshops` },
+  { label: 'Exhibition', href: `${prefix}#exhibition` },
+  // Research nav scrolls to the §5 teaser on the landing page rather than
+  // jumping straight to /research. The teaser ends in a "Read the full
+  // study →" CTA that takes the visitor to /research deliberately.
+  { label: 'Research', href: `${prefix}#research` },
+];
+---
+
+<div class="frame-top">
+  <a href="/" class="mark" aria-label="Pixels2GenAI — home">
+    <svg class="octo" viewBox="0 0 14 14" shape-rendering="crispEdges" aria-hidden="true">
+      <g class="frame-a" fill="#F4669A">
+        <rect x="5" y="0" width="4" height="1"/>
+        <rect x="4" y="1" width="6" height="1"/>
+        <rect x="3" y="2" width="8" height="1"/>
+        <rect x="3" y="3" width="8" height="1"/>
+        <rect x="2" y="4" width="10" height="1"/>
+        <rect x="2" y="5" width="10" height="1"/>
+        <rect x="2" y="6" width="10" height="1"/>
+        <rect x="2" y="7" width="10" height="1"/>
+        <rect x="1" y="8"  width="1" height="1"/>
+        <rect x="3" y="8"  width="1" height="1"/>
+        <rect x="5" y="8"  width="1" height="1"/>
+        <rect x="7" y="8"  width="1" height="1"/>
+        <rect x="9" y="8"  width="1" height="1"/>
+        <rect x="11" y="8" width="1" height="1"/>
+        <rect x="12" y="8" width="1" height="1"/>
+        <rect x="2" y="8"  width="1" height="1" opacity="0.7"/>
+        <rect x="0" y="9"  width="1" height="1"/>
+        <rect x="3" y="9"  width="1" height="1"/>
+        <rect x="5" y="9"  width="1" height="1"/>
+        <rect x="7" y="9"  width="1" height="1"/>
+        <rect x="9" y="9"  width="1" height="1"/>
+        <rect x="12" y="9" width="1" height="1"/>
+        <rect x="0" y="10" width="1" height="1"/>
+        <rect x="4" y="10" width="1" height="1"/>
+        <rect x="5" y="10" width="1" height="1"/>
+        <rect x="8" y="10" width="1" height="1"/>
+        <rect x="9" y="10" width="1" height="1"/>
+        <rect x="13" y="10" width="1" height="1"/>
+        <rect x="1" y="11" width="1" height="1"/>
+        <rect x="4" y="11" width="1" height="1"/>
+        <rect x="8" y="11" width="1" height="1"/>
+        <rect x="13" y="11" width="1" height="1"/>
+        <rect x="1" y="12" width="1" height="1"/>
+        <rect x="4" y="12" width="1" height="1"/>
+        <rect x="8" y="12" width="1" height="1"/>
+        <rect x="13" y="12" width="1" height="1"/>
+        <rect x="1" y="13" width="1" height="1"/>
+        <rect x="4" y="13" width="1" height="1"/>
+        <rect x="9" y="13" width="1" height="1"/>
+        <rect x="13" y="13" width="1" height="1"/>
+      </g>
+      <g class="frame-b" fill="#F4669A">
+        <rect x="5" y="0" width="4" height="1"/>
+        <rect x="4" y="1" width="6" height="1"/>
+        <rect x="3" y="2" width="8" height="1"/>
+        <rect x="3" y="3" width="8" height="1"/>
+        <rect x="2" y="4" width="10" height="1"/>
+        <rect x="2" y="5" width="10" height="1"/>
+        <rect x="2" y="6" width="10" height="1"/>
+        <rect x="2" y="7" width="10" height="1"/>
+        <rect x="1" y="8"  width="1" height="1"/>
+        <rect x="3" y="8"  width="1" height="1"/>
+        <rect x="5" y="8"  width="1" height="1"/>
+        <rect x="7" y="8"  width="1" height="1"/>
+        <rect x="9" y="8"  width="1" height="1"/>
+        <rect x="11" y="8" width="1" height="1"/>
+        <rect x="12" y="8" width="1" height="1"/>
+        <rect x="2" y="8"  width="1" height="1" opacity="0.7"/>
+        <rect x="0" y="9"  width="1" height="1"/>
+        <rect x="3" y="9"  width="1" height="1"/>
+        <rect x="5" y="9"  width="1" height="1"/>
+        <rect x="7" y="9"  width="1" height="1"/>
+        <rect x="9" y="9"  width="1" height="1"/>
+        <rect x="0" y="10" width="1" height="1"/>
+        <rect x="4" y="10" width="1" height="1"/>
+        <rect x="5" y="10" width="1" height="1"/>
+        <rect x="8" y="10" width="1" height="1"/>
+        <rect x="9" y="10" width="1" height="1"/>
+        <rect x="1" y="11" width="1" height="1"/>
+        <rect x="4" y="11" width="1" height="1"/>
+        <rect x="8" y="11" width="1" height="1"/>
+        <rect x="1" y="12" width="1" height="1"/>
+        <rect x="4" y="12" width="1" height="1"/>
+        <rect x="8" y="12" width="1" height="1"/>
+        <rect x="1" y="13" width="1" height="1"/>
+        <rect x="4" y="13" width="1" height="1"/>
+        <rect x="9" y="13" width="1" height="1"/>
+        <rect x="12" y="9"  width="1" height="1"/>
+        <rect x="13" y="9"  width="1" height="1"/>
+        <rect x="13" y="8"  width="1" height="1"/>
+        <rect x="12" y="10" width="1" height="1"/>
+        <rect x="11" y="10" width="1" height="1"/>
+      </g>
+      <g class="eyes" fill="#110D16">
+        <rect x="5" y="5" width="1" height="1"/>
+        <rect x="8" y="5" width="1" height="1"/>
+      </g>
+    </svg>
+    <span class="px">Pixels</span><span class="x">2</span><span class="ai">GenAI</span>
+  </a>
+  <nav class="nav-mid" aria-label="Primary">
+    {navItems.map(item => <a href={item.href}>{item.label}</a>)}
+  </nav>
+  <div class="nav-r">
+    <span class="ed">Ed. ii · 2026</span>
+    <a href="https://github.com/burakkagann/Pixels2GenAI" target="_blank" rel="noopener">GitHub ↗</a>
+    <button
+      class="theme-toggle"
+      type="button"
+      aria-label="Switch theme"
+      aria-pressed="false"
+      title="Switch theme"
+    >
+      <svg class="ic ic-sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4" />
+        <line x1="12" y1="2"  x2="12" y2="4" />
+        <line x1="12" y1="20" x2="12" y2="22" />
+        <line x1="2"  y1="12" x2="4"  y2="12" />
+        <line x1="20" y1="12" x2="22" y2="12" />
+        <line x1="4.93" y1="4.93"  x2="6.34"  y2="6.34" />
+        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07" />
+        <line x1="4.93" y1="19.07" x2="6.34"  y2="17.66" />
+        <line x1="17.66" y1="6.34"  x2="19.07" y2="4.93" />
+      </svg>
+      <svg class="ic ic-moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M20.5 14.4A8.5 8.5 0 1 1 9.6 3.5a7 7 0 0 0 10.9 10.9z" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const SESSION_KEY = 'p2g-octo-greeted';
+  const octo = document.querySelector('.octo') as HTMLElement | null;
+  if (octo) {
+    // First arrival per session: play the wave once
+    if (!sessionStorage.getItem(SESSION_KEY)) {
+      octo.classList.add('octo--play');
+      sessionStorage.setItem(SESSION_KEY, '1');
+    }
+    // Hover always replays — remove then re-add to restart the animation
+    octo.addEventListener('mouseenter', () => {
+      octo.classList.remove('octo--play');
+      void octo.offsetWidth; // force reflow so the animation restarts cleanly
+      octo.classList.add('octo--play');
+    });
+  }
+
+  // Theme toggle — binary light/dark. The no-flash <script is:inline> in
+  // Base.astro <head> sets data-theme on first paint; this just flips it
+  // on click and persists the user's explicit choice to localStorage.
+  const toggle = document.querySelector('.theme-toggle') as HTMLButtonElement | null;
+  const STORAGE_KEY = 'p2g-theme';
+
+  const syncToggleState = (theme: string) => {
+    if (!toggle) return;
+    const isLight = theme === 'light';
+    toggle.setAttribute('aria-pressed', String(isLight));
+    toggle.setAttribute(
+      'aria-label',
+      isLight ? 'Switch to dark theme' : 'Switch to light theme',
+    );
+  };
+
+  syncToggleState(document.documentElement.getAttribute('data-theme') ?? 'dark');
+
+  toggle?.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') ?? 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    syncToggleState(next);
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
+  });
+</script>

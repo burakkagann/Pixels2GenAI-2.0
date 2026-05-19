@@ -1,0 +1,65 @@
+---
+/**
+ * Right-rail "On this page" TOC for the /research page.
+ * Mirrors the lesson OnThisPage component but omits the cycle chip
+ * (the research page lives above the cycle layer; accent stays
+ * neutral violet via --accent). Scroll-spy script is identical:
+ * the active section gets .cur on its <li>.
+ */
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// h2 + h3 only — h1 is the page title.
+const tocItems = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+<nav class="toc-card" aria-label="On this page">
+  <div class="head">
+    <h4>On this page</h4>
+    <span class="ix">§ research</span>
+  </div>
+  <ul>
+    {tocItems.map(h => (
+      <li class={h.depth === 2 ? 'l2' : 'l3'}>
+        <a href={`#${h.slug}`} data-toc-slug={h.slug}>{h.text}</a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<script>
+  // Scroll-spy mirrors OnThisPage.astro: toggle .cur on the <li> so
+  // the toc-card's left-border + tint background carry the accent.
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc-card a[data-toc-slug]'));
+  const lis = links.map(a => a.closest('li')!).filter(Boolean);
+  const sections = links
+    .map((a, i) => ({ li: lis[i], el: document.getElementById(a.dataset.tocSlug!) }))
+    .filter((s): s is { li: HTMLElement; el: HTMLElement } => !!s.el);
+
+  if (sections.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (!visible.length) return;
+        const topEl = visible[0].target as HTMLElement;
+        lis.forEach(li => li.classList.remove('cur'));
+        const match = sections.find(s => s.el === topEl);
+        if (match) match.li.classList.add('cur');
+      },
+      { rootMargin: '-80px 0px -70% 0px', threshold: 0 },
+    );
+    sections.forEach(s => observer.observe(s.el));
+  }
+</script>

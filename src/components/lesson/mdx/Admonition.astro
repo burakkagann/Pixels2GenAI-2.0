@@ -1,0 +1,37 @@
+---
+type AdmonitionType = 'default' | 'note' | 'dyk' | 'important' | 'tip' | 'warning';
+
+interface Props {
+  type?: AdmonitionType;
+  title?: string;
+}
+
+const { type = 'default', title } = Astro.props;
+
+// Map common RST admonition names to design variants.
+const cssVariant: Record<AdmonitionType, string> = {
+  default: '',
+  note: 'note',
+  tip: 'note',
+  dyk: 'dyk',
+  warning: 'important',
+  important: 'important',
+};
+
+const defaultTitle: Record<AdmonitionType, string> = {
+  default: '',
+  note: 'Note',
+  tip: 'Tip',
+  dyk: 'Did you know',
+  warning: 'Warning',
+  important: 'Important',
+};
+
+const variant = cssVariant[type];
+const displayedTitle = title ?? defaultTitle[type];
+---
+
+<aside class:list={['ad', variant]} role="note">
+  {displayedTitle && <span class="ad-title">{displayedTitle}</span>}
+  <slot />
+</aside>

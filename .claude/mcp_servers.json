@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "c:\\Users\\User\\Desktop\\git-repos\\Pixels2GenAI-v2"
+      ],
+      "description": "Enhanced file operations for batch processing, directory traversal, and file watching. Scoped to the v2 repository.",
+      "disabled": false
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "c:\\Users\\User\\Desktop\\git-repos\\Pixels2GenAI-v2"
+      ],
+      "description": "Advanced git operations: branch management, commit history analysis, diff viewing. NEVER auto-commit.",
+      "disabled": false
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "description": "Extended reasoning for complex algorithm design, pedagogical strategy planning, thesis argumentation.",
+      "disabled": false
+    }
+  },
+  "readme": {
+    "setup_instructions": [
+      "1. Install Node.js from https://nodejs.org/ (LTS version recommended)",
+      "2. MCP servers will auto-install on first use via npx",
+      "3. Verify in Claude Code settings > MCP Servers section",
+      "4. To disable a server, set 'disabled': true in its config",
+      "",
+      "IMPORTANT REMINDERS:",
+      "- Git MCP: NEVER use auto-commit features. User always commits manually.",
+      "- Filesystem MCP: Scoped to the v2 repository directory only.",
+      "- Sequential-thinking MCP: Use for complex planning and thesis argumentation."
+    ],
+    "ported_from": "C:\\Users\\User\\Desktop\\git-repos\\numpy-to-genAI\\.claude\\mcp_servers.json",
+    "changes_from_v1": [
+      "Paths re-pointed to the v2 repository.",
+      "Dropped 'puppeteer' MCP server — it was used in v1 for browser-testing the built Sphinx HTML; v2 uses Astro's dev server (npm run dev) for interactive checks. Add it back later if browser-automation testing becomes useful."
+    ],
+    "troubleshooting": {
+      "server_not_found": "Ensure Node.js is installed and in PATH.",
+      "permission_errors": "Check repository path in config is absolute and correct.",
+      "server_crashes": "Check Claude Code logs, verify Node.js version compatibility."
+    },
+    "project_specific_notes": {
+      "filesystem": "Use for batch operations across lessons (e.g. scanning public/lessons/, src/content/lessons/), searching curriculum data (src/data/*.ts).",
+      "git": "Analyze commit history for thesis documentation; check when individual lessons shipped.",
+      "sequential-thinking": "Use when planning lesson architecture or solving complex pedagogical challenges."
+    }
+  }
+}

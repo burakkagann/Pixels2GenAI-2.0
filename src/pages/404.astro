@@ -1,0 +1,393 @@
+---
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+---
+
+<Base
+  title="Not Found"
+  description="The requested page is not in the curriculum."
+>
+  <main class="four-oh-four">
+    <header class="fof-head">
+      <div class="fof-eyebrow">
+        <span class="dot" aria-hidden="true"></span>
+        <span>§ 404 · Lost margin</span>
+      </div>
+      <h1 class="fof-title">This page is <em>not</em> in the curriculum.</h1>
+      <p class="fof-lead">
+        You followed a thread that does not yet exist in this edition.
+      </p>
+    </header>
+
+    <figure class="fof-field" aria-hidden="true">
+      <canvas
+        id="fof-canvas"
+        class="fof-canvas"
+        width="640"
+        height="220"
+      ></canvas>
+      <div class="fof-still" hidden>
+        <svg
+          class="fof-still-svg"
+          viewBox="0 0 640 220"
+          role="img"
+          aria-label="§ 404"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <text x="320" y="125" text-anchor="middle">§404</text>
+          <line x1="270" y1="170" x2="370" y2="170" />
+        </svg>
+      </div>
+    </figure>
+
+    <nav class="fof-actions" aria-label="Recovery">
+      <a class="btn btn-pri" href="/">Return home</a>
+    </nav>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .four-oh-four {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px var(--pad-x) 96px;
+  }
+
+  /* ---------- Head ---------- */
+  .fof-head {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+
+  .fof-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 22px;
+  }
+
+  .fof-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .fof-title {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    margin: 0 0 22px;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+
+  .fof-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .fof-lead {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--fg);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .fof-lead em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  /* ---------- Pixel field ---------- */
+  .fof-field {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 32px;
+    min-height: 220px;
+  }
+
+  .fof-canvas {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: 220px;
+  }
+
+  .fof-still {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fof-still-svg {
+    width: 100%;
+    height: auto;
+    max-height: 220px;
+  }
+
+  .fof-still-svg text {
+    font-family: var(--mono);
+    font-size: 110px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    fill: var(--fg);
+  }
+
+  .fof-still-svg line {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: square;
+  }
+
+  /* ---------- Recovery action ---------- */
+  .fof-actions {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 24px;
+  }
+
+  @media (max-width: 640px) {
+    .four-oh-four {
+      padding: 48px var(--pad-x) 72px;
+    }
+    .fof-still-svg text {
+      font-size: 84px;
+    }
+  }
+</style>
+
+<script>
+  // § 404 pixel field — vanilla Canvas + RAF.
+  // Glyph mask sampled from offscreen ctx.fillText('§404'), particles drift
+  // in (scatter) → settle (form/hold) → drift out (dissolve), looping ~6s.
+  // Reduced-motion: canvas is never initialized; the inline-SVG .fof-still
+  // is unhidden instead (a deliberately composed still, not a frozen frame).
+  (() => {
+    const canvas = document.getElementById('fof-canvas') as HTMLCanvasElement | null;
+    const still = document.querySelector('.fof-still') as HTMLElement | null;
+    if (!canvas || !still) return;
+
+    const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+    let rafId = 0;
+    let running = false;
+
+    const showStill = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+      running = false;
+      canvas.hidden = true;
+      still.hidden = false;
+    };
+
+    const hideStill = () => {
+      still.hidden = true;
+      canvas.hidden = false;
+    };
+
+    reduceMQ.addEventListener('change', () => {
+      if (reduceMQ.matches) showStill();
+      else if (!running) {
+        hideStill();
+        bootWhenFontsReady();
+      }
+    });
+
+    if (reduceMQ.matches) {
+      showStill();
+      return;
+    }
+
+    // --- Timeline (seconds) ---
+    const T_SCATTER = 1.5;
+    const T_HOLD_END = 4.5;
+    const T_LOOP = 6.0;
+    const SHIMMER_EVERY = 4.0;
+    const SHIMMER_LEN = 0.6;
+    const CELL = 5; // px (CSS), so glyph is sampled at 5px grid
+
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    const easeInCubic = (t: number) => t * t * t;
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+    type Particle = { tx: number; ty: number; sx: number; sy: number };
+
+    let W = 0;
+    let H = 0;
+    let dpr = 1;
+    let particles: Particle[] = [];
+    let noise: { x: number; y: number; phase: number }[] = [];
+    let fg = '#F0E7D8';
+    let fg3 = '#8A8273';
+    let accent = '#B585E8';
+    let lastColorCheck = 0;
+
+    const readColors = () => {
+      const cs = getComputedStyle(document.documentElement);
+      const f = cs.getPropertyValue('--fg').trim();
+      const f3 = cs.getPropertyValue('--fg-3').trim();
+      const a = cs.getPropertyValue('--accent').trim();
+      if (f) fg = f;
+      if (f3) fg3 = f3;
+      if (a) accent = a;
+    };
+
+    const build = () => {
+      const rect = canvas.getBoundingClientRect();
+      W = Math.max(1, Math.floor(rect.width));
+      H = Math.max(1, Math.floor(rect.height));
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Build glyph mask in an offscreen canvas at display resolution
+      const mask = document.createElement('canvas');
+      mask.width = W;
+      mask.height = H;
+      const mctx = mask.getContext('2d');
+      if (!mctx) return;
+      mctx.fillStyle = '#fff';
+      mctx.textAlign = 'center';
+      mctx.textBaseline = 'middle';
+      const fontSize = Math.min(120, Math.floor(H * 0.6));
+      mctx.font = `500 ${fontSize}px "JetBrains Mono", ui-monospace, monospace`;
+      mctx.fillText('§404', W / 2, H / 2 + Math.floor(H * 0.04));
+      const imgData = mctx.getImageData(0, 0, W, H).data;
+
+      // Sample on-cells at CELL pitch
+      const targets: { x: number; y: number }[] = [];
+      for (let y = 0; y < H; y += CELL) {
+        for (let x = 0; x < W; x += CELL) {
+          const a = imgData[(y * W + x) * 4 + 3];
+          if (a > 140) targets.push({ x: x + CELL / 2, y: y + CELL / 2 });
+        }
+      }
+
+      // Wide scatter region: -0.3W..1.3W, -0.6H..1.6H
+      particles = targets.map((t) => ({
+        tx: t.x,
+        ty: t.y,
+        sx: (Math.random() * 1.6 - 0.3) * W,
+        sy: (Math.random() * 2.2 - 0.6) * H,
+      }));
+
+      // ~30 noise particles outside glyph
+      noise = Array.from({ length: 30 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    };
+
+    let t0 = 0;
+    const frame = (now: number) => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      if (!t0) t0 = now;
+      const absT = (now - t0) / 1000;
+      const t = absT % T_LOOP;
+
+      if (absT - lastColorCheck > 0.5) {
+        readColors();
+        lastColorCheck = absT;
+      }
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Per-phase progress for the whole field
+      let alphaScale = 1;
+      let progress = 1; // 0 = scatter origin, 1 = formed target
+      if (t < T_SCATTER) {
+        const ti = t / T_SCATTER;
+        progress = easeOutCubic(ti);
+        alphaScale = ti;
+      } else if (t < T_HOLD_END) {
+        progress = 1;
+        alphaScale = 1;
+      } else {
+        const ti = (t - T_HOLD_END) / (T_LOOP - T_HOLD_END);
+        progress = 1 - easeInCubic(ti);
+        alphaScale = 1 - ti;
+      }
+
+      // Shimmer band: a horizontal row that drifts down the glyph for SHIMMER_LEN
+      const shimmerPhase = t % SHIMMER_EVERY;
+      const shimmerOn =
+        shimmerPhase < SHIMMER_LEN && t > T_SCATTER && t < T_HOLD_END;
+      const sP = shimmerOn ? shimmerPhase / SHIMMER_LEN : -1;
+      const shimmerY = shimmerOn ? lerp(H * 0.32, H * 0.68, sP) : -1;
+      const shimmerHalf = CELL * 2.2;
+
+      // Draw glyph particles
+      const drawSize = CELL - 1;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const x = lerp(p.sx, p.tx, progress);
+        const y = lerp(p.sy, p.ty, progress);
+        const inShimmer =
+          shimmerOn && Math.abs(p.ty - shimmerY) < shimmerHalf;
+        ctx.fillStyle = inShimmer ? accent : fg;
+        ctx.globalAlpha = inShimmer ? alphaScale * 0.9 : alphaScale;
+        ctx.fillRect(x - drawSize / 2, y - drawSize / 2, drawSize, drawSize);
+      }
+
+      // Noise dither (independent of phase — always quietly twinkling)
+      ctx.fillStyle = fg3;
+      for (let i = 0; i < noise.length; i++) {
+        const n = noise[i];
+        const tw = 0.12 + 0.18 * (0.5 + 0.5 * Math.sin(absT * 1.4 + n.phase));
+        ctx.globalAlpha = tw;
+        ctx.fillRect(n.x, n.y, 3, 3);
+      }
+      ctx.globalAlpha = 1;
+
+      rafId = requestAnimationFrame(frame);
+    };
+
+    const bootWhenFontsReady = () => {
+      const start = () => {
+        running = true;
+        readColors();
+        build();
+        t0 = 0;
+        rafId = requestAnimationFrame(frame);
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(start).catch(() => start());
+      } else {
+        setTimeout(start, 200);
+      }
+    };
+
+    // Re-build on resize (debounced via RAF)
+    let resizeRaf = 0;
+    window.addEventListener('resize', () => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        if (running) build();
+      });
+    });
+
+    bootWhenFontsReady();
+  })();
+</script>
