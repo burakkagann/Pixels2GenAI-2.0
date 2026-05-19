@@ -1,29 +1,11 @@
-"""
-DCGAN Generator and Discriminator networks.
-
-Architecture based on Radford et al. (2015) "Unsupervised Representation
-Learning with Deep Convolutional Generative Adversarial Networks".
-
-Implementation adapted from PyTorch Official DCGAN Tutorial:
-https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-BSD-3-Clause License
-
-Educational modifications:
-- Simplified for beginner-intermediate learners
-- Adapted for abstract art generation (64x64 images)
-- Removed advanced features not essential for core understanding
-"""
-
 import torch
 import torch.nn as nn
-
 
 # Model hyperparameters
 LATENT_DIM = 100      # Size of random noise vector (z)
 IMG_SIZE = 64         # Output image size (64x64 pixels)
 IMG_CHANNELS = 3      # RGB images
 FEATURE_MAP_SIZE = 64 # Base number of feature maps
-
 
 class Generator(nn.Module):
     """
@@ -101,7 +83,6 @@ class Generator(nn.Module):
         """
         return self.network(z)
 
-
 class Discriminator(nn.Module):
     """
     DCGAN Discriminator Network
@@ -171,11 +152,9 @@ class Discriminator(nn.Module):
         """
         return self.network(img)
 
-
 def count_parameters(model):
     """Count trainable parameters in a model."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
 
 if __name__ == '__main__':
     # Test the models

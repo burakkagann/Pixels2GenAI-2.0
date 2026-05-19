@@ -1,12 +1,3 @@
-"""
-Preprocess African Fabric Dataset for DCGAN Training
-
-This script prepares the African fabric images from Kaggle for DCGAN training
-by resizing them to 64x64 and ensuring consistent RGB format.
-
-Dataset source: https://www.kaggle.com/datasets/mikuns/african-fabric
-"""
-
 import os
 from PIL import Image
 from pathlib import Path

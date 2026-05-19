@@ -1,13 +1,3 @@
-"""
-Train a DCGAN on abstract art images.
-
-Training loop based on PyTorch Official DCGAN Tutorial:
-https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-BSD-3-Clause License
-
-Adapted for abstract art generation using pre-made dataset.
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -18,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from dcgan_model import Generator, Discriminator, LATENT_DIM
-
 
 # Hyperparameters
 DATASET_PATH = 'abstract_art_dataset'
@@ -31,7 +20,6 @@ IMG_SIZE = 64
 
 # Device configuration
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 def train_dcgan(dataset_path=DATASET_PATH, num_epochs=NUM_EPOCHS, batch_size=BATCH_SIZE):
     """
@@ -164,7 +152,6 @@ def train_dcgan(dataset_path=DATASET_PATH, num_epochs=NUM_EPOCHS, batch_size=BAT
 
     return generator, discriminator
 
-
 def save_samples(generator, noise, epoch):
     """Save generated samples to track training progress."""
     generator.eval()
@@ -188,7 +175,6 @@ def save_samples(generator, noise, epoch):
     plt.savefig(f'samples_epoch_{epoch:03d}.png', dpi=100)
     plt.close()
 
-
 def plot_losses(g_losses, d_losses):
     """Plot training loss curves."""
     plt.figure(figsize=(10, 5))
@@ -202,7 +188,6 @@ def plot_losses(g_losses, d_losses):
     plt.savefig('training_losses.png', dpi=150)
     plt.close()
     print("Training loss plot saved to training_losses.png")
-
 
 if __name__ == '__main__':
     # Check if dataset exists

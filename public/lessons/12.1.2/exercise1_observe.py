@@ -1,14 +1,6 @@
-"""
-Exercise 1: Observe DCGAN Generation
-
-Load a pre-trained generator and observe how it creates abstract art
-from random noise vectors.
-"""
-
 import torch
 import matplotlib.pyplot as plt
 from dcgan_model import Generator, LATENT_DIM
-
 
 def main():
     """Generate and display abstract art samples."""
@@ -64,7 +56,6 @@ def main():
     print("3. Why does the generator use Tanh activation in the output layer?")
     print()
     print("Exercise 1 complete!")
-
 
 if __name__ == '__main__':
     main()

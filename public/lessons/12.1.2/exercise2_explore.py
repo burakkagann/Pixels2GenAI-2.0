@@ -1,15 +1,7 @@
-"""
-Exercise 2: Explore Parameters
-
-Experiment with DCGAN generation by modifying parameters and exploring
-latent space interpolation.
-"""
-
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from dcgan_model import Generator, LATENT_DIM
-
 
 def generate_grid(generator, num_rows=4, num_cols=4, seed=None):
     """Generate a grid of images."""
@@ -33,7 +25,6 @@ def generate_grid(generator, num_rows=4, num_cols=4, seed=None):
         ax.axis('off')
 
     return fig
-
 
 def interpolate_latent(generator, num_steps=8, seed=42):
     """Create interpolation between two latent vectors."""
@@ -63,7 +54,6 @@ def interpolate_latent(generator, num_steps=8, seed=42):
     plt.tight_layout()
 
     return fig
-
 
 def main():
     """Explore DCGAN parameters."""
@@ -101,7 +91,6 @@ def main():
     print("4. Compare different random seeds for interpolation")
     print()
     print("Exercise 2 complete!")
-
 
 if __name__ == '__main__':
     main()

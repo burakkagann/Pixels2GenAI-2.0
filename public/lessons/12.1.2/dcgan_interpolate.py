@@ -1,13 +1,3 @@
-"""
-Latent space interpolation for DCGAN-generated images.
-
-Demonstrates smooth transitions between generated images by interpolating
-between points in the latent space.
-
-Based on PyTorch Official DCGAN Tutorial:
-https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-"""
-
 import os
 import numpy as np
 import torch
@@ -15,7 +5,6 @@ import matplotlib.pyplot as plt
 import imageio.v2 as imageio
 
 from dcgan_model import Generator, LATENT_DIM
-
 
 def linear_interpolate(z1, z2, t):
     """
@@ -30,7 +19,6 @@ def linear_interpolate(z1, z2, t):
         Interpolated latent vector
     """
     return (1 - t) * z1 + t * z2
-
 
 def generate_interpolation_frames(generator, z_start, z_end, num_frames=30):
     """
@@ -69,7 +57,6 @@ def generate_interpolation_frames(generator, z_start, z_end, num_frames=30):
             frames.append(img)
 
     return frames
-
 
 def create_interpolation_animation(generator, num_keypoints=4, frames_per_segment=20,
                                     seed=42):
@@ -116,7 +103,6 @@ def create_interpolation_animation(generator, num_keypoints=4, frames_per_segmen
 
     return all_frames
 
-
 def create_interpolation_strip(generator, num_steps=8, seed=42):
     """
     Create a static image showing interpolation steps between two points.
@@ -158,7 +144,6 @@ def create_interpolation_strip(generator, num_steps=8, seed=42):
 
     return fig
 
-
 def load_pretrained_generator(weights_path='generator_weights.pth'):
     """Load a pre-trained generator model."""
     generator = Generator()
@@ -172,7 +157,6 @@ def load_pretrained_generator(weights_path='generator_weights.pth'):
         print("Run 'python dcgan_train.py' first to train the model.")
 
     return generator
-
 
 def main():
     """Main function to create interpolation visualizations."""
@@ -208,7 +192,6 @@ def main():
     print("\nDone! Check the generated files:")
     print("  - interpolation_strip.png: Static interpolation steps")
     print("  - latent_interpolation.gif: Animated morphing between patterns")
-
 
 if __name__ == '__main__':
     main()

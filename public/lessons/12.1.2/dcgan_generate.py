@@ -1,13 +1,3 @@
-"""
-Generate abstract art patterns using a pre-trained DCGAN.
-
-This script loads a pre-trained Generator network and creates abstract art
-by sampling from random latent vectors.
-
-Based on PyTorch Official DCGAN Tutorial:
-https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-"""
-
 import os
 import numpy as np
 import torch
@@ -15,7 +5,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 from dcgan_model import Generator, LATENT_DIM
-
 
 def generate_samples(generator, num_samples=16, seed=None):
     """
@@ -50,7 +39,6 @@ def generate_samples(generator, num_samples=16, seed=None):
 
     return images
 
-
 def create_sample_grid(images, rows=4, cols=4):
     """
     Arrange generated images in a grid.
@@ -76,7 +64,6 @@ def create_sample_grid(images, rows=4, cols=4):
 
     return fig
 
-
 def load_pretrained_generator(weights_path='generator_weights.pth'):
     """
     Load a pre-trained generator model.
@@ -95,7 +82,6 @@ def load_pretrained_generator(weights_path='generator_weights.pth'):
         print("Run 'python dcgan_train.py' to train and save weights.")
 
     return generator
-
 
 def main():
     """Main function to generate and display abstract art samples."""
@@ -127,7 +113,6 @@ def main():
 
     print("Individual samples saved (sample_1.png through sample_4.png)")
     print("\nDone! Open generated_samples.png to view your AI art.")
-
 
 if __name__ == '__main__':
     main()

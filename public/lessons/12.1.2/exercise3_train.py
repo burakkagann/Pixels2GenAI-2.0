@@ -1,10 +1,3 @@
-"""
-Exercise 3: Train on African Fabric Patterns
-
-Train a DCGAN from scratch on African fabric patterns from Kaggle.
-This is a simplified version of dcgan_train.py for educational purposes.
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -17,7 +10,6 @@ from PIL import Image as PILImage
 
 from dcgan_model import Generator, Discriminator, LATENT_DIM
 
-
 # Training configuration
 DATASET_PATH = 'african_fabric_processed'
 BATCH_SIZE = 64
@@ -26,7 +18,6 @@ LEARNING_RATE = 0.0002
 IMG_SIZE = 64
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 class AfricanFabricDataset(torch.utils.data.Dataset):
     """Dataset loader for African fabric pattern images."""
@@ -43,7 +34,6 @@ class AfricanFabricDataset(torch.utils.data.Dataset):
         if self.transform:
             img = self.transform(img)
         return img
-
 
 def train():
     """Train the DCGAN."""
@@ -141,7 +131,6 @@ def train():
 
     print("\nTraining complete!")
 
-
 def save_progress(generator, noise, epoch):
     """Save generated samples at checkpoints."""
     generator.eval()
@@ -164,7 +153,6 @@ def save_progress(generator, noise, epoch):
     plt.close()
     print(f"  Saved exercise3_epoch_{epoch}.png")
 
-
 def plot_training_progress(g_losses, d_losses):
     """Plot and save training loss curves."""
     plt.figure(figsize=(10, 5))
@@ -178,7 +166,6 @@ def plot_training_progress(g_losses, d_losses):
     plt.savefig('exercise3_training_progress.png', dpi=150)
     plt.close()
     print("Saved exercise3_training_progress.png")
-
 
 def generate_final_samples(generator):
     """Generate final sample grid."""
@@ -202,7 +189,6 @@ def generate_final_samples(generator):
     plt.savefig('exercise3_final_samples.png', dpi=150)
     plt.close()
     print("Saved exercise3_final_samples.png")
-
 
 if __name__ == '__main__':
     if not os.path.exists(DATASET_PATH):
