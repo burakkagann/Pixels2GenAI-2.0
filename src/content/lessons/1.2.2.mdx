@@ -1,11 +1,13 @@
 ---
 module: "M 01"
 cycle: "I"
-title: "Cellular Automata"
-objective: "Coming soon — placeholder for the Cellular Automata lesson."
+title: "Cellular Automata (Game of Life)"
+objective: "Generate dynamic, lifelike behaviour from four arithmetic rules. Implement Conway's Game of Life with NumPy and SciPy convolutions, then watch gliders walk, blinkers oscillate, and blocks sit still — none of which you ever programmed."
 framework: "hands-on"
-duration: "TBD"
+duration: "20–25 min"
 level: "beginner"
+load: "4 core concepts"
+prereqs: "1.1.1 (RGB arrays), basic Python"
 prev:
   slug: "1.2.1"
   title: "Random Patterns"
@@ -17,20 +19,546 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-{/* placeholder */}
+## Overview <a id="overview"></a>
 
-## Coming soon <a id="coming-soon"></a>
+Five live cells on a 20×20 grid. Eight frames later, those five cells have walked diagonally across the canvas — without a single line of movement code. That illusion of motion comes from one of the most studied systems in twentieth-century mathematics: Conway's Game of Life [1]. Four arithmetic rules, applied uniformly to every cell, produce structures that move, blink, and persist [2].
 
-This lesson is part of **Module 01 — Pixel Fundamentals** in the *Foundations* cycle (Hands-On Discovery). When written, it will cover **Cellular Automata**.
+### Learning objectives
 
-<Admonition type="note" title="Placeholder">
-This lesson hasn't been written yet. The v1 source for this exercise lives at `content/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata` in the numpy-to-genAI repo.
+<ol class="obj-list">
+  <li>Implement Conway's Game of Life as a synchronous update over a 2D NumPy grid.</li>
+  <li>Count Moore-neighbourhood neighbours in parallel using a SciPy 2D convolution.</li>
+  <li>Recognise the three pattern classes — still lifes, oscillators, spaceships — by their neighbour-count signatures.</li>
+  <li>Reason about how boundary conditions (toroidal vs fixed) reshape a pattern's evolution.</li>
+</ol>
+
+## Quick start — see life in action <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+from scipy.ndimage import convolve
+import imageio
+
+def grid_to_image(grid, scale=8):
+    """Convert binary grid to grayscale image."""
+    return np.repeat(np.repeat(grid * 255, scale, axis=0), scale, axis=1).astype(np.uint8)
+
+grid = np.zeros((20, 20), dtype=int)
+grid[8:11, 8:11] = [[0, 1, 0], [0, 0, 1], [1, 1, 1]]  # Glider
+
+# Moore neighbourhood kernel (counts 8 surrounding cells, excludes centre)
+kernel = np.array([[1, 1, 1],
+                   [1, 0, 1],
+                   [1, 1, 1]])
+
+frames = []
+for step in range(8):
+    frames.append(grid_to_image(grid))
+    neighbor_count = convolve(grid, kernel, mode='wrap')
+    # Apply B3/S23 rules
+    birth = (neighbor_count == 3)
+    survival = (grid == 1) & (neighbor_count == 2)
+    grid = (birth | survival).astype(int)
+
+imageio.mimsave('glider_animation.gif', frames, fps=2, duration=0.5)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/1.2.2/visuals/glider_animation.gif"
+  alt="Animated glider pattern walking diagonally across a 20x20 cellular automata grid"
+  caption="The glider — five cells, no movement code, four generations per step diagonally."
+  num={1}
+  role="output"
+/>
+
+<Dropdown summary="Key functions used above">
+
+**NumPy** — `np.zeros(shape, dtype)` — Creates an array filled with zeros. `np.zeros((20, 20), dtype=int)` makes a 20×20 grid where every cell starts dead.
+
+**NumPy** — `np.repeat(array, repeats, axis)` — Repeats each element of an array along the given axis. We use it to upscale each grid cell into a visible block of pixels: `np.repeat(grid, 8, axis=0)` turns each row into eight identical rows, taking a 20×20 grid up to 160×160 pixels for display.
+
+**SciPy** — `convolve(input, weights, mode)` — Slides a small matrix (kernel) across every position in the input, computing a weighted sum at each location [8]. With our 3×3 kernel of ones (centre 0), it counts each cell's eight neighbours in a single call. `mode='wrap'` connects opposite edges so the grid behaves as a torus.
+
+**NumPy** — `np.stack(arrays, axis)` — Joins a sequence of arrays along a new axis. In Exercise 1 below, `np.stack([gray, gray, gray], axis=2)` builds an RGB image from a grayscale grid with shape `(H, W, 3)`.
+
+</Dropdown>
+
+<Admonition type="note">
+The glider was *never told* to move. It emerges from four rules about neighbour counts, applied locally and simultaneously to every cell. Movement is a side effect of arithmetic.
 </Admonition>
 
-### What this lesson will cover
+## Core concepts <a id="core-concepts"></a>
 
-The full lesson will follow the standard Hands-On Discovery format with **Execute → Modify → Create** scaffolding, runnable Python examples, generated outputs, and APA-cited references. Until then, this page is a structural placeholder so the curriculum navigation works end to end.
+### Concept 1 — What a cellular automaton is
 
-### Why this page exists
+A cellular automaton is three things plus one constraint [2]:
 
-The Pixels2GenAI v2 site is being built from the ground up alongside the v1 reference platform (`numpy-to-genAI`). Every leaf in the curriculum tree gets a v2 page from day one so navigation, sibling-lesson links, and the curriculum map are complete even before each individual lesson is hand-ported. Placeholder pages like this one will be replaced by full lessons as they are written.
+1. **A grid** — a regular array of cells, each in one of a small set of states (here: alive `1` or dead `0`).
+2. **A rule** — a function that determines a cell's next state from its current state and the states of its neighbours.
+3. **Discrete time** — every cell updates at once on each tick.
+
+<CodeBlock lang="python">
+```python
+grid = np.zeros((height, width), dtype=int)   # 0 = dead, 1 = alive
+
+for generation in range(num_steps):
+    grid = apply_rules(grid)                   # all cells update together
+```
+</CodeBlock>
+
+This framework, despite its plainness, generates four qualitatively distinct long-run dynamics [2]: static equilibria, periodic cycles, traveling structures, and unbounded chaotic transients. Conway's rules sit in the corner of rule space where all four can coexist on the same grid.
+
+<Admonition type="important">
+The key word is **simultaneity**. All cells read from the *current* generation and write to the *next* generation. Reading partially-updated state would break determinism and destroy every pattern below.
+</Admonition>
+
+<Figure
+  src="/lessons/1.2.2/visuals/simultaneous_update.gif"
+  alt="Animation showing all cells reading from the current generation and writing to the next, in one synchronous tick"
+  caption="Synchronous update: every cell reads from the current state, then the grid swaps."
+  num={2}
+  role="diagram"
+/>
+
+#### Conway's rules (B3/S23)
+
+The Game of Life uses four rules over each cell's eight neighbours — the **Moore neighbourhood** [1]:
+
+- **Birth** — a dead cell with exactly 3 living neighbours becomes alive.
+- **Survival** — a living cell with 2 or 3 living neighbours stays alive.
+- **Death by isolation** — a living cell with fewer than 2 neighbours dies.
+- **Death by overcrowding** — a living cell with more than 3 neighbours dies.
+
+<CodeBlock lang="python">
+```python
+birth     = (neighbor_count == 3) & (grid == 0)
+survival  = (neighbor_count >= 2) & (neighbor_count <= 3) & (grid == 1)
+new_grid  = (birth | survival).astype(int)
+```
+</CodeBlock>
+
+These rules sort almost any starting pattern into three pattern categories [3]: **still lifes** (unchanging), **oscillators** (periodic), and **spaceships** (traveling).
+
+<Admonition type="dyk" title="Historical note · Conway, von Neumann, and Guy">
+Conway designed B3/S23 in 1970 [1] specifically to simplify John von Neumann's 29-state self-reproducing automaton [7] — he wanted a system rich enough to be interesting but not so explosive that patterns grew indefinitely. The formal treatment is in *Winning Ways for Your Mathematical Plays* [4], which Conway co-authored. The glider itself was discovered earlier, in 1969, by Richard K. Guy while tracking the R-pentomino's evolution [5].
+</Admonition>
+
+<Figure
+  src="/lessons/1.2.2/visuals/rule_evaluation.gif"
+  alt="Animated B3/S23 rule evaluation: count alive neighbours, then apply birth, survival, or death rule"
+  caption="B3/S23 in slow motion: count alive neighbours, then apply birth / survival / death."
+  num={3}
+  role="diagram"
+/>
+
+### Concept 2 — Pattern classification
+
+Each pattern category has a recognisable signature once you know what to look for [3].
+
+**Still lifes — stable forever.** The smallest is the **block** [9]: a 2×2 square where every living cell has exactly three living neighbours (counted including diagonals) and every adjacent dead cell has fewer than three. Nothing is born, nothing dies — perfect stability.
+
+```text
+Generation 0:    Generation 1:    Generation 2:
+. . . .          . . . .          . . . .
+. ■ ■ .    →     . ■ ■ .    →     . ■ ■ .
+. ■ ■ .          . ■ ■ .          . ■ ■ .
+. . . .          . . . .          . . . .
+```
+
+**Oscillators — rhythmic patterns.** The **blinker** alternates between horizontal and vertical orientations every generation:
+
+```text
+Generation 0:    Generation 1:    Generation 2:
+. . . . .        . . ■ . .        . . . . .
+. ■ ■ ■ .   →    . . ■ . .   →    . ■ ■ ■ .
+. . . . .        . . ■ . .        . . . . .
+```
+
+The horizontal line becomes vertical, then horizontal again. This is a **period-2 oscillator** [9].
+
+<Figure
+  src="/lessons/1.2.2/visuals/blinker_oscillator_theory.gif"
+  alt="Blinker oscillator: horizontal three-cell line becoming vertical and back"
+  caption="The blinker — always three living cells, but orientation flips every tick."
+  num={4}
+  role="diagram"
+/>
+
+A more theatrical oscillator is the **beacon**, which alternates between six and eight living cells:
+
+```text
+Generation 0:    Generation 1:    Generation 2:
+■ ■ . .          ■ ■ . .          ■ ■ . .
+■ . . .    →     ■ ■ . .    →     ■ . . .
+. . . ■          . . ■ ■          . . . ■
+. . ■ ■          . . ■ ■          . . ■ ■
+```
+
+<Figure
+  src="/lessons/1.2.2/visuals/beacon_oscillator_theory.gif"
+  alt="Beacon oscillator alternating between six-cell and eight-cell configurations"
+  caption="The beacon — two diagonal blocks 'reach' toward each other and pull back, period 2."
+  num={5}
+  role="diagram"
+/>
+
+**Spaceships — moving patterns.** Where an oscillator transforms in place, a spaceship rebuilds itself one cell over each cycle. The **glider** moves diagonally:
+
+```text
+Step 0:          Step 1:          Step 2:          Step 4:
+. ■ . . .        . . . . .        . . . . .        . . . . .
+. . ■ . .   →    ■ . ■ . .   →    . . ■ . .   →    . . . ■ .
+■ ■ ■ . .        . ■ ■ . .        ■ . ■ . .        . . ■ ■ .
+. . . . .        . ■ . . .        . ■ ■ . .        . . ■ . .
+```
+
+The glider reconstructs itself one cell down and one cell to the right every four generations [1] — the illusion of motion produced entirely by arithmetic.
+
+<Figure
+  src="/lessons/1.2.2/visuals/spaceship_theory.gif"
+  alt="Glider spaceship moving diagonally while maintaining its shape"
+  caption="The glider walks down-and-right by reconstructing itself one cell over every four ticks."
+  num={6}
+  role="diagram"
+/>
+
+<Admonition type="tip">
+**Pattern recognition shortcut.** Look at the neighbour counts. Still lifes have *balanced* counts (every live cell with 2 or 3, every dead cell with fewer than 3). Oscillators have *boundary* cells whose counts alternate between birth and death. Spaceships have *asymmetric* counts whose lean shifts the pattern in a consistent direction.
+</Admonition>
+
+#### Placing patterns in code
+
+Every Game of Life pattern is a small 2D shape that you drop onto the grid via array slicing. Read the visual row by row, converting filled cells to `1` and empty cells to `0`:
+
+<CodeBlock lang="python">
+```python
+# Horizontal blinker (1 row × 3 columns):
+# ■ ■ ■
+grid[10, 5:8] = [1, 1, 1]
+
+# Vertical blinker (3 rows × 1 column):
+# ■
+# ■
+# ■
+grid[10:13, 5] = [1, 1, 1]
+
+# Glider (3 rows × 3 columns) — read row by row:
+# . ■ .     →  [0, 1, 0]
+# . . ■     →  [0, 0, 1]
+# ■ ■ ■     →  [1, 1, 1]
+grid[10:13, 5:8] = [[0, 1, 0], [0, 0, 1], [1, 1, 1]]
+```
+</CodeBlock>
+
+To **rotate** a pattern, rearrange the rows. A glider heading up-left instead of down-right:
+
+<CodeBlock lang="python">
+```python
+# Glider rotated 180°:
+# ■ ■ ■     →  [1, 1, 1]
+# ■ . .     →  [1, 0, 0]
+# . ■ .     →  [0, 1, 0]
+grid[10:13, 5:8] = [[1, 1, 1], [1, 0, 0], [0, 1, 0]]
+```
+</CodeBlock>
+
+### Concept 3 — Neighbour counting via convolution
+
+The standard, blazingly fast approach to neighbour counting is a **2D convolution** [8] with a kernel shaped like the Moore neighbourhood:
+
+<CodeBlock lang="python">
+```python
+# Counts each cell's 8 neighbours (centre 0 excludes the cell itself)
+kernel = np.array([[1, 1, 1],
+                   [1, 0, 1],
+                   [1, 1, 1]])
+
+neighbor_count = convolve(grid, kernel, mode='wrap')
+```
+</CodeBlock>
+
+Convolution counts every cell's neighbours in parallel, so the algorithm scales to large grids without nested Python loops. `mode='wrap'` produces **toroidal boundary conditions** [2] — opposite edges of the grid are connected.
+
+<Figure
+  src="/lessons/1.2.2/visuals/moore_neighborhood_theory.png"
+  alt="Diagram showing eight cells surrounding a central cell, and the corresponding 3x3 convolution kernel that counts them"
+  caption="The Moore neighbourhood: the eight cells touching a centre cell, and the 3×3 kernel that counts them."
+  num={7}
+  role="diagram"
+/>
+
+### Concept 4 — Boundary conditions reshape evolution
+
+How the grid handles its edges changes pattern behaviour at the boundary [6]:
+
+- **Wrap-around (torus)** — `mode='wrap'`, patterns can move continuously across the edge.
+- **Fixed dead boundary** — `mode='constant'`, cells beyond the edge act as permanently dead — a wall.
+- **Reflective** — custom implementation, patterns bounce off the edge.
+
+<CodeBlock lang="python">
+```python
+wrap_neighbors  = convolve(grid, kernel, mode='wrap')     # toroidal
+fixed_neighbors = convolve(grid, kernel, mode='constant') # dead boundary
+```
+</CodeBlock>
+
+For art and exploration, wrap-around produces more interesting long-run behaviour [6] because patterns can interact across the entire space. For studying single patterns in isolation, a fixed boundary acts like a black hole at the edge.
+
+<Figure
+  src="/lessons/1.2.2/visuals/boundary_conditions_theory.gif"
+  alt="Side-by-side animation comparing wrap-around boundary conditions (left) with fixed-dead-edge boundary conditions (right) using a glider pattern"
+  caption="Wrap-around vs fixed-dead boundary, same glider, different fate."
+  num={8}
+  role="diagram"
+/>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in the standard **Execute → Modify → Create** progression [10, 11].
+
+<Exercise n={1} kicker="EXECUTE" title="The blinker">
+
+The blinker is the simplest oscillator — three cells, period 2. Run it and watch the line flip.
+
+<CodeBlock lang="bash">
+```bash
+python exercise1_execute.py
+```
+</CodeBlock>
+
+<Admonition type="tip">
+**NumPy function:** `np.sum(array)` returns the sum of all elements. Since living cells are `1` and dead cells are `0`, `np.sum(grid)` counts the living cells directly.
+</Admonition>
+
+<Figure
+  src="/lessons/1.2.2/visuals/expected_exercise1.png"
+  alt="Expected output: a vertical line of three white cells against a black grid, the blinker's even-generation form"
+  caption="After six (even) generations the blinker has returned to its horizontal form. Yours should match."
+  num={9}
+  role="output"
+/>
+
+**Reflection questions**
+
+- Does the living-cell count change, or does it stay at exactly 3?
+- Can you trace, in your head, how the horizontal line becomes vertical, then horizontal again?
+- Which pattern category (still life / oscillator / spaceship) does the blinker belong to, and why?
+
+<Dropdown summary="Solution & explanation">
+
+The blinker maintains exactly three living cells throughout. Odd generations show a vertical line (three cells in a column); even generations show a horizontal line (three cells in a row). The pattern returns to its starting state every two ticks — a period-2 oscillator.
+
+Why exactly three cells? The end cells each have only one living neighbour, so they die. The middle cell has two living neighbours, so it survives. Two new cells are born above and below the middle (each has exactly three living neighbours). Net: three cells, rotated 90°.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Blinker variations">
+
+Open `exercise2_modify.py`. The script starts with a blinker at the centre of a 30×30 grid. Change the marked values to hit each goal below, then re-run.
+
+<CodeBlock lang="bash">
+```bash
+python exercise2_modify.py
+```
+</CodeBlock>
+
+**Goals**
+
+1. **Move the blinker to the very top edge** — change its position to row 0. Does it still oscillate?
+2. **Switch boundary mode** — keep the edge blinker and change `mode='wrap'` to `mode='constant'`. What happens?
+3. **Multiple blinkers** — add several blinkers at different positions and orientations.
+
+<Figure
+  src="/lessons/1.2.2/visuals/expected_exercise2_goals.png"
+  alt="Three reference panels: edge blinker oscillating on wrap-around, edge blinker dying on fixed boundary (empty grid), and a grid containing multiple coexisting blinkers"
+  caption="Reference outputs for the three goals."
+  num={10}
+  role="output"
+/>
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Change the placement line to `grid[0, 14:17] = [1, 1, 1]`. With wrap-around boundaries, the blinker oscillates normally even at the top edge because the grid is a torus — cells "above" row 0 wrap around to the bottom rows. The blinker survives.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Inside `game_of_life_step`, change the convolution to `mode='constant'`. Combined with the edge placement from goal 1, cells beyond the edge are now treated as permanently dead. The blinker loses the neighbours it needs to survive and **dies within two generations** — the grid goes empty. Boundary conditions can be the difference between life and death.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Each blinker oscillates independently as long as they are far enough apart. Mixing horizontal and vertical blinkers shows both orientations alive at once.
+
+**Experiment:** place two horizontal blinkers two rows apart (e.g. rows 14 and 16) and watch their interaction.
+
+</Dropdown>
+
+<Dropdown summary="Solutions">
+
+<CodeBlock lang="python">
+```python
+# 1. Edge blinker
+grid[0, 14:17] = [1, 1, 1]
+
+# 2. Fixed boundaries — in game_of_life_step:
+neighbor_count = convolve(grid, kernel, mode='constant')
+
+# 3. Multiple blinkers
+grid[8, 5:8]    = [1, 1, 1]   # horizontal
+grid[14:17, 15] = [1, 1, 1]   # vertical
+grid[22, 20:23] = [1, 1, 1]   # horizontal
+```
+</CodeBlock>
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="A pattern garden">
+
+Open `exercise3_create.py`. The helper functions and grid setup are provided. Complete the three TODOs to place an oscillator and a spaceship on the same grid and let them coexist for twenty generations.
+
+<CodeBlock lang="bash">
+```bash
+python exercise3_create.py
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — review the pattern shapes">
+
+The beacon's bottom-right block mirrors the top-left block:
+
+- Top-left: `[[1, 1], [1, 0]]` — full top row, left cell on the bottom.
+- Bottom-right: think of it as the *opposite*. What fills the bottom row and the right cell on top?
+
+For the glider, read the visual row by row, converting filled squares to `1` and empty to `0`.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — 2D slice indexing">
+
+A 2D list like `[[0, 1], [1, 1]]` assigns row-by-row into a grid slice. `grid[7:9, 7:9]` means rows 7 and 8, columns 7 and 8 — a 2×2 region. `grid[20:23, 10:13]` means rows 20–22, columns 10–12 — a 3×3 region.
+
+</Dropdown>
+
+<Dropdown summary="Hint 3 — partial code">
+
+<CodeBlock lang="python">
+```python
+# TODO 1 — beacon's bottom-right block:
+grid[7:9, 7:9] = [[0, 1], [1, 1]]
+
+# TODO 2 — glider (first row given, complete the rest):
+grid[20:23, 10:13] = [[0, 1, 0], ...]  # what are rows 2 and 3?
+
+# TODO 3 — the evolution loop:
+for generation in range(20):
+    grid = game_of_life_step(grid)
+    print(...)  # print generation number and np.sum(grid)
+```
+</CodeBlock>
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+# TODO 1 — beacon
+grid[5:7, 5:7] = [[1, 1], [1, 0]]    # top-left block (provided)
+grid[7:9, 7:9] = [[0, 1], [1, 1]]    # bottom-right block
+
+# TODO 2 — glider
+grid[20:23, 10:13] = [[0, 1, 0], [0, 0, 1], [1, 1, 1]]
+
+# TODO 3 — evolution
+for generation in range(20):
+    grid = game_of_life_step(grid)
+    print(f"Generation {generation + 1}: {np.sum(grid)} living cells")
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/1.2.2/visuals/expected_exercise3.png"
+  alt="Pattern garden output: a beacon oscillator in the top-left and a glider that has moved diagonally five cells from its starting position"
+  caption="Pattern garden after 20 generations — beacon stays put, glider has walked five cells diagonally."
+  num={11}
+  role="output"
+/>
+
+**How it works.** The beacon oscillates between 6 and 8 cells but stays at its corner of the grid. The glider moves diagonally — five cells in twenty generations, exactly four ticks per cell. The two patterns coexist because they are far enough apart that their neighbour counts never overlap. Different pattern *kinds* on the same grid.
+
+</Dropdown>
+
+#### Make it your own
+
+After the TODOs work, try these by editing the script directly:
+
+- Add a single blinker: `grid[row, col:col+3] = [1, 1, 1]`.
+- Add a block (still life): `grid[row:row+2, col:col+2] = 1`.
+- Place two gliders on a collision course. What happens when they meet?
+- Push the grid to 60×60 and scatter many patterns. Density changes the dynamics.
+
+<Dropdown summary="Challenge — glider collision">
+
+<CodeBlock lang="python">
+```python
+# Glider moving down-right
+grid[5:8, 5:8] = [[0, 1, 0], [0, 0, 1], [1, 1, 1]]
+
+# Glider moving up-left (rotated 180°)
+grid[30:33, 30:33] = [[1, 1, 1], [1, 0, 0], [0, 1, 0]]
+```
+</CodeBlock>
+
+Run for 50+ generations and watch the collision. The outcome depends on exactly when and where the gliders meet. Sometimes they annihilate cleanly; sometimes they spawn debris that becomes new stable patterns.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/1.2.2/exercise1_execute.py" label="exercise1_execute.py — blinker (Execute)" />
+<Download href="/lessons/1.2.2/exercise2_modify.py" label="exercise2_modify.py — blinker variations (Modify)" />
+<Download href="/lessons/1.2.2/exercise3_create.py" label="exercise3_create.py — pattern garden (Create)" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Four arithmetic rules, applied uniformly to every cell at every tick, generate every behaviour in this lesson — gliders that walk, beacons that blink, blocks that just persist. Convolution makes the neighbour-counting parallel, which is what lets the algorithm scale beyond a toy grid. Boundary conditions decide whether a pattern lives on a sphere, a torus, or inside a walled room — and the same starting state can resolve to opposite fates depending on which you pick. The lesson behind the lesson: simple local rules can produce arbitrarily complex global behaviour, and "complex" here is a precise mathematical statement, not a metaphor.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Updating cells *during* the sweep instead of after. The grid must be read entirely from the current generation before any cell flips. Use a separate `new_grid` or NumPy's `convolve` (which is implicitly synchronous).
+- Forgetting `mode='wrap'` and then wondering why edge patterns die.
+- Confusing the kernel with the rule — the kernel of ones only *counts* neighbours, it does not encode B3/S23. The rule lives in the birth/survival comparison afterwards.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Gardner, M. (1970). Mathematical Games: The fantastic combinations of John Conway's new solitaire game "life". *Scientific American*, 223(4), 120–123.</li>
+    <li><span class="tag">[2]</span> Wolfram, S. (2002). *A New Kind of Science*. Wolfram Media. ISBN 978-1-57955-008-0.</li>
+    <li><span class="tag">[3]</span> Adamatzky, A. (Ed.). (2010). *Game of Life Cellular Automata*. Springer. <a href="https://doi.org/10.1007/978-1-84996-217-9" target="_blank" rel="noopener">doi:10.1007/978-1-84996-217-9</a></li>
+    <li><span class="tag">[4]</span> Berlekamp, E. R., Conway, J. H., & Guy, R. K. (2004). *Winning Ways for Your Mathematical Plays* (2nd ed., Vol. 4, ch. 25). A K Peters.</li>
+    <li><span class="tag">[5]</span> Roberts, S. (2015). *Genius at Play: The Curious Mind of John Horton Conway* (pp. 125–126). Bloomsbury.</li>
+    <li><span class="tag">[6]</span> Flake, G. W. (1998). *The Computational Beauty of Nature*. MIT Press. ISBN 978-0-262-56127-3.</li>
+    <li><span class="tag">[7]</span> Von Neumann, J. (1966). *Theory of Self-Reproducing Automata* (A. W. Burks, Ed.). University of Illinois Press.</li>
+    <li><span class="tag">[8]</span> SciPy developers. (2024). *scipy.ndimage.convolve*. SciPy v1.12 Documentation. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.convolve.html" target="_blank" rel="noopener">scipy.org</a></li>
+    <li><span class="tag">[9]</span> ConwayLife.com. (2024). *LifeWiki: The wiki for Conway's Game of Life*. <a href="https://conwaylife.com/wiki/Main_Page" target="_blank" rel="noopener">conwaylife.com</a></li>
+    <li><span class="tag">[10]</span> Sweller, J. (1988). Cognitive load during problem solving: Effects on learning. *Cognitive Science*, 12(2), 257–285. <a href="https://doi.org/10.1207/s15516709cog1202_4" target="_blank" rel="noopener">doi:10.1207/s15516709cog1202_4</a></li>
+    <li><span class="tag">[11]</span> Mayer, R. E. (2020). *Multimedia Learning* (3rd ed.). Cambridge University Press. ISBN 978-1-316-63816-1.</li>
+  </ol>
+</section>

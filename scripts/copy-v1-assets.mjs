@@ -70,7 +70,10 @@ const SKIP_FILE_NAMES = new Set([
 // conservative top-level-only defaults. Add an entry when a specific lesson
 // needs subdirectory recursion or .pth inclusion.
 const PER_LESSON = {
-  // '1.1.1': { includeSubdirs: ['visuals'] },
+  // Lessons that need their visuals/ subdir copied alongside top-level
+  // assets. Diagram-generation assets (theory GIFs, expected outputs)
+  // live under visuals/ in the v1 source tree.
+  '1.2.2': { includeSubdirs: ['visuals'] },
   '12.1.2': { includePth: true },
 };
 
