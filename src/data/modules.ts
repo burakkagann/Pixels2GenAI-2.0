@@ -24,22 +24,22 @@ export interface ModuleEntry {
 }
 
 export const MODULES: ModuleEntry[] = [
-  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I' },
+  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I', firstLesson: '0.1' },
   { idx: '01', title: 'Pixel',             em: 'Fundamentals',        fw: 'F1',    cycle: 'I',   firstLesson: '1.1.1' },
-  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I' },
-  { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I' },
+  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I', firstLesson: '2.1.1' },
+  { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I', firstLesson: '3.1.1' },
   { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1' },
-  { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I' },
-  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II' },
-  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II' },
-  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II' },
-  { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II' },
-  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II' },
-  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II' },
+  { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I', firstLesson: '5.1.1' },
+  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II', firstLesson: '6.1.1' },
+  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II', firstLesson: '7.1.1' },
+  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II', firstLesson: '8.1.1' },
+  { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II', firstLesson: '9.1.1' },
+  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II', firstLesson: '10.1.1' },
+  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II', firstLesson: '11.1.1' },
   { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.2' },
-  { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III' },
-  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III' },
-  { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', capstone: true },
+  { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III', firstLesson: '13.1.1' },
+  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III', firstLesson: '14.1.1' },
+  { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', firstLesson: '15', capstone: true },
 ];
 
 /**
