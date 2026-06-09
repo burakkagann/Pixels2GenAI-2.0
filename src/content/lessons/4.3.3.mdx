@@ -12,8 +12,8 @@ prev:
   slug: "4.3.2"
   title: "Koch Snowflake"
 next:
-  slug: "12.1.2"
-  title: "DCGAN Art"
+  slug: "8.1.1"
+  title: "Image Transformations"
 backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
@@ -162,13 +162,13 @@ Run `simple_penrose.py`. The script starts with a 10-triangle wheel, applies 5 d
 
 **Reflection questions**
 
-- Tile count at depth 5 is 890. Verify the rough scaling law: $N_0$ times $\varphi$ to the power $2n$, which for $N_0 = 10$ and $n = 5$ comes out to $10 \cdot \varphi^{10}$ — close to the actual count.
+- Tile count at depth 5 is 890. Verify the rough scaling law: $N_0$ times $\varphi$ to the power $2n$, which for $N_0 = 10$ and $n = 5$ comes out to $10 \cdot \varphi^\{10\}$ — close to the actual count.
 - Find a "Sun" configuration (5 thick rhombi meeting at a central point). How many can you count in the image?
 - The image has 5-fold rotational symmetry. Why not 10-fold? (Hint: look at the colours.)
 
 <Dropdown summary="Answers">
 
-**Scaling check** — $\varphi$ raised to the tenth power is about 122.99. So $10 \cdot \varphi^{10}$ is about 1,230, versus the actual 890 — close to the right order of magnitude, with the discrepancy explained by the fact that thin and thick triangles deflate into different child counts (2 vs 3), so the average growth factor is not exactly $\varphi^2$. The exact recurrence for the count is "next tile count equals two times current thin + three times current thick" where the thin and thick subcounts evolve in lockstep.
+**Scaling check** — $\varphi$ raised to the tenth power is about 122.99. So $10 \cdot \varphi^\{10\}$ is about 1,230, versus the actual 890 — close to the right order of magnitude, with the discrepancy explained by the fact that thin and thick triangles deflate into different child counts (2 vs 3), so the average growth factor is not exactly $\varphi^2$. The exact recurrence for the count is "next tile count equals two times current thin + three times current thick" where the thin and thick subcounts evolve in lockstep.
 
 **Sun configurations** — you can find 4–6 visible suns in the depth-5 tiling. The exact count depends on which exact tile boundary you take; on the colored_penrose rendering with sharp orange tiles, the configurations stand out clearly.
 

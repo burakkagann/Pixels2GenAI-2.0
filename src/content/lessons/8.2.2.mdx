@@ -1,0 +1,311 @@
+---
+module: "M 08"
+cycle: "II"
+title: "Infinite Blossom"
+objective: "Petals spawn at the edge in polar coordinates, spiral inward as they rotate, and disappear at the centre. New ones spawn forever — no start, no end."
+framework: "hands-on"
+duration: "20–25 min"
+level: "intermediate"
+prereqs: "8.2.1 (per-object animation), 2.2.2 (polar coordinates)"
+prev:
+  slug: "8.2.1"
+  title: "Flower Assembly"
+next:
+  slug: "8.2.3"
+  title: "Walk Cycles"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The **infinite blossom** is the opposite of the flower assembly (8.2.1): instead of N pre-placed tiles converging to a finished image, *new* objects spawn continuously at the canvas edge, each one with its own lifetime. There is no end state. The animation runs forever, and yet the canvas stays bounded because every object eventually disappears at the centre.
+
+Mechanically the trick is to keep objects in **polar coordinates** — angle and distance from a fixed centre — and update both per frame: rotate the angle slightly (causing visual spiraling) and decrease the distance (causing inward motion). When `distance == 0`, retire the object. Spawn a fresh batch every N frames, and the pipeline becomes a steady flow. The same pattern drives every screensaver, every particle-effect emitter in game engines, and every "infinite spiral" video that fascinates an Instagram feed.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Represent moving objects in polar coordinates and update angle/distance per frame.</li>
+  <li>Implement a spawn-and-retire object lifecycle: new objects appear at the edge; old ones disappear in the centre.</li>
+  <li>Render each object using polar-to-Cartesian conversion with `cos(θ) * r, sin(θ) * r`.</li>
+  <li>Compose an "infinite" animation by ensuring the steady-state object count stays bounded.</li>
+</ol>
+
+## Quick start — the infinite blossom <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import math
+import numpy as np
+from PIL import Image, ImageDraw
+
+INNER, CANVAS, SPAWN_R, FRAMES = 800, 600, 320, 180
+
+class Petal:
+    def __init__(self, angle_deg, dist):
+        self.angle = angle_deg
+        self.dist = dist
+    def update(self):
+        self.angle = (self.angle + 1.2) % 360
+        self.dist -= 1.5
+    def polar(self, ang, d):
+        r = math.radians(ang)
+        return int(math.cos(r) * d), int(math.sin(r) * d)
+    def draw(self, draw):
+        m = 1.2 + self.dist / 280
+        v = [self.polar(self.angle, self.dist),
+             self.polar(self.angle - 30, self.dist * m),
+             self.polar(self.angle + 30, self.dist * m)]
+        ox, oy = INNER // 2, INNER // 2
+        col = (255, int(60 + 110 * self.dist / SPAWN_R), int(40 + 60 * self.dist / SPAWN_R))
+        draw.polygon([(x + ox, y + oy) for x, y in v], fill=col)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/8.2.2/infinite_blossom.gif"
+  alt="An animated GIF showing red and orange triangular petals spiraling inward from the edges of a canvas toward the centre, where they vanish. New petals continuously appear at the outer rim, creating a hypnotic looping pattern with three-fold rotational symmetry"
+  caption="180-frame loop. Petals spawn in triplets every 12 frames at the rim, spiral inward with 1.2°/frame rotation and 1.5 px/frame inward motion. They vanish at the centre."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The blossom **never repeats** at the pixel level — each cycle has different petal phases because the spawn timing isn't synchronised with the loop length. Yet the animation reads as seamlessly looping because its **statistics** are constant: the same average number of petals at every distance, the same average orientation, the same average colour distribution.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Polar coordinates as the natural state
+
+For motion that's rotational + radial, polar coordinates `(angle, distance)` are vastly simpler than Cartesian `(x, y)`. Rotating an object becomes "add to the angle"; moving it inward becomes "subtract from the distance." Per-frame update is a single addition per axis.
+
+<CodeBlock lang="python" file="update.py">
+```python
+def update(self):
+    self.angle = (self.angle + 1.2) % 360   # rotate 1.2° per frame
+    self.dist -= 1.5                         # 1.5 px inward per frame
+```
+</CodeBlock>
+
+The trade-off: rendering needs a polar-to-Cartesian conversion at every draw call. For a thousand objects per frame the cost is negligible — the conversion is two `cos`/`sin` calls. Same trick the spiral lesson (2.2.2) and the harmonograph lesson (2.3.3) used; same trick every 2D physics engine uses when objects orbit a centre.
+
+### Concept 2 — The spawn-and-retire lifecycle
+
+For the animation to last forever without unbounded memory, objects must retire when they finish their lifecycle. We keep a list of active petals, update them, then filter out the ones with `dist <= 0`:
+
+<CodeBlock lang="python" file="lifecycle.py">
+```python
+for f in range(FRAMES):
+    if f % 12 == 0:                                 # spawn cadence
+        petals += create_three(SPAWN_RADIUS,
+                                rng.uniform(0, 360))
+    for p in petals:
+        p.update()
+        p.draw(draw)
+    petals = [p for p in petals if p.dist > 0]      # retire arrived
+```
+</CodeBlock>
+
+The steady-state count is determined by spawn rate × lifetime. With petals spawning in groups of 3 every 12 frames and a lifetime of `SPAWN_RADIUS / 1.5 ≈ 213` frames, you can expect about `3 * 213 / 12 ≈ 53` petals on screen at any moment.
+
+<Admonition type="dyk" title="Did you know · particle emitters in every game engine">
+Unity's `ParticleSystem`, Unreal's `Niagara`, Godot's `GPUParticles2D`, and pygame's `pygame.sprite.Group` all expose the same conceptual contract: an *emitter* spawns particles at a fixed rate; each particle has a *lifetime* during which it updates per frame; when lifetime ends, the particle retires and frees its slot. The exact API surface differs — Unity uses `startSpeed` and `startLifetime`, Niagara uses *modules*, Godot uses *materials* — but the spawn-retire pattern is universal [1, 2].
+</Admonition>
+
+### Concept 3 — Rendering: oversize canvas + centre crop
+
+When new petals spawn at the edge, the visible window would show them appearing out of nowhere — a discontinuity. The fix: **render on a canvas larger than the visible viewport**, then crop the centre.
+
+<CodeBlock lang="python" file="crop.py">
+```python
+INNER, CANVAS = 800, 600
+crop_box = ((INNER - CANVAS) // 2, (INNER - CANVAS) // 2,
+            (INNER - CANVAS) // 2 + CANVAS, (INNER - CANVAS) // 2 + CANVAS)
+frame.crop(crop_box)
+```
+</CodeBlock>
+
+The 100 px margin on each side hides the spawn moment: by the time petals enter the visible 600×600 viewport, they have already travelled enough that their motion looks continuous. Every infinite-emitter animation needs some version of this trick — render bigger, crop the centre, hide the boundary.
+
+<Admonition type="important">
+The spawn position must be **beyond the visible canvas boundary** for the illusion to work. If petals spawn inside the cropped viewport, the user sees them materialise from nothing — an immersion-breaking pop. Tune the margin so spawn-radius > viewport-half-diagonal.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the loop, sweep parameters, then build a multi-direction emitter.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the infinite blossom">
+
+Run `infinite_blossom.py`. The script generates a 180-frame loop with ~50 petals on screen at any moment.
+
+<Download href="/lessons/8.2.2/infinite_blossom.py" label="infinite_blossom.py — reference implementation" />
+
+**Reflection questions**
+
+- The petals spawn in groups of 3 spaced 120° apart. Why?
+- What is the steady-state petal count if the spawn cadence is every 6 frames instead of 12?
+- The colour gets warmer as petals move toward the centre. How does this contribute to the perception of inward motion?
+
+<Dropdown summary="Answers">
+
+**Three-fold symmetry** — spawning in groups of 3 produces visible 3-fold rotational symmetry at every distance. Single-petal spawns would feel random; 6 or 12 would feel busy. Three is the visual sweet spot for "ordered chaos" — enough structure to read as composed, sparse enough to feel organic.
+
+**Steady-state petal count** — spawn rate doubles (every 6 frames instead of 12); lifetime stays at 213 frames; petal count doubles to ~106. The animation looks denser and may feel cluttered.
+
+**Colour cue for motion** — petals at the edge are dimmer (more orange); petals near the centre are saturated red. The eye reads warmer/brighter as "approaching" and cooler/dimmer as "receding." Reversing the gradient would make the petals feel like they were emerging from the centre rather than arriving at it.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep blossom parameters">
+
+Three variants.
+
+**Goals**
+
+1. **Slower spiral.** Reduce rotation per frame from 1.2° to 0.3°. The petals will feel more radial than spiral.
+2. **Five-fold symmetry.** Spawn 5 petals 72° apart instead of 3 at 120°. The composition now has 5-fold rotational symmetry.
+3. **Reversed motion.** Negate the distance decrement: petals spawn at the centre and spiral *outward*. You'll need to swap "retire when dist == 0" with "retire when dist > MAX_R".
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The petals move almost straight inward instead of spiraling. The composition becomes more radial than vortical — closer to a centripetal flow than a vortex.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Visible 5-fold rotational symmetry. Five is an odd number, so the symmetry is more difficult for the eye to track than 3 — the composition reads as more organic.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The reverse animation: petals emerge from the centre and grow outward, exiting the visible canvas. Use the inner canvas trick in reverse — retire when `dist > INNER // 2`. Visually it's the opposite mood — explosion outward instead of gravitational inward.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build a multi-shape emitter">
+
+Extend the system to support multiple object shapes — circles, squares, and the existing triangles — chosen randomly at spawn time.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import math, numpy as np
+from PIL import Image, ImageDraw
+
+class Particle:
+    def __init__(self, angle_deg, dist, shape, color):
+        self.angle = angle_deg
+        self.dist = dist
+        self.shape = shape       # 'tri', 'circle', or 'square'
+        self.color = color
+
+    def update(self):
+        # TODO 1: same as before — rotate angle, decrease distance
+        pass
+
+    def draw(self, draw, centre):
+        # TODO 2: dispatch on self.shape, draw the appropriate primitive
+        pass
+
+# Spawn loop: pick a random shape from ['tri', 'circle', 'square']
+# and a random colour for each new particle.
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — dispatch on shape">
+
+```python
+def draw(self, draw, centre):
+    r = math.radians(self.angle)
+    x = int(math.cos(r) * self.dist) + centre[0]
+    y = int(math.sin(r) * self.dist) + centre[1]
+    if self.shape == 'circle':
+        draw.ellipse([x - 8, y - 8, x + 8, y + 8], fill=self.color)
+    elif self.shape == 'square':
+        draw.rectangle([x - 7, y - 7, x + 7, y + 7], fill=self.color)
+    elif self.shape == 'tri':
+        # triangle pointing outward
+        verts = [(x, y - 10), (x - 8, y + 6), (x + 8, y + 6)]
+        draw.polygon(verts, fill=self.color)
+```
+
+A small primitive per branch — circles read as soft, squares as crisp, triangles as directional.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — random colour per spawn">
+
+```python
+hue = rng.uniform(0, 360)
+# HSV → RGB (cheap implementation)
+h = hue / 60
+c = 200
+x = c * (1 - abs((h % 2) - 1))
+if h < 1:   r, g, b = c, x, 0
+elif h < 2: r, g, b = x, c, 0
+elif h < 3: r, g, b = 0, c, x
+elif h < 4: r, g, b = 0, x, c
+elif h < 5: r, g, b = x, 0, c
+else:       r, g, b = c, 0, x
+color = (int(r + 55), int(g + 55), int(b + 55))
+```
+
+Uniform-hue colours look more varied than uniform-RGB.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The combined system supports any number of shapes — extend with stars, lines, or even small images. The lifecycle code (update + retire) is unchanged; only the draw dispatch and the spawn config grow. This is the structure every particle system in every game engine ships.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Wind field.** Add a horizontal velocity that varies sinusoidally with vertical position. Petals get blown by virtual wind as they fall.
+- **Gravity well.** Replace `dist -= 1.5` with `dist -= 1.5 * (1 + 200 / max(dist, 50))`. Petals accelerate inward, mimicking falling into a gravity well.
+- **Audio-reactive spawn rate.** Sample a microphone (`pyaudio`) and spawn petals proportional to loudness. The blossom becomes a music visualiser.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/8.2.2/infinite_blossom.py" label="infinite_blossom.py — reference implementation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Polar coordinates make rotational+radial motion trivial: rotate by adding to the angle, move inward by subtracting from the distance. The infinite-emitter pattern — spawn at the edge, update per frame, retire when lifetime ends — is the universal contract of every particle system. Render on an oversized canvas and crop the centre to hide the spawn moment, so the animation reads as continuous flow rather than discrete pops. The colour, shape, and size of each particle can vary per-instance, producing rich visual variety from a single uniform update loop. Same architectural pattern as the next two lessons (8.2.3 walk cycles use per-limb polar motion; 8.2.4 breathing uses scalar sinusoidal updates).
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Cartesian per-frame update.** Working in `(x, y)` for rotation requires trig at every update; polar makes the update one addition. Always pick the coordinate system that makes the update cheap.
+- **Spawn-inside-viewport.** Visible "pop" when objects materialise on screen. Spawn beyond the crop window.
+- **Unbounded object list.** Forgetting to retire arrived objects leaks memory and slows down the animation over time.
+- **Frame-loop count desynchronised with spawn cadence.** If `FRAMES % SPAWN_PERIOD != 0`, the GIF loop point may show a visible jump. Either match the periods or use a long enough total to make the discontinuity sub-frame.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Reeves, W. T. (1983). Particle systems — a technique for modeling a class of fuzzy objects. *ACM Transactions on Graphics*, 2(2), 91–108. <a href="https://doi.org/10.1145/357318.357320" target="_blank" rel="noopener">doi:10.1145/357318.357320</a></li>
+    <li><span class="tag">[2]</span> Akenine-Möller, T., Haines, E., Hoffman, N., et al. (2018). *Real-Time Rendering* (4th ed.). CRC Press. ISBN 978-1-138-62700-0.</li>
+    <li><span class="tag">[3]</span> Pearson, M. (2011). *Generative Art: A Practical Guide Using Processing*. Manning. ISBN 978-1-935182-62-5.</li>
+    <li><span class="tag">[4]</span> Shiffman, D. (2012). *The Nature of Code: Simulating Natural Systems with Processing*. <a href="https://natureofcode.com/" target="_blank" rel="noopener">natureofcode.com</a></li>
+    <li><span class="tag">[5]</span> Lasseter, J. (1987). Principles of traditional animation applied to 3D computer animation. *Proceedings of SIGGRAPH '87*, 35–44. <a href="https://doi.org/10.1145/37402.37407" target="_blank" rel="noopener">doi:10.1145/37402.37407</a></li>
+    <li><span class="tag">[6]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley. ISBN 978-0-201-12110-0.</li>
+    <li><span class="tag">[7]</span> Unity Technologies. (2024). *Particle System Module Reference*. <a href="https://docs.unity3d.com/Manual/PartSysMainModule.html" target="_blank" rel="noopener">docs.unity3d.com</a></li>
+  </ol>
+</section>

@@ -1,0 +1,291 @@
+---
+module: "M 08"
+cycle: "II"
+title: "Data-Driven Animation"
+objective: "An animated bar-chart race: interpolate between time-series data points, sort bars by current value, animate the rank changes. The architecture behind every viral 'Top 10' video."
+framework: "hands-on"
+duration: "22–28 min"
+level: "intermediate"
+prereqs: "8.1.2 (easing), 8.1.3 (interpolation)"
+prev:
+  slug: "8.4.1"
+  title: "Music Visualization"
+next:
+  slug: "8.4.3"
+  title: "Animated Fractals"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The "bar chart race" went viral in 2018: an animated horizontal-bar visualization that shows ranked data evolving over time, with bars smoothly sliding past each other as ranks change. The format originated with John Burn-Murdoch at the Financial Times [1] and now drives countless YouTube videos showing "10 Most Populous Countries 1950-2020" or "Top Programming Languages 2010-2024." Mechanically it's a small but elegant problem: interpolate between data points smoothly, *and* animate the resorting that happens when ranks change.
+
+This lesson builds a 12-step, 5-category bar-chart race with smooth eased interpolation between time steps. The same architecture extends to line charts, area charts, stacked bars, scatter plots — any time-series visualization where each frame is a function of the data at that moment.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Represent time-series data as a 2D array indexed by time-step and category.</li>
+  <li>Interpolate between consecutive time steps using ease-in-out for smooth animation.</li>
+  <li>Re-sort categories every frame and animate rank changes by computing a continuous y-position from rank.</li>
+  <li>Render the bar chart with title, labels, current values, and a time indicator.</li>
+</ol>
+
+## Quick start — bar chart race <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image, ImageDraw
+
+DATA = np.array([
+    [50, 45, 5, 20, 8],         # time step 0
+    [52, 44, 13, 24, 14],
+    # ... 10 more time steps
+])
+CATEGORIES = ['Python', 'JavaScript', 'Rust', 'Go', 'Julia']
+
+def render_frame(frame, frames_per_step=12):
+    step = frame // frames_per_step
+    frac = (frame % frames_per_step) / frames_per_step
+    progress = frac * frac * (3 - 2 * frac)         # smoothstep
+
+    values = DATA[step] * (1 - progress) + DATA[step + 1] * progress
+    ranks = np.argsort(np.argsort(-values))        # 0 = top
+
+    img = Image.new('RGB', (720, 480), (20, 22, 32))
+    draw = ImageDraw.Draw(img)
+    for i, cat in enumerate(CATEGORIES):
+        y = 80 + ranks[i] * 60
+        w = int(values[i] / max(values) * 480)
+        draw.rectangle([160, y, 160 + w, y + 44], fill=COLORS[i])
+        draw.text((40, y), cat, fill=COLORS[i])
+    return img
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/8.4.2/bar_chart_race.gif"
+  alt="An animated bar chart with five language categories — Python (blue), JavaScript (yellow), Rust (orange), Go (cyan), Julia (purple) — competing for the top rank over 12 synthetic time steps. The bars grow and shrink smoothly, and when rank order changes, bars slide past each other vertically"
+  caption="164 frames over 12 time steps. Synthetic data; eased interpolation; rank-based vertical positioning."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The "race" is the combination of two simultaneous animations: **bar lengths** changing as values interpolate, and **bar positions** changing as ranks reorder. Both are driven by the same `progress` variable; the visual effect is a single smooth motion.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Time-series as a 2D array
+
+Data with $T$ time steps and $C$ categories naturally fits into a $T \times C$ array. Indexing: `DATA[step, category]`. To get the value of category $i$ at fractional time step $f$:
+
+`value = DATA[floor(f), i] * (1 - frac) + DATA[ceil(f), i] * frac`
+
+where `frac = f - floor(f)`. That's exactly the lerp formula from 8.1.3 applied independently to each category. With NumPy broadcasting, the whole row gets interpolated at once:
+
+<CodeBlock lang="python" file="interpolation.py">
+```python
+step = int(f)
+frac = f - step
+values = DATA[step] * (1 - frac) + DATA[step + 1] * frac
+```
+</CodeBlock>
+
+For the visual effect to read as smooth, apply an easing curve to `frac` first (smoothstep or ease-in-out cubic). Linear interpolation produces visible "snaps" at integer steps; eased interpolation looks like continuous motion.
+
+### Concept 2 — Rank-based positioning
+
+Ranks change over time. The challenge: when category A passes category B in rank, both their y-positions must change *smoothly*. If you sort the values and just paste them in sort order, the labels jump — A and B swap instantly with no transition.
+
+The trick is to **compute ranks per frame**, then map each category's *current* rank to a y-position:
+
+<CodeBlock lang="python" file="ranks.py">
+```python
+values = interpolated_values(frame)
+ranks = np.argsort(np.argsort(-values))    # rank of each category (0 = top)
+
+for i, cat in enumerate(CATEGORIES):
+    y = TOP + ranks[i] * BAR_HEIGHT
+    draw_bar(cat, y, values[i])
+```
+</CodeBlock>
+
+When a rank-swap happens, the *values* of A and B cross momentarily, which means their *ranks* swap. Since both A and B's positions are computed from their (continuously interpolated) values, the swap happens through fractional positions — no jump.
+
+<Admonition type="dyk" title="Did you know · bar-chart races went viral in 2018">
+John Burn-Murdoch's animated bar chart of "Top Football Goalscorers" became the first viral bar-chart race in 2018 [1]. The format then exploded on YouTube — channels like *Data Is Beautiful* built audiences of millions in months by animating "Top 10 X" with the same template. The crucial UX innovation: showing the **current time step** prominently, so viewers can correlate the visual change with a year or date. Hide the time indicator and the animation feels weightless.
+</Admonition>
+
+### Concept 3 — Rendering the chart
+
+Each frame is a small UI rendering job: title at the top, time indicator in the upper-right, category labels on the left, bars in the middle, values at the right of each bar. Pillow's `ImageDraw` handles all of it:
+
+<CodeBlock lang="python" file="rendering.py">
+```python
+draw.text((MARGIN, 18), title, fill=(220, 220, 230), font=title_font)
+draw.text((CANVAS_W - 100, 22), f'Year {year:.1f}', fill=(200, 200, 220), font=font)
+
+for i, cat in enumerate(CATEGORIES):
+    y = TOP + ranks[i] * BAR_HEIGHT + PADDING
+    w = int(values[i] / max_val * MAX_BAR)
+    draw.rectangle([BAR_X, y, BAR_X + w, y + BAR_HEIGHT - 16], fill=COLORS[i])
+    draw.text((LABEL_X, y - 2), cat, fill=COLORS[i], font=font)
+    draw.text((BAR_X + w + 8, y - 2), f'{values[i]:.0f}',
+              fill=(220, 220, 230), font=font)
+```
+</CodeBlock>
+
+Constants for margin, bar height, padding, and colour palette make the layout reusable. Replace `CATEGORIES`, `COLORS`, and `DATA` and you have a different chart.
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the chart, sweep parameters, then add a leader indicator.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the bar chart race">
+
+Run `bar_chart_race.py`. The script generates the synthetic data and renders 164 frames.
+
+<Download href="/lessons/8.4.2/bar_chart_race.py" label="bar_chart_race.py — reference implementation" />
+
+**Reflection questions**
+
+- The animation has 12 time steps and 12 frames per step. What does that imply about the relationship between data resolution and animation smoothness?
+- Rust's bar grows from 5 to ~80 over the 12 steps. What does that growth look like visually?
+- Why does ease-in-out produce smoother motion than linear interpolation in this context?
+
+<Dropdown summary="Answers">
+
+**Data resolution and smoothness** — each pair of consecutive data points is bridged by 12 interpolated frames. Doubling frames-per-step gives smoother motion but doesn't add information. Quadrupling data steps gives a more accurate trajectory at the same animation length.
+
+**Rust's growth** — a steady upward climb in length, with rank promotions as it overtakes other categories. The rank changes are the most visually exciting moments — viewers track *who passes whom*, not absolute values.
+
+**Easing benefits** — linear interpolation creates a sawtooth velocity profile (constant within step, sudden change at step boundaries). Ease-in-out smooths the boundaries: motion slows as one step ends and accelerates as the next begins, so transitions read as continuous rather than discrete.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep visualization parameters">
+
+**Goals**
+
+1. **Fewer frames per step.** Halve `FRAMES_PER_STEP` to 6. The animation will feel snappier but less smooth.
+2. **Different colour palette.** Replace the language-themed colours with a `viridis`-style perceptually-uniform palette.
+3. **Linear interpolation.** Replace ease-in-out with linear. The rank changes should feel mechanical.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Faster animation but visible "jitter" at step boundaries because the eased curve has less time to smooth out the transition.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A perceptually-uniform palette like viridis (dark purple → green → bright yellow) is more "scientific" and less topical. Use for data where categories don't have natural brand colours.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+A "stepped" feel — each step's worth of motion is uniform, then snaps to the next. Useful for "honest" data visualization where you don't want easing to imply continuous interpolation between discrete data points.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Add a leader indicator">
+
+Highlight the current first-place category with a gold star or a "👑" indicator next to its bar.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+# Inside the render loop, after computing ranks:
+
+# TODO 1: find the category currently at rank 0
+# leader_idx = np.argmin(ranks)
+# Or simpler: leader_idx = np.argmax(values)
+
+# TODO 2: render a small gold star icon next to that bar's label
+# Using ImageDraw.polygon with 5 points
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — find the leader">
+
+```python
+leader_idx = int(np.argmax(values))
+star_x, star_y = LABEL_X - 22, 80 + ranks[leader_idx] * BAR_HEIGHT + 12
+```
+
+`argmax` gives the index of the highest current value, which is by definition the rank-0 category.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — draw a star">
+
+```python
+def draw_star(draw, cx, cy, r=8, fill=(255, 220, 80)):
+    pts = []
+    for k in range(10):
+        angle = math.pi / 2 + k * math.pi / 5
+        radius = r if k % 2 == 0 else r * 0.4
+        pts.append((cx + radius * math.cos(angle),
+                    cy - radius * math.sin(angle)))
+    draw.polygon(pts, fill=fill)
+```
+
+A five-point star is ten alternating outer/inner vertices.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The combined chart now highlights the leader at every moment. Extra credit: animate the star with a subtle pulse using the breathing technique from 8.2.4.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Real data.** Load real time-series from a CSV — Stack Overflow tag counts, GitHub stars, Spotify play counts. The animation primitives are identical.
+- **Cumulative totals.** Add a small "cumulative" indicator that shows the running total — useful for "Most Olympic Medals Ever Won" type charts.
+- **Drop-out.** Have some categories enter or leave the chart over time. Render them with alpha 0 outside their active window.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/8.4.2/bar_chart_race.py" label="bar_chart_race.py — reference implementation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A bar chart race interpolates between time-series data points with an easing curve, sorts the categories by current value, and renders each category at a y-position computed from its current rank. The same continuous-rank trick handles smooth rank swaps. Constants for margin, bar height, and colour palette make the layout reusable across datasets. Same architecture scales to line charts, area charts, scatter plots, and any other time-series visualisation. The format went viral in 2018 because it answers the question viewers really care about: *who overtook whom, and when*.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Sort instead of rank-positioning.** Sorting the data array directly loses the connection between rows and category names — labels jump instead of slide.
+- **Linear interpolation.** Reads as choppy. Use smoothstep or ease-in-out cubic.
+- **No time indicator.** Viewers lose orientation. Always show the current time step prominently.
+- **Too many categories.** Above 12-15 categories the chart becomes hard to track. Aggregate small ones into "Other."
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Burn-Murdoch, J. (2018). *How to make a bar-chart race in d3*. Financial Times. <a href="https://github.com/johnburnmurdoch/d3-barchart-race" target="_blank" rel="noopener">github.com/johnburnmurdoch</a></li>
+    <li><span class="tag">[2]</span> Bostock, M., Ogievetsky, V., & Heer, J. (2011). D3: Data-driven documents. *IEEE Transactions on Visualization and Computer Graphics*, 17(12), 2301–2309. <a href="https://doi.org/10.1109/TVCG.2011.185" target="_blank" rel="noopener">doi:10.1109/TVCG.2011.185</a></li>
+    <li><span class="tag">[3]</span> Tufte, E. R. (2001). *The Visual Display of Quantitative Information* (2nd ed.). Graphics Press. ISBN 978-1-930824-13-3.</li>
+    <li><span class="tag">[4]</span> Munzner, T. (2014). *Visualization Analysis and Design*. CRC Press. ISBN 978-1-466-50891-0.</li>
+    <li><span class="tag">[5]</span> Heer, J., & Robertson, G. (2007). Animated transitions in statistical data graphics. *IEEE Transactions on Visualization and Computer Graphics*, 13(6), 1240–1247. <a href="https://doi.org/10.1109/TVCG.2007.70539" target="_blank" rel="noopener">doi:10.1109/TVCG.2007.70539</a></li>
+    <li><span class="tag">[6]</span> Penner, R. (2002). *Motion, Tweening, and Easing*. In *Robert Penner's Programming Macromedia Flash MX*. McGraw-Hill. ISBN 978-0-07-222356-2.</li>
+    <li><span class="tag">[7]</span> Pillow Contributors. (2024). *Pillow Documentation: ImageDraw*. <a href="https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html" target="_blank" rel="noopener">pillow.readthedocs.io</a></li>
+  </ol>
+</section>
