@@ -1,0 +1,372 @@
+---
+module: "M 02"
+cycle: "I"
+title: "Strange Attractors"
+objective: "Iterate a non-linear 2D map hundreds of thousands of times and accumulate the visited pixels — the trajectory is chaotic but the visited region is a fixed fractal shape, the strange attractor."
+framework: "hands-on"
+duration: "20–25 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "2.3.3 (parametric curves, damping), basic Python loops"
+prev:
+  slug: "2.3.3"
+  title: "Harmonograph Simulation"
+next: null
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Pick a starting point `(x₀, y₀)`. Apply a non-linear map `(x_{n+1}, y_{n+1}) = (f(x_n, y_n), g(x_n, y_n))` a few hundred thousand times. Plot every visited point. Most of the time you get a boring blob — but for certain parameter choices, the trajectory chaotically settles onto a fixed geometric shape: a **strange attractor**. Slight changes to the starting point produce wildly different trajectories, yet they all visit the same set of pixels. Edward Lorenz stumbled on the first example of this in 1963 while running a weather simulation, and the discovery launched modern chaos theory [1].
+
+This lesson works with two famous 2D attractors — the **de Jong** and **Clifford** maps — and the rendering technique that makes them visible: density accumulation with a log-scaled colour ramp.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Iterate a discrete non-linear map and accumulate per-pixel visit counts in a density buffer.</li>
+  <li>Apply log scaling to a density buffer so rare visits remain visible alongside dense ones.</li>
+  <li>Vary the four parameters of the de Jong map and observe how the attractor shape changes.</li>
+  <li>Colour the trajectory by iteration index to expose the visitation order along the attractor.</li>
+</ol>
+
+## Quick start — the de Jong attractor <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+CANVAS_SIZE = 600
+NUM_POINTS = 400_000
+a, b, c, d = 1.641, 1.902, 0.316, 1.525
+
+def iterate(x, y):
+    return np.sin(a * y) - np.cos(b * x), np.sin(c * x) - np.cos(d * y)
+
+x, y = 0.1, 0.1
+density = np.zeros((CANVAS_SIZE, CANVAS_SIZE), dtype=np.uint32)
+
+def to_pixel(v):
+    return int((v + 2) / 4 * (CANVAS_SIZE - 1))
+
+# Burn in 100 steps so we land on the attractor
+for _ in range(100):
+    x, y = iterate(x, y)
+
+# Accumulate
+for _ in range(NUM_POINTS):
+    x, y = iterate(x, y)
+    px, py = to_pixel(x), to_pixel(y)
+    if 0 <= px < CANVAS_SIZE and 0 <= py < CANVAS_SIZE:
+        density[py, px] += 1
+
+# Log-scale so rare visits show up alongside common ones
+log_density = np.log1p(density.astype(np.float64))
+normalized = (log_density / log_density.max() * 255).astype(np.uint8)
+
+Image.fromarray(normalized, mode='L').save('simple_attractor.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/2.3.4/simple_attractor.png"
+  alt="The de Jong attractor: a complex fractal-looking shape with characteristic filamented structure on a black background"
+  caption="The de Jong attractor with parameters `(1.641, 1.902, 0.316, 1.525)`. 400 000 iterations, log-scaled density."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The image you see is not a curve. It is a **density map** — every pixel records how many times the orbit visited it. The log scaling is what reveals the fine filaments; without it the brightest spots would saturate to white and the rare visits would disappear into black.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Iterated maps and attractors
+
+A **discrete dynamical system** is a recurrence `(x_{n+1}, y_{n+1}) = T(x_n, y_n)` where `T` is some function. Start with a point and iterate. The sequence of points is the **orbit**. Three things can happen:
+
+1. The orbit settles to a fixed point (`T(p) = p`).
+2. The orbit settles to a periodic cycle of finitely many points.
+3. The orbit settles to a **complicated infinite set** that is neither a point nor a curve — a *strange attractor* [2].
+
+The de Jong map used above is
+
+$$T(x, y) = (\sin(a y) - \cos(b x),\ \sin(c x) - \cos(d y)).$$
+
+It is deterministic — given `(x, y)`, the next point is uniquely defined. But the trajectory is **chaotic**: it is exquisitely sensitive to small changes in the starting point. Two orbits that start one pixel apart end up tracing completely different paths through the attractor [1]. Despite that, both orbits visit *the same shape*.
+
+<Admonition type="dyk" title="Technical note · Lorenz and chaos">
+Edward Lorenz first discovered chaotic attractors in 1963 by accident, while running a simplified weather simulation [1]. He restarted a calculation by typing in numbers from a printout, but the printout was rounded to three digits where the program had been using six. The simulation diverged completely — yet stayed on the same butterfly-shaped attractor. The "butterfly effect" got its name from that picture.
+</Admonition>
+
+### Concept 2 — Density accumulation and log scaling
+
+The orbit visits an infinite set of points, but a pixel grid is finite — and some pixels are visited millions of times while others only once. To render the attractor, you increment a counter every time the orbit lands on a pixel, then visualise the counter array.
+
+The catch is the dynamic range. After 400 000 iterations, the busiest pixel might have a count of 800 while a far-edge filament pixel has a count of 1. If you linearly scale to `uint8`, the filament becomes invisible (`1/800 * 255 ≈ 0`). **Log scaling** is the standard fix:
+
+`display = log(1 + count) / log(1 + count_max)`.
+
+`np.log1p(count)` computes `log(1 + count)` safely for `count = 0`. After log scaling, the count of 1 becomes ~0.10 of the maximum (visible), while the count of 800 stays bright. This is the same trick astronomers use to display starfields and the standard renderer for IFS fractals [3].
+
+<CodeBlock lang="python" file="log_scale_demo.py">
+```python
+log_density = np.log1p(density.astype(np.float64))
+normalized = (log_density / log_density.max() * 255).astype(np.uint8)
+```
+</CodeBlock>
+
+### Concept 3 — Parameter space and attractor variety
+
+The de Jong map has four parameters `(a, b, c, d)`. Each quadruple defines a different system, with a different attractor. Many quadruples produce nothing interesting (the orbit explodes to infinity or collapses to a point), but a wide variety give visually striking attractors. Small changes can produce radically different shapes — a hallmark of non-linear systems [4].
+
+<Figure
+  src="/lessons/2.3.4/attractor_variations.png"
+  alt="A two-by-two grid of de Jong attractors with four different parameter quadruples, each producing a visually distinct fractal-like pattern"
+  caption="Four de Jong attractors — same code, four different `(a, b, c, d)` quadruples."
+  num={2}
+  role="output"
+/>
+
+The Clifford attractor uses a related but distinct map:
+
+`T_Clifford(x, y) = (sin(a·y) + c·cos(a·x),  sin(b·x) + d·cos(b·y))`.
+
+Its parameter space is similarly rich and its attractors have a different visual character — more swirling and elongated than the de Jong family. The general technique works for any 2D map of this form: define the iteration, choose parameters, burn in, accumulate density, log-scale. Lorenz's original three-dimensional system is the same idea projected from 3D, and the Chua circuit, Hénon map, and Ikeda map are all variants of the same template [2].
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the de Jong attractor, sweep the parameters, then colour the Clifford attractor by visitation order.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the de Jong attractor">
+
+Run `simple_attractor.py` and inspect the output. The script takes a few seconds to iterate.
+
+**Reflection questions**
+
+- What does `density[py, px] += 1` accumulate, and why is the buffer `uint32` rather than `uint8`?
+- Why is there a burn-in loop of 100 iterations before the main loop starts accumulating?
+- What would the picture look like *without* the log scaling?
+
+<Dropdown summary="Answers">
+
+**Counts per pixel** — `density[py, px]` records how many times the orbit landed on pixel `(px, py)`. After 400 000 iterations the busiest pixels accumulate counts in the thousands, which would overflow `uint8` (max 255). `uint32` (max 4 billion) is plenty of headroom.
+
+**Burn-in** — the very first few iterations might still be "homing in" on the attractor from your arbitrary starting point. Discarding the first 100 steps ensures you only count points already on the attractor, which keeps the image clean.
+
+**Without log scaling** — the brightest pixels dominate, the rare filament pixels collapse to near-black. The attractor reads as a few bright dots in the middle of an almost-empty canvas, with the fine structure lost.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep the parameters">
+
+Edit `simple_attractor.py` to produce three different attractors by changing the `(a, b, c, d)` quadruple.
+
+**Goals**
+
+1. **Compact attractor** — try `(1.4, -2.3, 2.4, -2.1)`.
+2. **Square-ish attractor** — try `(-2.0, -2.0, -1.2, 2.0)`.
+3. **Custom** — pick your own quadruple and see what happens. Most "random" quadruples produce nothing interesting, but you can find good ones by trial and error.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+`(1.4, -2.3, 2.4, -2.1)` gives a denser, more compact attractor with curved filaments — bunched into the centre of the canvas. You may need to adjust the `to_pixel` mapping if the attractor sits outside `[-2, 2]`.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+`(-2.0, -2.0, -1.2, 2.0)` produces a more square-shaped attractor with sharp transitions and visible internal structure.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Most random quadruples are duds. A useful range for de Jong is roughly `a, b, c, d ∈ [-3, 3]`. If the picture looks empty, the orbit probably escaped to infinity within a few iterations. If it looks like a single bright dot, the orbit converged to a fixed point. Both happen often.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Clifford attractor with progress-coloured orbit">
+
+Render a **Clifford attractor** and colour each point by its iteration index, so early iterations are red and late iterations are purple — a visualisation of the visitation order along the attractor.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+CANVAS_SIZE = 600
+NUM_POINTS = 600_000
+
+# Clifford parameters
+a, b, c, d = -1.7, 1.8, -1.9, -0.4
+
+def to_pixel(v, low=-2.5, high=2.5):
+    return int((v - low) / (high - low) * (CANVAS_SIZE - 1))
+
+# TODO 1: implement hue_to_rgb_vec(hue) returning a (r, g, b) tuple for hue in [0, 1].
+
+# TODO 2: iterate the Clifford map. The iteration is
+#   x_new = sin(a*y) + c*cos(a*x)
+#   y_new = sin(b*x) + d*cos(b*y)
+
+# TODO 3: burn in 100 iterations.
+
+# TODO 4: loop NUM_POINTS times. For each point, compute the pixel coords.
+# If they land inside the canvas, compute progress = i / NUM_POINTS,
+# map progress to a hue, and write the resulting RGB into canvas[py, px].
+
+canvas = np.zeros((CANVAS_SIZE, CANVAS_SIZE, 3), dtype=np.uint8)
+# ... your loop here ...
+Image.fromarray(canvas, mode='RGB').save('colored_attractor.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — single-hue mapping">
+
+A scalar version of the 6-segment hue helper:
+
+```python
+def hue_to_rgb_vec(hue):
+    h6 = hue * 6
+    seg = int(h6) % 6
+    x = 1 - abs((h6 % 2) - 1)
+    table = [(1, x, 0), (x, 1, 0), (0, 1, x),
+             (0, x, 1), (x, 0, 1), (1, 0, x)]
+    r, g, b = table[seg]
+    return int(r * 255), int(g * 255), int(b * 255)
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — Clifford iteration and colour assignment">
+
+```python
+x, y = 0.1, 0.1
+for _ in range(100):
+    x, y = np.sin(a*y) + c*np.cos(a*x), np.sin(b*x) + d*np.cos(b*y)
+
+for i in range(NUM_POINTS):
+    x, y = np.sin(a*y) + c*np.cos(a*x), np.sin(b*x) + d*np.cos(b*y)
+    px, py = to_pixel(x), to_pixel(y)
+    if 0 <= px < CANVAS_SIZE and 0 <= py < CANVAS_SIZE:
+        progress = i / NUM_POINTS
+        hue = 0.05 + 0.7 * progress         # red → blue, skip cyan
+        canvas[py, px] = hue_to_rgb_vec(hue)
+```
+
+The `0.05 + 0.7 * progress` keeps the hue inside the warm half of the wheel for a more striking palette.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+CANVAS_SIZE = 600
+NUM_POINTS = 600_000
+a, b, c, d = -1.7, 1.8, -1.9, -0.4
+
+def to_pixel(v, low=-2.5, high=2.5):
+    return int((v - low) / (high - low) * (CANVAS_SIZE - 1))
+
+def hue_to_rgb_vec(hue):
+    h6 = hue * 6
+    seg = int(h6) % 6
+    x = 1 - abs((h6 % 2) - 1)
+    table = [(1, x, 0), (x, 1, 0), (0, 1, x),
+             (0, x, 1), (x, 0, 1), (1, 0, x)]
+    r, g, b = table[seg]
+    return int(r * 255), int(g * 255), int(b * 255)
+
+canvas = np.zeros((CANVAS_SIZE, CANVAS_SIZE, 3), dtype=np.uint8)
+
+x, y = 0.1, 0.1
+for _ in range(100):
+    x_new = np.sin(a * y) + c * np.cos(a * x)
+    y_new = np.sin(b * x) + d * np.cos(b * y)
+    x, y = x_new, y_new
+
+for i in range(NUM_POINTS):
+    x_new = np.sin(a * y) + c * np.cos(a * x)
+    y_new = np.sin(b * x) + d * np.cos(b * y)
+    x, y = x_new, y_new
+    px, py = to_pixel(x), to_pixel(y)
+    if 0 <= px < CANVAS_SIZE and 0 <= py < CANVAS_SIZE:
+        progress = i / NUM_POINTS
+        hue = 0.05 + 0.7 * progress
+        canvas[py, px] = hue_to_rgb_vec(hue)
+
+Image.fromarray(canvas, mode='RGB').save('colored_attractor.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/2.3.4/colored_attractor.png"
+  alt="The Clifford attractor rendered with progress-coloured iteration: early iterations appear in red and orange, late iterations in blue and purple, revealing the visitation order across the attractor"
+  caption="A Clifford attractor coloured by iteration index. Red dominates early-visited regions, purple where the orbit lingers later."
+  num={3}
+  role="output"
+/>
+
+**How it works:**
+
+- The Clifford map is the same iteration template as de Jong, with different combinators.
+- The colouring is per-point — every iteration writes its own colour based on `progress = i / NUM_POINTS`.
+- Unlike the density renderer, this version *overwrites* earlier visits with later colours when the orbit revisits a pixel — which is why the late-iteration colours dominate where the orbit lingers most.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Density + hue.** Combine the density-accumulation approach (Exercise 1) with the per-pixel hue. Use the density for the intensity (`V` channel) and a separate per-pixel statistic — say, the *mean* progress index — for the hue.
+- **Lorenz 3D.** Implement the Lorenz system (`dx/dt = σ(y - x)`, etc.) with `dt = 0.005`, project orthographically, and you have the original chaotic attractor that started the field.
+- **Parameter explorer.** Sweep one parameter (say `a` from `-3` to `3` in steps of `0.05`) and save each attractor as a frame. Assemble a GIF — most frames are blank or boring, but a few seconds in you see beautiful attractors emerge.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/2.3.4/simple_attractor.py" label="simple_attractor.py — de Jong quick start" />
+<Download href="/lessons/2.3.4/attractor_variations.py" label="attractor_variations.py — parameter-sweep panel" />
+<Download href="/lessons/2.3.4/colored_attractor.py" label="colored_attractor.py — Clifford with progress colour" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A strange attractor is the long-term invariant set of an iterated non-linear map. Trajectories starting from nearby points diverge wildly (the sensitive dependence Lorenz observed) yet all of them visit *the same* set of pixels. The rendering pipeline is universal: pick a 2D non-linear map, iterate from any starting point, burn in a few iterations to land on the attractor, then accumulate a per-pixel density counter for several hundred thousand iterations. Log-scaling the density restores the dynamic range so fine filaments stay visible. The same pipeline works for the de Jong, Clifford, Ikeda, Hénon, and many other maps — and 3D versions like the Lorenz butterfly need only an orthographic projection step on top.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Using `uint8` for the density buffer — counts can easily exceed 255 and wrap around silently.
+- Forgetting the burn-in loop — the first few iterations may be off the attractor and bias the density.
+- Linear-scaling the density instead of log-scaling — fine filaments vanish, the picture looks like a bright blob.
+- Iterating from `(0, 0)` for a map that has a fixed point at the origin — the orbit may converge to the origin and never explore the attractor. Start at `(0.1, 0.1)` or similar.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Lorenz, E. N. (1963). Deterministic nonperiodic flow. *Journal of the Atmospheric Sciences*, 20(2), 130–141. <a href="https://doi.org/10.1175/1520-0469(1963)020%3C0130:DNF%3E2.0.CO;2" target="_blank" rel="noopener">doi:10.1175/1520-0469(1963)020&lt;0130:DNF&gt;2.0.CO;2</a></li>
+    <li><span class="tag">[2]</span> Strogatz, S. H. (2015). *Nonlinear Dynamics and Chaos* (2nd ed.). Westview Press.</li>
+    <li><span class="tag">[3]</span> Draves, S., & Reckase, E. (2007). The Fractal Flame algorithm. <a href="https://flam3.com/flame_draves.pdf" target="_blank" rel="noopener">flam3.com/flame_draves.pdf</a>. <span class="note">Reference description of density-and-log-scale rendering for iterated function systems.</span></li>
+    <li><span class="tag">[4]</span> Sprott, J. C. (2003). *Chaos and Time-Series Analysis*. Oxford University Press.</li>
+    <li><span class="tag">[5]</span> de Jong, P. (1987). Hyperchaos, attractors, and time series. *Personal communication via Cliff Pickover's collected attractor parameter lists*. <span class="note">de Jong's map became widely known via Pickover's 1990s catalogue of attractor parameters.</span></li>
+    <li><span class="tag">[6]</span> Clifford, A. P. (1990). Cliff Pickover's "Chaos in Wonderland: Visual Adventures in a Fractal World". *St. Martin's Press*.</li>
+    <li><span class="tag">[7]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585(7825), 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

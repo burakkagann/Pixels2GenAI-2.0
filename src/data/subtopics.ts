@@ -55,23 +55,23 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
 
   '02': [
     { id: '2.1', title: 'Basic Shapes & Primitives', leaves: [
-      { id: '2.1.1', title: 'Lines' },
-      { id: '2.1.2', title: 'Triangles' },
-      { id: '2.1.3', title: 'Circles' },
-      { id: '2.1.4', title: 'Stars' },
-      { id: '2.1.5', title: 'Polygons & Polyhedra' },
+      { id: '2.1.1', title: 'Lines', lessonSlug: '2.1.1' },
+      { id: '2.1.2', title: 'Triangles', lessonSlug: '2.1.2' },
+      { id: '2.1.3', title: 'Circles', lessonSlug: '2.1.3' },
+      { id: '2.1.4', title: 'Stars', lessonSlug: '2.1.4' },
+      { id: '2.1.5', title: 'Polygons & Polyhedra', lessonSlug: '2.1.5' },
     ]},
     { id: '2.2', title: 'Coordinate Systems & Fields', leaves: [
-      { id: '2.2.1', title: 'Gradient' },
-      { id: '2.2.2', title: 'Spiral' },
-      { id: '2.2.3', title: 'Vector Fields' },
-      { id: '2.2.4', title: 'Distance Fields' },
+      { id: '2.2.1', title: 'Gradient', lessonSlug: '2.2.1' },
+      { id: '2.2.2', title: 'Spiral', lessonSlug: '2.2.2' },
+      { id: '2.2.3', title: 'Vector Fields', lessonSlug: '2.2.3' },
+      { id: '2.2.4', title: 'Distance Fields', lessonSlug: '2.2.4' },
     ]},
     { id: '2.3', title: 'Mathematical Art', leaves: [
-      { id: '2.3.1', title: 'Lissajous Curves' },
-      { id: '2.3.2', title: 'Rose Curves' },
-      { id: '2.3.3', title: 'Harmonograph Simulation' },
-      { id: '2.3.4', title: 'Strange Attractors' },
+      { id: '2.3.1', title: 'Lissajous Curves', lessonSlug: '2.3.1' },
+      { id: '2.3.2', title: 'Rose Curves', lessonSlug: '2.3.2' },
+      { id: '2.3.3', title: 'Harmonograph Simulation', lessonSlug: '2.3.3' },
+      { id: '2.3.4', title: 'Strange Attractors', lessonSlug: '2.3.4' },
     ]},
   ],
 

@@ -26,7 +26,7 @@ export interface ModuleEntry {
 export const MODULES: ModuleEntry[] = [
   { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I' },
   { idx: '01', title: 'Pixel',             em: 'Fundamentals',        fw: 'F1',    cycle: 'I',   firstLesson: '1.1.1' },
-  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I' },
+  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I',   firstLesson: '2.1.1' },
   { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I' },
   { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1' },
   { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I' },
