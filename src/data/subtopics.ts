@@ -228,24 +228,24 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
 
   '09': [
     { id: '9.1', title: 'Neural Network Fundamentals', leaves: [
-      { id: '9.1.1', title: 'Perceptron from Scratch' },
-      { id: '9.1.2', title: 'Backpropagation Visualization' },
-      { id: '9.1.3', title: 'Activation Functions Art' },
+      { id: '9.1.1', title: 'Perceptron from Scratch', lessonSlug: '9.1.1' },
+      { id: '9.1.2', title: 'Backpropagation Visualization', lessonSlug: '9.1.2' },
+      { id: '9.1.3', title: 'Activation Functions Art', lessonSlug: '9.1.3' },
     ]},
     { id: '9.2', title: 'Network Architectures', leaves: [
-      { id: '9.2.1', title: 'Feedforward Networks' },
-      { id: '9.2.2', title: 'Convolutional Networks' },
-      { id: '9.2.3', title: 'Recurrent Networks' },
+      { id: '9.2.1', title: 'Feedforward Networks', lessonSlug: '9.2.1' },
+      { id: '9.2.2', title: 'Convolutional Networks', lessonSlug: '9.2.2' },
+      { id: '9.2.3', title: 'Recurrent Networks', lessonSlug: '9.2.3' },
     ]},
     { id: '9.3', title: 'Training Dynamics', leaves: [
-      { id: '9.3.1', title: 'Loss Landscape' },
-      { id: '9.3.2', title: 'Gradient Descent Animation' },
-      { id: '9.3.3', title: 'Overfitting / Underfitting' },
+      { id: '9.3.1', title: 'Loss Landscape', lessonSlug: '9.3.1' },
+      { id: '9.3.2', title: 'Gradient Descent Animation', lessonSlug: '9.3.2' },
+      { id: '9.3.3', title: 'Overfitting / Underfitting', lessonSlug: '9.3.3' },
     ]},
     { id: '9.4', title: 'Feature Visualization', leaves: [
-      { id: '9.4.1', title: 'DeepDream' },
-      { id: '9.4.2', title: 'Feature Map Art' },
-      { id: '9.4.3', title: 'Network Attention' },
+      { id: '9.4.1', title: 'DeepDream', lessonSlug: '9.4.1' },
+      { id: '9.4.2', title: 'Feature Map Art', lessonSlug: '9.4.2' },
+      { id: '9.4.3', title: 'Network Attention', lessonSlug: '9.4.3' },
     ]},
   ],
 

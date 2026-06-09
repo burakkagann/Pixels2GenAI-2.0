@@ -1,0 +1,207 @@
+---
+module: "M 09"
+cycle: "II"
+title: "Feedforward Networks"
+objective: "Stack multiple hidden layers and discover what depth buys you over width. A 2-8-8-1 network learns curved boundaries the perceptron and shallow XOR-trainer can't, and the same architecture scales up to classify handwriting and recognise images."
+framework: "conceptual"
+duration: "30–40 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "9.1.2 (backprop on 2-2-1), 9.1.3 (activations)"
+prev:
+  slug: "9.1.3"
+  title: "Activation Functions Art"
+next:
+  slug: "9.2.2"
+  title: "Convolutional Networks"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+*If a single hidden layer can approximate any continuous function (Universal Approximation Theorem, 1989), why does anybody build deeper networks?* The answer is that *width* and *depth* are different resources. A shallow but wide network needs exponentially many neurons to express the same function a deep narrow network captures in polynomially many [1]. Depth gives you **compositional structure**: each layer learns features built from features below. This is the central insight of modern deep learning — the network "discovers" useful intermediate representations on its own.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Generalise the 2-2-1 backprop code from 9.1.2 to a configurable layer list `[2, 8, 8, 1]`.</li>
+  <li>Train a 2-8-8-1 network on non-XOR datasets (spirals, moons, concentric circles).</li>
+  <li>Visualise hidden-layer activations as a *learned representation* of the input.</li>
+  <li>Compare depth (more layers) vs width (more neurons per layer) on the same problem.</li>
+</ol>
+
+## Part 1 — A configurable forward pass <a id="part-1"></a>
+
+The 2-2-1 network of 9.1.2 hard-coded two weight matrices. Generalise to any architecture:
+
+```python
+class MLP:
+    def __init__(self, layers, seed=0):
+        rng = np.random.default_rng(seed)
+        self.Ws, self.bs = [], []
+        for i in range(len(layers) - 1):
+            # He init for ReLU
+            self.Ws.append(rng.normal(0, np.sqrt(2/layers[i]),
+                                       size=(layers[i+1], layers[i])))
+            self.bs.append(np.zeros(layers[i+1]))
+
+    def forward(self, x):
+        a = x
+        cache = [x]
+        for W, b in zip(self.Ws[:-1], self.bs[:-1]):
+            z = W @ a + b
+            a = np.maximum(0, z)        # ReLU hidden
+            cache.append(a)
+        # final layer with sigmoid for binary classification
+        z = self.Ws[-1] @ a + self.bs[-1]
+        y = 1 / (1 + np.exp(-z))
+        cache.append(y)
+        return y, cache
+```
+
+`layers=[2, 8, 8, 1]` gives a 2-input, two-hidden-layer, 1-output network with 8 neurons each in the hidden layers.
+
+<Figure
+  src="/lessons/9.2.1/network_architecture.png"
+  alt="A diagram of a feedforward network with two input nodes, two hidden layers of eight neurons each, and one output node, with weighted connections between consecutive layers."
+  caption="A 2-8-8-1 feedforward network. Each hidden layer learns a different representation of the input; the output combines those representations into a prediction."
+  num={1}
+  role="diagram"
+/>
+
+## Part 2 — Depth as composition <a id="part-2"></a>
+
+Each hidden layer applies its own non-linear transformation. The first hidden layer carves the input space into half-spaces (just like a perceptron); the second hidden layer combines those half-spaces into more complex regions; and so on. With ReLU activations, each additional layer can roughly *double* the number of linear regions the network expresses [2].
+
+<Figure
+  src="/lessons/9.2.1/depth_comparison.png"
+  alt="A comparison of decision boundaries learned by networks of different depths on the same dataset: 1 hidden layer gives a simple curve, 2 hidden layers give a more complex curve, 3 hidden layers give a near-perfect boundary."
+  caption="Same data, three networks of increasing depth. Adding layers gives qualitatively different shapes; not just smoother versions of the same boundary."
+  num={2}
+  role="output"
+/>
+
+<Admonition type="important">
+**Universal Approximation** says one hidden layer of any width can represent any continuous function. **Depth efficiency** says deep networks need exponentially fewer total parameters to express *some* functions. Both are true; modern deep learning chose depth because real-world data has hierarchical structure that maps cleanly onto layered representations [3].
+</Admonition>
+
+## Part 3 — Learned representations <a id="part-3"></a>
+
+The hidden activations *are* the learned representation. For a 2-8-8-1 network trained on a spiral dataset, plotting the 8-dimensional hidden activations (projected to 2D via PCA) reveals that the network has *un-twisted* the spiral — in hidden space the two classes are linearly separable, exactly the property the output layer needs.
+
+<Figure
+  src="/lessons/9.2.1/feedforward_output.png"
+  alt="A 2D scatter plot of points coloured by class, with a curved decision boundary correctly separating the two intertwined spirals."
+  caption="A 2-8-8-1 network has learned a curved boundary that separates two spirals. The perceptron and 2-2-1 XOR-trainer can't do this; depth and width together unlock it."
+  num={3}
+  role="output"
+/>
+
+<Figure
+  src="/lessons/9.2.1/perceptron_vs_feedforward.png"
+  alt="Side-by-side comparison: a perceptron tries to separate spirals with a straight line and fails; a multi-layer feedforward network draws a curved boundary and succeeds."
+  caption="Perceptron (left) vs feedforward (right) on the same spiral data. The architecture is what makes the difference."
+  num={4}
+  role="diagram"
+/>
+
+<Admonition type="dyk" title="Technical note · why ReLU + He init unlocked depth">
+Glorot's 2010 initialisation worked well for sigmoid/tanh networks. He's 2015 modification — scaling by `√(2/n)` instead of `√(1/n)` — accounts for ReLU's half-zero behaviour and keeps activation variances stable through arbitrarily many layers. This combination (ReLU + He init) was the key that let the field train networks 50+ layers deep without batch normalisation [4].
+</Admonition>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Train on the spiral dataset">
+
+Run `feedforward_network.py` from the downloads. It generates two interlocked spirals, trains a 2-8-8-1 MLP for 3000 epochs, and saves the decision-boundary plot.
+
+**Reflection questions**
+
+- The spiral dataset is harder than XOR. What makes it harder, exactly?
+- Why does the boundary converge from a straight-line approximation to a curve as training progresses?
+- What would the network look like if you only had 2 hidden neurons in *both* layers?
+
+<Dropdown summary="Answers">
+
+**Spiral difficulty** — XOR has 4 points and is finite. Spirals are continuous interleaved curves; the network must approximate a *very* curvy decision boundary with finitely many neurons. More expressive architecture is required.
+
+**Convergence** — early in training, ReLU activations are near-linear; the network behaves like a single linear unit. As gradients accumulate, ReLU's "kinks" position themselves to carve out the spiral shape. Each kink in the final boundary is one ReLU activation switching from 0 to positive somewhere in input space.
+
+**2 hidden / 2 hidden** — the network barely has enough capacity. With ReLU you'd get a piecewise-linear boundary that approximates the spiral roughly. Bumping the width is what gives you smoothness.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Width vs depth experiment">
+
+Train three networks on the same spiral data and compare their final loss:
+
+**Goals**
+
+1. **Shallow & wide** — `[2, 64, 1]`. One hidden layer, 64 neurons.
+2. **Standard** — `[2, 8, 8, 1]`. Two hidden layers, 8 each.
+3. **Deep & narrow** — `[2, 4, 4, 4, 4, 1]`. Four hidden layers, 4 each.
+
+<Dropdown summary="Expected outcomes">
+
+All three reach low loss given enough epochs, but with different training characteristics:
+
+- **Shallow wide**: trains fastest per epoch (fewer layers = less backprop computation). Boundary is smooth.
+- **Standard**: slightly slower per epoch; reaches similar quality.
+- **Deep narrow**: hardest to train. Without batch normalisation or residual connections, the deeper network may struggle with gradient flow. When it works, the boundary has noticeably more compositional structure.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Decision-boundary evolution GIF">
+
+Generate a sequence of decision-boundary images at epochs 0, 100, 300, 1000, 3000, and assemble into a GIF showing the network's learning trajectory.
+
+<Figure
+  src="/lessons/9.2.1/decision_boundary_evolution.gif"
+  alt="An animation showing the decision boundary of a feedforward network evolving over training: initially flat and useless, then gradually curving and refining until it cleanly separates the two spirals."
+  caption="The boundary at epochs 0, 100, 300, 1000, 3000. Watch how the network discovers the spiral structure over time."
+  num={5}
+  role="output"
+/>
+
+<Dropdown summary="Implementation hint">
+
+```python
+import imageio
+
+frames = []
+for epoch in [0, 100, 300, 1000, 3000]:
+    train_until(net, X, y, epoch)
+    img = render_boundary(net)
+    frames.append(img)
+imageio.mimsave('evolution.gif', frames, fps=2)
+```
+
+The fun of this exercise is *watching* the boundary morph. Networks don't go directly from "flat" to "perfect" — they hit recognisable intermediate stages: a single dividing line, a more complex curve, the rough spiral shape, then refinement.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/9.2.1/feedforward_network.py" label="feedforward_network.py — train + visualise" />
+<Download href="/lessons/9.2.1/feedforward_starter.py" label="feedforward_starter.py — Exercise starter" />
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Telgarsky, M. (2016). Benefits of depth in neural networks. *Conference on Learning Theory (COLT)*.</li>
+    <li><span class="tag">[2]</span> Montufar, G. F., Pascanu, R., Cho, K., & Bengio, Y. (2014). On the number of linear regions of deep neural networks. *NeurIPS 27*.</li>
+    <li><span class="tag">[3]</span> Cybenko, G. (1989). Approximation by superpositions of a sigmoidal function. *Mathematics of Control, Signals, and Systems*, 2(4), 303–314.</li>
+    <li><span class="tag">[4]</span> He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers. *ICCV*, 1026–1034.</li>
+    <li><span class="tag">[5]</span> Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.</li>
+    <li><span class="tag">[6]</span> LeCun, Y., Bengio, Y., & Hinton, G. (2015). Deep learning. *Nature*, 521(7553), 436–444.</li>
+  </ol>
+</section>

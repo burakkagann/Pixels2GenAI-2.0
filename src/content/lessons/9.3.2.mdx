@@ -1,0 +1,193 @@
+---
+module: "M 09"
+cycle: "II"
+title: "Gradient Descent Animation"
+objective: "Trace the path gradient descent takes across a loss landscape. The same algorithm follows a smooth bowl downhill to the minimum, oscillates across a narrow valley, or diverges entirely with too-large a learning rate."
+framework: "conceptual"
+duration: "25–30 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "9.3.1 (loss landscape), basic calculus"
+prev:
+  slug: "9.3.1"
+  title: "Loss Landscape"
+next:
+  slug: "9.3.3"
+  title: "Overfitting / Underfitting"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+*How does gradient descent actually navigate the landscape we just plotted?* The algorithm is one of the simplest in machine learning: step in the direction opposite the gradient, with step size controlled by a learning rate. The interesting behaviour comes from how *that single rule* interacts with non-trivial loss surfaces. Run gradient descent on a smooth bowl and it slides cleanly to the minimum. Run it on a narrow valley and it zig-zags. Pick a learning rate that's too large and it diverges. This lesson animates these regimes so you can see the geometry.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Express vanilla gradient descent as `θ ← θ − lr · ∇L(θ)` and explain each term.</li>
+  <li>Predict the trajectory shape from the local landscape geometry — bowl, valley, plateau.</li>
+  <li>Diagnose the three failure modes — too-small LR (slow), too-large LR (oscillating/diverging), and stuck-in-saddle.</li>
+  <li>Connect vanilla GD to the modern optimisers (momentum, Adam) that fix its weaknesses.</li>
+</ol>
+
+## Part 1 — Vanilla gradient descent <a id="part-1"></a>
+
+Pick a starting point `θ_0` in parameter space; iterate:
+
+```python
+def gd(loss_grad, theta_0, lr=0.1, steps=50):
+    theta = theta_0.copy()
+    path = [theta.copy()]
+    for _ in range(steps):
+        g = loss_grad(theta)
+        theta = theta - lr * g
+        path.append(theta.copy())
+    return path
+```
+
+That's the entire algorithm. Three knobs:
+
+- **Starting point** `θ_0` — where you initialise. Bad inits → bad final solutions for non-convex problems.
+- **Learning rate** `lr` — step size. Almost every neural-network failure mode is an LR misconfiguration.
+- **Step count** — when to stop.
+
+## Part 2 — The trajectory on a bowl <a id="part-2"></a>
+
+For a quadratic bowl `L(w) = 0.5 (w − w*)² + ...`, the gradient points away from the minimum and gradient descent converges directly toward it:
+
+<Figure
+  src="/lessons/9.3.2/gradient_descent_path.png"
+  alt="A loss surface visualisation in grayscale, with a red path showing gradient descent steps starting from the top-right corner and curving down to the minimum in the centre."
+  caption="Gradient descent on a quadratic bowl. The path bends because the bowl is anisotropic (steeper in one direction than the other)."
+  num={1}
+  role="output"
+/>
+
+The path bends in the second direction because the bowl is *anisotropic* — `L = 0.5(W₁ − 0.5)² + 1.5(W₂ + 0.3)²` has different curvature along the two axes. The gradient direction is `(W₁ − 0.5, 3(W₂ + 0.3))`, which is *not* parallel to the line toward the minimum. The optimiser corrects its direction at every step but ends up in a curved path [1].
+
+## Part 3 — Learning rate is everything <a id="part-3"></a>
+
+Pick the wrong learning rate and gradient descent fails in characteristic ways:
+
+<Figure
+  src="/lessons/9.3.2/learning_rate_comparison.png"
+  alt="A line plot showing three loss curves over training steps. One curve decreases slowly (small LR). One curve decreases smoothly to near-zero (good LR). One curve oscillates wildly and increases (too-large LR)."
+  caption="Three learning rates on the same bowl. Too small: slow convergence. Just right: smooth decrease. Too large: oscillation or divergence."
+  num={2}
+  role="output"
+/>
+
+**The three regimes:**
+
+| Learning rate | Behaviour |
+|---------------|-----------|
+| Too small (0.001) | Tiny steps; converges *eventually* but takes forever |
+| Just right (0.1) | Smooth decrease; converges in tens of steps |
+| Too large (1.5)   | Overshoots; oscillates or diverges |
+
+In practice, you tune LR by running short training experiments and picking the LR that decreases the loss fastest *without* showing oscillations. This is the **learning-rate warmup** + **cosine schedule** combination used in most modern training [2].
+
+<Admonition type="important">
+Vanilla GD is the simplest case. Modern optimisers fix its weaknesses:
+- **Momentum** (Polyak 1964) — accumulates past gradients; helps escape valleys and accelerate plateaus.
+- **Adam** (Kingma & Ba 2015) — per-parameter learning rates with adaptive scaling. Default for most deep learning [3].
+- **AdamW** (Loshchilov & Hutter 2019) — Adam with decoupled weight decay. Default for transformers [4].
+</Admonition>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Trace a GD path on the quadratic bowl">
+
+Run `gradient_descent.py` from the downloads. It builds the anisotropic bowl from Part 2, runs GD for 40 steps, and plots the path on top of the loss contour.
+
+**Reflection questions**
+
+- The path curves rather than running straight to the minimum. What does that tell you about the bowl?
+- The first step takes the largest jump in the y-direction. Why?
+- What would the path look like on a perfectly isotropic bowl `L = W₁² + W₂²`?
+
+<Dropdown summary="Answers">
+
+**Curving path** — the bowl is *anisotropic*: steeper along W₂ than W₁. The gradient direction is dominated by the steeper axis; the optimiser corrects after each step, producing the curve.
+
+**Big first y-step** — the y-gradient is `3 × (W₂ + 0.3) = 3 × 2.8 = 8.4` at the starting point. The x-gradient is `(W₁ − 0.5) = 2.0`. The y-step is 4× larger; the path moves dramatically down in y before correcting in x.
+
+**Isotropic bowl** — perfectly straight path to the origin. Equal curvature in all directions → gradient points directly at the minimum from every point.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Find the right learning rate">
+
+For the quadratic bowl `L = 0.5(W₁ − 0.5)² + 1.5(W₂ + 0.3)²`, find learning rates that:
+
+**Goals**
+
+1. **Just barely converge** in 100 steps.
+2. **Converge fastest** — typical for this bowl.
+3. **Oscillate but eventually converge** (one step past the optimum).
+4. **Diverge** (gradient ascent in disguise).
+
+<Dropdown summary="Approximate values">
+
+- ~0.01: barely converges in 100 steps. Very slow.
+- ~0.15: converges in ~20 steps. Sweet spot for this bowl.
+- ~0.5: oscillates across the W₂ axis but slowly settles.
+- ≥ 0.7: diverges. Each step overshoots more than the last.
+
+For the W₂ direction (curvature 3.0), the maximum stable LR is `2/3 = 0.667`. Beyond this, GD on this axis diverges; below it, GD converges. The exercise illustrates the *spectral radius* condition for convergence.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Add momentum">
+
+Replace vanilla GD with momentum GD:
+
+```python
+def momentum_gd(loss_grad, theta_0, lr=0.1, mu=0.9, steps=50):
+    theta = theta_0.copy()
+    v = np.zeros_like(theta)
+    path = [theta.copy()]
+    for _ in range(steps):
+        g = loss_grad(theta)
+        v = mu * v - lr * g
+        theta = theta + v
+        path.append(theta.copy())
+    return path
+```
+
+Compare paths and convergence speed on the anisotropic bowl. Then try it on a *narrow valley* `L = W₁² + 10·W₂²` where vanilla GD zig-zags badly.
+
+<Dropdown summary="Expected behaviour">
+
+- On the anisotropic bowl, momentum *overshoots* and oscillates around the minimum before settling. Slightly faster than vanilla but not dramatically.
+- On the narrow valley, momentum makes a huge difference: vanilla GD zig-zags badly across the valley walls; momentum *averages out* the oscillation, settling into a smoother trajectory along the valley floor.
+
+This is exactly why momentum dominated the 2010s as an SGD variant — it fixes the most common failure mode of plain gradient descent.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/9.3.2/gradient_descent_path.png" label="gradient_descent_path.png — bowl trajectory" />
+<Download href="/lessons/9.3.2/learning_rate_comparison.png" label="learning_rate_comparison.png — LR sweep" />
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Boyd, S., & Vandenberghe, L. (2004). *Convex Optimization*. Cambridge University Press.</li>
+    <li><span class="tag">[2]</span> Loshchilov, I., & Hutter, F. (2017). SGDR: Stochastic gradient descent with warm restarts. *ICLR*.</li>
+    <li><span class="tag">[3]</span> Kingma, D. P., & Ba, J. (2015). Adam: A method for stochastic optimization. *ICLR*.</li>
+    <li><span class="tag">[4]</span> Loshchilov, I., & Hutter, F. (2019). Decoupled weight decay regularization. *ICLR*.</li>
+    <li><span class="tag">[5]</span> Polyak, B. T. (1964). Some methods of speeding up the convergence of iteration methods. *USSR Computational Mathematics and Mathematical Physics*, 4(5), 1–17.</li>
+    <li><span class="tag">[6]</span> Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.</li>
+  </ol>
+</section>
