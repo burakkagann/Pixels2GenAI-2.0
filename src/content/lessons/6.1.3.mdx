@@ -1,0 +1,329 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Worley (Cellular) Noise"
+objective: "Drop random seed points into the plane, then assign every pixel a value derived from its distance to the *k*-th nearest seed. Variants on the distance metric and the k-choice produce stone, scales, dragonfly wings, and crackle."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "3.3.4 (Voronoi), 6.1.1 (noise concepts)"
+prev:
+  slug: "6.1.2"
+  title: "Simplex Noise"
+next:
+  slug: "6.1.4"
+  title: "Colored Noise"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Steven Worley introduced **cellular noise** at SIGGRAPH 1996 as a procedural-texture cousin of Perlin noise. The construction is closer to the Voronoi diagrams of 3.3.4 than to Perlin's grid: scatter random *seed* points across the plane, and for each pixel compute the distance to the *closest* seed (or the second-closest, or the difference between the two). Different formulas of those distances produce wildly different textures — stone, scales, dragonfly wings, crackle, lily pads [1]. The pipeline is one broadcast computation plus an `np.sort`, and it runs in NumPy as easily as Voronoi did.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Compute the distance from every pixel to every seed point with one broadcast and sort along the seed axis.</li>
+  <li>Use `F₁` (distance to nearest seed) for cellular patterns and `F₂ − F₁` for crackle / dragonfly-wing patterns.</li>
+  <li>Swap distance metric (Euclidean → Manhattan → Chebyshev) for different cell shapes.</li>
+  <li>Combine cellular noise with Perlin/value fbm for textured stone and lily-pad effects.</li>
+</ol>
+
+## Quick start — F₁ cellular noise <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+H, W, N_SEEDS = 400, 400, 36
+rng = np.random.default_rng(7 + 20)
+seeds = rng.integers(0, [H, W], size=(N_SEEDS, 2))
+
+y, x = np.indices((H, W))
+dy = y[..., None] - seeds[:, 0]
+dx = x[..., None] - seeds[:, 1]
+dist_sq = dy * dy + dx * dx                    # (H, W, N_SEEDS)
+sorted_d = np.sqrt(np.sort(dist_sq, axis=-1))  # ascending per pixel
+
+f1 = sorted_d[..., 0]                          # distance to nearest seed
+f1n = (f1 - f1.min()) / (f1.max() - f1.min())
+
+Image.fromarray((f1n * 255).astype(np.uint8), 'L').save('worley_f1.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/6.1.3/worley_f1.png"
+  alt="A grayscale field showing cellular patterns — dark spots at scattered points (the seeds) with smooth gradients radiating outward, and bright ridges along the boundaries between cells."
+  caption="`F₁` cellular noise: pixel brightness equals distance to the nearest seed. Cell interiors are dark; cell boundaries glow bright."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The seeds are the same input as a Voronoi diagram (3.3.4); the difference is that Worley *uses the distance value* per pixel, not just which cell each pixel belongs to. Voronoi produces label maps; Worley produces continuous fields.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — F₁: distance to the nearest seed
+
+The simplest cellular field is `F₁(x, y)` = distance from `(x, y)` to its nearest seed. The construction is one broadcast computation (every pixel against every seed), then `np.min` (equivalent to `sort[..., 0]`) along the seed axis [1].
+
+```python
+dist_sq = (y[..., None] - seeds[:, 0])**2 + (x[..., None] - seeds[:, 1])**2
+F1 = np.sqrt(dist_sq.min(axis=-1))
+```
+
+Cell interiors (near the seed) take small `F₁` values; cell boundaries take large ones. Inverting and rescaling produces the classic "dark dots on light background" cellular look.
+
+### Concept 2 — F₂ − F₁: the crackle map
+
+Subtract the nearest distance from the second-nearest distance and you get a *crackle* pattern — bright lines exactly along the cell boundaries, dark interiors, no soft falloff:
+
+```python
+sorted_d = np.sort(dist_sq, axis=-1)
+F2_minus_F1 = np.sqrt(sorted_d[..., 1]) - np.sqrt(sorted_d[..., 0])
+```
+
+Why does this produce sharp boundaries? On a cell boundary the nearest and second-nearest seeds are *equidistant*, so `F₂ − F₁` is near zero. Move slightly off the boundary into one cell and `F₁` shrinks while `F₂` grows, so the difference rises. The result is a thin ridge along every Voronoi edge — exactly like the boundary masks of 3.3.4 but produced as a continuous field [2].
+
+<Figure
+  src="/lessons/6.1.3/worley_f2_minus_f1.png"
+  alt="A grayscale field with bright ridges forming a network of cell boundaries on a near-black background. The pattern resembles cracked dry earth or stained glass leading."
+  caption="`F₂ − F₁` — the crackle map. Distance from the nearest seed minus distance from the second-nearest seed. Cell interiors are zero; boundaries glow."
+  num={2}
+  role="output"
+/>
+
+### Concept 3 — Distance metric controls cell shape
+
+Like Voronoi (3.3.4), Worley's cells can use any distance metric. The choice changes the cell geometry without changing the seed positions:
+
+| Metric    | Formula                       | Cell shape |
+|-----------|-------------------------------|------------|
+| Euclidean | `sqrt(dx² + dy²)`             | Curved cells with arc boundaries |
+| Manhattan | `|dx| + |dy|`                 | Diamond/staircase boundaries     |
+| Chebyshev | `max(|dx|, |dy|)`             | Axis-aligned rectangles          |
+
+<Figure
+  src="/lessons/6.1.3/worley_metrics.png"
+  alt="A side-by-side comparison of three cellular noise fields. Left: Euclidean — round cells. Middle: Manhattan — diamond cells. Right: Chebyshev — rectangular cells."
+  caption="Same seeds, three metrics. Euclidean gives round cells (like soap bubbles); Manhattan gives diamonds (like crystals); Chebyshev gives rectangles (like cracked tile)."
+  num={3}
+  role="output"
+/>
+
+<Admonition type="dyk" title="Technical note · Worley's biological references">
+Worley's 1996 paper cites *biological* motivation: dragonfly wings, reptile scales, the cells of botanical tissue. The procedural texturing community latched on immediately — the same algorithm powers stone textures in virtually every modern AAA game [1].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the F₁ field, try the crackle map, then build a textured stone effect by combining Worley with fbm.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the F₁ field">
+
+Run `worley_f1.py` from the quick start. Inspect the cellular pattern.
+
+**Reflection questions**
+
+- Where are the *darkest* pixels in the output, and why?
+- What happens if you increase `N_SEEDS` from 36 to 200?
+- The cell boundaries form straight lines. Why are they straight rather than curved?
+
+<Dropdown summary="Answers">
+
+**Darkest pixels** — the seed positions themselves. At a seed pixel, the distance to "the nearest seed" is zero. Move one pixel away and the distance becomes 1, two pixels away → ~1.4 (diagonal), etc.
+
+**More seeds** — the cells shrink. With 200 seeds in a 400×400 image you get roughly 800 px² per cell instead of 4400 px². The texture looks finer, almost grainy.
+
+**Straight boundaries** — boundaries lie where two seeds are equidistant. The set of points equidistant from two fixed points is the *perpendicular bisector* of the segment joining them — a straight line. Three-way junctions are the circumcenters of seed triples.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three Worley variations">
+
+Edit the quick-start script to produce these pictures.
+
+**Goals**
+
+1. **Crackle map** — output `F₂ − F₁` instead of `F₁`.
+2. **Manhattan cells** — replace `dy² + dx²` with `|dy| + |dx|`.
+3. **Inverted F₁** — output `1 − F₁` (normalised) so seeds glow bright and boundaries fade dark.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+sorted_d = np.sqrt(np.sort(dist_sq, axis=-1))
+crackle = sorted_d[..., 1] - sorted_d[..., 0]
+```
+
+Bright ridges along the cell boundaries, dark cell interiors. Reads as cracked mud or stained-glass leading.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+dist = np.abs(dy) + np.abs(dx)
+sorted_d = np.sort(dist, axis=-1)
+```
+
+Cell boundaries become diamond-shaped — only horizontal, vertical, and 45° segments. The texture looks like crystal facets.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+f1n = (f1 - f1.min()) / (f1.max() - f1.min())
+out = 1 - f1n
+```
+
+Seeds glow bright (formerly black); cell interiors are bright; boundaries dim. Reads as bioluminescent points or stars.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Stone texture by combining Worley + fbm">
+
+Worley gives you the cell structure; Perlin/value noise gives you the within-cell colour variation. Combine them.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+# ... assume fbm() from 6.1.1 in scope ...
+
+H, W, N = 400, 400, 60
+rng = np.random.default_rng(123)
+seeds = rng.integers(0, [H, W], size=(N, 2))
+
+# TODO 1: compute crackle = sqrt(F2) - sqrt(F1).
+
+# TODO 2: compute base = fbm((H, W), 80, octaves=4) for soft variation.
+
+# TODO 3: combine — base colour from fbm, dark crack lines where crackle is small.
+#         Output an RGB image of warm stone tones.
+
+Image.fromarray(rgb).save('stone.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — crackle field">
+
+```python
+y, x = np.indices((H, W))
+dy = y[..., None] - seeds[:, 0]
+dx = x[..., None] - seeds[:, 1]
+dist_sq = dy*dy + dx*dx
+sorted_d = np.sqrt(np.sort(dist_sq, axis=-1))
+crackle = sorted_d[..., 1] - sorted_d[..., 0]
+cracks = (crackle / crackle.max() < 0.04)        # mask for crack lines
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — colour fill</hint>">
+
+```python
+base = fbm((H, W), 80, octaves=4, seed=7)
+warm_a = np.array([0.65, 0.55, 0.45])
+warm_b = np.array([0.45, 0.35, 0.25])
+rgb = base[..., None] * warm_a + (1 - base[..., None]) * warm_b
+rgb[cracks] = [0.10, 0.07, 0.05]
+rgb = (np.clip(rgb, 0, 1) * 255).astype(np.uint8)
+```
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Assume fbm() helper from 6.1.1 is in scope
+
+H, W, N = 400, 400, 60
+rng = np.random.default_rng(123)
+seeds = rng.integers(0, [H, W], size=(N, 2))
+
+y, x = np.indices((H, W))
+dy = y[..., None] - seeds[:, 0]
+dx = x[..., None] - seeds[:, 1]
+dist_sq = dy*dy + dx*dx
+sorted_d = np.sqrt(np.sort(dist_sq, axis=-1))
+crackle = sorted_d[..., 1] - sorted_d[..., 0]
+cracks = (crackle / crackle.max()) < 0.04
+
+base = fbm((H, W), 80, octaves=4, seed=7)
+warm_a = np.array([0.65, 0.55, 0.45])
+warm_b = np.array([0.45, 0.35, 0.25])
+rgb = base[..., None] * warm_a + (1 - base[..., None]) * warm_b
+rgb[cracks] = [0.10, 0.07, 0.05]
+
+Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)).save('stone.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- The Worley step gives sharp crack geometry.
+- The fbm step gives soft within-cell colour variation, simulating natural stone mottling.
+- Compositing: paint the cracks black on top of the warm stone fill.
+
+</Dropdown>
+
+#### Make it your own
+
+- Use the *F₁* distance instead of crackle to add a soft halo around each seed — the stone looks weathered.
+- Compute the Worley field in `log` space (`log(1 + F1)`) so distant pixels stop dominating the dynamic range.
+- Place seeds on a hex lattice (`np.mgrid`-based) instead of random for a regular honeycomb cellular pattern.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/6.1.3/worley_f1.png" label="worley_f1.png — nearest-distance field" />
+<Download href="/lessons/6.1.3/worley_f2_minus_f1.png" label="worley_f2_minus_f1.png — crackle field" />
+<Download href="/lessons/6.1.3/worley_cells.png" label="worley_cells.png — inverted F1" />
+<Download href="/lessons/6.1.3/worley_metrics.png" label="worley_metrics.png — metric comparison" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Worley (cellular) noise scatters random seed points, then derives a continuous field from per-pixel distances to those seeds. `F₁` (distance to nearest) gives soft cell-and-halo patterns; `F₂ − F₁` (second minus first) gives a sharp crackle map where ridges line up exactly with cell boundaries. The distance metric — Euclidean, Manhattan, Chebyshev — controls cell shape. Cell count and seed positions control scale. Compose with Perlin/value fbm for textured stone, mottled scales, or any natural surface where macro cell structure overlays a soft fine variation. The same construction underlies a huge body of procedural-texture work, and the implementation is a single broadcast + sort.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Computing `F₁` with `np.min` and `F₂` with a *second* `np.min` after excluding the minimum — `np.sort` then indexing `[..., 0]` and `[..., 1]` is cleaner and only sorts once.
+- Skipping the `sqrt` when computing `F₂ − F₁` — the difference of squared distances has nothing to do with cell boundaries; only the difference of *actual* distances does.
+- Random seed positions inside an integer grid — fine for pedagogy, but seeds slightly outside grid corners give smoother gradients.
+- Too few seeds — fewer than ~10 over a 400×400 image and the pattern reads as patches, not cells.
+- Comparing Worley to Perlin as if they were variants of the same algorithm — they share goals (procedural noise) but the construction is unrelated.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Worley, S. (1996). A cellular texture basis function. *Proceedings of SIGGRAPH '96*, 291–294. <a href="https://doi.org/10.1145/237170.237267" target="_blank" rel="noopener">doi:10.1145/237170.237267</a></li>
+    <li><span class="tag">[2]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[3]</span> Aurenhammer, F. (1991). Voronoi diagrams — a survey of a fundamental geometric data structure. *ACM Computing Surveys*, 23(3), 345–405. <a href="https://doi.org/10.1145/116873.116880" target="_blank" rel="noopener">doi:10.1145/116873.116880</a></li>
+    <li><span class="tag">[4]</span> Lagae, A., Lefebvre, S., Cook, R., et al. (2010). A survey of procedural noise functions. *Computer Graphics Forum*, 29(8), 2579–2600.</li>
+    <li><span class="tag">[5]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

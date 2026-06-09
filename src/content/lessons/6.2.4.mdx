@@ -1,0 +1,339 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Island Generation"
+objective: "Multiply an fbm height map by a radial falloff so elevation drops to zero at the canvas edges. The result is an island procedurally surrounded by sea, with beaches at the right altitude no matter where the noise has its peaks."
+framework: "hands-on"
+duration: "16–20 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "6.2.1 (height maps), 2.2.4 (distance fields)"
+prev:
+  slug: "6.2.3"
+  title: "Cave Generation"
+next:
+  slug: "6.3.1"
+  title: "Marble & Wood"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A height map drawn at full canvas would have terrain bumping against the edges with no guarantee of sea boundary. The standard fix for "make this look like an island" is to multiply the noise field by a **radial falloff** — a smooth bias that goes from 1 at the centre to 0 at the corners. The fbm peaks survive near the middle; the noise gets squashed to zero near the borders. Apply the same biome colour map from 6.2.1 and you get a procedurally generated island, surrounded by sea, with no engineering of where the coast should be [1].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Build a radial falloff mask from a distance field — `falloff = (1 − r)^p` for shape exponent `p`.</li>
+  <li>Multiply fbm by the falloff to bias the noise toward an island shape.</li>
+  <li>Tune the exponent `p` to control coastline sharpness — small p → soft falloff (atolls), large p → sharp coastline.</li>
+  <li>Render with biome colours so the procedural island reads as a real landscape.</li>
+</ol>
+
+## Quick start — a single island <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 400, 400
+elev = fbm((H, W), scale=90, octaves=5, seed=7 + 70)
+
+# Radial falloff: 1 at centre, 0 at canvas edge
+y, x = np.indices((H, W))
+cy, cx = H / 2, W / 2
+r = np.sqrt((y - cy) ** 2 + (x - cx) ** 2) / (min(H, W) / 2)
+falloff = np.clip(1 - r, 0, 1) ** 1.3
+
+island = elev * falloff
+island = (island - island.min()) / (island.max() - island.min())
+
+# Biome map (same as 6.2.1)
+rgb = np.zeros((H, W, 3))
+sea  = island < 0.35
+sand = (island >= 0.35) & (island < 0.42)
+grass = (island >= 0.42) & (island < 0.65)
+rock = (island >= 0.65) & (island < 0.85)
+snow = island >= 0.85
+rgb[sea]   = [0.10, 0.30, 0.60]
+rgb[sand]  = [0.93, 0.82, 0.55]
+rgb[grass] = [0.25, 0.55, 0.25]
+rgb[rock]  = [0.50, 0.40, 0.30]
+rgb[snow]  = [0.97, 0.97, 0.97]
+
+Image.fromarray((rgb * 255).astype(np.uint8)).save('island.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/6.2.4/island.png"
+  alt="A procedurally generated island viewed from above. Deep blue sea surrounds an island with sandy beaches at the coast, green interior plains, brown rocky highlands, and a small white snow cap on the highest peaks."
+  caption="The fbm height field multiplied by a radial falloff. The biome colour map turns the resulting elevations into ocean, beach, grass, rock, and snow."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The falloff is one line — `(1 − r)^p` after computing the distance from the centre. The exponent `p` is the *only* knob; everything else inherits from the height-map and biome lessons.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Radial falloff masks
+
+A radial falloff smoothly attenuates a field toward the edges of the canvas. Build it from a normalised distance field:
+
+```python
+y, x = np.indices((H, W))
+cy, cx = H / 2, W / 2
+r = np.sqrt((y - cy) ** 2 + (x - cx) ** 2) / (min(H, W) / 2)   # 0 at centre, 1 at edge
+falloff = np.clip(1 - r, 0, 1) ** p
+```
+
+- `r = 0` at the centre → `falloff = 1` → noise passes through unmodified.
+- `r = 1` at the canvas edge → `falloff = 0` → noise is forced to zero (sea level).
+- The exponent `p` controls the shape of the falloff curve: `p = 1` gives a linear ramp; `p > 1` keeps the centre stronger (sharper coastline); `p < 1` extends the influence outward (softer coastline) [2].
+
+The `np.clip` keeps the mask in `[0, 1]` even for distance values that overshoot 1 in the corners.
+
+### Concept 2 — Multiplication is the composition
+
+Combining the noise and the falloff is a single multiplication:
+
+```python
+island = elev * falloff
+```
+
+Wherever `falloff` is 1 (the centre), elevation comes from `elev` directly. Wherever `falloff` is 0 (the edges), elevation is forced to 0 — sea level. Between those extremes, the noise field is *scaled down* gradually.
+
+After multiplication, **renormalise** to `[0, 1]` so the biome thresholds still make sense:
+
+```python
+island = (island - island.min()) / (island.max() - island.min())
+```
+
+Without renormalisation, the highest peak might only reach 0.5 (depending on the noise statistics), and your snow band would never trigger.
+
+### Concept 3 — Tuning the exponent
+
+The exponent `p` controls coastline character:
+
+| Exponent | Effect |
+|----------|--------|
+| 0.5      | Very soft falloff. Island bleeds gently into the surroundings; possibly multiple atolls. |
+| 1.0      | Linear falloff. Smooth circular outline. |
+| 1.3      | Used in the quick start. Balanced — gentle beaches, distinct outline. |
+| 2.0      | Sharper falloff. Steeper coastline; less gentle gradient at the edge. |
+| 4.0      | Very sharp falloff. Almost step function; coastline is essentially the disc boundary. |
+
+The right value depends on what feels island-like. Most procedural-island code lives in the 1.0–2.0 range [3].
+
+<Admonition type="dyk" title="Technical note · two falloff variants">
+There are two common falloff forms: the **disc** falloff used here (`max(0, 1 − r)^p`) and the **Gaussian** falloff `exp(−r² / σ²)`. The disc form has a definite "ocean" beyond the falloff radius; the Gaussian form has very low non-zero elevation everywhere, which can read as deep ocean. Most island generators use the disc form for cleaner coastlines [3].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the island, vary the falloff, then add multiple islands.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the island generator">
+
+Run `island.py` from the quick start.
+
+**Reflection questions**
+
+- Why are the beaches naturally located at the same place around every island generated by this script (modulo seed)?
+- What does `np.clip(1 − r, 0, 1)` accomplish that just `1 − r` would not?
+- If you removed the renormalisation, what would happen to the biome map?
+
+<Dropdown summary="Answers">
+
+**Beach placement** — the radial falloff smoothly pushes the elevation across all thresholds (sea → beach → grass → ...) as you walk inward. The beach band is always the *first* non-sea threshold you cross from the edge inward, which is geometrically the coastline.
+
+**Clip** — without clipping, `1 - r` can go negative in the corners (where `r > 1`). Negative falloff would flip the sign of the elevation there, producing a weird inverted-noise ring outside the island.
+
+**No renormalisation** — the elevation range would be `[0, max_elev × max_falloff]`, smaller than the [0, 1] the biome thresholds expect. The snow band might never trigger because the peak only reaches 0.5 instead of 1.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Tune the falloff shape">
+
+Edit `island.py` for these three goals.
+
+**Goals**
+
+1. **Soft atoll** — `p = 0.5`. The island bleeds into surroundings; possibly multiple peaks.
+2. **Sharp continent** — `p = 4.0`. Distinct coastline, less gradient at the edge.
+3. **Offset centre** — move the falloff centre to `(H/3, 2*W/3)` so the island isn't centred on the canvas.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+falloff = np.clip(1 - r, 0, 1) ** 0.5
+```
+
+Atolls and reefs; the noise stays strong further from centre. Sometimes you get multiple separate islands.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+falloff = np.clip(1 - r, 0, 1) ** 4.0
+```
+
+The falloff is much sharper. The coastline becomes a clear circle near the centre; the noise doesn't bleed outward.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+cy, cx = H / 3, 2 * W / 3
+r = np.sqrt((y - cy) ** 2 + (x - cx) ** 2) / (min(H, W) / 2)
+```
+
+The island moves to the upper-right quadrant. The rest of the canvas is ocean.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Multi-island archipelago">
+
+Generate an archipelago — three islands at different positions, each with its own radial falloff. Combine via `np.maximum` so the strongest falloff at each pixel wins.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 500, 500
+centres = [(150, 150), (350, 100), (300, 400)]
+sizes = [120, 80, 100]
+seeds = [10, 11, 12]
+
+falloff_total = np.zeros((H, W))
+elev_total = np.zeros((H, W))
+
+# TODO 1: for each centre/size/seed:
+#         - build a radial falloff around (cy, cx) with `1 - r/size` clipped.
+#         - generate fbm with that seed.
+#         - multiply and add to elev_total weighted by the falloff.
+
+# TODO 2: normalise and apply the biome colour map.
+
+Image.fromarray(rgb).save('archipelago.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — per-island falloff and weighted sum">
+
+```python
+for (cy, cx), size, seed in zip(centres, sizes, seeds):
+    y, x = np.indices((H, W))
+    r = np.sqrt((y - cy) ** 2 + (x - cx) ** 2) / size
+    fall = np.clip(1 - r, 0, 1) ** 1.3
+    noise = fbm((H, W), scale=60, octaves=5, seed=seed)
+    elev_total = np.maximum(elev_total, noise * fall)
+```
+
+`np.maximum` keeps the highest contribution per pixel — the closest island always wins, no double-counting.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 500, 500
+centres = [(150, 150), (350, 100), (300, 400)]
+sizes = [120, 80, 100]
+seeds = [10, 11, 12]
+
+elev_total = np.zeros((H, W))
+for (cy, cx), size, seed in zip(centres, sizes, seeds):
+    y, x = np.indices((H, W))
+    r = np.sqrt((y - cy) ** 2 + (x - cx) ** 2) / size
+    fall = np.clip(1 - r, 0, 1) ** 1.3
+    noise = fbm((H, W), scale=60, octaves=5, seed=seed)
+    elev_total = np.maximum(elev_total, noise * fall)
+
+elev_total = (elev_total - elev_total.min()) / (elev_total.max() - elev_total.min())
+
+rgb = np.zeros((H, W, 3))
+sea  = elev_total < 0.35
+sand = (elev_total >= 0.35) & (elev_total < 0.42)
+grass = (elev_total >= 0.42) & (elev_total < 0.65)
+rock = (elev_total >= 0.65) & (elev_total < 0.85)
+snow = elev_total >= 0.85
+rgb[sea]   = [0.10, 0.30, 0.60]
+rgb[sand]  = [0.93, 0.82, 0.55]
+rgb[grass] = [0.25, 0.55, 0.25]
+rgb[rock]  = [0.50, 0.40, 0.30]
+rgb[snow]  = [0.97, 0.97, 0.97]
+
+Image.fromarray((rgb * 255).astype(np.uint8)).save('archipelago.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- Each island has its own centre, size (size of the falloff), and seed (for noise variation).
+- `np.maximum` keeps the highest elevation per pixel — between islands you get sea.
+- The biome colours apply to the final combined elevation map without modification.
+
+</Dropdown>
+
+#### Make it your own
+
+- Drive the falloff *exponent* from a global noise field — some islands have sharp coasts, others have gentle ones.
+- Combine archipelago + erosion (6.2.2): run thermal erosion on each island separately, then composite.
+- Apply different *fbm parameters* per island (high octaves for craggy islands, low for atolls) — the variety reads as a real archipelago.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/6.2.4/island.png" label="island.png — quick-start single island" />
+<Download href="/lessons/6.2.4/island_gray.png" label="island_gray.png — grayscale elevation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Procedural islands come from one extra multiplication on top of a height map: a radial falloff that drops the elevation to zero at the canvas edges. Build the falloff as `(1 − r/R)^p` from a centred distance field; tune `p` for coastline sharpness (0.5–4.0 covers most cases). Multiply the noise by the falloff, renormalise, and apply the biome colour map from 6.2.1 — the result is an island with naturally placed beaches, plains, rock, and snow. Combine multiple falloff centres with `np.maximum` for archipelagos. The same pipeline scales from single islands to whole map tilesets; you just compose more falloffs.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to renormalise after multiplication — the elevation range shrinks; biome thresholds don't trigger.
+- `r/R` with `R = min(H, W)` instead of `min(H, W) / 2` — the falloff reaches zero at canvas centre instead of canvas edge.
+- Adding instead of multiplying — addition gives "elevated noise everywhere"; multiplication is what produces the falloff.
+- Choosing `p` too high — coastline becomes a hard step. Too low — the noise bleeds across the canvas.
+- For archipelagos, summing islands instead of taking `max` — overlap regions accumulate to weird high elevations.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Patel, A. (2010). Polygonal map generation for games. *Red Blob Games Blog*. <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">redblobgames.com</a></li>
+    <li><span class="tag">[2]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[3]</span> Shaker, N., Togelius, J., & Nelson, M. J. (2016). *Procedural Content Generation in Games*. Springer.</li>
+    <li><span class="tag">[4]</span> Mandelbrot, B. B. (1967). How long is the coast of Britain? Statistical self-similarity and fractional dimension. *Science*, 156(3775), 636–638.</li>
+    <li><span class="tag">[5]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.</li>
+  </ol>
+</section>

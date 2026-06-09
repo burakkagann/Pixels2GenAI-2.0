@@ -1,0 +1,299 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Cave Generation"
+objective: "Start from a random binary grid (45% wall, 55% floor), then smooth it with cellular-automata rules — a cell becomes a wall if 5+ of its 8 neighbours are walls. After 5 iterations, organic cave shapes emerge."
+framework: "hands-on"
+duration: "16–20 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "1.2.2 (cellular automata), basic NumPy stencil ops"
+prev:
+  slug: "6.2.2"
+  title: "Erosion Simulation"
+next:
+  slug: "6.2.4"
+  title: "Island Generation"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The standard procedural-cave algorithm is a one-screen cellular automaton. Start with a random binary grid — each cell is either wall or floor, with a slight bias toward wall. Run a smoothing rule for a few steps: a cell becomes wall if 5 or more of its 8 neighbours are walls, floor otherwise. The noisy initial state condenses into open chambers connected by twisting corridors — exactly the look of a roguelike dungeon or natural limestone cave system [1]. The algorithm goes back to Steve Wolfram's *cellular automata* work and to the seminal *Conway's Game of Life*; the cave-mining application was popularised by indie roguelike developers in the 2010s [2].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Initialise a binary grid with a tunable wall ratio (typical: 0.45).</li>
+  <li>Implement the 8-neighbour count with `np.pad` and slicing — no nested Python loops.</li>
+  <li>Apply the "≥5 wall neighbours → wall, else floor" smoothing rule for 4–6 iterations.</li>
+  <li>Recognise the cave-vs-Conway distinction: this rule converges, Conway's rule oscillates.</li>
+</ol>
+
+## Quick start — 5-iteration cave smoothing <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+H, W = 300, 300
+WALL_RATIO = 0.45
+N_STEPS = 5
+
+rng = np.random.default_rng(7 + 60)
+grid = (rng.random((H, W)) < WALL_RATIO).astype(np.int8)   # 1 = wall
+
+for _ in range(N_STEPS):
+    p = np.pad(grid, 1, mode='edge')
+    n = (
+        p[:-2, :-2] + p[:-2, 1:-1] + p[:-2, 2:]
+        + p[1:-1, :-2] + p[1:-1, 1:-1] + p[1:-1, 2:]
+        + p[2:, :-2] + p[2:, 1:-1] + p[2:, 2:]
+    )
+    grid = (n >= 5).astype(np.int8)
+
+img = (1 - grid) * 255       # invert so floors are bright
+Image.fromarray(img.astype(np.uint8), 'L').save('caves.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/6.2.3/caves.png"
+  alt="A grayscale image showing organic cave-like patterns: large open white chambers connected by twisting corridors against black wall regions."
+  caption="Five smoothing iterations turn random noise into a cave system. Open chambers (bright) are connected by narrow corridors; walls (dark) form the rock."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The 9-term sum in the loop is the *Moore neighbourhood* sum — counting the cell itself plus its 8 neighbours. The threshold `≥ 5` means *strict majority* in the 9-cell neighbourhood (5 out of 9).
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Cellular automata in one line
+
+A cellular automaton updates every cell based on its local neighbourhood. For the cave rule:
+
+- **State**: each cell is 0 (floor) or 1 (wall).
+- **Neighbourhood**: Moore — the 8 surrounding cells.
+- **Rule**: cell becomes wall if ≥ 5 of the 9 cells in its neighbourhood (itself + 8 neighbours) are walls.
+
+The same rule applied for 4–6 iterations converges; longer runs barely change the picture. Different threshold values give different cavern shapes (`≥ 4` opens caves up; `≥ 6` shrinks them).
+
+```python
+# Counting walls in the 9-cell Moore neighbourhood
+p = np.pad(grid, 1, mode='edge')
+n = sum_of_nine_padded_slices(p)
+grid = (n >= THRESHOLD).astype(np.int8)
+```
+
+The padding handles the boundary — every interior cell still has 8 valid neighbours after padding by 1 with edge replication.
+
+### Concept 2 — Why 5 of 9?
+
+The threshold `≥ 5` is *strict majority*. It pushes every cell to agree with its neighbours: a slightly more-wall area becomes solid wall, a slightly more-floor area becomes solid floor. The bias toward wall in the initial ratio (0.45 → just under 50%) means most cells flip to wall in the first iteration; only the densely-floor regions survive as open caves.
+
+Compare to **Conway's Game of Life**, which uses much narrower rules:
+
+| State | Live neighbours | Result |
+|-------|-----------------|--------|
+| Dead  | exactly 3       | Live   |
+| Live  | 2 or 3          | Live   |
+| Live  | else            | Dead   |
+
+Conway's rule is finely tuned and *oscillates* — gliders, blinkers, complex patterns. The cave rule is broadly stable and *converges* — repeatable, predictable, useful for level generation [3].
+
+### Concept 3 — Tuning the wall ratio
+
+The initial wall ratio decides what kind of cave you get:
+
+- **0.40** — caves dominate. Big chambers, thin walls. Reads as a sponge.
+- **0.45** — the sweet spot for roguelike-style caves. Balanced chambers and corridors.
+- **0.50** — walls dominate. Small isolated chambers, thick wall regions.
+- **0.55** — closed system. Most cells become walls; only small pockets survive.
+
+Cellular automata are *sensitive* to the initial ratio — a 5% change in the seed density makes a visible difference in the output [4].
+
+<Admonition type="dyk" title="Technical note · roguelike caves">
+The "B5/S5678" rule used here (Born if 5+ neighbours, Survive if 5+ neighbours) is from Jeremy Kun's 2012 blog post that popularised the algorithm for roguelike developers. Variations include B678/S345678 (more sponge-like) and B6/S5678 (more open). The cave-generation literature cycles through a handful of these variants, all converging to similar-looking but subtly different caverns [1].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the cave, tune ratio and iterations, then carve floors with multiple thresholds.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the 5-step cave smoother">
+
+Run `caves.py` from the downloads. Look at the output.
+
+**Reflection questions**
+
+- Why does running more than 5–6 iterations barely change the picture?
+- What happens if you start with `WALL_RATIO = 0.55` instead of 0.45?
+- The chambers are *connected* by narrow corridors. Could the algorithm produce *isolated* chambers?
+
+<Dropdown summary="Answers">
+
+**Convergence** — after 5–6 iterations the rule has "agreed" with itself: every cell already has ≥ 5 wall neighbours iff it is a wall. Additional steps are no-ops. The picture is stable.
+
+**Wall ratio 0.55** — the initial state has more walls than floors. The rule keeps anything that has ≥ 5 wall neighbours, which is most of the grid. The output is a small isolated pocket of floor in a sea of wall — too much wall, useless as a level.
+
+**Isolated chambers** — yes, occasionally. If the initial random density has a pocket of floors surrounded by walls, the smoothing can preserve the isolation. Production code does a *connectivity* pass (BFS flood-fill) to either link or remove small isolated chambers.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep the parameters">
+
+Edit `caves.py` for each goal.
+
+**Goals**
+
+1. **Sponge** — `WALL_RATIO = 0.40, N_STEPS = 8`. Big chambers, thin walls.
+2. **Maze** — `WALL_RATIO = 0.50, N_STEPS = 3`. Twisting corridors, no big chambers.
+3. **One smoothing pass** — `N_STEPS = 1` with `WALL_RATIO = 0.45`. See the half-smoothed transition.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Lots of bright pixels, thin black walls. Reads as a sponge or coral reef. With 8 iterations, the long-range structure becomes clearer than at 5.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Equal mix of wall and floor; the smoothing has not had enough iterations to coalesce broad chambers. The picture reads as a labyrinth or capillary network.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The image is between TV-static and clean caves. Some chambers are forming but local noise is still visible — a useful debug step to see what the algorithm is doing.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Multi-tier cave system">
+
+Generate three separate cave systems at three different wall ratios (0.42, 0.45, 0.48) and combine them with `np.maximum` — wall in *any* system means wall in the final. The result has multiple scales of cavern structure.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+H, W = 300, 300
+ratios = [0.42, 0.45, 0.48]
+
+def cave(seed, wall_ratio, steps=5):
+    rng = np.random.default_rng(seed)
+    g = (rng.random((H, W)) < wall_ratio).astype(np.int8)
+    for _ in range(steps):
+        p = np.pad(g, 1, mode='edge')
+        n = sum(p[i:i+H, j:j+W] for i in (0, 1, 2) for j in (0, 1, 2))
+        g = (n >= 5).astype(np.int8)
+    return g
+
+# TODO 1: generate three caves with the three ratios (use different seeds).
+
+# TODO 2: combine — final[i, j] is a wall if ANY of the three are walls.
+#         (Equivalently: floors only where ALL are floors.)
+
+# TODO 3: save the result, with floors bright and walls dark.
+
+Image.fromarray(img).save('layered_caves.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — combine with max">
+
+```python
+caves = [cave(seed=s, wall_ratio=r) for s, r in enumerate(ratios)]
+combined = np.maximum.reduce(caves)
+img = ((1 - combined) * 255).astype(np.uint8)
+```
+
+`np.maximum.reduce` is equivalent to OR over the three binary caves: a wall in any one becomes a wall in the result. Floor pixels survive only where all three caves agree on floor.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+H, W = 300, 300
+
+def cave(seed, wall_ratio, steps=5):
+    rng = np.random.default_rng(seed)
+    g = (rng.random((H, W)) < wall_ratio).astype(np.int8)
+    for _ in range(steps):
+        p = np.pad(g, 1, mode='edge')
+        n = sum(p[i:i+H, j:j+W] for i in (0, 1, 2) for j in (0, 1, 2))
+        g = (n >= 5).astype(np.int8)
+    return g
+
+ratios = [0.42, 0.45, 0.48]
+caves = [cave(seed=s, wall_ratio=r) for s, r in enumerate(ratios)]
+combined = np.maximum.reduce(caves)
+
+img = ((1 - combined) * 255).astype(np.uint8)
+Image.fromarray(img, 'L').save('layered_caves.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- Each individual cave has a different chamber distribution because of the different wall ratio and seed.
+- Taking the OR (max) keeps walls from every layer — the result has the *tightest* corridors of all three.
+- The output reads as a more complex cave system with multiple scales of chamber.
+
+</Dropdown>
+
+#### Make it your own
+
+- Run a connectivity check (BFS or `scipy.ndimage.label`) and keep only the *largest* connected floor region — guarantees the cave is fully traversable.
+- Apply the cave to a 3D voxel grid by running the same rule on a `(D, H, W)` array with a 26-neighbour Moore stencil. Useful for Minecraft-style voxel terrain.
+- Use the height map from 6.2.1 as a wall-ratio modulator: dense caves in mountainous regions, sparse in plains. Same rule, locally-varying parameter.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/6.2.3/caves.png" label="caves.png — quick-start cave system" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Procedural caves come from a tiny cellular automaton. Start with a random binary grid biased toward wall (~45% walls), then apply the smoothing rule "cell becomes wall if 5+ of its 9 Moore-neighbours are walls" for 4–6 iterations. The noise condenses into open chambers connected by corridors. The whole algorithm is a 9-term sum of padded slices plus a threshold; no Python loops over pixels needed. The wall ratio is the main knob — 0.40 gives sponge, 0.45 gives roguelike caves, 0.50 gives mazes. Compared to Conway's Game of Life, the cave rule is broad enough to *converge* rather than oscillate — exactly what you want for level generation.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to pad with `mode='edge'` — pixels at the boundary lose neighbours and the algorithm behaves weirdly near the borders.
+- Using a smoothing threshold of `> 4` instead of `>= 5` — equivalent in this case but easy to miss by one.
+- Running too many iterations — past 6 the picture is stable; more steps just waste compute.
+- Initial wall ratio at exactly 0.50 — the smoothing is unpredictable because there is no bias either way.
+- Comparing to Conway's Game of Life — they share a structure but use very different rules. Conway oscillates; the cave rule converges.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Kun, J. (2012). The cellular automaton method for cave generation. *Math ∩ Programming Blog*. <a href="https://jeremykun.com/2012/07/29/the-cellular-automaton-method-for-cave-generation/" target="_blank" rel="noopener">jeremykun.com</a></li>
+    <li><span class="tag">[2]</span> Gardner, M. (1970). Mathematical Games: The fantastic combinations of John Conway's new solitaire game "life". *Scientific American*, 223(4), 120–123.</li>
+    <li><span class="tag">[3]</span> Wolfram, S. (2002). *A New Kind of Science*. Wolfram Media.</li>
+    <li><span class="tag">[4]</span> Adams, D. (2002). Automatic generation of dungeons for computer games. Bachelor's thesis, University of Sheffield.</li>
+    <li><span class="tag">[5]</span> Shaker, N., Togelius, J., & Nelson, M. J. (2016). *Procedural Content Generation in Games*. Springer.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.</li>
+  </ol>
+</section>

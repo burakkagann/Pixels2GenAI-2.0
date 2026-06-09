@@ -153,27 +153,27 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
 
   '06': [
     { id: '6.1', title: 'Noise Functions', leaves: [
-      { id: '6.1.1', title: 'Perlin Noise' },
-      { id: '6.1.2', title: 'Simplex Noise' },
-      { id: '6.1.3', title: 'Worley Noise' },
-      { id: '6.1.4', title: 'Colored Noise' },
+      { id: '6.1.1', title: 'Perlin Noise', lessonSlug: '6.1.1' },
+      { id: '6.1.2', title: 'Simplex Noise', lessonSlug: '6.1.2' },
+      { id: '6.1.3', title: 'Worley Noise', lessonSlug: '6.1.3' },
+      { id: '6.1.4', title: 'Colored Noise', lessonSlug: '6.1.4' },
     ]},
     { id: '6.2', title: 'Terrain Generation', leaves: [
-      { id: '6.2.1', title: 'Height Maps' },
-      { id: '6.2.2', title: 'Erosion Simulation' },
-      { id: '6.2.3', title: 'Cave Generation' },
-      { id: '6.2.4', title: 'Island Generation' },
+      { id: '6.2.1', title: 'Height Maps', lessonSlug: '6.2.1' },
+      { id: '6.2.2', title: 'Erosion Simulation', lessonSlug: '6.2.2' },
+      { id: '6.2.3', title: 'Cave Generation', lessonSlug: '6.2.3' },
+      { id: '6.2.4', title: 'Island Generation', lessonSlug: '6.2.4' },
     ]},
     { id: '6.3', title: 'Texture Synthesis', leaves: [
-      { id: '6.3.1', title: 'Marble & Wood' },
-      { id: '6.3.2', title: 'Cloud Generation' },
-      { id: '6.3.3', title: 'Abstract Patterns' },
-      { id: '6.3.4', title: 'Procedural Materials' },
+      { id: '6.3.1', title: 'Marble & Wood', lessonSlug: '6.3.1' },
+      { id: '6.3.2', title: 'Cloud Generation', lessonSlug: '6.3.2' },
+      { id: '6.3.3', title: 'Abstract Patterns', lessonSlug: '6.3.3' },
+      { id: '6.3.4', title: 'Procedural Materials', lessonSlug: '6.3.4' },
     ]},
     { id: '6.4', title: 'Wave & Interference Patterns', leaves: [
-      { id: '6.4.1', title: 'Moiré Patterns' },
-      { id: '6.4.2', title: 'Wave Interference' },
-      { id: '6.4.3', title: 'Cymatics' },
+      { id: '6.4.1', title: 'Moiré Patterns', lessonSlug: '6.4.1' },
+      { id: '6.4.2', title: 'Wave Interference', lessonSlug: '6.4.2' },
+      { id: '6.4.3', title: 'Cymatics', lessonSlug: '6.4.3' },
     ]},
   ],
 

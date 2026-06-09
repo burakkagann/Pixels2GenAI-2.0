@@ -1,0 +1,328 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Procedural Materials"
+objective: "Stack three procedural layers — Worley cracks, fbm mottling, and a colour ramp — into a credible rust-and-corrosion material. The recipe extends to lichen, concrete, weathered wood, and every other surface that needs a 'lived-in' look."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "6.1.1 (fbm), 6.1.3 (Worley), 6.3.1 (texture composition)"
+prev:
+  slug: "6.3.3"
+  title: "Abstract Patterns"
+next:
+  slug: "6.4.1"
+  title: "Moiré Patterns"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A *material* in modern rendering is a stack of procedural layers — base colour, normal map, roughness, displacement — that together describe how a surface looks under light. The 2D version covers the most important layer: the **albedo**, or what the surface looks like when lit flatly. This lesson builds one material from scratch — rust on weathered iron — by combining three procedural primitives from this module: Worley cracks (6.1.3), fbm mottling (6.1.1), and a two-stop colour ramp (6.3.1). The same recipe — cells + noise + palette — produces lichen, concrete, weathered wood, ageing copper, and every other "lived-in" surface [1].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Compose Worley cellular noise + fbm mottling + a colour ramp into a layered material.</li>
+  <li>Use the `F₂ − F₁` Worley map as a crack-line mask laid over the base material.</li>
+  <li>Tune layer weights and palette colours to shift between fresh paint, mature rust, and corroded iron.</li>
+  <li>Extend the stack to other materials by swapping the palette and tuning the noise scales.</li>
+</ol>
+
+## Quick start — rust on iron <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1, worley distances from 6.1.3 — assume both helpers in scope
+
+H, W = 400, 400
+
+# Layer 1: base fbm mottling
+base = fbm((H, W), scale=70, octaves=5, seed=7 + 110)
+
+# Layer 2: Worley cracks (F2 - F1)
+rng = np.random.default_rng(7 + 111)
+seeds = rng.integers(0, [H, W], size=(60, 2))
+y, x = np.indices((H, W))
+dy = y[..., None] - seeds[:, 0]; dx = x[..., None] - seeds[:, 1]
+sorted_d = np.sqrt(np.sort(dy*dy + dx*dx, axis=-1))
+crackle = sorted_d[..., 1] - sorted_d[..., 0]
+crackle = crackle / crackle.max()
+crack_mask = crackle < 0.04        # thin cracks
+
+# Layer 3: two-stop rust palette
+rust_dark = np.array([0.45, 0.18, 0.08])
+rust_light = np.array([0.85, 0.45, 0.20])
+rgb = base[..., None] * rust_light + (1 - base[..., None]) * rust_dark
+
+# Paint cracks dark on top
+rgb[crack_mask] = [0.10, 0.07, 0.05]
+
+Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)).save('rust_material.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/6.3.4/rust_material.png"
+  alt="A close-up of a weathered rust-coloured metal surface. Patches of orange and dark brown mottle the surface; a network of fine dark crack lines runs across it like cracked dry paint."
+  caption="Three procedural layers stacked: fbm mottling for the rust patches, Worley `F₂ − F₁` for the crack network, two-stop palette for the rust colours."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The material is a *composition* of techniques you've already met. Once each individual primitive is one-line code, stacking three of them into a credible material is a 10-line script. That's the philosophy of procedural materials: small primitives compose into rich surfaces.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Layer 1 is colour, layer 2 is detail
+
+Procedural materials are *layered*. The bottom layer determines the bulk colour and broad-scale texture; each subsequent layer adds finer detail. The recipe for rust:
+
+```python
+# Layer 1 — broad rust mottling: which patches are bright orange, which dark brown
+base = fbm(scale=70)               # smooth field at the mottling scale
+
+# Layer 2 — fine crack network: thin dark lines from the Worley F2 - F1 map
+crackle = worley_F2_minus_F1(seeds)
+crack_mask = crackle < threshold   # thin lines
+
+# Layer 3 — palette: map base to a two-stop rust ramp, then darken at the cracks
+rgb = palette_lerp(base, rust_dark, rust_light)
+rgb[crack_mask] = [0.10, 0.07, 0.05]
+```
+
+The order matters: cracks paint *on top* of the base mottling because they should be visible regardless of underlying rust colour. If the order were reversed, the cracks could be hidden by bright rust patches [2].
+
+### Concept 2 — Worley cracks as a thin mask
+
+The `F₂ − F₁` Worley field from 6.1.3 measures "distance to second-nearest seed minus distance to nearest seed." It's near 0 on cell boundaries (where two seeds tie for closest) and grows quickly as you move into a cell. Thresholding at a small value picks the boundary pixels:
+
+```python
+crack_mask = crackle < 0.04
+```
+
+A threshold of 0.04 gives lines roughly 1–2 pixels wide. Tuning the threshold tunes the crack width — 0.02 gives near-1-pixel-wide cracks; 0.10 gives broad blocks of dark.
+
+For *unaligned* cracks (cracks that don't follow the Worley cells), you can use an fbm field thresholded at its low-density tail instead. The Worley version gives architecturally-plausible cracks that look like a rust network rather than random scribbles [3].
+
+### Concept 3 — The palette is the material's identity
+
+Same noise layers, different palettes → different materials. The stack from the quick start is shape-agnostic:
+
+| Material | Layer 1 stop A | Layer 1 stop B | Crack colour |
+|----------|----------------|----------------|--------------|
+| Rust     | `(0.85, 0.45, 0.20)` | `(0.45, 0.18, 0.08)` | `(0.10, 0.07, 0.05)` |
+| Concrete | `(0.85, 0.85, 0.82)` | `(0.55, 0.55, 0.52)` | `(0.25, 0.25, 0.22)` |
+| Lichen   | `(0.55, 0.65, 0.30)` | `(0.30, 0.35, 0.15)` | `(0.10, 0.15, 0.05)` |
+| Copper patina | `(0.50, 0.70, 0.60)` | `(0.30, 0.50, 0.40)` | `(0.10, 0.20, 0.15)` |
+
+The palette swap is the most economical way to extend the material library. Pick a real-world reference photo, sample two representative colours, and you have a procedural version of that material [4].
+
+<Admonition type="dyk" title="Technical note · why layered procedurals beat hand-painted textures">
+Production game and film pipelines have largely shifted from hand-painted to procedural texturing because procedural materials are *resolution-independent* and *seamlessly tileable*. A hand-painted texture has a fixed resolution and tiles awkwardly; a procedural one re-evaluates to any resolution and naturally wraps when you set the noise functions to be periodic. Substance Designer (Adobe) is the industry-standard tool for layered procedural materials; its building blocks are the same primitives we've covered in this module [5].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the rust, swap to concrete, then animate the rust over time.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the rust material">
+
+Run `material.py` from the quick start.
+
+**Reflection questions**
+
+- Why does layering the cracks *after* the base produce convincing rust, whereas other orderings might not?
+- What happens if you bump the Worley seed count from 60 to 200?
+- What's the role of `clip` in the final RGB conversion?
+
+<Dropdown summary="Answers">
+
+**Crack order** — cracks need to be the visible surface feature. If you painted the base over the cracks, half the cracks would be hidden. The convention in procedural materials is "top-down" — surface details on top, deeper structures underneath.
+
+**More seeds** — finer crack network. The rust looks more weathered; each rust patch becomes its own micro-island.
+
+**Clip** — the palette lerp can produce values slightly above 1 if `base` exceeds 1 (numerical drift in fbm). `np.clip(0, 1)` keeps the RGB conversion safe.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Swap to concrete">
+
+Edit `material.py` to render *concrete* instead of rust — change the palette colours, keep the structure identical.
+
+**Goals**
+
+1. **Base palette: light-to-mid grey** — `rust_light → (0.85, 0.85, 0.82)`, `rust_dark → (0.55, 0.55, 0.52)`.
+2. **Crack colour: dark grey** — `(0.25, 0.25, 0.22)` instead of black.
+3. **Drop the Worley seed count to 30** — concrete has wider tile-like cracks than rust.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+rust_dark = np.array([0.55, 0.55, 0.52])
+rust_light = np.array([0.85, 0.85, 0.82])
+```
+
+The "rust" is now concrete grey. Same mottling structure; instantly different material.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+seeds = rng.integers(0, [H, W], size=(30, 2))
+```
+
+Fewer seeds → bigger Worley cells → wider concrete tile slabs. Looks like a paved courtyard.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Time-lapse rust">
+
+Generate three frames of a rusting surface — fresh paint, mid-corrosion, and mature rust. The progression should look like the same panel at different ages.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+H, W = 250, 250
+# fbm() and Worley helpers in scope
+
+# TODO 1: define three palettes:
+#         - fresh: green-blue paint with light scuffs
+#         - middle: orange-brown with some cracks
+#         - mature: dark rust with dense cracks (the quick start)
+
+# TODO 2: render each as its own panel and hstack into a 3-panel timeline.
+
+Image.fromarray(timeline).save('rust_timeline.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — three age palettes">
+
+```python
+def render(palette_a, palette_b, crack_color, crack_seeds, crack_thresh):
+    base = fbm((H, W), scale=70, octaves=5, seed=11)
+    rng = np.random.default_rng(22)
+    pts = rng.integers(0, [H, W], size=(crack_seeds, 2))
+    y, x = np.indices((H, W))
+    dy = y[..., None] - pts[:, 0]; dx = x[..., None] - pts[:, 1]
+    sd = np.sqrt(np.sort(dy*dy + dx*dx, axis=-1))
+    crackle = (sd[..., 1] - sd[..., 0]) / (sd[..., 1] - sd[..., 0]).max()
+    mask = crackle < crack_thresh
+    rgb = base[..., None] * palette_b + (1 - base[..., None]) * palette_a
+    rgb[mask] = crack_color
+    return rgb
+
+fresh  = render(np.array([0.25, 0.45, 0.55]), np.array([0.45, 0.65, 0.75]),
+                [0.15, 0.25, 0.30], 20, 0.02)
+middle = render(np.array([0.55, 0.30, 0.15]), np.array([0.80, 0.50, 0.25]),
+                [0.20, 0.10, 0.05], 40, 0.03)
+mature = render(np.array([0.45, 0.18, 0.08]), np.array([0.85, 0.45, 0.20]),
+                [0.10, 0.07, 0.05], 60, 0.04)
+```
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() in scope
+
+H, W = 250, 250
+
+def render(palette_a, palette_b, crack_color, crack_seeds, crack_thresh):
+    base = fbm((H, W), scale=70, octaves=5, seed=11)
+    rng = np.random.default_rng(22)
+    pts = rng.integers(0, [H, W], size=(crack_seeds, 2))
+    y, x = np.indices((H, W))
+    dy = y[..., None] - pts[:, 0]
+    dx = x[..., None] - pts[:, 1]
+    sd = np.sqrt(np.sort(dy*dy + dx*dx, axis=-1))
+    crackle = sd[..., 1] - sd[..., 0]
+    crackle = crackle / crackle.max()
+    mask = crackle < crack_thresh
+    rgb = base[..., None] * palette_b + (1 - base[..., None]) * palette_a
+    rgb[mask] = crack_color
+    return np.clip(rgb, 0, 1)
+
+fresh  = render(np.array([0.25, 0.45, 0.55]),
+                np.array([0.45, 0.65, 0.75]),
+                [0.15, 0.25, 0.30], 20, 0.02)
+middle = render(np.array([0.55, 0.30, 0.15]),
+                np.array([0.80, 0.50, 0.25]),
+                [0.20, 0.10, 0.05], 40, 0.03)
+mature = render(np.array([0.45, 0.18, 0.08]),
+                np.array([0.85, 0.45, 0.20]),
+                [0.10, 0.07, 0.05], 60, 0.04)
+
+gap = np.zeros((H, 8, 3))
+timeline = np.hstack([fresh, gap, middle, gap, mature])
+Image.fromarray((timeline * 255).astype(np.uint8)).save('rust_timeline.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- The `render` function takes palette + crack parameters and returns an RGB image.
+- Three calls produce three "ages": fresh paint (cool palette, few cracks), middle (warm with moderate cracks), mature (rust palette, dense cracks).
+- The hstack timeline lets you read the progression at a glance.
+
+</Dropdown>
+
+#### Make it your own
+
+- Add a *fourth* layer — a soft Perlin-derived bump/highlight to simulate light catching the surface roughness.
+- Use the result as a tileable texture: make `fbm` periodic by sampling on a 4D lattice (3.4.4-style FFT periodicity) and the material wraps seamlessly.
+- Composite the rust over a base photo of a metal panel; modulate the rust *intensity* by a separate fbm field for non-uniform weathering.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/6.3.4/rust_material.png" label="rust_material.png — quick-start rust" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A procedural material stacks small primitives into a credible surface. The recipe — base fbm mottling + Worley `F₂ − F₁` crack mask + two-stop palette ramp — produces rust, concrete, lichen, copper patina, and any "weathered" material. Layer order matters: cracks paint on top of the mottling so the surface details remain visible regardless of base colour. The palette is the material's identity — swap two colours and you have a different material with the same noise structure. The same compositional approach scales to production tools (Substance Designer, shaders) where you stack dozens of primitives instead of three. The principle stays: every material is a *stack*; build it from one-line primitives.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Painting the base over the cracks instead of after — cracks become invisible in bright regions.
+- Setting the crack threshold too high — cracks become broad blocks instead of thin lines.
+- Using a single colour stop instead of two — the material loses its "mottled" feel and looks flat.
+- Forgetting to normalise the `F₂ − F₁` field before thresholding — different runs have different effective thresholds.
+- Reusing the same fbm seed for base and cracks — both layers correlate, killing the procedural variety.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[2]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[3]</span> Worley, S. (1996). A cellular texture basis function. *Proceedings of SIGGRAPH '96*, 291–294.</li>
+    <li><span class="tag">[4]</span> Adobe Inc. (2024). *Substance Designer Documentation*. <a href="https://substance3d.adobe.com/documentation/sddoc" target="_blank" rel="noopener">substance3d.adobe.com</a></li>
+    <li><span class="tag">[5]</span> Burley, B. (2012). Physically based shading at Disney. *SIGGRAPH 2012 Practical Physically Based Shading in Film and Game Production Course Notes*.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.</li>
+  </ol>
+</section>
