@@ -1,0 +1,375 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Dragon Curve"
+objective: "Generate the Heighway dragon — a recursive L/R fold sequence rendered with turtle graphics. One self-similar rule, 2,047 turns, an unmistakable silhouette."
+framework: "hybrid"
+duration: "20–25 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "4.1.1 (recursion basics), Python string manipulation"
+prev:
+  slug: "4.1.1"
+  title: "Fractal Square"
+next:
+  slug: "4.1.3"
+  title: "Mandelbrot Set"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The Heighway dragon curve is what you get when you fold a paper strip in half repeatedly, always in the same direction, then unfold each crease to exactly 90°. NASA physicist John Heighway first investigated it in 1966, and Martin Gardner popularised it in his *Scientific American* column the next year [1]. What makes it irresistible: the entire curve, no matter how complex, is encoded as a string of `L`s and `R`s built by one short recursive rule. Render the string with turtle graphics — move forward, turn left or right — and a self-similar dragon emerges that never crosses itself and tiles the plane.
+
+This lesson sits at the conceptual end of Module 04. Where 4.1.1 used recursion to **place pixels**, 4.1.2 uses recursion to **construct a sequence of instructions** and only then renders it. That separation — generation rule vs. interpretation — is the same architectural move you will see again in Mandelbrot iteration (4.1.3) and L-systems (4.3.1).
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Apply the recursive rule "$D_n$ = previous sequence + $R$ + reversed-and-inverted previous sequence" to build the dragon sequence.</li>
+  <li>Render an `L`/`R` turn sequence on a NumPy canvas using a turtle-graphics interpreter.</li>
+  <li>Predict the sequence length for any depth using the formula 2 to the power (n+1), minus 1.</li>
+  <li>Recognise the dragon curve as a separation of **generation** (the recursive string) from **interpretation** (the turtle walk) — the same pattern that drives L-systems.</li>
+</ol>
+
+## Quick start — see the dragon emerge <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+LEFT, UP, RIGHT, DOWN = range(4)
+
+def turn_left(d):  return (d + 3) % 4
+def turn_right(d): return (d + 1) % 4
+
+def generate_dragon_sequence(initial_turn, depth):
+    if depth == 0:
+        return initial_turn
+    previous = generate_dragon_sequence(initial_turn, depth - 1)
+    inverted = ''.join('L' if c == 'R' else 'R' for c in previous[::-1])
+    return previous + 'R' + inverted
+
+# Depth 10 → 2047 turn instructions
+sequence = generate_dragon_sequence('R', 10)
+print(f"Sequence length: {len(sequence)}")
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.2/dragon_curve.png"
+  alt="The Heighway dragon curve rendered at depth 10 — a light-blue, intricate, self-similar shape that resembles a curled dragon"
+  caption="Depth 10 — 2,047 line segments produced from one recursive rule applied to a single `R`."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The 2,047 number is not a coincidence. Each iteration of the rule doubles the previous sequence length and adds one new fold in the middle. The recurrence is "new length equals two times previous length, plus one". Solving it gives 2 to the power n+1, minus 1, segments at depth n. At depth 10 that comes out to 2,048 minus 1 = 2,047 turn instructions.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Paper-folding as recursion
+
+Fold a paper strip in half once. Unfold it so the crease opens to 90°: one right turn. Fold it twice in the same direction, then unfold each crease to 90°: the sequence is `R R L` — two right turns then one left turn [2]. The number of creases doubles with every fold, and the pattern is exactly the dragon curve at that depth.
+
+The construction rule that captures this is recursive: take the previous depth's sequence, append a single `R` (the brand-new middle fold), then append the **reversed and inverted** previous sequence. "Inverted" means swap every `L` with `R` and vice versa — this captures the fact that, after the new fold, the second half of the paper now points in the opposite direction:
+
+> $D_0 = R$, and at depth $n$, $D_n$ is the previous depth's sequence, then `R`, then the previous depth's sequence reversed and inverted.
+
+<Admonition type="dyk" title="Did you know · the dragon's nine lives">
+The dragon curve has more public-facing lives than most mathematical objects. It appears as a chapter-divider illustration in Michael Crichton's *Jurassic Park* (one curve per chapter, deepening as the novel progresses) [3], and tiles the plane perfectly with a 90°-rotated copy of itself — a property Donald Knuth and Chandler Davis analysed in 1970 [2].
+</Admonition>
+
+### Concept 2 — Generating the sequence
+
+The recursive construction translates directly to two short Python functions:
+
+<CodeBlock lang="python" file="sequence.py">
+```python
+def invert_sequence(s):
+    """Swap every L for R and vice versa."""
+    return ''.join('L' if c == 'R' else 'R' for c in s)
+
+def generate_dragon_sequence(initial_turn, depth):
+    if depth == 0:
+        return initial_turn
+    previous = generate_dragon_sequence(initial_turn, depth - 1)
+    second_half = invert_sequence(previous[::-1])
+    return previous + 'R' + second_half
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.2/recursive_sequence_visual.png"
+  alt="Diagram showing the recursive growth of the dragon curve sequence through depths zero, one, two, three, and four, highlighting the central R fold and the reversed-inverted second half"
+  caption="The recursive sequence: each row is the previous row, then `R`, then the previous row reversed-and-inverted."
+  num={2}
+  role="diagram"
+/>
+
+Trace the first few iterations by hand:
+
+| Depth | Sequence | Length |
+|-------|----------|--------|
+| 0 | `R` | 1 |
+| 1 | `R` **`R`** `L` | 3 |
+| 2 | `RRL` **`R`** `RLL` | 7 |
+| 3 | `RRLRRLL` **`R`** `RRLRLLL` | 15 |
+| 4 | `RRLRRLLRRRLRLLL` **`R`** `RRLRRLRRRLLRLLL` | 31 |
+
+The bolded middle `R` is the brand-new fold introduced at each depth — every other character was either inherited from the previous row or is a reversed-inverted copy of it.
+
+### Concept 3 — Turtle interpretation
+
+The sequence tells you *how to turn*. To actually draw anything, an imaginary "turtle" walks across the canvas:
+
+- **Forward** — move one step in the current direction, drawing pixels along the way.
+- **`L`** — turn 90° counter-clockwise.
+- **`R`** — turn 90° clockwise.
+
+Directions are integers `0..3` so rotation is a `(d ± 1) % 4` operation. Forward motion is a slice assignment along the matching axis — `canvas[y, x:x+s]` for a rightward step, and so on:
+
+<CodeBlock lang="python" file="turtle.py">
+```python
+def move_forward(canvas, position, step_size, direction, color):
+    x, y = position
+    if direction == RIGHT:
+        canvas[y, x:x + step_size] = color
+        return (x + step_size, y)
+    elif direction == LEFT:
+        canvas[y, x - step_size:x] = color
+        return (x - step_size, y)
+    elif direction == UP:
+        canvas[y - step_size:y, x] = color
+        return (x, y - step_size)
+    elif direction == DOWN:
+        canvas[y:y + step_size, x] = color
+        return (x, y + step_size)
+
+def draw_dragon(canvas, sequence, start, step, direction, color):
+    pos = start
+    for turn in sequence:
+        pos = move_forward(canvas, pos, step, direction, color)
+        direction = turn_right(direction) if turn == 'R' else turn_left(direction)
+    move_forward(canvas, pos, step, direction, color)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.2/turtle_graphics_visual.png"
+  alt="Diagram showing the four cardinal directions arranged in a circle and how left and right turns map to direction index changes"
+  caption="The turtle's direction code: integers `0..3` form a cycle that left/right turns step around modulo 4."
+  num={3}
+  role="diagram"
+/>
+
+<Admonition type="important">
+The **generation** step (build the `L`/`R` string) and the **interpretation** step (walk the turtle) are independent. Swap the turtle for a Pillow `ImageDraw.line` call and the same sequence produces a smooth vector drawing. Swap the recursive rule for a different one and the same turtle draws Koch curves or fern leaves. This split is the architectural move behind every L-system in 4.3.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the depth-10 dragon, sweep parameters, then re-implement the recursive sequence generator from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the dragon">
+
+Download and run `dragon_curve.py`. The full script generates the depth-10 sequence and walks the turtle across an 800×600 canvas.
+
+<Download href="/lessons/4.1.2/dragon_curve.py" label="dragon_curve.py — full reference implementation" />
+
+**Reflection questions**
+
+- Why does the depth-10 sequence have exactly 2,047 entries?
+- Look for the "spine" of bilateral symmetry. Where on the curve does the very first `R` of the sequence fall — at the start, the middle, or the end?
+- What is the visible difference between depth 6 and depth 10? Where does the new detail live?
+
+<Dropdown summary="Answers">
+
+**Why 2,047** — each iteration roughly doubles the previous length and adds one new fold: $L_n = 2 L_p + 1$, where $L_p$ is the previous-depth length. Starting from $L_0 = 1$, the recurrence resolves to "$L_n$ = two to the power n+1, minus one". At depth 10 this gives $2^\{11\} - 1 = 2047$.
+
+**The spine of symmetry** — the recursive rule places the brand-new middle `R` exactly between the inherited half and the inverted-reversed half. Visually, the sequence is symmetric around its middle character (with an L/R swap). The first `R` you see is at index 0; the spine is at index 1023 of the depth-10 sequence.
+
+**Depth 6 vs depth 10** — the silhouette is broadly the same; the new detail lives along the boundary, where extra folds turn smooth edges into nested zigzags. Self-similarity in action: zoom into any branch of depth 10 and you find a depth-6 dragon inside it.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep depth, colour, and direction">
+
+Edit your copy of `dragon_curve.py` to produce three variants. Only change the marked parameters.
+
+**Goals**
+
+1. **Depth comparison.** Render the same dragon at depths 4, 7, and 10 side-by-side. Keep `step_size = 3` constant so you can see the silhouette converging.
+2. **Fire dragon.** Replace the light-blue colour `(100, 180, 255)` with a warm orange-red such as `(255, 110, 40)`.
+3. **Rotated dragon.** Change `start_direction` from `UP` to `RIGHT`. Predict what happens, then verify.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The depth-4 dragon is a recognisable 31-segment zigzag with its silhouette barely emerging. By depth 7 the dragon shape is unmistakable; by depth 10 the boundary is dense with fine detail. None of the silhouettes drift away from a common bounding box — that is the stability of the recursive construction.
+
+<Figure
+  src="/lessons/4.1.2/dragon_depth_comparison.png"
+  alt="A grid of dragon curves at depths two through twelve showing how the silhouette emerges and fills in"
+  caption="Dragon curves at depths 2, 4, 6, 8, 10, 12 — the silhouette stabilises by depth 6; later depths just thicken the boundary."
+  num={4}
+  role="output"
+/>
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Just a recoloured curve. The dragon shape is decided entirely by the `L`/`R` sequence; colour is a render decision applied uniformly to every segment. You could also pass `color` as a tuple that depends on segment index to get a hue gradient along the dragon's body.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The entire dragon rotates 90° clockwise. Starting direction is a global rotation: it applies to every segment uniformly, so the *shape* is preserved and only the orientation changes. You may need to re-tune `start_position` to keep the curve inside the canvas.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Re-code the recursive generator">
+
+Implement the dragon sequence generator from scratch. The turtle/render code is provided; you fill in the recursion.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+def invert_sequence(sequence):
+    """Swap all L's and R's."""
+    # TODO 1: return a string with every L replaced by R and every R by L
+    pass
+
+def generate_dragon_sequence(initial_turn, depth):
+    """Build the dragon curve sequence recursively."""
+    if depth == 0:
+        # TODO 2: return the base case
+        pass
+    # TODO 3: get the previous depth's sequence (recursive call)
+    previous = None
+    # TODO 4: build the second half — reverse, then invert
+    second_half = None
+    # TODO 5: combine: previous + 'R' (the new fold) + second_half
+    return None
+
+# Self-test
+test = generate_dragon_sequence('R', 3)
+assert test == 'RRLRRLLRRRLRLLL', f"Got {test!r}"
+print("All good — depth 3 sequence matches the expected dragon string.")
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — invert_sequence">
+
+```python
+return ''.join('L' if c == 'R' else 'R' for c in sequence)
+```
+
+A list comprehension that walks the string character by character, swapping each.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — base and recursive cases">
+
+- **Base case** — `depth == 0` returns the single character `initial_turn`. Without this the recursion never bottoms out.
+- **Recursive case** — call `generate_dragon_sequence(initial_turn, depth - 1)` to get the previous sequence, then build `previous + 'R' + invert_sequence(previous[::-1])`. The `[::-1]` reverses, `invert_sequence` swaps L/R, and the central `'R'` is the new fold introduced at this depth.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+def invert_sequence(sequence):
+    return ''.join('L' if c == 'R' else 'R' for c in sequence)
+
+def generate_dragon_sequence(initial_turn, depth):
+    if depth == 0:
+        return initial_turn
+    previous = generate_dragon_sequence(initial_turn, depth - 1)
+    second_half = invert_sequence(previous[::-1])
+    return previous + 'R' + second_half
+
+assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLRLLL'
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.2/exercise3_expected_output.gif"
+  alt="An animation showing the depth-three dragon curve being drawn segment by segment, fifteen segments in total"
+  caption="The depth-3 dragon — fifteen segments traced in order from the start of the sequence."
+  num={5}
+  role="gif"
+/>
+
+</Dropdown>
+
+#### Make it your own
+
+- **Twin dragons.** Draw two dragons from the same start position, one facing `UP` and one facing `DOWN`, each a different colour. They interlock without overlapping — the twin-dragon tiling Knuth analysed [2].
+
+<Figure
+  src="/lessons/4.1.2/twin_dragon.gif"
+  alt="An animation of twin dragon curves in blue and orange interlocking on a black background"
+  caption="Twin dragons growing through depths 1–10 — one blue and rising, one orange and descending."
+  num={6}
+  role="gif"
+/>
+
+- **Animated depth sweep.** Loop over depths 1..12 and save each as a frame. Pillow's `Image.save(..., save_all=True, append_images=...)` writes the result as an animated GIF.
+
+<Figure
+  src="/lessons/4.1.2/dragon_animation.gif"
+  alt="An animation of the dragon curve evolving from depth one to depth twelve, with each frame adding more recursive detail"
+  caption="One frame per depth — the dragon's silhouette settles by depth 6 and the rest is boundary detail."
+  num={7}
+  role="gif"
+/>
+
+- **Vector output.** Replace `move_forward` with a Pillow `ImageDraw.line()` call (or SVG output) for a smooth, resolution-independent dragon you can print or laser-cut.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/4.1.2/dragon_curve.py" label="dragon_curve.py — Exercise 1 reference" />
+<Download href="/lessons/4.1.2/exercise3_solution.py" label="exercise3_solution.py — Exercise 3 reference" />
+<Download href="/lessons/4.1.2/dragon.py" label="dragon.py — minimal alternative implementation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+The dragon curve is a single recursive rule — append the previous sequence, then `R`, then the reversed-inverted previous sequence — applied at any depth. A turtle-graphics interpreter turns the resulting `L`/`R` string into pixels: forward, turn, repeat. Sequence length follows the formula "two to the n+1, minus one"; the silhouette stabilises by depth 6 and later depths only add boundary detail. The clean separation between **generation** (build the rule's output string) and **interpretation** (walk the turtle) is the same architecture behind every L-system in the rest of Module 04 — change the rule, keep the turtle, and you get a different fractal for free.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Forgetting the base case.** Without `if depth == 0: return initial_turn`, the recursion never terminates and Python raises `RecursionError`.
+- **Reversing without inverting (or vice versa).** Both operations are needed on the second half. Drop either one and the curve loses its self-similar shape and starts crossing itself.
+- **Off-canvas drawing.** Depth 12 at `step_size = 3` exceeds an 800-pixel canvas. Either reduce `step_size`, increase the canvas, or tune `start_position`.
+- **Confusing axis conventions.** `move_forward` uses `(x, y)` but NumPy indexes `canvas[y, x]`. Mixing these up swaps your dragon's orientation.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Gardner, M. (1967). Mathematical games: The dragon curve and other animals. *Scientific American*, 216(3), 124–129.</li>
+    <li><span class="tag">[2]</span> Davis, C., & Knuth, D. E. (1970). Number representations and dragon curves — I, II. *Journal of Recreational Mathematics*, 3(2), 66–81; 3(3), 133–149.</li>
+    <li><span class="tag">[3]</span> Crichton, M. (1990). *Jurassic Park*. Knopf. ISBN 978-0-394-58816-2.</li>
+    <li><span class="tag">[4]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[5]</span> Prusinkiewicz, P., & Lindenmayer, A. (1990). *The Algorithmic Beauty of Plants*. Springer-Verlag. ISBN 978-0-387-97297-8.</li>
+    <li><span class="tag">[6]</span> Edgar, G. (2008). *Measure, Topology, and Fractal Geometry* (2nd ed.). Springer. ISBN 978-0-387-74748-4.</li>
+    <li><span class="tag">[7]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

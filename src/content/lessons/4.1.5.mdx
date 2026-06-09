@@ -1,0 +1,336 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Sierpinski Triangle"
+objective: "Build the Sierpinski gasket two ways — recursive subdivision and the chaos game — then prove the same attractor falls out of both. One shape, two paradigms."
+framework: "hybrid"
+duration: "20–25 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "4.1.1 (recursive subdivision), 4.1.2 (turtle-like state updates)"
+prev:
+  slug: "4.1.4"
+  title: "Julia Sets"
+next:
+  slug: "4.2.1"
+  title: "Fractal Trees"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The Sierpinski triangle is the textbook example of a self-similar fractal — three smaller copies of itself, arranged in the corners of an equilateral triangle, with the central inverted triangle removed. Wacław Sierpiński described it in 1915, almost half a century before fractals had a name [1]. What makes this lesson special is that two completely different algorithms produce the same shape:
+
+1. **Recursive subdivision** — start with a triangle, split it into four, blank out the centre, recurse on the three corners.
+2. **The chaos game** — start at a random point, repeatedly jump halfway to a randomly chosen vertex, plot every step. After a few thousand jumps the points settle onto the same gasket.
+
+That convergence is not coincidence. Both algorithms are different views of the same **iterated function system** — a set of three contractions that, applied randomly or systematically, always converge to the same attractor [2]. This is the conceptual hinge of Module 04: once you see this duality, the recursive-string side (4.1.2, 4.3) and the iteration-on-pixels side (4.1.3, 4.1.4) are revealed as two interfaces to the same underlying idea.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Implement recursive triangle subdivision with `PIL.ImageDraw` and a base-case fill.</li>
+  <li>Implement the chaos game: a vectorisable Markov chain on three affine contractions.</li>
+  <li>Recognise both algorithms as **iterated function systems** sharing the same attractor.</li>
+  <li>Extend the same paradigm to the Sierpinski carpet — same recursion, different dividing geometry.</li>
+</ol>
+
+## Quick start — the chaos game <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE, N_POINTS = 600, 200_000
+vertices = np.array([[300, 60], [60, 510], [540, 510]])  # top, BL, BR
+
+rng = np.random.default_rng(0)
+indices = rng.integers(0, 3, size=N_POINTS)
+
+point = np.array([300.0, 300.0])  # arbitrary start in the canvas
+canvas = np.zeros((SIZE, SIZE), dtype=np.uint8)
+
+for i, vi in enumerate(indices):
+    point = (point + vertices[vi]) / 2.0  # halfway to chosen vertex
+    if i > 20:                             # drop transient
+        x, y = point.round().astype(int)
+        canvas[y, x] = 255
+
+Image.fromarray(canvas, mode='L').save('simple_sierpinski.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.5/simple_sierpinski.png"
+  alt="The Sierpinski triangle rendered as a cloud of two hundred thousand individual white pixels on a black background, produced by the chaos game"
+  caption="The chaos game: 200,000 dots, each placed halfway from the previous point to a randomly chosen vertex. The Sierpinski gasket emerges as the **attractor** of this random process."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Run this twice with different seeds. The individual dots land in completely different places — but the silhouette is identical. The Sierpinski triangle is not "drawn"; it is the **attractor** that any sequence of half-jumps to random vertices eventually visits.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Recursive subdivision
+
+The first way to build the gasket is the same divide-and-conquer move from 4.1.1's fractal square: take a triangle, find the midpoint of each edge, and identify four sub-triangles. The central one (inverted) is empty; the three corner ones recurse.
+
+<CodeBlock lang="python" file="recursive.py">
+```python
+def draw_sierpinski(canvas, p1, p2, p3, depth, color):
+    if depth == 0:
+        Draw(canvas).polygon([p1, p2, p3], fill=color)
+        return
+    m12 = midpoint(p1, p2)
+    m23 = midpoint(p2, p3)
+    m13 = midpoint(p1, p3)
+    draw_sierpinski(canvas, p1,  m12, m13, depth - 1, color)
+    draw_sierpinski(canvas, m12, p2,  m23, depth - 1, color)
+    draw_sierpinski(canvas, m13, m23, p3,  depth - 1, color)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/4.1.5/recursive_sierpinski.png"
+  alt="The Sierpinski triangle rendered by filled recursion at depth six on a dark background, with sharp solid corners"
+  caption="Depth-6 recursive subdivision — 729 solid corner triangles. Each recursion level subdivides the previous corners into three more."
+  num={2}
+  role="output"
+/>
+
+Branch factor 3, base case `depth == 0`. After $n$ levels of recursion, the picture contains $3^n$ small solid triangles. The fractal dimension is $\log 3 / \log 2 \approx 1.585$ — more than a line, less than a filled area [1].
+
+### Concept 2 — The chaos game
+
+The second way: pick a random starting point, pick one of the three vertices uniformly at random, and jump halfway to it. Plot. Repeat. Michael Barnsley's *Fractals Everywhere* baptised this construction the **chaos game** in 1988 [2]:
+
+<CodeBlock lang="python" file="chaos.py">
+```python
+point = np.array([300.0, 300.0])
+for _ in range(N_POINTS):
+    v = vertices[rng.integers(0, 3)]
+    point = (point + v) / 2.0     # affine contraction toward v
+    canvas[point.round().astype(int)] = 255
+```
+</CodeBlock>
+
+The map $T_i(p) = (p + v_i) / 2$ for $i$ in 1, 2, or 3 is a **contraction** — each application halves the distance to vertex $v_i$. Choose a contraction randomly, apply it, repeat. After enough steps the orbit settles onto the gasket regardless of the starting point.
+
+<Admonition type="dyk" title="Did you know · Pascal's triangle modulo 2">
+Print Pascal's triangle and colour the **odd** entries black. The first 64 rows of that diagram are pixel-perfect identical to a Sierpinski gasket at depth 6 [3]. The connection: the binomial coefficient "$n$ choose $k$" is odd if and only if every bit of $k$ is also set in $n$ (Kummer's theorem). Plotting those `(n, k)` pairs reconstructs the gasket bit by bit.
+</Admonition>
+
+### Concept 3 — Iterated function systems
+
+Both algorithms are the same iterated function system (IFS). An IFS is a set of contractions $T_1, T_2, \ldots, T_k$. The **attractor** of the IFS is the unique compact set $A$ such that
+
+$$A = T_1(A) \cup T_2(A) \cup \cdots \cup T_k(A).$$
+
+For Sierpinski, the three contractions are exactly the "halfway-to-vertex" maps. The recursive algorithm computes the attractor *deterministically* by applying every combination of contractions down to some depth. The chaos game computes the attractor *stochastically* by following a random orbit. **The Hutchinson–Barnsley theorem** guarantees that both converge to the same set [2].
+
+<Admonition type="important">
+This same IFS perspective is what unifies the rest of Module 04. Fractal trees (4.2.1) are an IFS with two rotated-and-scaled contractions per branch. L-systems (4.3) are an IFS where the contractions are encoded as a string-rewriting grammar. Even Julia sets sit one layer down — they are the attractors of a (non-contracting) dynamical system, which is why they look like fractals but were not introduced via the same framework.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the chaos game, sweep the half-step ratio, then re-code recursive subdivision from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the chaos game">
+
+Run `simple_sierpinski.py` as written. The script generates 200,000 chaos-game points on a 600×600 canvas.
+
+<Download href="/lessons/4.1.5/simple_sierpinski.py" label="simple_sierpinski.py — chaos game" />
+
+**Reflection questions**
+
+- Try setting `N_POINTS` to 500. What does the gasket look like?
+- Why is dropping the first 20 points important? Where do those transient points land?
+- Predict what happens if the random vertex choice is **biased** — say, vertex 0 is chosen 80% of the time. Does the gasket survive?
+
+<Dropdown summary="Answers">
+
+**With 500 points** — the silhouette is faintly recognisable but very sparse. You can see the empty central triangles forming but the corners look like scatter. Each additional point refines the picture; convergence is asymptotic.
+
+**The transient** — the orbit starts at an arbitrary point that is almost certainly *not* on the attractor. The first 20 or so jumps contract toward the attractor exponentially fast (each jump halves the distance), so by point 20 the orbit is essentially on the gasket and the remaining points trace it out. Plot the first 20 and you see a few stray dots wandering inward.
+
+**Biased selection** — the gasket is still the attractor, but the **point density** is no longer uniform. The corner near vertex 0 fills in densely while the other corners look sparse. Used this way, the chaos game becomes a **probabilistic colouring scheme** for the attractor, which is the basis of Barnsley's fern (4.3-adjacent).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Vary the ratio and vertex count">
+
+Modify `simple_sierpinski.py` to explore parameter variations.
+
+**Goals**
+
+1. **Square chaos game.** Switch from 3 vertices to 4 (corners of a square), keep the halfway ratio. Run 200,000 points. What appears?
+2. **Pentagon with a 2/3 jump ratio.** 5 vertices arranged regularly, and `point = point + (2/3) * (v - point)`. The ratio is no longer "halfway."
+3. **Three-vertex restriction.** Back to a triangle, but disallow choosing the same vertex twice in a row. Compare to the unrestricted version.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+A uniformly filled square. With four vertices and a ratio of 1/2, the attractor is the entire square — no gaps. The chaos game produces a gasket only when the contractions cover the parent shape **without overlapping**. With 4 vertices halfway is too far: the four contracted copies overlap and there is no "hole."
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A pentagonal silhouette with an inner hole — a five-fold version of the Sierpinski idea, sometimes called the **Sierpinski pentagon** or *N-flake*. The ratio 2/3 is chosen so the five contracted copies just touch at their edges, leaving a star-shaped hole in the middle [2].
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+A **subtly modified** gasket. Restricting consecutive vertex choices removes specific subsets of the orbit, leaving "holes" in the density of points but preserving the overall silhouette. This is one of the cleanest demonstrations that the attractor depends on the IFS, not on the orbit's individual history.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Re-code recursive subdivision">
+
+Implement the recursive subdivision algorithm from scratch. Start from the skeleton — fill in the midpoint helper and the three recursive calls.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+from PIL import Image
+from PIL.ImageDraw import Draw
+
+SIZE = 600
+
+def midpoint(a, b):
+    # TODO 1: return the (x, y) midpoint of two points a and b
+    pass
+
+def draw_sierpinski(canvas, p1, p2, p3, depth, color=(255, 220, 110)):
+    # Base case
+    if depth == 0:
+        Draw(canvas).polygon([p1, p2, p3], fill=color)
+        return
+
+    # TODO 2: compute midpoints of the three edges
+    m12 = None
+    m23 = None
+    m13 = None
+
+    # TODO 3: three recursive calls — one per corner sub-triangle
+    # corner at p1 ...
+    # corner at p2 ...
+    # corner at p3 ...
+
+# Drive it
+p_top = (300, 60); p_bl = (60, 510); p_br = (540, 510)
+canvas = Image.new('RGB', (SIZE, SIZE), color=(20, 20, 30))
+draw_sierpinski(canvas, p_top, p_bl, p_br, depth=6)
+canvas.save('my_sierpinski.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — midpoint">
+
+```python
+return ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+```
+
+Pillow accepts floats in coordinates, so there is no need to round here.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — three recursive calls">
+
+Each recursive call gets two original vertices and one midpoint — the midpoint of the **opposite** edge of the parent triangle stays out of that sub-triangle. The corner at `p1` is the triangle `(p1, m12, m13)`: it contains `p1` and the midpoints of the two edges adjacent to `p1`. By symmetry the corner at `p2` is `(m12, p2, m23)`, and at `p3` it is `(m13, m23, p3)`.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+from PIL import Image
+from PIL.ImageDraw import Draw
+
+SIZE = 600
+
+def midpoint(a, b):
+    return ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+
+def draw_sierpinski(canvas, p1, p2, p3, depth, color=(255, 220, 110)):
+    if depth == 0:
+        Draw(canvas).polygon([p1, p2, p3], fill=color)
+        return
+    m12 = midpoint(p1, p2)
+    m23 = midpoint(p2, p3)
+    m13 = midpoint(p1, p3)
+    draw_sierpinski(canvas, p1,  m12, m13, depth - 1, color)
+    draw_sierpinski(canvas, m12, p2,  m23, depth - 1, color)
+    draw_sierpinski(canvas, m13, m23, p3,  depth - 1, color)
+
+p_top, p_bl, p_br = (300, 60), (60, 510), (540, 510)
+canvas = Image.new('RGB', (SIZE, SIZE), color=(20, 20, 30))
+draw_sierpinski(canvas, p_top, p_bl, p_br, depth=6)
+canvas.save('my_sierpinski.png')
+```
+</CodeBlock>
+
+</Dropdown>
+
+#### Make it your own
+
+- **Sierpinski carpet.** The square cousin — divide each square into a 3×3 grid, blank the centre, recurse on the eight surrounding cells. Reference implementation in `sierpinski_carpet.py`. The fractal dimension is $\log 8 / \log 3 \approx 1.893$ — closer to a filled square than the triangle is.
+
+<Figure
+  src="/lessons/4.1.5/sierpinski_carpet.png"
+  alt="The Sierpinski carpet rendered at depth five — a square fractal pattern with nested missing centres on a dark background"
+  caption="The Sierpinski carpet at depth 5 — same recursive paradigm, square dividing geometry, $\\log 8 / \\log 3 \\approx 1.893$ fractal dimension."
+  num={3}
+  role="output"
+/>
+
+- **Sierpinski tetrahedron.** Apply the same recursion in 3D — four corner tetrahedra per parent. Project to 2D and you get a Sierpinski silhouette that rotates beautifully.
+- **Animated emergence.** Render the chaos game frame-by-frame at `[1000, 5000, 20000, 100000, 200000]` points. The silhouette materialises in front of you — Save them as a GIF for an unmistakable IFS-convergence demo.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/4.1.5/simple_sierpinski.py" label="simple_sierpinski.py — chaos-game gasket" />
+<Download href="/lessons/4.1.5/recursive_sierpinski.py" label="recursive_sierpinski.py — recursive subdivision" />
+<Download href="/lessons/4.1.5/sierpinski_carpet.py" label="sierpinski_carpet.py — the square cousin" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Two algorithms, one attractor. Recursive subdivision computes the Sierpinski gasket deterministically, top-down — divide, blank the centre, recurse on three corners. The chaos game computes it stochastically, bottom-up — jump halfway to a random vertex repeatedly, plot every step. Both are the same **iterated function system** of three contractions, and the Hutchinson–Barnsley theorem proves they converge to the same set. This IFS perspective is the conceptual hinge of Module 04: trees (4.2.1) and L-systems (4.3) are different IFS dialects. Fractal dimension $\log 3 / \log 2 \approx 1.585$ for the triangle; $\log 8 / \log 3 \approx 1.893$ for the carpet — both genuinely intermediate between line and area.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Plotting the transient.** The first ~20 chaos-game points haven't landed on the attractor yet. They look like noise; drop them.
+- **Wrong contraction ratio.** With 4 vertices and ratio 1/2, the contractions overlap and you get a solid square instead of a gasket. Use 1/2 for 3 vertices, 2/3 for pentagons, etc.
+- **Sub-triangle mix-up.** Each corner sub-triangle uses one original vertex and the midpoints of the **two edges adjacent to it**, not the opposite edge. Mixing them up draws a different fractal.
+- **Off-by-one rounding.** Vector graphics tolerate float coordinates; raster pixel writes need integer rounding. `round().astype(int)` before indexing the canvas.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Sierpiński, W. (1915). Sur une courbe dont tout point est un point de ramification. *Comptes Rendus de l'Académie des Sciences de Paris*, 160, 302–305.</li>
+    <li><span class="tag">[2]</span> Barnsley, M. F. (1988). *Fractals Everywhere*. Academic Press. ISBN 978-0-12-079062-9.</li>
+    <li><span class="tag">[3]</span> Stewart, I. (1995). *Nature's Numbers: The Unreal Reality of Mathematics*. Basic Books. ISBN 978-0-465-07273-5.</li>
+    <li><span class="tag">[4]</span> Hutchinson, J. E. (1981). Fractals and self-similarity. *Indiana University Mathematics Journal*, 30(5), 713–747. <a href="https://doi.org/10.1512/iumj.1981.30.30055" target="_blank" rel="noopener">doi:10.1512/iumj.1981.30.30055</a></li>
+    <li><span class="tag">[5]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[6]</span> Falconer, K. (2003). *Fractal Geometry: Mathematical Foundations and Applications* (2nd ed.). Wiley. ISBN 978-0-470-84862-3.</li>
+    <li><span class="tag">[7]</span> Peitgen, H.-O., Jürgens, H., & Saupe, D. (2004). *Chaos and Fractals: New Frontiers of Science* (2nd ed.). Springer. ISBN 978-0-387-20229-7.</li>
+  </ol>
+</section>

@@ -321,7 +321,7 @@ Image.fromarray(np.clip(blurred, 0, 255).astype(np.uint8), 'L').save('gauss_blur
 padded = np.pad(image, pad, mode='edge')
 ```
 
-The output of `np.pad` has shape `(H + 2*pad, W + 2*pad)`. Indexing `padded[y:y+K, x:x+K]` will always be valid for `y ∈ [0, H)` and `x ∈ [0, W)`.
+The output of `np.pad` has shape `(H + 2*pad, W + 2*pad)`. Indexing `padded[y:y+K, x:x+K]` will always be valid for `y` in `range(H)` and `x` in `range(W)`.
 
 </Dropdown>
 
