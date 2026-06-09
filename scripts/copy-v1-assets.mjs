@@ -74,6 +74,11 @@ const PER_LESSON = {
   // assets. Diagram-generation assets (theory GIFs, expected outputs)
   // live under visuals/ in the v1 source tree.
   '1.2.2': { includeSubdirs: ['visuals'] },
+  // 1.3.1 / 1.3.2: v1 content lives one level deep under flags/ and repeat/.
+  '1.3.1': { includeSubdirs: ['flags'] },
+  '1.3.2': { includeSubdirs: ['repeat'] },
+  // 3.4.1 convolution output PNGs and animated demo GIFs live under visuals/.
+  '3.4.1': { includeSubdirs: ['visuals'] },
   '12.1.2': { includePth: true },
 };
 

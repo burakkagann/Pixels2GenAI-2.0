@@ -1,0 +1,411 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Kaleidoscope Effects"
+objective: "Build an N-fold kaleidoscope by reading every pixel's polar angle, folding it into a single wedge, and mirroring alternate wedges. Then stack three wedge-rings into a mandala."
+framework: "hands-on"
+duration: "20–25 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "3.1.3 (coordinate remapping), polar coordinates"
+prev:
+  slug: "3.1.3"
+  title: "Nonlinear Distortions"
+next:
+  slug: "3.2.1"
+  title: "Mask"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A kaleidoscope turns one wedge of pattern into a full circle through two mathematical moves: rotational repetition and mirror reflection. David Brewster built the first physical one in 1816 from two angled mirrors in a brass tube, and the optics of those mirrors are exactly the geometry we will recreate in code [1]. Every pixel asks the same question — *what is my polar angle?* — and the answer, after folding and mirroring, decides which colour it gets. That single algorithm scales from a clean 6-fold pattern to a multi-ring mandala by varying the wedge count per ring.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Convert pixel positions to polar `(radius, angle)` with `np.arctan2` and `np.sqrt`.</li>
+  <li>Map every angle into a single wedge using integer division by the wedge width, then a modulo.</li>
+  <li>Reflect angles in alternating wedges (`wedge - angle_in_wedge`) to add mirror symmetry on top of rotation.</li>
+  <li>Stack rings with different fold counts to compose a multi-symmetry mandala.</li>
+</ol>
+
+## Quick start — a 6-fold kaleidoscope <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+size = 512
+center = size // 2
+num_folds = 6
+wedge_angle = 2 * np.pi / num_folds
+
+# Polar coordinates for every pixel
+y, x = np.ogrid[:size, :size]
+dx, dy = x - center, y - center
+angle = np.arctan2(dy, dx)
+radius = np.sqrt(dx * dx + dy * dy)
+
+# Fold all angles into one wedge
+angle_pos = angle + np.pi                                # shift to [0, 2π)
+wedge_idx = (angle_pos / wedge_angle).astype(int)
+angle_in_wedge = angle_pos - wedge_idx * wedge_angle
+
+# Mirror odd-numbered wedges
+is_odd = wedge_idx % 2 == 1
+angle_mirrored = np.where(is_odd, wedge_angle - angle_in_wedge, angle_in_wedge)
+
+# Procedural colours that depend on the folded angle + radius
+r_ch = ((np.sin(angle_mirrored * 3 + radius * 0.05) + 1) * 127).astype(np.uint8)
+g_ch = ((np.cos(angle_mirrored * 2 + radius * 0.03) + 1) * 80 + 30).astype(np.uint8)
+b_ch = ((np.sin(radius * 0.08) + 1) * 100 + 30).astype(np.uint8)
+
+mask = radius <= center - 10
+out = np.zeros((size, size, 3), dtype=np.uint8)
+out[mask, 0] = r_ch[mask]; out[mask, 1] = g_ch[mask]; out[mask, 2] = b_ch[mask]
+
+Image.fromarray(out).save('simple_kaleidoscope.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.1.4/simple_kaleidoscope.png"
+  alt="A 6-fold kaleidoscope pattern with magenta, cyan, and yellow gradients folded into a circular composition"
+  caption="A 6-fold kaleidoscope. Six wedges of 60° each, alternately reflected, sampling colour from a procedural pattern."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The kaleidoscope is built entirely from polar coordinates and integer arithmetic on angles — no rotations, no `scipy.ndimage`. The colour function never sees `(x, y)`; it sees `(angle_mirrored, radius)`.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Polar coordinates everywhere
+
+The first move is to leave the Cartesian world. For every pixel `(x, y)`, you compute the **distance from the centre** and the **angle relative to the centre**:
+
+```python
+dx, dy = x - center, y - center
+radius = np.sqrt(dx*dx + dy*dy)
+angle  = np.arctan2(dy, dx)     # in [-π, π]
+```
+
+`np.arctan2(dy, dx)` is the four-quadrant inverse tangent — unlike `arctan(dy / dx)`, it returns the correct quadrant. The output range is `[-π, π]`; we shift it to `[0, 2π)` with `+ np.pi` so the integer division for the wedge index works cleanly [2].
+
+<Admonition type="important">
+NumPy's `ogrid` makes this pixel-wide computation cheap: `y, x = np.ogrid[:size, :size]` gives a `(size, 1)` and a `(1, size)` array that broadcast to a full grid without ever materialising it. The polar calculation runs in vectorised C, not Python loops.
+</Admonition>
+
+### Concept 2 — Folding all angles into one wedge
+
+If you want `N`-fold rotational symmetry, the full circle splits into `N` wedges of angular width `2π/N`. Every angle in the image gets *mapped* into the first wedge by integer-dividing by the wedge width and subtracting:
+
+```python
+wedge_angle = 2 * np.pi / num_folds
+wedge_idx = (angle_pos / wedge_angle).astype(int)    # 0..N-1
+angle_in_wedge = angle_pos - wedge_idx * wedge_angle # 0..wedge_angle
+```
+
+Now every pixel in the image is described by `(angle_in_wedge, radius)`, and you have `N` copies of the same wedge stacked around the centre. Sample a colour from those two coordinates and you already have a pinwheel — `N`-fold rotational symmetry without any explicit rotation [3].
+
+### Concept 3 — The mirror trick (alternating reflection)
+
+Pinwheels are only half of a real kaleidoscope. The other half is **reflection**: in a brass-tube kaleidoscope, two physical mirrors fold the pattern back on itself, so adjacent wedges are mirror images of each other rather than identical copies. The code version is a `np.where` on the parity of `wedge_idx`:
+
+```python
+is_odd = wedge_idx % 2 == 1
+angle_mirrored = np.where(is_odd, wedge_angle - angle_in_wedge, angle_in_wedge)
+```
+
+Even-numbered wedges get the un-reflected angle; odd-numbered wedges get the angle measured from the *other* edge of the wedge. The effect is bilateral symmetry along every wedge boundary, which is what makes the pattern read as a kaleidoscope rather than a pinwheel [4].
+
+<Figure
+  src="/lessons/3.1.4/wedge_reflection.png"
+  alt="Three diagrams. Left: a single 60-degree wedge with a coloured pattern. Middle: the same wedge plus its mirror image, forming a kite shape. Right: the kite shape rotated six times around the centre to form a full kaleidoscope pattern."
+  caption="The kaleidoscope construction. (1) one wedge of pattern; (2) wedge + mirror = kite shape; (3) kite × N rotations = full kaleidoscope."
+  num={2}
+  role="diagram"
+/>
+
+<Admonition type="dyk" title="Technical note · Brewster's mirrors">
+A physical kaleidoscope with mirror angle `θ` produces `2π/(2θ)` reflected wedges. Brewster's preferred angle of 60° gives the classic six-fold pattern; 45° gives eight-fold; 30° gives twelve-fold [1]. The arithmetic in code is the same — `num_folds = π / mirror_angle_in_radians`.
+</Admonition>
+
+<Figure
+  src="/lessons/3.1.4/kaleidoscope_variations.png"
+  alt="Four kaleidoscope patterns in a two by two grid showing 4-fold, 6-fold, 8-fold, and 12-fold symmetry, with the pattern getting visually finer as fold count increases"
+  caption="Four fold counts, one source colour function. Smaller wedges give more intricate patterns; larger wedges give bolder geometry."
+  num={3}
+  role="output"
+/>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the 6-fold quick start, tune fold counts and palette, then assemble a multi-ring mandala.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the 6-fold kaleidoscope">
+
+Run `simple_kaleidoscope.py` from the downloads. The output is the picture in Figure 1.
+
+**Reflection questions**
+
+- Drop `num_folds` to `3`. What changes about the wedge size and the pattern complexity?
+- Set `num_folds = 1`. Why does the kaleidoscope effect disappear entirely?
+- Remove the `is_odd` mirror step. What does the pattern look like, and what symmetry has been lost?
+
+<Dropdown summary="Answers">
+
+**3-fold** — wedge width jumps to 120°. The pattern reads as three big slices instead of six fine ones; each slice has more visible detail because the source colour function spans a wider angle range per wedge.
+
+**1-fold** — `wedge_angle = 2π`, so every pixel falls in wedge index 0 with `angle_in_wedge = angle`. No folding happens; you see the raw colour function on a disc. The kaleidoscope effect *requires* folding, and 1-fold means "no folds."
+
+**No mirror** — the result is a pinwheel: every wedge looks identical (just rotated). True kaleidoscopes have bilateral symmetry along each mirror axis; without the `np.where`, you only get rotational symmetry. Visually, the pattern feels swirly rather than reflective.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three kaleidoscope variations">
+
+Edit `simple_kaleidoscope.py` to produce these three pictures.
+
+**Goals**
+
+1. **8-fold pattern** — change the fold count.
+2. **Blue-purple palette** — drop red, boost blue.
+3. **12-fold with a smaller disc** — increase folds *and* shrink the circular mask.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+num_folds = 8
+```
+
+Eight wedges of 45° each. The pattern feels more snowflake-like; finer details emerge because each wedge captures less of the source function.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+r_ch = ((np.sin(angle_mirrored * 3 + radius * 0.05) + 1) * 60).astype(np.uint8)
+b_ch = ((np.sin(radius * 0.08) + 1) * 127 + 60).astype(np.uint8)
+```
+
+Halving the red multiplier and adding a constant offset on the blue channel shifts the palette toward indigo. The shape and symmetry are untouched.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+num_folds = 12
+mask = radius <= center - 100
+```
+
+Twelve narrow wedges of 30° each, plus a 100-pixel black border around the disc. The pattern is denser and more mandala-like.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Three-ring mandala">
+
+Build a mandala from **three concentric rings**, each with a different fold count. Inner ring with the highest fold count, middle with medium, outer with the lowest. Each ring keeps the same wedge-fold-mirror algorithm; the only thing that changes between rings is `num_folds` and the inner/outer `radius` range.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 512
+CENTER = SIZE // 2
+
+def ring(num_folds, inner_r, outer_r, color_scheme):
+    """Return (ring_pixels, mask). Caller composites into the final canvas."""
+    y, x = np.ogrid[:SIZE, :SIZE]
+    dx, dy = x - CENTER, y - CENTER
+    angle = np.arctan2(dy, dx)
+    radius = np.sqrt(dx * dx + dy * dy)
+
+    wedge_angle = 2 * np.pi / num_folds
+    angle_pos = angle + np.pi
+    wedge_idx = (angle_pos / wedge_angle).astype(int)
+    angle_in_wedge = angle_pos - wedge_idx * wedge_angle
+    is_odd = wedge_idx % 2 == 1
+    angle_m = np.where(is_odd, wedge_angle - angle_in_wedge, angle_in_wedge)
+
+    in_ring = (radius >= inner_r) & (radius < outer_r)
+
+    r_mult, g_mult, b_mult = color_scheme
+    ring_pos = (radius - inner_r) / max(outer_r - inner_r, 1)
+    r = ((np.sin(angle_m * num_folds + ring_pos * np.pi * 2) + 1) * 100 * r_mult + 30).astype(np.uint8)
+    g = ((np.cos(angle_m * (num_folds + 2))                    + 1) * 100 * g_mult + 30).astype(np.uint8)
+    b = ((np.sin(ring_pos * np.pi * 3)                          + 1) * 100 * b_mult + 30).astype(np.uint8)
+
+    out = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+    out[in_ring, 0] = r[in_ring]
+    out[in_ring, 1] = g[in_ring]
+    out[in_ring, 2] = b[in_ring]
+    return out, in_ring
+
+canvas = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+
+# TODO 1: choose ring specs (inner_r, outer_r, num_folds, color_scheme)
+# rings = [...]
+
+# TODO 2: composite each ring into canvas using its mask
+# for spec in rings:
+#     r, m = ring(*spec)
+#     canvas[m] = r[m]
+
+Image.fromarray(canvas).save('mandala.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — ring specs">
+
+Three contrasting rings, fold count decreasing outward, distinct palettes:
+
+```python
+rings = [
+    (12, 0,   60,  (1.0, 0.6, 0.8)),   # inner: 12-fold, pink
+    ( 6, 60,  140, (0.5, 0.8, 1.0)),   # middle: 6-fold, blue
+    ( 4, 140, 230, (1.0, 0.5, 0.6)),   # outer: 4-fold, coral
+]
+```
+
+Each tuple matches the `ring(...)` signature: `(num_folds, inner_r, outer_r, color_scheme)`.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — composite the rings">
+
+The masks are disjoint (no two rings overlap), so a plain overwrite is enough:
+
+```python
+for spec in rings:
+    pixels, mask = ring(*spec)
+    canvas[mask] = pixels[mask]
+```
+
+If you wanted soft edges between rings you would use alpha blending, but the disjoint masks make that unnecessary here.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 512
+CENTER = SIZE // 2
+
+def ring(num_folds, inner_r, outer_r, color_scheme):
+    y, x = np.ogrid[:SIZE, :SIZE]
+    dx, dy = x - CENTER, y - CENTER
+    angle = np.arctan2(dy, dx)
+    radius = np.sqrt(dx * dx + dy * dy)
+
+    wedge_angle = 2 * np.pi / num_folds
+    angle_pos = angle + np.pi
+    wedge_idx = (angle_pos / wedge_angle).astype(int)
+    angle_in_wedge = angle_pos - wedge_idx * wedge_angle
+    is_odd = wedge_idx % 2 == 1
+    angle_m = np.where(is_odd, wedge_angle - angle_in_wedge, angle_in_wedge)
+
+    in_ring = (radius >= inner_r) & (radius < outer_r)
+    r_mult, g_mult, b_mult = color_scheme
+    ring_pos = (radius - inner_r) / max(outer_r - inner_r, 1)
+
+    r = ((np.sin(angle_m * num_folds + ring_pos * np.pi * 2) + 1) * 100 * r_mult + 30).astype(np.uint8)
+    g = ((np.cos(angle_m * (num_folds + 2))                    + 1) * 100 * g_mult + 30).astype(np.uint8)
+    b = ((np.sin(ring_pos * np.pi * 3)                          + 1) * 100 * b_mult + 30).astype(np.uint8)
+
+    out = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+    out[in_ring, 0] = r[in_ring]
+    out[in_ring, 1] = g[in_ring]
+    out[in_ring, 2] = b[in_ring]
+    return out, in_ring
+
+canvas = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+rings = [
+    (12, 0,   60,  (1.0, 0.6, 0.8)),
+    ( 6, 60,  140, (0.5, 0.8, 1.0)),
+    ( 4, 140, 230, (1.0, 0.5, 0.6)),
+]
+for spec in rings:
+    pixels, mask = ring(*spec)
+    canvas[mask] = pixels[mask]
+
+Image.fromarray(canvas).save('mandala.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.1.4/mandala_pattern.png"
+  alt="A multi-ring mandala with a tight twelve-fold centre, a medium six-fold middle ring, and a bolder four-fold outer ring, in pink-blue-coral palette"
+  caption="The mandala: three rings, three fold counts, three palettes — but only one kaleidoscope algorithm."
+  num={4}
+  role="output"
+/>
+
+**How it works:**
+
+- `ring(...)` runs the full fold + mirror computation for every pixel, then a Boolean mask keeps only the pixels inside `[inner_r, outer_r)`.
+- Pixels outside the ring stay zero. Compositing is a plain `canvas[mask] = pixels[mask]` — no blending needed because the masks are disjoint.
+- Decreasing fold counts outward makes the centre look like a fine star and the edge look like a bold cross. Increasing fold counts outward would do the opposite.
+
+</Dropdown>
+
+#### Make it your own
+
+- Animate `num_folds` per ring over time and save 60 frames as a GIF — the mandala morphs through symmetries.
+- Replace `radius >= inner_r` with `radius >= inner_r + 5 * sin(angle * num_folds)` for petalled ring boundaries.
+- Pipe the kaleidoscope through the swirl distortion from 3.1.3 for a folded, twirling pattern.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/3.1.4/simple_kaleidoscope.py" label="simple_kaleidoscope.py — 6-fold quick start" />
+<Download href="/lessons/3.1.4/kaleidoscope_variations.py" label="kaleidoscope_variations.py — fold-count comparison" />
+<Download href="/lessons/3.1.4/mandala_starter.py" label="mandala_starter.py — Exercise 3 starter" />
+<Download href="/lessons/3.1.4/mandala_solution.py" label="mandala_solution.py — Exercise 3 reference" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A kaleidoscope is two operations stacked: rotational repetition by integer-dividing the angle, and reflection by mirroring odd-indexed wedges. The whole pipeline runs in polar coordinates — every pixel asks for its radius and angle, the angle gets folded into a single wedge, alternate wedges get mirrored, and a colour function reads `(angle_mirrored, radius)`. Vary the wedge count and you get the snowflake spectrum from bold 4-fold to fine 12-fold; ring the canvas with multiple wedge counts and the same algorithm composes a full mandala. The mathematics is the same Brewster used in his 1816 brass tube; the only new ingredient is `np.where` instead of a physical mirror.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to shift `np.arctan2` output from `[-π, π]` to `[0, 2π)` — the wedge index goes negative and indexing breaks.
+- Casting `wedge_idx` with `int()` instead of `.astype(int)` — works for a scalar but crashes on the NumPy array.
+- Skipping the `is_odd` mirror — you get a pinwheel (rotation only), not a kaleidoscope.
+- Sampling the colour function from `(x, y)` instead of `(angle_mirrored, radius)` — the symmetry is lost; the colour ignores the fold.
+- Forgetting the circular mask — the rectangular canvas corners show un-folded artefacts.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Brewster, D. (1858). *The Kaleidoscope: Its History, Theory, and Construction* (2nd ed.). John Murray.</li>
+    <li><span class="tag">[2]</span> NumPy Community. (2024). numpy.arctan2. *NumPy Documentation*. <a href="https://numpy.org/doc/stable/reference/generated/numpy.arctan2.html" target="_blank" rel="noopener">numpy.org</a></li>
+    <li><span class="tag">[3]</span> Weyl, H. (1952). *Symmetry*. Princeton University Press.</li>
+    <li><span class="tag">[4]</span> Hargittai, I., & Hargittai, M. (2009). *Visual Symmetry*. World Scientific.</li>
+    <li><span class="tag">[5]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+    <li><span class="tag">[6]</span> Molnár, V. (1974). Toward aesthetic guidelines for paintings with the aid of a computer. *Leonardo*, 7(3), 185–189. <a href="https://doi.org/10.2307/1572906" target="_blank" rel="noopener">doi:10.2307/1572906</a></li>
+  </ol>
+</section>

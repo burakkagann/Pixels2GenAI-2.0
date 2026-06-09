@@ -1,0 +1,348 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Boolean Masks"
+objective: "Build a 2D boolean array — `True` for *keep*, `False` for *cut* — and use it as the gatekeeper for every per-pixel edit. A circular vignette, a colour swap, and a custom shape are all the same one-line indexing trick."
+framework: "hands-on"
+duration: "15–18 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "1.1.1 (RGB arrays), basic NumPy broadcasting"
+prev:
+  slug: "3.1.4"
+  title: "Kaleidoscope Effects"
+next:
+  slug: "3.2.2"
+  title: "Meme Generator"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The next subtopic — masking and compositing — runs on a single idea: a **boolean mask** is a 2D array of `True`/`False` values, one per pixel, that decides where an operation applies. Where the mask is `True`, the operation fires; where it is `False`, the original pixels are left untouched. Every alpha channel, every layer mask in Photoshop, every "select all blue pixels" tool comes down to the same construction [1]. This lesson focuses on the boolean operation itself: build a mask from a geometric condition, apply it with NumPy fancy indexing, and read it as a single composable operator that the rest of the subtopic builds on.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Build a 2D boolean mask from a geometric condition (a circle, a rectangle, a vertical band).</li>
+  <li>Apply a mask with fancy indexing — `image[mask] = value` — and predict which pixels get touched.</li>
+  <li>Combine multiple masks with `&`, `|`, and `~` to express AND, OR, and NOT.</li>
+  <li>Use a colour-channel threshold (`image[:, :, 2] > 180`) as a content-aware mask source.</li>
+</ol>
+
+## Quick start — a circular vignette <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+image = np.array(Image.open('bbtor.jpg'))   # any RGB photo will do
+h, w = image.shape[:2]
+
+# Grid of pixel coordinates
+Y, X = np.ogrid[:h, :w]
+
+# Distance² from the image centre — cheap because we never sqrt
+cx, cy = w / 2, h / 2
+distance_sq = (X - cx) ** 2 + (Y - cy) ** 2
+
+# Mask: True where the pixel is *outside* the circle
+outside = distance_sq > (w * h) / 6
+
+# Blacken every "outside" pixel
+image[outside] = 0
+
+Image.fromarray(image).save('mask.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.2.1/mask.png"
+  alt="A photograph of the Brandenburg Gate at dusk, with everything outside a central circle blacked out, leaving a circular vignette"
+  caption="A circular vignette built from one boolean condition. `outside` is `True` where the squared distance from the centre exceeds the threshold, and those pixels get set to zero."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The whole effect is the single line `image[outside] = 0`. NumPy's fancy indexing treats the boolean array as a selector — only the pixels where `outside` is `True` are touched. There is no per-pixel Python loop anywhere in the pipeline.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — A mask is a `(H, W)` boolean array
+
+Every per-pixel operation in this subtopic needs an answer to the same question: *should I touch this pixel?* The cleanest place to keep that answer is a 2D array with one `bool` per pixel, called a **mask**.
+
+```python
+mask = some_condition_over_pixel_coordinates   # shape (H, W), dtype bool
+```
+
+You build the mask from a vectorised expression — a comparison, a range check, a colour-channel threshold. Anything that produces a `(H, W)` boolean output is valid. NumPy's `ogrid` is the standard way to materialise the coordinate grid:
+
+```python
+Y, X = np.ogrid[:h, :w]                # X has shape (1, w), Y has shape (h, 1)
+mask = (X - cx) ** 2 + (Y - cy) ** 2 < r_sq    # circle interior, shape (h, w)
+```
+
+The fact that the coordinate inputs to the condition are arrays — not Python loops — is what makes the mask cheap. The whole evaluation runs in vectorised C.
+
+<Admonition type="important">
+A mask is `(H, W)`, not `(H, W, 3)`. NumPy's indexing rules say `image[mask] = value` selects pixels along the first two axes and assigns `value` to *all* their colour channels at once. Mixing up a 2D and a 3D mask is one of the most common bugs in masking code.
+</Admonition>
+
+### Concept 2 — Applying a mask with fancy indexing
+
+Three patterns recur. All three use the mask as a selector on the left of `=`.
+
+**Solid colour where True.**
+
+```python
+image[mask] = [255, 0, 0]    # everywhere the mask is True → red
+```
+
+**Copy from another image where True.**
+
+```python
+image[mask] = other[mask]    # everywhere the mask is True → take from other
+```
+
+**Per-channel edit.**
+
+```python
+image[mask, 0] = 0            # zero out the red channel only, where the mask is True
+```
+
+Notice that the right-hand side never has to match the *shape* of the masked region — NumPy broadcasts. A 3-element list becomes the colour for every selected pixel; a same-shape `other[mask]` substitutes pixel-for-pixel.
+
+### Concept 3 — Boolean algebra on masks
+
+Two masks combine with the same `& | ~` operators you would use on individual booleans. Because the operands are NumPy arrays, the bitwise operators are the correct ones — `and`/`or` would short-circuit on the whole array as a single truth value and throw.
+
+```python
+inner_circle = (X - cx)**2 + (Y - cy)**2 < r1_sq
+outer_circle = (X - cx)**2 + (Y - cy)**2 < r2_sq
+
+ring   = outer_circle & ~inner_circle      # AND NOT — inside outer but not inner
+either = outer_circle | top_half_strip     # OR
+not_in_circle = ~inner_circle              # negation
+```
+
+The boolean algebra is exactly what lets you build complex masks compositionally — a vignette, a ring, a chequered window, a colour-thresholded patch — without ever leaving NumPy.
+
+<Admonition type="dyk" title="Technical note · why squared distance">
+`(X - cx) ** 2 + (Y - cy) ** 2 < r_sq` skips the square root that a *real* distance check would need. `sqrt` is monotonic and non-negative, so `d² < r²` ⇔ `d < r`. Saving a `sqrt` over a million pixels is the standard optimisation in any distance-field code [2].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the vignette, swap the mask formula, then build a custom shape mask of your own.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the circular vignette">
+
+Run `mask.py` from the downloads. The script loads `bbtor.jpg`, builds the squared-distance mask, and blackens every outside pixel.
+
+**Reflection questions**
+
+- The threshold is `w * h / 6` rather than a tidy radius. Why does that magic number happen to produce a roughly circular crop?
+- What would `image[~outside] = 0` produce instead?
+- What changes if the mask is shape `(h, w, 3)` instead of `(h, w)`?
+
+<Dropdown summary="Answers">
+
+**`w * h / 6` as a squared radius** — the threshold has dimensions of pixels². It corresponds to a radius of `sqrt(w*h/6)`. For a square image it gives a radius of about 41% of the side; for the wide-ish Brandenburg photo it lands at roughly the same fraction, which is why the gate fits cleanly inside the circle. The "magic number" is an empirical pick — the lesson is that *one scalar* is the only knob you need to tune the vignette size.
+
+**`~outside` instead** — the negation; you blacken the *inside* of the circle, leaving a black disc on the original photograph. Same mask, opposite role.
+
+**3D mask** — `image[3d_mask] = 0` still works, but it now treats each *channel pixel* as an independently selectable element. If you wanted to zero only the red channel of selected pixels, that is the correct shape; if you wanted to zero whole pixels, a 2D mask is cleaner.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three mask variations">
+
+Edit `mask.py` to produce these three pictures.
+
+**Goals**
+
+1. **Inverse vignette** — keep the outside, blacken the centre disc.
+2. **Vertical band** — keep a vertical strip down the middle, blacken the sides.
+3. **Two circles** — keep the union of two overlapping circles, blacken everything else.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+inside = distance_sq < (w * h) / 6
+image[inside] = 0
+```
+
+The mask condition flips. Now the central disc is the part that vanishes.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+band_half = w // 6
+keep_band = (X >= cx - band_half) & (X < cx + band_half)
+image[~keep_band] = 0
+```
+
+`keep_band` is `True` for a vertical strip; the `~` flips it so the strip stays and the rest goes black.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+r_sq = (min(w, h) / 4) ** 2
+left  = (X - w/3) ** 2 + (Y - h/2) ** 2 < r_sq
+right = (X - 2*w/3) ** 2 + (Y - h/2) ** 2 < r_sq
+keep = left | right
+image[~keep] = 0
+```
+
+Two circle-interior masks ORed together, then negated for the "everything else" black.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="A custom heart mask">
+
+Build a heart-shaped mask using one of two routes: an algebraic curve, or two circles plus a triangle. Apply it to any photo so the heart stays full-colour and the rest goes black.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+image = np.array(Image.open('bbtor.jpg'))
+h, w = image.shape[:2]
+
+# Normalise coordinates so the heart can be tuned in (−1, 1)
+Y, X = np.ogrid[:h, :w]
+nx = (X - w / 2) / (w / 2)
+ny = (Y - h / 2) / (h / 2)
+ny = -ny     # flip y so the heart points "up" on screen
+
+# TODO 1: build the heart mask. Two starter routes — pick one.
+# Algebraic curve:
+#   (x² + y² − 1)³ − x² · y³ < 0  is the inside of a heart.
+# Or: two circles for the lobes + a downward triangle for the point.
+
+# TODO 2: blacken everything *outside* the heart.
+
+Image.fromarray(image).save('heart_mask.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — the algebraic heart">
+
+The cardioid-like curve $(x^2 + y^2 - 1)^3 - x^2 y^3 = 0$ traces a classic heart. Plug arrays into it directly:
+
+```python
+heart_inside = (nx**2 + ny**2 - 1) ** 3 - nx**2 * ny**3 < 0
+```
+
+Pixels where the left-hand side is negative are inside the heart [3].
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — the two-circles version">
+
+If you prefer a geometric construction, two lobes plus a triangular bottom work too:
+
+```python
+lobe_l  = (nx + 0.35)**2 + (ny - 0.30)**2 < 0.2
+lobe_r  = (nx - 0.35)**2 + (ny - 0.30)**2 < 0.2
+v_top   = 0.50
+v_left  = -0.85
+v_right =  0.85
+v_bot   = -0.95
+# inside a triangle: three half-plane tests AND'd
+triangle = (ny > v_bot) & (ny < v_top - 0.4 * np.abs(nx)) & (np.abs(nx) < 0.85)
+heart_inside = lobe_l | lobe_r | triangle
+```
+
+Adjust the radii, centres, and triangle slope until the silhouette looks right. The lesson is the same: each lobe and the triangle are independent masks; `|` glues them.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+image = np.array(Image.open('bbtor.jpg'))
+h, w = image.shape[:2]
+
+Y, X = np.ogrid[:h, :w]
+nx = (X - w / 2) / (w / 2)
+ny = -((Y - h / 2) / (h / 2))   # flip y
+
+# Algebraic heart curve
+heart_inside = (nx**2 + ny**2 - 1) ** 3 - nx**2 * ny**3 < 0
+
+# Blacken outside
+image[~heart_inside] = 0
+
+Image.fromarray(image).save('heart_mask.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- Normalising `nx, ny` to `(-1, 1)` makes the heart formula independent of image dimensions.
+- The cubic inequality is evaluated *once* on the whole grid; the result is the `(h, w)` boolean mask.
+- `image[~heart_inside] = 0` blackens the complement. Swap `~heart_inside` for `heart_inside` to invert.
+
+</Dropdown>
+
+#### Make it your own
+
+- Replace `image[~heart_inside] = 0` with `image[~heart_inside] //= 4` to *dim* the outside rather than nuke it — a soft vignette.
+- Combine with the wave distortion from 3.1.3: distort the image first, then apply the heart mask. Edge pixels under wrap will look interestingly fragmented.
+- Build the mask from `image[:, :, 2] > 200` (bright-blue threshold) — a content-aware mask that selects the sky pixels in the original photo.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/3.2.1/mask.py" label="mask.py — vignette starter" />
+<Download href="/lessons/3.2.1/bbtor.jpg" label="bbtor.jpg — input photograph" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A boolean mask is a 2D `bool` array, one entry per pixel, computed from a vectorised condition. Apply it with fancy indexing — `image[mask] = value` — and only the `True` pixels are touched. Build it from geometry (`X² + Y² < r²`), from a colour-channel threshold (`image[:, :, 2] > 180`), or from any boolean expression that produces an `(H, W)` shape. Combine masks with `&`, `|`, and `~` to express AND, OR, and NOT. The same one-array-one-condition pattern recurs in every later lesson of this subtopic — meme overlays, drop shadows, blend modes — so getting comfortable with masks now pays off everywhere downstream.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Using Python's `and`/`or` instead of `&`/`|` — the former raise on whole arrays; only the bitwise operators broadcast.
+- Building a `(H, W, 3)` mask when a `(H, W)` mask would do — indexing semantics differ in surprising ways.
+- Forgetting parentheses around chained comparisons: `(X > 100) & (X < 200)` is correct; `X > 100 & X < 200` is parsed as `X > (100 & X) < 200` and crashes.
+- Computing `sqrt(d²)` when you only need to compare against a radius — squaring the radius and skipping `sqrt` is faster *and* numerically cleaner.
+- Assigning a tuple `image[mask] = (255, 0, 0)` — works, but a list `[255, 0, 0]` is the more conventional NumPy style.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+    <li><span class="tag">[2]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[3]</span> Weisstein, E. W. (2024). Heart curve. *MathWorld — A Wolfram Web Resource*. <a href="https://mathworld.wolfram.com/HeartCurve.html" target="_blank" rel="noopener">mathworld.wolfram.com/HeartCurve</a></li>
+    <li><span class="tag">[4]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+    <li><span class="tag">[5]</span> NumPy Community. (2024). Boolean array indexing. *NumPy Documentation*. <a href="https://numpy.org/doc/stable/user/basics.indexing.html#boolean-array-indexing" target="_blank" rel="noopener">numpy.org</a></li>
+    <li><span class="tag">[6]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley.</li>
+  </ol>
+</section>

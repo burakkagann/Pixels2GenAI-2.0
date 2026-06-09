@@ -1,0 +1,370 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Blend Modes"
+objective: "Implement Photoshop-style blend modes in NumPy — multiply, screen, overlay, difference — as pure pixel-wise formulas on normalised float arrays. Build a grid that compares the five most-used modes on the same image pair."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "3.2.1 (masks), basic NumPy arithmetic"
+prev:
+  slug: "3.2.3"
+  title: "Shadow Compositing"
+next:
+  slug: "3.3.1"
+  title: "Warhol"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The shadow lesson composited two layers with a boolean mask — a binary choice per pixel. **Blend modes** generalise that decision to a *continuous* formula: each output pixel is some function `f(A, B)` of the same pixel in the two input layers, computed in normalised `[0, 1]` space. Multiply darkens, screen lightens, overlay does both, difference highlights changes. The Porter–Duff alpha-compositing paper of 1984 is the canonical reference, but every image editor since has added a small zoo of additional modes that all reduce to the same pattern: convert to float in `[0, 1]`, apply the formula, clip, convert back to `uint8` [1, 2]. This lesson implements the five canonical modes from scratch and lays them out in a comparison grid.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Normalise `uint8` images to float `[0, 1]` and back; explain why blend formulas live in that space.</li>
+  <li>Implement `multiply`, `screen`, `overlay`, `difference`, and `add` blend modes as one-line NumPy expressions.</li>
+  <li>Predict the output of a blend mode from a sketch of its formula (multiply → dark, screen → light, overlay → S-curve, difference → edges).</li>
+  <li>Lay out a 1-row 5-panel grid that compares blend modes side-by-side using `np.hstack`.</li>
+</ol>
+
+## Quick start — multiply two coloured gradients <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+size = 400
+
+# Two coloured gradients for the demo
+y, x = np.mgrid[:size, :size] / size
+A = np.zeros((size, size, 3), dtype=np.float64)
+A[..., 0] = x            # red ramps left → right
+A[..., 1] = y            # green ramps top → bottom
+A[..., 2] = 0.3
+
+B = np.zeros((size, size, 3), dtype=np.float64)
+B[..., 0] = 0.5
+B[..., 1] = 1 - x        # green ramps right → left
+B[..., 2] = 1 - y        # blue ramps bottom → top
+
+# Multiply blend: per-channel, in [0, 1] space
+multiplied = A * B
+
+out = (multiplied * 255).astype(np.uint8)
+Image.fromarray(out).save('multiply_demo.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.2.4/multiply_demo.png"
+  alt="A square image showing a dark green-and-amber gradient that is the product of two perpendicular colour gradients"
+  caption="A `multiply` blend of two gradients. The bottom-right corner — where both inputs are close to white in two channels — stays bright; the top-left, where both inputs are dark, stays nearly black."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The whole blend operation is one expression: `A * B`. The rest of the script is normalisation in (`/ 255`) and out (`* 255`). Every other blend mode in this lesson is the same shape — one NumPy expression per mode.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Normalise to `[0, 1]` and clip back
+
+Blend mode formulas are defined on values in `[0, 1]`, not `[0, 255]`. Two reasons:
+
+- Multiplying `uint8` values overflows at `256`; in float `[0, 1]` the product is always in range.
+- The formulas come from compositing literature where colours are fractions of full intensity, not integer counts.
+
+The pipeline is always the same:
+
+```python
+A_f = A_uint8.astype(np.float64) / 255
+B_f = B_uint8.astype(np.float64) / 255
+
+result_f = some_blend(A_f, B_f)           # produces values in [0, 1]
+
+result = np.clip(result_f * 255, 0, 255).astype(np.uint8)
+```
+
+Skipping the clip is the most common subtle bug — *some* blend formulas (add, screen with bright inputs) overshoot `1.0` even with valid inputs.
+
+<Admonition type="important">
+Blend modes operate **per channel**. R blends with R, G with G, B with B. None of the modes in this lesson cross channels — the output's red is a function of the inputs' reds only. That is what lets you write `A * B` for an entire RGB image and have it just work.
+</Admonition>
+
+### Concept 2 — The five canonical modes
+
+Five formulas cover most of what photo editors expose [3].
+
+```python
+def multiply (A, B): return A * B
+def screen   (A, B): return 1 - (1 - A) * (1 - B)
+def add      (A, B): return A + B                       # caller must clip
+def difference (A, B): return np.abs(A - B)
+def overlay  (A, B):
+    return np.where(A < 0.5,
+                    2 * A * B,
+                    1 - 2 * (1 - A) * (1 - B))
+```
+
+What each one *does*, intuitively:
+
+- **Multiply** — output is darker than either input. Black times anything is black; white times anything is the other input.
+- **Screen** — the inverse-multiply. Output is lighter than either input. White screened with anything is white; black screened is the other input.
+- **Add** — straight sum, then clip. Saturates fast; useful for additive lighting.
+- **Difference** — absolute difference. Same pixel in both layers → black; very different → bright.
+- **Overlay** — multiply where the *base* is dark, screen where the base is light. Contrast booster.
+
+<Figure
+  src="/lessons/3.2.4/blend_modes_grid.png"
+  alt="A grid of five panels showing the same two source images blended with five different modes: multiply, screen, overlay, difference, and add. Each panel has a label below it"
+  caption="Five blend modes on the same input pair. Multiply darkens; screen lightens; overlay sharpens contrast; difference highlights edges where the layers diverge; add saturates."
+  num={2}
+  role="output"
+/>
+
+<Admonition type="dyk" title="Technical note · why overlay needs `np.where`">
+Overlay is the only mode in this group that *branches* per pixel. It is multiply where the base is dark and screen where the base is light. The two regimes ensure the output stays in `[0, 1]` no matter where on the curve a pixel sits, but the branching means a scalar formula won't do — you need `np.where` (or `np.select` for more cases) to dispatch [4].
+</Admonition>
+
+### Concept 3 — Pair sketches and predictable outcomes
+
+You can predict a blend mode's output by mental arithmetic on a handful of extreme cases. Multiply applied to white-on-anything returns the other image; difference applied to identical layers returns black; add applied to two greys gives near-white.
+
+| Mode | `A=0` | `A=0.5` | `A=1` |
+|------|------|---------|------|
+| Multiply  | `0`              | `0.5 B` | `B` |
+| Screen    | `B`              | `0.5 + 0.5 B` | `1` |
+| Add       | `B` (clip 1) | `0.5 + B` (clip 1) | `1` |
+| Difference| `B`              | `\|0.5 − B\|` | `1 − B` |
+| Overlay   | `0`              | `B`     | `1` |
+
+Reading the columns: when `A = 0`, multiply zeroes everything; screen and add return the underlying `B`; overlay zeroes (multiply branch); difference returns `B`. The same table is what artists internalise to pick a mode by intent: "make this layer act as light" → screen or add; "make it act as ink" → multiply.
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the multiply demo, swap blend formulas, then build a five-panel comparison grid.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the multiply blend">
+
+Run `multiply_demo.py` from the downloads. Look at the output, then mentally trace where each colour came from.
+
+**Reflection questions**
+
+- Why is the top-left corner of the output close to black?
+- The bottom-right corner has full green and full blue contributions from B, but full red from A. What colour does it produce?
+- What blend formula would make the *top-left* corner bright instead of dark?
+
+<Dropdown summary="Answers">
+
+**Black top-left** — at `(x, y) ≈ (0, 0)`: A is `(0, 0, 0.3)` (almost black) and B is `(0.5, 1, 1)`. The element-wise product is `(0, 0, 0.3)`. Black times anything stays black.
+
+**Bottom-right colour** — at `(x, y) ≈ (1, 1)`: A is `(1, 1, 0.3)` and B is `(0.5, 0, 0)`. Product is `(0.5, 0, 0)` — a dim red. Multiply collapses any channel where *either* input is low.
+
+**Light top-left** — `screen(A, B) = 1 - (1 - A) * (1 - B)`. Where A is dark, `(1 - A)` is near 1, and the product `(1-A)(1-B)` stays small only if B is also light — meaning screen *lifts* dark regions when paired with a light B.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three more blend modes">
+
+Edit `multiply_demo.py` so it saves three different outputs by swapping the blend expression. Keep the gradient generators the same.
+
+**Goals**
+
+1. **Screen** — replace the multiply with `1 - (1 - A) * (1 - B)`.
+2. **Difference** — replace it with `np.abs(A - B)`.
+3. **Overlay** — use the branching formula from Concept 2.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+result = 1 - (1 - A) * (1 - B)
+```
+
+A noticeably brighter image. The corners where one input was dark are no longer black; screen *adds* light from each layer's bright regions.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+result = np.abs(A - B)
+```
+
+Where A and B agree (e.g. both around 0.5 somewhere mid-image), the output is near black. Where they disagree most (one near 0, the other near 1), the output is near white. Useful as an "edges" map for two similar inputs.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+result = np.where(A < 0.5, 2 * A * B, 1 - 2 * (1 - A) * (1 - B))
+```
+
+A more contrasty version of the two gradients. Shadows deepen; highlights brighten; midtones stay roughly the same.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="A 5-panel blend-mode comparison grid">
+
+Build a horizontal grid that shows the same two gradients blended with five different modes (multiply, screen, overlay, difference, add). Each panel should be the same size, separated by a thin black gutter.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 200
+GUTTER = 6
+
+def two_gradients(size):
+    y, x = np.mgrid[:size, :size] / size
+    A = np.stack([x, y, np.full_like(x, 0.3)], axis=-1)
+    B = np.stack([np.full_like(x, 0.5), 1 - x, 1 - y], axis=-1)
+    return A, B
+
+A, B = two_gradients(SIZE)
+
+# TODO 1: define five blend functions on float [0, 1] arrays.
+# def multiply(A, B): ...
+# def screen(A, B): ...
+# def overlay(A, B): ...
+# def difference(A, B): ...
+# def add(A, B): ...
+
+# TODO 2: compute the five panels.
+# panels = [multiply(A, B), screen(A, B), overlay(A, B), difference(A, B), add(A, B)]
+
+# TODO 3: assemble them with hstack, gutters in between.
+# grid = ...
+
+# Save as uint8
+Image.fromarray((np.clip(grid, 0, 1) * 255).astype(np.uint8)).save('blend_grid.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — five blend formulas">
+
+```python
+def multiply  (A, B): return A * B
+def screen    (A, B): return 1 - (1 - A) * (1 - B)
+def overlay   (A, B): return np.where(A < 0.5, 2 * A * B, 1 - 2 * (1 - A) * (1 - B))
+def difference(A, B): return np.abs(A - B)
+def add       (A, B): return A + B          # caller clips later
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — assemble the grid">
+
+```python
+gutter = np.zeros((SIZE, GUTTER, 3), dtype=np.float64)
+pieces = []
+for i, panel in enumerate(panels):
+    pieces.append(panel)
+    if i < len(panels) - 1:
+        pieces.append(gutter)
+grid = np.hstack(pieces)
+```
+
+`np.hstack` concatenates along the second axis (columns). Each panel and each gutter slot in one after the other.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 200
+GUTTER = 6
+
+def two_gradients(size):
+    y, x = np.mgrid[:size, :size] / size
+    A = np.stack([x, y, np.full_like(x, 0.3)], axis=-1)
+    B = np.stack([np.full_like(x, 0.5), 1 - x, 1 - y], axis=-1)
+    return A, B
+
+def multiply  (A, B): return A * B
+def screen    (A, B): return 1 - (1 - A) * (1 - B)
+def overlay   (A, B): return np.where(A < 0.5, 2 * A * B, 1 - 2 * (1 - A) * (1 - B))
+def difference(A, B): return np.abs(A - B)
+def add       (A, B): return A + B
+
+A, B = two_gradients(SIZE)
+panels = [multiply(A, B), screen(A, B), overlay(A, B), difference(A, B), add(A, B)]
+
+gutter = np.zeros((SIZE, GUTTER, 3), dtype=np.float64)
+pieces = []
+for i, panel in enumerate(panels):
+    pieces.append(panel)
+    if i < len(panels) - 1:
+        pieces.append(gutter)
+grid = np.hstack(pieces)
+
+out = (np.clip(grid, 0, 1) * 255).astype(np.uint8)
+Image.fromarray(out).save('blend_grid.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- Each blend function is a one-line NumPy expression on the float-normalised inputs.
+- `np.hstack` is the simplest "lay panels horizontally" call there is; the gutters are thin black panels between the content panels.
+- The final clip on `[0, 1]` protects against the `add` mode overshooting.
+
+</Dropdown>
+
+#### Make it your own
+
+- Add a vertical row of labels under the grid using the Pillow text helper from 3.2.2.
+- Wrap the five-mode grid in a function and call it on a *pair of photos* instead of gradients — useful for showing students how blend modes behave on realistic input.
+- Implement two more modes: `lighten = np.maximum(A, B)` and `darken = np.minimum(A, B)`. These are "min/max" blends, simple but useful in real workflows.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/3.2.4/placeholder.py" label="placeholder.py — v1 stub (kept for archive)" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A blend mode is a pixel-wise function `f(A, B)` defined on float values in `[0, 1]`. The standard pipeline is normalise (`/ 255`), apply the formula, clip to `[0, 1]`, denormalise (`* 255`). Five formulas cover the bulk of what artists use: multiply (darken via per-channel product), screen (lighten via inverse multiply), overlay (contrast via piecewise multiply/screen), difference (highlight divergence via absolute subtract), and add (straight sum with clip). All five operate per channel — no cross-channel logic — which means the same one-line expression applies to grayscale or RGB without change. The same idea generalises into the dozen-plus modes shipping in modern editors; once you understand multiply and screen, the rest of the family is variations on those two themes.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to normalise — `uint8` multiplication overflows at 256, so `A * B` on raw uint8 produces nonsense.
+- Forgetting to clip after `add` — the sum can exceed `1.0` and `(arr * 255).astype(uint8)` wraps around to 0.
+- Using `np.where` with arrays of different shape — broadcasting works, but a 2D mask on a 3D image needs `mask[..., None]` to broadcast cleanly.
+- Implementing overlay without the `np.where` branch — a single formula cannot produce both the multiply and screen regimes.
+- Confusing multiply with element-wise *and* operations — `A & B` is bitwise on integers and undefined on float arrays.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Porter, T., & Duff, T. (1984). Compositing digital images. *ACM SIGGRAPH Computer Graphics*, 18(3), 253–259. <a href="https://doi.org/10.1145/964965.808606" target="_blank" rel="noopener">doi:10.1145/964965.808606</a></li>
+    <li><span class="tag">[2]</span> Smith, A. R. (1995). Image compositing fundamentals. *Microsoft Technical Memo*, 4.</li>
+    <li><span class="tag">[3]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+    <li><span class="tag">[4]</span> Adobe Systems Inc. (2010). *Adobe Photoshop CS5 Help — Blending modes*. Adobe Technical Documentation.</li>
+    <li><span class="tag">[5]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

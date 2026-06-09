@@ -1,0 +1,375 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Contour Lines"
+objective: "Visualise a 2D scalar field two ways: stepped bands by integer quantisation, and thin isolines by a modulo on the height. Build the terrain from a sum of Gaussian hills and render both styles."
+framework: "hands-on"
+duration: "15–18 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "1.1.1 (RGB arrays), basic NumPy meshgrid"
+prev:
+  slug: "3.4.2"
+  title: "Edge Detection (Sobel)"
+next:
+  slug: "3.4.4"
+  title: "Fourier Art"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A **contour map** turns a continuous 2D scalar field into a readable picture. Topographic maps use it for elevation; weather maps use it for pressure; medical images use it for tissue density. The same construction shows up everywhere a scientist wants to see *level sets* — the lines or bands along which a function takes a fixed value. Modern usage traces back to 18th-century French hydrographers mapping seabed depth; the principle stayed unchanged, and CT scans, marching cubes, and ggplot's `geom_contour` all sit on top of it [1, 2]. This short lesson builds the field as a sum of Gaussian hills and renders it in the two canonical styles: stepped bands by integer quantisation, and thin isolines by a modulo test.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Construct a 2D scalar field by summing a few Gaussian hills evaluated on a meshgrid.</li>
+  <li>Quantise the normalised field into `N` discrete levels with `(normalised * N).astype(int) * (255 // N)` for stepped contours.</li>
+  <li>Mark thin isolines using `((field * scale).round() % step) == 0` — one pixel wide.</li>
+  <li>Read the trade-off between number-of-levels and visual readability.</li>
+</ol>
+
+## Quick start — one Gaussian hill <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 300
+
+x = np.linspace(-5, 5, SIZE)
+y = np.linspace(-5, 5, SIZE)
+X, Y = np.meshgrid(x, y)
+
+# A single Gaussian hill centred at origin
+height = np.exp(-(X**2 + Y**2) / 4)
+
+# Normalise to [0, 1], quantise into 8 levels, rescale to [0, 255]
+normalised = (height - height.min()) / (height.max() - height.min())
+contour = (normalised * 8).astype(np.uint8) * 32     # 8 × 32 = 256 → wraps to 0
+contour = np.clip(contour, 0, 255).astype(np.uint8)
+
+Image.fromarray(contour, 'L').save('simple_contour.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.4.3/simple_contour.png"
+  alt="A grayscale image of concentric rings centred on the middle of the canvas. The centre is bright; the rings step down to dark at the edges, with sharp boundaries between each level."
+  caption="One Gaussian hill quantised into 8 stepped levels. The sharp ring boundaries are exactly where `(normalised × 8)` flips from one integer to the next."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The quantisation is `(normalised * 8).astype(np.uint8) * 32`. Multiply by 8 to spread the values into the range `[0, 8]`, cast to int (floor), multiply by 32 to spread back into `[0, 256)`. The cast is what creates the steps — float-to-int loses information, deliberately.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Scalar fields and meshgrid
+
+A **scalar field** is a function `f(x, y)` returning one value per `(x, y)` location. On a discrete grid it is exactly a 2D NumPy array. `np.meshgrid` is the standard tool for building the coordinate inputs:
+
+```python
+x = np.linspace(-5, 5, 300)
+y = np.linspace(-5, 5, 300)
+X, Y = np.meshgrid(x, y)        # both shape (300, 300)
+```
+
+`X[i, j]` is the x-coordinate at pixel `(i, j)`; `Y[i, j]` is its y-coordinate. With those two arrays, *any* scalar function can be evaluated for every pixel at once:
+
+```python
+height = np.exp(-(X**2 + Y**2) / 4)         # Gaussian hill
+distance = np.sqrt(X**2 + Y**2)             # distance field (same as 2.2.4)
+spiral = np.sin(np.arctan2(Y, X) * 5 + distance)
+```
+
+Building maps of `Z = f(X, Y)` is the basic move; the contour styles in the next two concepts are different ways to visualise the same `Z` [3].
+
+### Concept 2 — Stepped bands by quantisation
+
+Integer division turns a continuous range into discrete buckets. Apply the same idea to a normalised field:
+
+```python
+normalised = (height - height.min()) / (height.max() - height.min())   # [0, 1]
+levels = (normalised * N).astype(np.uint8)                              # 0..N-1
+contour = levels * (255 // N)                                            # back to display range
+```
+
+Each pixel lands in exactly one of `N` buckets; pixels in the same bucket share the same grey value. The boundaries between buckets — the *contours* — are visible as the sharp lines between two grey levels. `N = 8` gives a friendly stepped map; `N = 4` gives bold poster-style bands; `N = 64` looks almost continuous.
+
+<Figure
+  src="/lessons/3.4.3/contour_concept.png"
+  alt="A side-by-side comparison. Left panel shows a smooth Gaussian gradient with continuous tones. Right panel shows the same shape quantised into 8 distinct grey bands with sharp boundaries between them."
+  caption="Left: the continuous scalar field. Right: the same field quantised into 8 levels — the stepped boundaries are the contours of the field at evenly spaced thresholds."
+  num={2}
+  role="output"
+/>
+
+<Admonition type="important">
+The cast `astype(np.uint8)` *truncates* — `0.7` becomes `0`, not `1`. If your output's highest level looks darker than expected, that is why. Add a `+ 0.5` before the cast to round half-up, or use `np.round(...).astype(int)`.
+</Admonition>
+
+### Concept 3 — Thin isolines via modulo
+
+Stepped bands are everywhere except *exactly on* the boundaries. The traditional topographic-map style is the opposite — thin curves *on* the level set, blank everywhere else. The trick is a modulo test:
+
+```python
+isolines = ((normalised * 100).round() % 16) == 0
+isolines = (isolines * 255).astype(np.uint8)
+```
+
+Multiply the field by 100, round to the nearest integer, and check which values are exact multiples of `step = 16`. Those pixels become white; everything else stays black. The lines are 1-pixel wide because the rounded integer only equals a multiple at the discrete locations where the field crosses each threshold.
+
+Tighter spacing comes from a smaller `step` (more lines); a higher `scale` means more granularity. The two work together — `(scale, step) = (100, 16)` gives ~6 levels across `[0, 1]`; `(200, 20)` gives ~10 levels [4].
+
+<Admonition type="dyk" title="Technical note · marching squares">
+The naïve modulo isoline is *staircase-aliased* — it picks discrete pixels, so lines on a near-horizontal slope can look like a row of dots. Real cartographic software uses the **marching-squares** algorithm: for every 2×2 cell of the grid, it linearly interpolates where the level crosses each cell edge and draws a continuous polyline. The output is smooth at any zoom level. Marching cubes (Lorensen, 1987) is the 3D generalisation, used in medical visualisation and game terrain [2].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render both styles, vary the level count, then sum random hills into a richer terrain.
+
+<Exercise n={1} kicker="EXECUTE" title="Render both styles">
+
+Run `contour.py` from the downloads. It builds a three-hill terrain (sum of three Gaussians) and saves both stepped contours and isolines as separate PNGs.
+
+<Figure
+  src="/lessons/3.4.3/contour_steps.png"
+  alt="A stepped contour visualisation of three overlapping Gaussian hills. The peaks of the hills appear as bright clusters; the level sets nest around each peak with sharp grey boundaries between bands."
+  caption="Stepped contour bands — three hills, 8 levels each. The dark interior of the lower hill bleeds into the brighter upper hill where they overlap."
+  num={3}
+  role="output"
+/>
+
+<Figure
+  src="/lessons/3.4.3/contour_isolines.png"
+  alt="The same three-hill terrain rendered as thin white isolines on a black background. Each hill produces nested closed curves; the curves get tighter near the peaks."
+  caption="The isoline view of the same field. Nested closed curves trace constant-height lines; the closer the lines, the steeper the terrain."
+  num={4}
+  role="output"
+/>
+
+**Reflection questions**
+
+- The hills overlap; in the stepped contour their joint region shows broad bands. Why are the bands *wider* there than in the isolated parts of each hill?
+- The isolines are *closed curves*. Will they ever cross each other? Why or why not?
+- What is the visual signature of a *steep* hill vs a *gentle* hill in the isoline picture?
+
+<Dropdown summary="Answers">
+
+**Wider bands at overlap** — where two hills overlap, the sum of two Gaussians is locally close to flat (both functions near their respective peaks contribute high values, and the *gradient* of the sum is small). Wider bands mean a smaller gradient — the field changes slowly across more pixels.
+
+**Isolines never cross** — two isolines correspond to two different level values. For them to cross, the same pixel would have to take both values simultaneously, which is impossible for a single-valued field. They can be tangent (touch and bounce) but never transverse.
+
+**Steep vs gentle** — steep hills produce tightly spaced isolines (the field crosses many levels in a small distance); gentle hills produce widely spaced isolines. The same convention used by hikers reading a topographic map.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three contour edits">
+
+Edit `contour.py` for each goal.
+
+**Goals**
+
+1. **Fine bands** — bump the quantisation to 16 levels instead of 8.
+2. **Coarse bands** — drop to 4 levels for a bold poster-art look.
+3. **Tighter isolines** — change the modulo from `% 16 == 0` to `% 8 == 0` so the isolines come every 8 raw units instead of every 16.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+contour = (znorm * 16).astype(np.uint8) * 16     # 16 × 16 = 256
+```
+
+Twice as many bands; each band is half as bright. The picture looks smoother; individual contours are harder to spot.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+contour = (znorm * 4).astype(np.uint8) * 64
+```
+
+Four bands — black, dark grey, light grey, near-white. Big bold posters. The terrain reads as four broad altitude zones instead of a fine ramp.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+isolines = ((znorm * 100).round() % 8) == 0
+```
+
+Twice as many isolines. The picture reads as a denser topographic map.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="A random terrain of hills">
+
+Build a terrain by summing **15 random Gaussian hills** with varied positions, amplitudes, and widths. Render both styles.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 400
+N_HILLS = 15
+rng = np.random.default_rng(0)
+
+x = np.linspace(-10, 10, SIZE)
+y = np.linspace(-10, 10, SIZE)
+X, Y = np.meshgrid(x, y)
+
+Z = np.zeros_like(X)
+
+# TODO 1: for each of N_HILLS, sample random (cx, cy, amplitude, width)
+#         and add an exp(-((X-cx)**2 + (Y-cy)**2) / width) term to Z.
+
+# TODO 2: normalise Z to [0, 1].
+
+# TODO 3: save the stepped contour (8 levels) AND the isolines.
+
+Image.fromarray(stepped, 'L').save('random_terrain.png')
+Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — sum random hills">
+
+```python
+for _ in range(N_HILLS):
+    cx = rng.uniform(-9, 9)
+    cy = rng.uniform(-9, 9)
+    amp = rng.uniform(0.5, 2.0)
+    width = rng.uniform(1.5, 4.0)
+    Z = Z + amp * np.exp(-((X - cx) ** 2 + (Y - cy) ** 2) / width)
+```
+
+Each iteration adds one Gaussian to the field. Different `amp` values make some peaks tall and some low; different `width` values make some narrow and some sprawling.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — render both styles">
+
+```python
+znorm = (Z - Z.min()) / (Z.max() - Z.min())
+stepped = ((znorm * 8).astype(np.uint8) * 32).clip(0, 255).astype(np.uint8)
+isolines = (((znorm * 100).round() % 12) == 0).astype(np.uint8) * 255
+```
+
+Both rendered styles take the same `znorm`; only the visualisation step differs.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE = 400
+N_HILLS = 15
+rng = np.random.default_rng(0)
+
+x = np.linspace(-10, 10, SIZE)
+y = np.linspace(-10, 10, SIZE)
+X, Y = np.meshgrid(x, y)
+
+Z = np.zeros_like(X)
+for _ in range(N_HILLS):
+    cx, cy = rng.uniform(-9, 9, size=2)
+    amp = rng.uniform(0.5, 2.0)
+    width = rng.uniform(1.5, 4.0)
+    Z = Z + amp * np.exp(-((X - cx) ** 2 + (Y - cy) ** 2) / width)
+
+znorm = (Z - Z.min()) / (Z.max() - Z.min())
+
+stepped = ((znorm * 8).astype(np.uint8) * 32).clip(0, 255).astype(np.uint8)
+isolines = (((znorm * 100).round() % 12) == 0).astype(np.uint8) * 255
+
+Image.fromarray(stepped, 'L').save('random_terrain.png')
+Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/3.4.3/random_terrain.png"
+  alt="A grayscale terrain made of many overlapping hills, rendered as 8 quantisation levels. The peaks appear as bright clusters, the valleys as dark regions, and the slopes as stepped intermediate grey bands."
+  caption="Random terrain rendered with stepped contour bands. 15 random Gaussian hills sum to a rich topology with both clear peaks and broad plateaus."
+  num={5}
+  role="output"
+/>
+
+<Figure
+  src="/lessons/3.4.3/random_terrain_isolines.png"
+  alt="The same terrain rendered as thin white isolines on a black background. Closed curves nest around each peak; the spacing between curves visualises slope steepness."
+  caption="The same terrain in isoline form. Tight curves mark steep slopes; wide spacing marks gentle plateaus. The whole field is encoded by curve geometry."
+  num={6}
+  role="output"
+/>
+
+**How it works:**
+
+- Each random hill is one Gaussian `exp(-((X-cx)² + (Y-cy)²) / width)`; the field is their sum.
+- Normalising to `[0, 1]` makes the quantisation step independent of the random amplitudes — even with totally different hills you get 8 levels.
+- The two render styles are pure NumPy expressions, each one line.
+
+</Dropdown>
+
+#### Make it your own
+
+- Replace the Gaussian hills with `exp(-d)` where `d` is computed with the Manhattan or Chebyshev metric. The level sets stop being circles and start being squares or diamonds.
+- Render the stepped contour in *colour* by indexing a matplotlib colormap with the level array: `cm.terrain(levels / 8)`.
+- Animate the field over time — make the hill amplitudes a function of `sin(2π·t/T)` and save a GIF. The contours pulse like a slow-motion lava lamp.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/3.4.3/simple_contour.py" label="simple_contour.py — quick-start single hill" />
+<Download href="/lessons/3.4.3/contour.py" label="contour.py — three-hill stepped + isolines" />
+<Download href="/lessons/3.4.3/contour_starter.py" label="contour_starter.py — Exercise 3 starter" />
+<Download href="/lessons/3.4.3/contour_solution.py" label="contour_solution.py — Exercise 3 reference" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A contour visualisation turns a 2D scalar field into a level-set picture. Build the field with `np.meshgrid` plus any scalar function — `np.exp(-r²)` for Gaussian hills, distance fields, signed-distance functions, anything. Two render styles cover most needs: **stepped bands** quantise the normalised field into `N` integer levels with `(field * N).astype(int) * (255 // N)`, and **isolines** use a modulo test `((field * scale).round() % step == 0)` to pick exactly the pixels along each level. Fewer bands = bolder; tighter modulo step = more lines. The same algorithms underlie topographic maps, weather maps, medical-image segmentation, and modern game terrain — the only thing fancier methods add is sub-pixel smoothing via marching squares.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to normalise — without `(z - z.min()) / (z.max() - z.min())`, the quantisation depends on the absolute range of `z` and can produce a uniform black image.
+- Casting before scaling — `(field * 8).astype(int) * 256` overflows because `8 × 256 = 2048`. Scale by `(255 // N)`, not `256`.
+- Using `int(x % 16 == 0)` on a single float — works for one pixel, but for a NumPy array use `(field % 16 == 0)` to get the boolean array.
+- Isolines too dense — `% 2 == 0` against `(field * 100)` gives 50 levels and the picture turns into solid white.
+- Mixing `np.meshgrid` indexing conventions — by default `meshgrid` returns `X, Y` with `Y` first along axis 0. If your hills appear rotated, swap `(X, Y)` to `(Y, X)`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> USGS. (2024). Topographic Maps. *USGS Education*. <a href="https://www.usgs.gov/educational-resources/topographic-maps" target="_blank" rel="noopener">usgs.gov</a></li>
+    <li><span class="tag">[2]</span> Lorensen, W. E., & Cline, H. E. (1987). Marching cubes: A high-resolution 3D surface construction algorithm. *ACM SIGGRAPH Computer Graphics*, 21(4), 163–169. <a href="https://doi.org/10.1145/37402.37422" target="_blank" rel="noopener">doi:10.1145/37402.37422</a></li>
+    <li><span class="tag">[3]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+    <li><span class="tag">[4]</span> Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. *Computing in Science & Engineering*, 9(3), 90–95.</li>
+    <li><span class="tag">[5]</span> Slocum, T. A., McMaster, R. B., Kessler, F. C., & Howard, H. H. (2009). *Thematic Cartography and Geovisualization* (3rd ed.). Pearson.</li>
+    <li><span class="tag">[6]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+  </ol>
+</section>
