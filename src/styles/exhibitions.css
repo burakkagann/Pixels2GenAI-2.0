@@ -1,29 +1,44 @@
 /* ============================================================
-   EXHIBITIONS — landing § 4 catalog AND per-show route.
+   EXHIBITIONS — landing § 3 catalog AND per-show route.
    Layered on:
      - tokens.css → palette, typography, spacing
      - landing.css → .section, .btn family
 
    Two registers in one stylesheet, mirroring how workshops.css
-   holds both the landing § 3 .workshops-archive AND the
+   holds both the landing § 2 .workshops-archive AND the
    /workshops route:
-     1. Landing § 4   → .exhibitions-archive, .exhibition-specimen,
+     1. Landing § 3   → .exhibitions-archive, .exhibition-specimen,
                         .exhibition-plate-strip, .exhibition-plate, …
      2. Route page    → .exhibition-page, .exhibition-head,
                         .exhibition-section, .exhibition-plate, …
    Each block has its own comment header below.
 
-   Pink discipline matches § 3 Workshops: badge + CTA + hover only.
-   Inner classes (.summary-index, .summary-status.completed,
-   .summary-identifier, .summary-meta, .summary-chevron) are
-   intentionally shared with the workshop sibling for typographic
-   parity, but every rule below is scoped under
-   .exhibition-specimen-summary so styles never leak to a page that
-   imports only exhibitions.css.
+   Accent scheme matches § 2 Workshops in structure: pink --studio
+   for brand moments only (summary open-tint, "▶ live" badges, dots —
+   as text always via --studio-ink); the working accent for hovers,
+   borders, focus, and small text accents is --c3 violet, the
+   genai/art pole — the only cycle ink that passes AA as small text
+   on both themes. Inner classes (.summary-index,
+   .summary-status.completed, .summary-identifier, .summary-meta,
+   .summary-chevron) are intentionally shared with the workshop
+   sibling for typographic parity, but every rule below is scoped
+   under .exhibition-specimen-summary so styles never leak to a page
+   that imports only exhibitions.css.
    ============================================================ */
 
+/* Theme-aware inks, derived from tokens only — see workshops.css for
+   the rationale. Duplicated here so either stylesheet works alone. */
+:root {
+  --studio-ink: var(--studio);
+  --done-ink: var(--c1);
+}
+[data-theme="light"] {
+  --studio-ink: color-mix(in srgb, var(--studio) 60%, var(--fg));
+  --done-ink: color-mix(in srgb, var(--c1) 75%, var(--fg));
+}
+
 /* ============================================================
-   LANDING § 4 — Exhibition specimen + plate strip
+   LANDING § 3 — Exhibition specimen + plate strip
    The whole catalog wraps in .exhibitions-archive (plural,
    matching .workshops-archive).
    ============================================================ */
@@ -113,7 +128,7 @@
 }
 
 .exhibition-specimen-summary .summary-status.completed {
-  color: var(--c1);
+  color: var(--done-ink);
   border-color: color-mix(in srgb, var(--c1) 50%, transparent);
   background: color-mix(in srgb, var(--c1) 6%, transparent);
 }
@@ -156,10 +171,10 @@
   transition: transform 0.25s ease;
 }
 
-.exhibition-specimen-summary:hover .summary-chevron { color: var(--studio); }
+.exhibition-specimen-summary:hover .summary-chevron { color: var(--c3); }
 
 .exhibition-specimen[open] > .exhibition-specimen-summary .summary-chevron {
-  color: var(--studio);
+  color: var(--c3);
 }
 
 .exhibition-specimen[open] > .exhibition-specimen-summary .summary-chevron svg {
@@ -231,7 +246,7 @@
   transition: border-bottom-color 0.15s ease;
 }
 
-.exhibition-specimen-text .lede a:hover { border-bottom-color: var(--studio); }
+.exhibition-specimen-text .lede a:hover { border-bottom-color: var(--c3); }
 
 .exhibition-specimen-dl {
   display: grid;
@@ -268,7 +283,7 @@
   transition: border-bottom-color 0.15s ease;
 }
 
-.exhibition-specimen-dl dd a:hover { border-bottom-color: var(--studio); }
+.exhibition-specimen-dl dd a:hover { border-bottom-color: var(--c3); }
 
 /* ---------- Specimen aside · dimmed poster, hover lifts ---------- */
 .exhibition-specimen-aside {
@@ -311,7 +326,7 @@
 .exhibition-specimen-poster:hover::after { opacity: 0; }
 
 .exhibition-specimen-poster:focus-visible {
-  outline: 1px solid var(--studio);
+  outline: 1px solid var(--c3);
   outline-offset: 2px;
 }
 .exhibition-specimen-poster:focus-visible img { opacity: 1; filter: saturate(1); }
@@ -387,7 +402,7 @@
   overflow: hidden;
 }
 
-.exhibition-plate:hover { border-color: var(--studio); }
+.exhibition-plate:hover { border-color: var(--c3); }
 
 .exhibition-plate img {
   width: 100%;
@@ -438,7 +453,7 @@
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--studio);
+  color: var(--c3);
 }
 
 /* ---------- Specimen actions row (catalog CTA + meta note) ---------- */
@@ -451,28 +466,23 @@
   flex-wrap: wrap;
 }
 
+/* Bordered CTA on the .btn-sec pattern (landing.css); the section's
+   violet working accent appears on hover. */
 .exhibition-specimen-actions .btn-ghost {
+  display: inline-flex;
+  align-items: center;
   background: transparent;
-  color: var(--fg-2);
-  border: none;
-  padding: 6px 0;
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+  padding: 9px 14px;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.exhibition-specimen-actions .btn-ghost:hover { color: var(--studio); }
-
-.exhibition-specimen-actions .right {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
+.exhibition-specimen-actions .btn-ghost:hover { border-color: var(--c3); }
 
 /* ============================================================
    ROUTE PAGE — per-show /exhibitions/<id> (e.g. /exhibitions/2026-03)
@@ -529,7 +539,7 @@
 
 .exhibition-head h1 em {
   font-style: italic;
-  color: var(--studio);
+  color: var(--studio-ink);
   font-weight: 500;
 }
 
@@ -608,7 +618,7 @@
 }
 
 .exhibition-section .deck a:hover {
-  border-bottom-color: var(--studio);
+  border-bottom-color: var(--c3);
 }
 
 /* ---------- Feature · poster + body (poster NOT dimmed — this is the page) ---------- */
@@ -636,7 +646,7 @@
 }
 
 .exhibition-poster:hover {
-  border-color: var(--studio-dim);
+  border-color: var(--c3);
   transform: translateY(-2px);
 }
 
@@ -700,15 +710,16 @@
   color: var(--fg-2);
 }
 
+/* Prose links carry the section's violet accent (AA on both themes). */
 .exhibition-feature-body .narrative a {
-  color: var(--studio);
-  border-bottom: 1px solid var(--studio-dim);
+  color: var(--c3);
+  border-bottom: 1px solid var(--c3-dim);
   padding-bottom: 1px;
   transition: border-bottom-color .15s;
 }
 
 .exhibition-feature-body .narrative a:hover {
-  border-bottom-color: var(--studio);
+  border-bottom-color: var(--c3);
 }
 
 /* meta dl */
@@ -784,12 +795,12 @@
 }
 
 .exhibition-plate:hover {
-  border-color: var(--studio);
+  border-color: var(--c3);
   transform: translateY(-2px);
 }
 
 .exhibition-plate:focus-visible {
-  outline: 1px solid var(--studio);
+  outline: 1px solid var(--c3);
   outline-offset: 2px;
 }
 
@@ -881,7 +892,7 @@
 }
 
 .exhibition-anim-card:hover {
-  border-color: var(--studio);
+  border-color: var(--c3);
   transform: translateY(-2px);
 }
 
@@ -1018,8 +1029,8 @@
 }
 
 .exhibition-anim-card .anim-foot .repo {
-  color: var(--studio);
-  border-bottom: 1px solid var(--studio-dim);
+  color: var(--c3);
+  border-bottom: 1px solid var(--c3-dim);
   padding-bottom: 1px;
 }
 
@@ -1138,15 +1149,15 @@
 }
 
 .exhibition-docs .doc:hover {
-  border-color: var(--studio);
-  color: var(--studio);
+  border-color: var(--c3);
+  color: var(--c3);
 }
 
 .exhibition-docs .doc .kind {
   font-family: var(--mono);
   font-size: 9px;
   letter-spacing: 0.16em;
-  color: var(--studio);
+  color: var(--c3);
   padding-right: 12px;
   border-right: 1px solid var(--line-2);
 }
@@ -1184,8 +1195,8 @@
 }
 
 .exhibition-ack a:hover {
-  color: var(--studio);
-  border-bottom-color: var(--studio);
+  color: var(--studio-ink);
+  border-bottom-color: var(--studio-ink);
 }
 
 /* ---------- Modal for enlarged plate ---------- */
@@ -1303,4 +1314,10 @@
 .exhibition-modal-close:hover {
   background: var(--studio);
   color: var(--bg);
+}
+
+/* Light theme: `color: var(--bg)` above is cream on the pink fill
+   (2.58:1) — flip to --fg (6.4:1). Dark theme is untouched. */
+[data-theme="light"] .exhibition-modal-close:hover {
+  color: var(--fg);
 }

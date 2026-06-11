@@ -1,7 +1,7 @@
 ---
 /**
  * One exhibition rendered as a collapsible <details> specimen card in the
- * landing § 4 catalog. Mirrors the WorkshopSpecimen pattern.
+ * landing § 3 catalog. Mirrors the WorkshopSpecimen pattern.
  *
  * v1 constraint: past/completed exhibitions only. No upcoming variant —
  * the catalog has exactly one row and doesn't promise the next show.
@@ -96,7 +96,7 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
     <span class="summary-index">{indexDisplay}</span>
     <span class="summary-status completed">✓ Completed</span>
     <span class="summary-identifier">
-      Pixels2GenAI · <em>group show in {ex.artists.length} artists</em>
+      Group show · <em>{ex.artists.length} artists</em>
     </span>
     <span class="summary-meta">{ex.city} · {ex.date}</span>
     <span class="summary-chevron" aria-hidden="true">
@@ -108,19 +108,20 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
 
   <article class="exhibition-specimen-body">
     <div class="exhibition-specimen-text">
-      <h3>{indexDisplay} · <em>Pixels2GenAI · the first group show.</em></h3>
+      <h3>{indexDisplay} · <em>The first group show.</em></h3>
       <p class="lede">
-        {ex.artists.length} artists turned the {ex.venue} office in {ex.district ?? ex.city} into a
-        gallery for three days. Printed works on the walls, code-driven installations on screens and
-        projection. Equations, algorithms, and generative models, arranged as objects you could walk
-        between.
+        Over two days, {ex.artists.length} artists turned the {ex.venue} office in {ex.district ?? ex.city} into
+        a gallery: printed works on the walls, code-driven installations on screens and projection.
+        Several of the pieces grew directly out of curriculum modules — equations, algorithms, and
+        generative models, arranged as objects you could walk between.
       </p>
 
       <dl class="exhibition-specimen-dl">
-        <dt>Date</dt>
-        <dd>
-          {ex.date} · <em>{ex.openingHours.replace(/^[^·]+·\s*/, '')}</em> · public {ex.publicHours.replace(/^[^·]+·\s*/, '')}
-        </dd>
+        <dt>Opening</dt>
+        <dd>{ex.openingHours.replace(/\s*—\s*opening$/, '')} · <em>invited guests</em></dd>
+
+        <dt>Public</dt>
+        <dd>{ex.publicHours.replace(/\s*—\s*public$/, '')}</dd>
 
         <dt>Where</dt>
         <dd>{ex.venue} · {ex.address} · <em>{ex.station}</em> · {ex.city}</dd>
@@ -137,20 +138,20 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
     </div>
 
     <aside class="exhibition-specimen-aside">
-      <a class="exhibition-specimen-poster" href={route} aria-label="Open the exhibition catalog — poster lifts on hover">
+      <a class="exhibition-specimen-poster" href={route} aria-label="Open the exhibition page — poster lifts on hover">
         <img
           src={ex.poster}
           alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.city} · ${ex.date}.`}
           loading="lazy"
         />
       </a>
-      <div class="exhibition-specimen-poster-cap">Poster · {ex.city} · <em>hover to lift</em></div>
+      <div class="exhibition-specimen-poster-cap">Poster · {ex.city}</div>
     </aside>
 
     <div class="exhibition-plate-strip">
       <div class="exhibition-plate-strip-head">
-        <span><b>Plates</b> · {plates.length} works on view (of ~{totalWorks})</span>
-        <span>Curated · prints by {ex.artists[0]?.name ?? 'B.K. Yılmazer'}</span>
+        <span><b>Plates</b> · {plates.length} of {totalWorks} works</span>
+        <span>Curated · prints by {ex.artists[0]?.name ?? 'Burak Kağan Yılmazer'}</span>
       </div>
       <div class="exhibition-plate-strip-grid">
         {plates.map((p) => {
@@ -181,7 +182,6 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
   </article>
 
   <div class="exhibition-specimen-actions">
-    <a class="btn-ghost" href={route}>Open the exhibition catalog →</a>
-    <span class="right">{plates.length} of ~{totalWorks} works shown · catalog forthcoming</span>
+    <a class="btn-ghost" href={route}>See the full exhibition →</a>
   </div>
 </details>

@@ -1,7 +1,7 @@
 ---
 /**
  * One workshop rendered as a collapsible <details> specimen card in the
- * landing § 3 catalog. Closed by default; pass `defaultOpen` to expand.
+ * landing § 2 catalog. Closed by default; pass `defaultOpen` to expand.
  *
  * Two variants by data shape, not by prop:
  *   status === 'past'  → completed badge · dimmed poster on the right ·
@@ -32,12 +32,12 @@ const indexDisplay = String(arabic).padStart(2, '0');
 const isPast = w.status === 'past';
 
 const cohortLine = isPast
-  ? `${w.participants ?? 'TBA'} participants · 1 day · pixel → diffusion`
-  : `Up to ${w.capacity > 0 ? w.capacity : 'TBA'} participants · 1 day · TBA`;
+  ? `${w.participants ?? 'TBA'} participants · one day · pixel → diffusion`
+  : w.capacity > 0
+    ? `Up to ${w.capacity} participants · one day`
+    : 'Capacity TBA · one day';
 
-const identifier = isPast
-  ? 'Pixels2GenAI · one-day intensive'
-  : 'Next workshop · open seats';
+const identifier = isPast ? 'One-day intensive' : 'Next in the program';
 
 const summaryMeta = `${w.city} · ${w.date}`;
 ---
@@ -48,7 +48,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
     <span class={`summary-status ${isPast ? 'completed' : 'planning'}`}>
       {isPast ? '✓ Completed' : '▌ In planning'}
     </span>
-    <span class="summary-identifier">Pixels2GenAI · <em>{isPast ? 'one-day intensive' : 'open seats'}</em></span>
+    <span class="summary-identifier">Workshop · <em>{isPast ? 'one-day intensive' : 'registration open'}</em></span>
     <span class="summary-meta">{summaryMeta}</span>
     <span class="summary-chevron" aria-hidden="true">
       <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,7 +67,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
         </p>
       ) : (
         <p class="specimen-lede">
-          The next workshop in the recurring program. Same shape as 01: one day, with Academis, up to eight participants once the date and venue land.
+          The next workshop in the recurring program — one day with Academis, same shape as 01. Registration of interest is open now; date and venue follow.
         </p>
       )}
 
@@ -100,11 +100,6 @@ const summaryMeta = `${w.city} · ${w.date}`;
         )}
       </dl>
 
-      {isPast && (
-        <div class="specimen-actions">
-          <a class="btn-ghost" href="/workshops">See the full workshop →</a>
-        </div>
-      )}
     </div>
 
     {isPast ? (
@@ -127,4 +122,10 @@ const summaryMeta = `${w.city} · ${w.date}`;
       </div>
     )}
   </article>
+
+  {isPast && (
+    <div class="specimen-actions">
+      <a class="btn-ghost" href="/workshops">See the full workshop →</a>
+    </div>
+  )}
 </details>

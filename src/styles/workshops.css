@@ -1,15 +1,18 @@
 /* ============================================================
-   WORKSHOPS — landing § 3 catalog, /workshops route, /workshops/signup.
-   Reads as part of the studio identity (fluoro pink --studio is the
-   workshop accent), but pink is used sparingly: In planning badge,
-   Register CTA, and link hover states only.
+   WORKSHOPS — landing § 2 catalog, /workshops route, /workshops/signup.
+   Reads as part of the studio identity. Fluoro pink --studio is kept
+   for brand moments (summary open-tint, In planning badge, Register
+   CTA, eyebrows — as text always via --studio-ink); the working accent
+   for hovers, borders, and focus rings is --c2 electric blue, the
+   machine-learning pole — the workshop is the project's empirical
+   engine. Blue is used non-text only, so both themes pass contrast.
 
    Layered on:
      - tokens.css → palette, typography, spacing
      - landing.css → .section, .section-head, .section-num,
                      .section-title, .section-desc, .btn family
    This file adds:
-     - .workshops-archive (landing § 3 catalog container)
+     - .workshops-archive (landing § 2 catalog container)
      - .archive-head (mono ruled-line sub-header)
      - .workshop-specimen (each collapsible workshop row)
      - .workshops-page (/workshops route)
@@ -17,7 +20,21 @@
      - .signup-form (Netlify form on /workshops/signup)
    ============================================================ */
 
-/* ---------- Landing § 3 catalog (collapsible specimens) ---------- */
+/* Theme-aware inks, derived from tokens only (no hex). --studio is
+   brand-invariant and measures ~2.5:1 as text on cream, so pink *text*
+   uses --studio-ink: identical to --studio in dark, darkened to ~4.9:1
+   on light --bg-2. --done-ink does the same for the green Completed
+   badge (4.08:1 → 5.78:1 on light --bg-2). */
+:root {
+  --studio-ink: var(--studio);
+  --done-ink: var(--c1);
+}
+[data-theme="light"] {
+  --studio-ink: color-mix(in srgb, var(--studio) 60%, var(--fg));
+  --done-ink: color-mix(in srgb, var(--c1) 75%, var(--fg));
+}
+
+/* ---------- Landing § 2 catalog (collapsible specimens) ---------- */
 .workshops-archive {
   border: 1px solid var(--line);
 }
@@ -101,13 +118,13 @@
 }
 
 .summary-status.completed {
-  color: var(--c1);
+  color: var(--done-ink);
   border-color: color-mix(in srgb, var(--c1) 50%, transparent);
   background: color-mix(in srgb, var(--c1) 6%, transparent);
 }
 
 .summary-status.planning {
-  color: var(--studio);
+  color: var(--studio-ink);
   border-color: var(--studio-dim);
   background: var(--studio-tint);
 }
@@ -150,10 +167,10 @@
   transition: transform 0.25s ease;
 }
 
-.specimen-summary:hover .summary-chevron { color: var(--studio); }
+.specimen-summary:hover .summary-chevron { color: var(--c2); }
 
 .workshop-specimen[open] > .specimen-summary .summary-chevron {
-  color: var(--studio);
+  color: var(--c2);
 }
 
 .workshop-specimen[open] > .specimen-summary .summary-chevron svg {
@@ -225,11 +242,11 @@
   transition: border-bottom-color 0.15s ease;
 }
 
-.specimen-lede a:hover { border-bottom-color: var(--studio); }
+.specimen-lede a:hover { border-bottom-color: var(--c2); }
 
 .specimen-dl {
   display: grid;
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: 90px 1fr;
   gap: 6px 16px;
   margin: 6px 0 0;
   align-items: baseline;
@@ -262,7 +279,7 @@
   transition: border-bottom-color 0.15s ease;
 }
 
-.specimen-dl dd a:hover { border-bottom-color: var(--studio); }
+.specimen-dl dd a:hover { border-bottom-color: var(--c2); }
 
 /* Module chips row */
 .specimen-dl dd.chips {
@@ -292,25 +309,33 @@
   letter-spacing: 0.06em;
 }
 
+/* Full-width actions bar below the body — mirrors the exhibition sibling. */
 .specimen-actions {
-  padding-top: 10px;
+  padding: 16px 26px 22px;
   border-top: 1px solid var(--line);
-  margin-top: 6px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
+/* Bordered CTA on the .btn-sec pattern (landing.css); the section's
+   blue working accent appears on hover. */
 .specimen-actions .btn-ghost {
+  display: inline-flex;
+  align-items: center;
   background: transparent;
-  color: var(--fg-2);
-  border: none;
-  padding: 6px 0;
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+  padding: 9px 14px;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.specimen-actions .btn-ghost:hover { color: var(--studio); }
+.specimen-actions .btn-ghost:hover { border-color: var(--c2); }
 
 /* ---------- Aside: dimmed poster (past) or placeholder + CTA (upcoming) ---------- */
 .specimen-aside {
@@ -355,7 +380,7 @@
 .specimen-poster:hover::after { opacity: 0; }
 
 .specimen-poster:focus-visible {
-  outline: 1px solid var(--studio);
+  outline: 1px solid var(--c2);
   outline-offset: 2px;
 }
 .specimen-poster:focus-visible img { opacity: 1; filter: saturate(1); }
@@ -405,7 +430,7 @@
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--studio);
+  color: var(--studio-ink);
   font-weight: 500;
 }
 
@@ -487,7 +512,7 @@
 
 .workshops-head h1 em {
   font-style: italic;
-  color: var(--studio);
+  color: var(--studio-ink);
   font-weight: 500;
 }
 
@@ -538,7 +563,7 @@
 
 .workshops-section h2 em {
   font-style: italic;
-  color: var(--studio);
+  color: var(--studio-ink);
   font-weight: 400;
 }
 
@@ -575,7 +600,7 @@
 }
 
 .case-poster:hover {
-  border-color: var(--studio);
+  border-color: var(--c2);
 }
 
 .case-poster img {
@@ -605,7 +630,7 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--studio);
+  color: var(--studio-ink);
 }
 
 .case-title {
@@ -636,15 +661,16 @@
   color: var(--fg-2);
 }
 
+/* Prose links carry the site's --link blue (= --c2), not pink. */
 .case-narrative a {
-  color: var(--studio);
-  border-bottom: 1px solid var(--studio-dim);
+  color: var(--c2);
+  border-bottom: 1px solid var(--c2-dim);
   padding-bottom: 1px;
   transition: border-bottom-color .15s;
 }
 
 .case-narrative a:hover {
-  border-bottom-color: var(--studio);
+  border-bottom-color: var(--c2);
 }
 
 .case-meta {
@@ -699,7 +725,7 @@
 }
 
 .case-modules li b {
-  color: var(--studio);
+  color: var(--studio-ink);
   font-weight: 600;
   margin-right: 8px;
 }
@@ -733,12 +759,12 @@
 }
 
 .workshop-gallery .g-tile:hover {
-  border-color: var(--studio);
+  border-color: var(--c2);
   transform: translateY(-1px);
 }
 
 .workshop-gallery .g-tile:focus-visible {
-  outline: 1px solid var(--studio);
+  outline: 1px solid var(--c2);
   outline-offset: 2px;
 }
 
@@ -762,7 +788,7 @@
 }
 
 .gallery-modal::backdrop {
-  background: rgba(8, 6, 12, 0.78);
+  background: color-mix(in srgb, var(--bg-deep) 78%, transparent);
 }
 
 .gallery-modal img {
@@ -779,8 +805,10 @@
   right: 8px;
   width: 32px;
   height: 32px;
+  /* 48px hit area around the 32px visual button (::after below). */
   background: rgba(0, 0, 0, 0.55);
-  color: #F0E7D8;
+  /* Always sits on a dark overlay — the theme-invariant frame ink applies. */
+  color: var(--figure-frame-fg);
   border: 1px solid rgba(255, 255, 255, 0.25);
   font-size: 22px;
   line-height: 1;
@@ -788,6 +816,12 @@
   display: grid;
   place-items: center;
   transition: background .15s, color .15s;
+}
+
+.gallery-modal .g-close::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 .gallery-modal .g-close:hover {
@@ -827,7 +861,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--studio);
+  color: var(--studio-ink);
 }
 
 .outcomes .o-value {
@@ -862,8 +896,8 @@
 }
 
 .outcomes-link a:hover {
-  color: var(--studio);
-  border-bottom-color: var(--studio);
+  color: var(--studio-ink);
+  border-bottom-color: var(--studio-ink);
 }
 
 /* ---------- /workshops · Upcoming card ----------
@@ -907,7 +941,7 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 3px 9px;
-  color: var(--studio);
+  color: var(--studio-ink);
   border: 1px solid var(--studio-dim);
   background: var(--studio-tint);
 }
@@ -973,8 +1007,8 @@
 }
 
 .workshops-ack a:hover {
-  color: var(--studio);
-  border-bottom-color: var(--studio);
+  color: var(--studio-ink);
+  border-bottom-color: var(--studio-ink);
 }
 
 /* ---------- /workshops/signup · form ---------- */
@@ -989,7 +1023,7 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--studio);
+  color: var(--studio-ink);
   margin-bottom: 18px;
   display: block;
 }
@@ -1007,7 +1041,7 @@
 
 .signup-page h1 em {
   font-style: italic;
-  color: var(--studio);
+  color: var(--studio-ink);
 }
 
 .signup-page .lede {
@@ -1040,7 +1074,7 @@
 }
 
 .signup-form label .req {
-  color: var(--studio);
+  color: var(--studio-ink);
   font-style: normal;
 }
 
@@ -1060,7 +1094,7 @@
 .signup-form input:focus,
 .signup-form textarea:focus {
   outline: none;
-  border-color: var(--studio);
+  border-color: var(--studio-ink);
 }
 
 .signup-form textarea {
@@ -1133,7 +1167,7 @@
 
 .thanks-page h1 em {
   font-style: italic;
-  color: var(--studio);
+  color: var(--studio-ink);
 }
 
 .thanks-page p {
@@ -1146,4 +1180,28 @@
 
 .thanks-page .btn {
   --card-accent: var(--studio);
+}
+
+/* ---------- Light theme · filled-pink button legibility ----------
+   .btn-pri (landing.css) sets `color: var(--bg)`, which is cream in the
+   light theme — 2.58:1 on the pink fill. Flip the label to --fg (6.4:1)
+   and re-ink the hover state (transparent fill + pink label) so the
+   label and border hold AA on cream. Dark theme is untouched. */
+[data-theme="light"] .specimen-upcoming-cta .btn-pri,
+[data-theme="light"] .upcoming-card .u-cta .btn,
+[data-theme="light"] .signup-form button,
+[data-theme="light"] .thanks-page .btn {
+  color: var(--fg);
+}
+
+[data-theme="light"] .specimen-upcoming-cta .btn-pri:hover,
+[data-theme="light"] .upcoming-card .u-cta .btn:hover,
+[data-theme="light"] .signup-form button:hover,
+[data-theme="light"] .thanks-page .btn:hover {
+  color: var(--studio-ink);
+  border-color: var(--studio-ink);
+}
+
+[data-theme="light"] .gallery-modal .g-close:hover {
+  color: var(--fg);
 }

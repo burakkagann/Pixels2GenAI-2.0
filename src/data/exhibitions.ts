@@ -112,7 +112,7 @@ export const EXHIBITIONS: Exhibition[] = [
     organiserHref: 'https://www.academis.eu',
     statement: [
       'Pixels2GenAI is an exhibition by software developers creating computer art. The works on view use equations, algorithms, and AI models to generate images and installations — exploring the space between hand-programmed images, the aesthetics of mathematical rules, and AI as an art-making tool.',
-      'At the end of March 2026, the office of IT studio Academis transformed into a gallery for three days.',
+      'At the end of March 2026, the office of IT studio Academis transformed into a gallery for two days — an opening evening for invited guests, then a day open to the public.',
     ],
     artists: [
       { name: 'Burak Kağan Yılmazer', role: 'Project author' },
