@@ -34,6 +34,7 @@ interface MutableState {
   bands: number;
   perFace: boolean;
   journeyPal: boolean;
+  paused: boolean;
 }
 
 interface FaceCanvas {
@@ -60,6 +61,21 @@ const FACE_META: Record<FaceKey, { code: string; rot: string; idx: number }> = {
 
 const TAU3 = (Math.PI * 2) / 3;
 
+// Local outward normals in FACE_KEYS order, CSS coords (+x right, +y down,
+// +z toward viewer). Used for back-face culling: a face is front-facing when
+// its transformed normal's screen-Z is positive.
+const FACE_NORMALS: ReadonlyArray<readonly [number, number, number]> = [
+  [0, 0, 1],   // front
+  [1, 0, 0],   // right
+  [0, 0, -1],  // back
+  [-1, 0, 0],  // left
+  [0, -1, 0],  // top
+  [0, 1, 0],   // bottom
+];
+// Paint a face once its normal screen-Z exceeds this. Slightly negative so a
+// face is repainted just before it rotates into view → never shows a stale frame.
+const CULL_THRESHOLD = -0.1;
+
 const DEFAULTS: MutableState = {
   j: 0,
   freq: 0.32,
@@ -72,6 +88,7 @@ const DEFAULTS: MutableState = {
   bands: 0,
   perFace: true,
   journeyPal: true,
+  paused: false,
 };
 
 export default function JourneyCube() {
@@ -124,6 +141,12 @@ export default function JourneyCube() {
       const octx = off.getContext('2d');
       if (!octx) return;
       const buf = octx.createImageData(RES, RES);
+      // Alpha is constant 255; set it once here and only write RGB in the loop.
+      const bd = buf.data;
+      for (let p = 3; p < bd.length; p += 4) bd[p] = 255;
+      // Smoothing defaults to true and a canvas resize restores that default,
+      // so set it once instead of every frame.
+      ctx.imageSmoothingEnabled = true;
 
       faces.push({ cv, ctx, off, octx, buf, phase: i * Math.PI / 3, seed: i * 17.31 });
     });
@@ -136,12 +159,16 @@ export default function JourneyCube() {
     let t = 0;
     let last = performance.now();
     let rafId = 0;
+    let acc = 0;
+    let running = false;
+    const FRAME = 1 / 30; // throttle the surface paint to ~30fps (the CSS spin stays 60fps)
 
-    const frame = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Paint every face once using the current `t`. Pulled out of the RAF loop so
+    // reduced-motion can render a single static frame without animating.
+    const paintAll = () => {
       const state = stateRef.current;
-      t += dt * state.speed * 1.2;
 
       const jx = state.j * (STAGES.length - 1);
       const lower = Math.floor(jx);
@@ -153,11 +180,14 @@ export default function JourneyCube() {
       const freq = state.freq;
       const C = Math.max(1, Math.floor(state.centers));
       const con = state.contrast;
+      const applyCon = con !== 1; // pow(n, 1) is a no-op; skip it at the default contrast
 
       const mode = state.mode;
       const lutA = LUTS[state.palette];
       const idxPal = PALETTE_ORDER.indexOf(state.palette);
-      const lutB = state.journeyPal
+      // #7 — at the resting position (j=0) the crossfade collapses to a no-op
+      // but still costs 3 mul-adds/pixel; skip the second LUT entirely.
+      const lutB = state.journeyPal && state.j > 0
         ? LUTS[PALETTE_ORDER[(idxPal + 1) % PALETTE_ORDER.length]]
         : null;
       const jBlend = lutB ? state.j : 0;
@@ -167,7 +197,27 @@ export default function JourneyCube() {
       const useBands = bands >= 2;
       const perFaceStride = state.perFace ? 1 / faces.length : 0;
 
+      // Back-face culling: read the cube's live animated matrix once and skip
+      // faces whose normal points away from the camera. Single style read per
+      // frame; the CSS spin stays GPU-composited and untouched.
+      const cubeEl = cubeElRef.current;
+      let cull = false;
+      let mZ0 = 0, mZ1 = 0, mZ2 = 0;
+      if (cubeEl) {
+        const tr = getComputedStyle(cubeEl).transform;
+        if (tr && tr.startsWith('matrix')) {
+          const m = new DOMMatrix(tr);
+          mZ0 = m.m13; mZ1 = m.m23; mZ2 = m.m33; // screen-Z row of the rotation
+          cull = true;
+        }
+      }
+
       for (let fi = 0; fi < faces.length; fi++) {
+        if (cull) {
+          const nrm = FACE_NORMALS[fi];
+          const screenZ = mZ0 * nrm[0] + mZ1 * nrm[1] + mZ2 * nrm[2];
+          if (screenZ <= CULL_THRESHOLD) continue; // back-facing → keep last paint
+        }
         const fc = faces[fi];
         const data = fc.buf.data;
         const ph = fc.phase;
@@ -178,7 +228,6 @@ export default function JourneyCube() {
             const nx = x / RES;
             const ny = y / RES;
             const idx = (y * RES + x) * 4;
-            data[idx + 3] = 255;
 
             if (mode === 'chromatic') {
               const ar = fnL(nx, ny, t, ph,            freq, C);
@@ -198,9 +247,11 @@ export default function JourneyCube() {
               if (nR < 0) nR = 0; else if (nR > 1) nR = 1;
               if (nG < 0) nG = 0; else if (nG > 1) nG = 1;
               if (nB < 0) nB = 0; else if (nB > 1) nB = 1;
-              nR = Math.pow(nR, con);
-              nG = Math.pow(nG, con);
-              nB = Math.pow(nB, con);
+              if (applyCon) {
+                nR = Math.pow(nR, con);
+                nG = Math.pow(nG, con);
+                nB = Math.pow(nB, con);
+              }
               const iR = (nR * LUT_MAX) | 0;
               const iG = (nG * LUT_MAX) | 0;
               const iB = (nB * LUT_MAX) | 0;
@@ -224,7 +275,7 @@ export default function JourneyCube() {
             const v = a * (1 - blend) + bV * blend;
             let n = (v + 1) * 0.5;
             if (n < 0) n = 0; else if (n > 1) n = 1;
-            n = Math.pow(n, con);
+            if (applyCon) n = Math.pow(n, con);
 
             let u = n;
             if (mode === 'cycle') {
@@ -254,18 +305,68 @@ export default function JourneyCube() {
         }
 
         fc.octx.putImageData(fc.buf, 0, 0);
-        fc.ctx.imageSmoothingEnabled = true;
-        fc.ctx.clearRect(0, 0, fc.cv.width, fc.cv.height);
+        // Opaque source filling the whole canvas → no clearRect needed.
         fc.ctx.drawImage(fc.off, 0, 0, fc.cv.width, fc.cv.height);
       }
+    };
 
+    const frame = (now: number) => {
+      rafId = requestAnimationFrame(frame);
+      const state = stateRef.current;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (state.paused) return;        // #5 — Pause freezes the surface, not just the spin
+      acc += dt;
+      if (acc < FRAME) return;         // #3 — throttle the paint to ~30fps
+      t += acc * state.speed * 1.2;    // advance by real elapsed time → speed unchanged
+      acc = 0;
+      paintAll();
+    };
+
+    const start = () => {
+      if (running || reduceMotion.matches) return;
+      running = true;
+      last = performance.now();
+      acc = 0;
       rafId = requestAnimationFrame(frame);
     };
 
-    rafId = requestAnimationFrame(frame);
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(rafId);
+    };
+
+    // #1 — reduced motion: paint one static frame, never start the loop.
+    if (reduceMotion.matches) {
+      paintAll();
+    }
+
+    // #2 — only animate while the cube is on-screen.
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting ?? true) start();
+        else stop();
+      },
+      { threshold: 0 },
+    );
+    if (stageElRef.current) io.observe(stageElRef.current);
+
+    // Live-toggle the OS reduced-motion setting without a reload.
+    const onMotionChange = () => {
+      if (reduceMotion.matches) {
+        stop();
+        t = 0;
+        paintAll();
+      } else {
+        start();
+      }
+    };
+    reduceMotion.addEventListener('change', onMotionChange);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      stop();
+      io.disconnect();
+      reduceMotion.removeEventListener('change', onMotionChange);
       window.removeEventListener('resize', onResize);
     };
   }, []);
@@ -294,7 +395,11 @@ export default function JourneyCube() {
   };
 
   const handlePauseToggle = () => {
-    setUi((prev) => ({ ...prev, paused: !prev.paused }));
+    setUi((prev) => {
+      const paused = !prev.paused;
+      stateRef.current.paused = paused; // freeze the surface paint too, not just the CSS spin
+      return { ...prev, paused };
+    });
   };
 
   const handleReset = () => {
@@ -311,6 +416,7 @@ export default function JourneyCube() {
     stateRef.current.centers = DEFAULTS.centers;
     stateRef.current.speed = DEFAULTS.speed;
     stateRef.current.contrast = DEFAULTS.contrast;
+    stateRef.current.paused = false;
   };
 
   // ---- Cursor parallax: tilt perspective-origin on pointer move.
@@ -460,7 +566,7 @@ export default function JourneyCube() {
         <div className={styles['ctrl-foot']}>
           <span className={styles.note}>Drag the master slider to traverse the curriculum.</span>
           <span className={styles['btn-row']}>
-            <button type="button" onClick={handlePauseToggle}>{ui.paused ? 'Resume spin' : 'Pause spin'}</button>
+            <button type="button" onClick={handlePauseToggle}>{ui.paused ? 'Resume' : 'Pause'}</button>
             <button type="button" onClick={handleReset}>Reset</button>
           </span>
         </div>

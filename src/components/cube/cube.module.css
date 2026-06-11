@@ -49,10 +49,23 @@
   animation-play-state: paused;
 }
 
+/* Reduced-motion: stop the spin. The RAF loop also paints a single static
+   frame instead of animating (see JourneyCube.tsx). */
+@media (prefers-reduced-motion: reduce) {
+  .cube {
+    animation: none;
+  }
+}
+
 .face {
   position: absolute;
   inset: 0;
-  background: var(--bg-2);
+  /* On-brand glow behind the canvas. The painted canvas is fully opaque, so
+     this only shows before the first paint (no-JS / mid-hydration) — a cube
+     instead of a flat panel. */
+  background:
+    radial-gradient(ellipse at 30% 25%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg-2);
   border: 1px solid var(--accent-soft);
   overflow: hidden;
   display: flex;
