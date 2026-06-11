@@ -73,7 +73,6 @@ Pixels2GenAI-v2/
 │   ├── data/                       # Curriculum + event catalogs (source of truth)
 │   │   ├── modules.ts              # Flat list of 15 modules + capstone
 │   │   ├── subtopics.ts            # Nested subtopics + leaf exercises
-│   │   ├── paths.ts                # Painter / Engineer / Architect paths
 │   │   ├── research.ts             # 5 RQs + 3 DBR cycles
 │   │   ├── exhibitions.ts          # Exhibition catalog
 │   │   └── workshops.ts            # Workshop catalog

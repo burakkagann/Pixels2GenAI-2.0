@@ -1,6 +1,8 @@
 ---
+import { getStarCount, formatStars, GITHUB_REPO } from '@/lib/github';
+
 interface Props {
-  /** When true, section anchors (#paths, #curriculum, …) are in-page links.
+  /** When true, section anchors (#curriculum, #workshops, …) are in-page links.
    *  When false (lesson pages), they prepend a "/" to navigate back to the
    *  landing page first. */
   onLanding?: boolean;
@@ -9,8 +11,10 @@ interface Props {
 const { onLanding = false } = Astro.props;
 const prefix = onLanding ? '' : '/';
 
+// Build-time GitHub star count (memoised across pages; null if unreachable).
+const stars = await getStarCount();
+
 const navItems = [
-  { label: 'Paths', href: `${prefix}#paths` },
   { label: 'Curriculum', href: `${prefix}#curriculum` },
   { label: 'Workshops', href: `${prefix}#workshops` },
   { label: 'Exhibition', href: `${prefix}#exhibition` },
@@ -120,7 +124,15 @@ const navItems = [
   </nav>
   <div class="nav-r">
     <span class="ed">Ed. ii · 2026</span>
-    <a href="https://github.com/burakkagann/Pixels2GenAI" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="gh-link" href={`https://github.com/${GITHUB_REPO}`} target="_blank" rel="noopener">
+      GitHub
+      {stars !== null && (
+        <span class="gh-stars" title={`${stars} ${stars === 1 ? 'star' : 'stars'} on GitHub`} aria-label={`${stars} ${stars === 1 ? 'star' : 'stars'} on GitHub`}>
+          <svg class="gh-star" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>{formatStars(stars)}
+        </span>
+      )}
+      <span class="gh-arr" aria-hidden="true">↗</span>
+    </a>
     <button
       class="theme-toggle"
       type="button"
