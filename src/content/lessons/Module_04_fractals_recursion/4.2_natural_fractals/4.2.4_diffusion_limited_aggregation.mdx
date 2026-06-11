@@ -1,0 +1,339 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Diffusion-Limited Aggregation"
+objective: "Random walkers stick where they land. One particle at a time, the cluster grows into a dendritic crystal whose fractal dimension matches real electrochemical deposits."
+framework: "hybrid"
+duration: "22–28 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "Basic NumPy 2D indexing, random-walk intuition"
+prev:
+  slug: "4.2.3"
+  title: "Fractal Landscapes"
+next:
+  slug: "4.3.1"
+  title: "Plant Generation (L-Systems)"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Diffusion-limited aggregation (DLA) is the fractal that physics produces by accident. Witten and Sander proposed the model in 1981 to explain electrochemical deposition patterns: a particle wanders randomly through a fluid until it touches an existing cluster, at which point it sticks irreversibly. Run that rule many times and the cluster grows outward in a branching dendrite — the same shape mineralogists call "manganese dendrites" on slate, electrochemists call "electrodeposition," and physicists measure to have fractal dimension $D \approx 1.71$ in 2D, independent of every microscopic detail of the experiment [1].
+
+DLA is the natural counterpart to the recursive constructions we have seen so far in Module 04. The Sierpinski triangle (4.1.5) emerged from three contractions applied repeatedly. The Mandelbrot set (4.1.3) emerged from a deterministic quadratic iteration. DLA emerges from a **stochastic** rule with no contractions and no iteration formula — just a million random walks aggregating into one shape — and yet the result is unmistakably fractal. The same algorithm shows up in models of urban sprawl, neuron growth, river-delta formation, and even galaxy clustering [2]. **The geometry is universal; the substrate is incidental.**
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Implement DLA on a 2D grid with a launch circle, a kill circle, and a four-neighbour stick test.</li>
+  <li>Recognise the role of the launch radius as an efficiency parameter — too small wastes particles, too large wastes random walks.</li>
+  <li>Vary the seed configuration (single point, line, multiple seeds) and observe how the macro-shape changes while the micro-rule stays identical.</li>
+  <li>Estimate the cluster's fractal dimension by box-counting and verify it sits near the literature value $D \approx 1.71$.</li>
+</ol>
+
+## Quick start — single-seed dendrite <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE, N = 600, 4000
+rng = np.random.default_rng(3)
+
+cluster = np.zeros((SIZE, SIZE), dtype=np.int32)
+cx, cy = SIZE // 2, SIZE // 2
+cluster[cy, cx] = 1
+max_r = 5
+
+for k in range(2, N + 1):
+    launch_r = max_r + 10
+    kill_r = launch_r + 30
+    angle = rng.uniform(0, 2*np.pi)
+    x = int(cx + launch_r * np.cos(angle))
+    y = int(cy + launch_r * np.sin(angle))
+
+    while True:
+        s = rng.integers(0, 4)
+        x += (1, -1, 0, 0)[s]; y += (0, 0, 1, -1)[s]
+        if (x - cx)**2 + (y - cy)**2 > kill_r**2 or x < 1 or x >= SIZE-1 or y < 1 or y >= SIZE-1:
+            # Walker strayed too far; restart it on the launch circle.
+            angle = rng.uniform(0, 2*np.pi)
+            x = int(cx + launch_r * np.cos(angle))
+            y = int(cy + launch_r * np.sin(angle))
+            continue
+        if cluster[y-1, x] or cluster[y+1, x] or cluster[y, x-1] or cluster[y, x+1]:
+            cluster[y, x] = k
+            r = int(((x - cx)**2 + (y - cy)**2) ** 0.5)
+            if r > max_r: max_r = r
+            break
+
+# Colour by attachment order with a sine-rainbow palette.
+mask = cluster > 0
+norm = (cluster[mask] - 1) / max(cluster.max() - 1, 1)
+img = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+img[mask, 0] = (128 + 127*np.sin(norm*4 + 0)).astype(np.uint8)
+img[mask, 1] = (128 + 127*np.sin(norm*4 + 2)).astype(np.uint8)
+img[mask, 2] = (128 + 127*np.sin(norm*4 + 4)).astype(np.uint8)
+Image.fromarray(img, mode='RGB').save('simple_dla.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/simple_dla.png"
+  alt="A DLA dendrite radiating outward from a central seed, with branches in cyclic rainbow colours that hint at the order in which particles attached"
+  caption="4,000-particle DLA cluster, single central seed. Colour codes the attachment order — radial symmetry on average, branching on the small scale."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+DLA is the **first algorithm in Module 04 where the shape is not predetermined by the rule**. Sierpinski's gasket is the same every time; the Mandelbrot set is mathematically unique. A DLA cluster's silhouette is statistically self-similar — the **fractal dimension** is reproducible, but the exact branches are not. Two runs with different seeds produce different clusters that look like siblings.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Random walkers with a sticking rule
+
+The DLA algorithm is short: a `cluster` grid records which pixels are occupied; a sequence of random walkers approaches and sticks. Each walker:
+
+1. **Launches** at a random point on a circle (radius = current cluster max + small margin) centred on the seed.
+2. **Walks** by taking nearest-neighbour steps in `±x` or `±y` chosen uniformly at random.
+3. **Tests** at every step: is any of the four 4-neighbour pixels already in the cluster? If yes, stick — set `cluster[y, x] = k` (with $k$ a step counter for colouring) and end the walker. If no, keep walking.
+4. **Restarts** if the walker strays beyond a kill radius — the launch circle plus a margin. Without this safety valve, occasional walkers drift away from the cluster forever and the algorithm hangs.
+
+The launch and kill radii are efficiency tweaks, not part of the physical model. The clean physical version says "launch from infinity"; in practice you launch from a circle close enough to the cluster that walkers hit it in reasonable time, and you kill walkers that stray off so they don't waste compute.
+
+<Admonition type="dyk" title="Did you know · the universality of 1.71">
+DLA clusters in 2D have fractal dimension $D \approx 1.713$ regardless of any microscopic detail [3]. Change the lattice geometry (square, hex, off-lattice), the walker step length, the bond type — none of it shifts the dimension by more than a couple of percent. The value seems to encode something fundamental about diffusion-driven growth. **No closed-form derivation of 1.71 exists**; it is known only from simulation [4]. It is one of the cleanest examples of a "universal constant" in non-equilibrium physics.
+</Admonition>
+
+### Concept 2 — The launch and kill circles
+
+The cluster grows outward, so the launch radius must grow with it. The standard choice — and what the reference implementation uses — is to track the cluster's maximum extent from the seed and launch from `max_radius + margin`. Each new walker starts a few pixels outside the current "envelope" of the cluster.
+
+The kill radius is similar: large enough that walkers approaching the cluster are likely to hit it, small enough that lost walkers die quickly. A factor of $\sim 2 \times$ launch radius is the conventional choice [4]. If the kill radius is too small, walkers struggle to ever reach the cluster (they keep restarting); if it is too large, walkers can wander deep into empty space before being killed.
+
+Both choices are pure **bookkeeping**. They don't change the cluster's shape — they only change how fast you generate it.
+
+### Concept 3 — Seed geometry decides the macro-shape
+
+The micro-rule (random walk + stick on contact) is universal. The macro-shape of the cluster is decided by the **initial configuration** of stuck pixels:
+
+- **A single seed.** Roughly radial dendrite, branching uniformly in all directions. The classic DLA "tumbleweed."
+- **Two seeds, side by side.** Two clusters grow toward each other and outward; where they meet, neither extends because each blocks walkers approaching the other. The dividing line between their territories is roughly the perpendicular bisector — DLA's own Voronoi-like partitioning.
+- **Three seeds in a triangle.** Three separate dendrites grow, each starving the others of incoming walkers — the "screening" effect that makes DLA dimension what it is.
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/dla_seeds.png"
+  alt="Three side-by-side DLA clusters grown from different initial seeds — a single radial dendrite on the left, two seeds growing into adjacent territories in the centre, and three competing clusters on the right"
+  caption="Three seed configurations, same micro-rule. Left: one seed → radial dendrite. Centre: two seeds → adjacent territories with a visible boundary. Right: triangle of seeds → three competing clusters."
+  num={2}
+  role="output"
+/>
+
+The compulsion to see **shapes that look intelligent** — neurons, river deltas, vascular networks — comes from this universality. Whenever an aggregation process is dominated by diffusion of incoming material, you get DLA-like geometry. The macro-shape just records the local geometry of the boundary at the moment growth started.
+
+<Admonition type="important">
+DLA's "screening" effect explains why it is fractal. A walker approaching the cluster is far more likely to hit a **protruding tip** than to penetrate into a deep fjord — tips intercept walkers, fjords are shadowed. Tips therefore grow faster, which makes them protrude more, which makes them grow even faster. The positive feedback creates dendrites at every scale. Drop the screening (e.g. by letting particles "anneal" to the smoothest position) and DLA's dimension shifts toward 2.0, the filled disc [4].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: grow one cluster, sweep particle counts and stick probabilities, then estimate the fractal dimension by box-counting.
+
+<Exercise n={1} kicker="EXECUTE" title="Grow a single-seed dendrite">
+
+Run `simple_dla.py`. The script aggregates 4,000 particles around a central seed on a 600×600 grid.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/simple_dla.py" label="simple_dla.py — single-seed dendrite" />
+
+**Reflection questions**
+
+- Roughly how does the runtime scale with the particle count? Linearly, quadratically, or super-linearly?
+- Why do the cluster's branches taper as they get further from the centre? Tip: think about where each new walker is most likely to land.
+- What would happen if you removed the `kill_r` check (let walkers wander forever)?
+
+<Dropdown summary="Answers">
+
+**Runtime scaling** — empirically super-linear, somewhere between $O(N^{1.5})$ and $O(N^2)$. Each new walker has to do more steps to find the cluster (the launch radius grows roughly as $N$ raised to the power $1/D$, with $D \approx 1.71$), and the per-walker random-walk path length grows as the launch radius squared. The product is around $N^{1.17}$ in the simplest analysis, but the constants matter for finite cluster sizes.
+
+**Why branches taper** — screening. The cluster's tips intercept incoming walkers before they reach the deeper, older arms. Old arms therefore stop growing while tips elongate. The tapering you see is the cumulative record of which generations of branches were still "exposed" to the walker stream.
+
+**No kill radius** — the algorithm would still work, but a small fraction of walkers would diffuse far away and never come back. Each such walker contributes nothing but wastes time. With unbounded canvases the runtime can become infinite in expectation, because a 2D random walk is **recurrent** (always returns to the origin eventually) but the expected return time is infinite.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep seed configurations">
+
+Modify the script to grow DLA from three different initial seed configurations side by side.
+
+**Goals**
+
+1. **Single central seed.** The default — radial dendrite.
+2. **Two seeds side by side.** Two seeds, one centred on each half of the canvas. Each grows toward the other; where they meet, growth stops.
+3. **Three triangle seeds.** Place three seeds in a triangle pattern. Each grows its own dendrite, competing for incoming walkers.
+
+Save the result as a 3-panel image. Use about 1,500 walkers per panel to keep runtime reasonable.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Symmetric-ish radial dendrite, similar to Exercise 1 but smaller because of fewer walkers. You can see branches starting from the original central pixel and reaching outward.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Two dendrites that grow toward each other and away from the canvas's central axis. Where they meet, neither extends — each blocks the walkers that would otherwise reach the other. The boundary between them is roughly the perpendicular bisector of the seed line, which is DLA's noisy Voronoi tessellation in action.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Three competing dendrites. Each grows roughly outward from its seed, but the side facing the other seeds grows less (walkers from that side are intercepted by the other clusters). The boundary between the clusters' "territories" approximates a Voronoi cell tessellation — the same geometry you saw in 3.3.4.
+
+</Dropdown>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/dla_seeds.py" label="dla_seeds.py — three seed configurations" />
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Box-count the fractal dimension">
+
+Write a function that estimates the fractal dimension of a binary cluster mask by **box-counting**. Cover the mask with boxes of size $\epsilon$, count how many contain at least one cluster pixel as $N(\epsilon)$. The fractal dimension is the slope of $\log N(\epsilon)$ versus $\log(1/\epsilon)$:
+
+> $D \approx -\,\log N(\epsilon) / \log \epsilon$ in the small-$\epsilon$ limit.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+
+def box_count(mask, box_sizes):
+    """For each box size, count occupied boxes covering the mask."""
+    counts = []
+    for box in box_sizes:
+        # TODO 1: for each box-sized window, count if any cluster pixel is inside
+        #         hint: reshape the mask into (rows/box, box, cols/box, box) and
+        #         take .any() along axes (1, 3)
+        n = ...
+        counts.append(n)
+    return counts
+
+def fractal_dimension(mask, box_sizes):
+    counts = box_count(mask, box_sizes)
+    # TODO 2: log-log fit: D = -slope of log(count) vs log(box_size)
+    log_eps = np.log(np.array(box_sizes, dtype=float))
+    log_N   = np.log(np.array(counts,    dtype=float))
+    # np.polyfit gives the slope; remember to negate.
+    slope, _ = np.polyfit(log_eps, log_N, 1)
+    return -slope
+
+# Smoke test on the DLA cluster:
+# D = fractal_dimension(cluster > 0, [2, 4, 8, 16, 32, 64])
+# Expect a value near 1.7 for a well-grown cluster.
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — vectorised box-counting">
+
+Reshape the mask into 4D blocks and use `.any()` along the within-box axes:
+
+```python
+H, W = mask.shape
+# Crop to a multiple of box
+Hb = (H // box) * box
+Wb = (W // box) * box
+blocks = mask[:Hb, :Wb].reshape(Hb // box, box, Wb // box, box)
+n = blocks.any(axis=(1, 3)).sum()
+```
+
+`reshape` partitions the mask into a grid of $box \times box$ blocks; `any(axis=(1, 3))` collapses each block to a single boolean (true if any pixel is in the cluster); `sum()` counts the trues.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — log-log fit">
+
+```python
+slope, intercept = np.polyfit(np.log(box_sizes), np.log(counts), 1)
+D = -slope
+```
+
+`np.polyfit` returns the linear-regression coefficients. The dimension is the negative slope because we count occupied boxes against box **size** (not against the inverse size).
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+
+def box_count(mask, box_sizes):
+    counts = []
+    H, W = mask.shape
+    for box in box_sizes:
+        Hb = (H // box) * box
+        Wb = (W // box) * box
+        blocks = mask[:Hb, :Wb].reshape(Hb // box, box, Wb // box, box)
+        counts.append(int(blocks.any(axis=(1, 3)).sum()))
+    return counts
+
+def fractal_dimension(mask, box_sizes):
+    counts = box_count(mask, box_sizes)
+    log_eps = np.log(np.array(box_sizes, dtype=float))
+    log_N   = np.log(np.array(counts,    dtype=float))
+    slope, _ = np.polyfit(log_eps, log_N, 1)
+    return -slope
+```
+</CodeBlock>
+
+Expected output for a 4,000-particle DLA cluster: $D \approx 1.68 \pm 0.05$ — close to the literature 1.713, with the gap explained by finite-size effects. As cluster size grows, the measured dimension converges to 1.71.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Animated growth.** Save the cluster as a frame every 100 walkers; combine into a GIF. The dendrite visibly extends, screening forms, and competition shapes the silhouette.
+- **Off-lattice DLA.** Replace the 4-neighbour grid step with a continuous random walk (step length 1, uniform angle). The cluster looks the same statistically; the dimension is still 1.71. Universality in action.
+- **Anisotropic stick rule.** Make particles 50% more likely to stick on top than on the side. The cluster gains a directional bias — vertical dendrites become dominant. Same algorithm, biased physics.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/simple_dla.py" label="simple_dla.py — single-seed dendrite" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/dla_seeds.py" label="dla_seeds.py — three seed configurations" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Diffusion-limited aggregation is the fractal that emerges from random walkers sticking on contact. The micro-rule is trivial — launch on a circle, walk randomly, stick when touching the cluster, kill if you stray too far. The macro-shape is universal in dimension ($D \approx 1.71$ in 2D) but particular to the seed configuration. The launch and kill radii are bookkeeping for runtime, not part of the physical model. Screening — tips intercept walkers, fjords are shadowed — is what makes the dimension less than 2.0. The same algorithm describes electrodeposition, neuron growth, urban sprawl, and river deltas, which is why DLA appears in so many disjoint fields. With box-counting you can measure the dimension directly from the cluster and confirm it sits near the universal value — a clean experimental verification of a non-equilibrium constant that has no known closed form.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Forgetting the kill circle.** A small fraction of walkers drift away forever, and the algorithm gets exponentially slower as the cluster grows.
+- **Fixed launch radius.** The launch circle must grow with the cluster. Otherwise late walkers spawn inside the cluster's bounding circle and stick to it from the wrong direction.
+- **8-neighbour vs 4-neighbour sticking.** Both work, but 8-neighbour produces marginally rounder branches and (slightly) higher dimension. The 4-neighbour version is closer to the canonical DLA literature value.
+- **Reading too much into a single cluster.** Two clusters grown with different seeds will not look identical — only their **statistics** match. Always measure dimension by averaging across multiple runs.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Witten, T. A., & Sander, L. M. (1981). Diffusion-limited aggregation, a kinetic critical phenomenon. *Physical Review Letters*, 47(19), 1400–1403. <a href="https://doi.org/10.1103/PhysRevLett.47.1400" target="_blank" rel="noopener">doi:10.1103/PhysRevLett.47.1400</a></li>
+    <li><span class="tag">[2]</span> Vicsek, T. (1992). *Fractal Growth Phenomena* (2nd ed.). World Scientific. ISBN 978-981-02-0668-8.</li>
+    <li><span class="tag">[3]</span> Meakin, P. (1983). Diffusion-controlled cluster formation in two, three, and four dimensions. *Physical Review A*, 27(1), 604–607. <a href="https://doi.org/10.1103/PhysRevA.27.604" target="_blank" rel="noopener">doi:10.1103/PhysRevA.27.604</a></li>
+    <li><span class="tag">[4]</span> Halsey, T. C. (2000). Diffusion-limited aggregation: A model for pattern formation. *Physics Today*, 53(11), 36–41. <a href="https://doi.org/10.1063/1.1333284" target="_blank" rel="noopener">doi:10.1063/1.1333284</a></li>
+    <li><span class="tag">[5]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[6]</span> Sander, L. M. (2000). Diffusion-limited aggregation: A kinetic critical phenomenon? *Contemporary Physics*, 41(4), 203–218. <a href="https://doi.org/10.1080/001075100409698" target="_blank" rel="noopener">doi:10.1080/001075100409698</a></li>
+    <li><span class="tag">[7]</span> Falconer, K. (2003). *Fractal Geometry: Mathematical Foundations and Applications* (2nd ed.). Wiley. ISBN 978-0-470-84862-3.</li>
+  </ol>
+</section>

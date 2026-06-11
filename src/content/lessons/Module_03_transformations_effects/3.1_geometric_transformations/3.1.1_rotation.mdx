@@ -1,0 +1,372 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Rotation"
+objective: "Rotate a NumPy image array by an arbitrary angle with `scipy.ndimage.rotate`, then turn that one call into a fan-shaped composition by accumulating rotated copies with additive blending."
+framework: "hands-on"
+duration: "18–22 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "2.3.4 (parametric trajectories), basic NumPy slicing"
+prev:
+  slug: "2.3.4"
+  title: "Strange Attractors"
+next:
+  slug: "3.1.2"
+  title: "Affine Transformations"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A rotation is a geometric transformation that preserves distances. Every pixel travels along an arc around a chosen pivot, and the picture as a whole turns by a single angle. Computationally it is one library call — `scipy.ndimage.rotate` — but it is also the first transformation in this module that produces *resampled* pixels: most rotated coordinates do not land on integer grid positions, so the library has to interpolate. In this lesson you will rotate a single shape, watch interpolation smooth the edges, and then iterate the rotation in a loop to draw a radial fan from one rectangle [1].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Rotate an image array by any angle with `scipy.ndimage.rotate` and read off the side-by-side comparison.</li>
+  <li>Distinguish the four parameters that decide what a rotation looks like — angle, pivot, interpolation order, output reshape.</li>
+  <li>Choose between `reshape=True` (no clipping, larger output) and `reshape=False` (same size, clipped corners).</li>
+  <li>Stack rotated copies of one shape into a fan composition using additive blending.</li>
+</ol>
+
+## Quick start — one 45° rotation <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from scipy import ndimage
+from PIL import Image
+
+canvas_size = 400
+image = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+
+# A cyan rectangle, centred horizontally
+image[150:250, 100:300] = [0, 200, 200]
+
+rotated = ndimage.rotate(image, 45, reshape=False, mode='constant', cval=0)
+
+# Side-by-side: original on the left, rotated on the right
+comparison = np.zeros((canvas_size, canvas_size * 2 + 20, 3), dtype=np.uint8)
+comparison[:, :canvas_size] = image
+comparison[:, canvas_size + 20:] = rotated
+
+Image.fromarray(comparison).save('simple_rotation.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/simple_rotation.png"
+  alt="A horizontal cyan rectangle on the left half of the canvas, and the same rectangle rotated 45 degrees on the right half, both on a black background"
+  caption="Left: a horizontal cyan rectangle. Right: the same rectangle rotated 45° around the image centre. The four corners now sit off the canvas because `reshape=False` clips them."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+`scipy.ndimage.rotate` is one of those one-line library calls that hides a lot of machinery — a rotation matrix, a coordinate inversion, and bilinear interpolation. The next sections unpack each piece.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The rotation matrix
+
+A 2D rotation by angle `θ` around the origin is the linear map whose 2×2 matrix is
+
+<CodeBlock lang="text">
+```text
+R(θ) = | cos θ   -sin θ |
+       | sin θ    cos θ |
+```
+</CodeBlock>
+
+Multiply any column vector `(x, y)ᵀ` by `R(θ)` and you get the rotated point [2]. The matrix is *orthogonal* — its transpose is its inverse — which is the algebraic statement of "rotation preserves lengths." `scipy.ndimage.rotate` does this for you; you write the angle in degrees and the library converts to radians, builds the matrix, and applies it pixel by pixel.
+
+<Admonition type="important">
+NumPy and SciPy follow the mathematical convention: **positive angles rotate counter-clockwise** when viewed on a normal x-right, y-up plot. Image arrays index y downward, so on screen the same call *looks* clockwise. The sign is fine; the visual flip is just the screen coordinate system.
+</Admonition>
+
+<Admonition type="dyk" title="Technical note · orthogonal matrices">
+Because $R^\top R = I$, the inverse of a rotation by $\theta$ is exactly the rotation by $-\theta$. That property is also what lets graphics libraries undo a rotation without re-deriving the inverse matrix from scratch — they just transpose [2].
+</Admonition>
+
+### Concept 2 — Pivot, interpolation, and reshape
+
+Four parameters decide the output of a rotation.
+
+- **Angle** — degrees, signed.
+- **Pivot** — the point that does not move. `ndimage.rotate` always uses the **image centre**; if you want a different pivot you translate the image first.
+- **Interpolation order** — how to compute the colour at a rotated coordinate that falls between grid cells. `order=0` is nearest-neighbour (fast, blocky); `order=1` is bilinear (the default, a good balance); `order=3` is cubic (smoother but slower) [3].
+- **Reshape** — `reshape=True` enlarges the output so every rotated pixel still fits; `reshape=False` keeps the original size and clips the four corners that swing outside the frame.
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_center_diagram.png"
+  alt="A two-panel diagram. Left panel labelled centre rotation shows a square turning in place around its own centre. Right panel labelled corner rotation shows a square orbiting around its lower-left corner."
+  caption="Same angle, two different pivots. The image centre is the default; offset pivots make the shape orbit instead of spin."
+  num={2}
+  role="diagram"
+/>
+
+The reshape choice is the trade-off you have to make every time:
+
+<CodeBlock lang="python" file="reshape_demo.py">
+```python
+clipped = ndimage.rotate(image, 45, reshape=False)
+print(clipped.shape)   # (400, 400, 3) — corners gone
+
+full    = ndimage.rotate(image, 45, reshape=True)
+print(full.shape)      # (566, 566, 3) — bigger canvas, nothing lost
+```
+</CodeBlock>
+
+Reshape `True` is right for archival output; `reshape=False` is right when you are layering many rotated copies onto a fixed-size canvas, because all the copies need the same dimensions to add together.
+
+### Concept 3 — Iterated rotations as composition
+
+Once one rotation is a single library call, $N$ rotations are a loop. The rotated copies share the same canvas dimensions (because `reshape=False`), so they can be summed pixel-by-pixel. The classic move is **additive blending**: convert to `int16` to dodge overflow, add scaled contributions, then clip back to `uint8`. With an off-centre rectangle, eighteen rotations spread across 180° trace the fan shape in Figure 3.
+
+<CodeBlock lang="python" file="fan_demo.py">
+```python
+shape = np.zeros_like(canvas)
+shape[200:300, 250:450] = [0, 180, 220]  # off-centre rectangle
+
+for i in range(18):
+    rotated = ndimage.rotate(shape, i * 10, reshape=False)
+    canvas = np.clip(
+        canvas.astype(np.int16) + (rotated * 0.4).astype(np.int16),
+        0, 255,
+    ).astype(np.uint8)
+```
+</CodeBlock>
+
+The `0.4` scaling is what stops the overlapping centre from saturating to pure white on the second or third rotation. Each contribution stays sub-maximal, and only the regions that *many* rotations overlap reach full brightness — that gradient is what makes the fan readable [4].
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the fan pattern, change three parameters at once, then build a single-rotation compositor from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the 18-rotation fan">
+
+Run `rotation_pattern.py` from the downloads. It draws an off-centre cyan rectangle, then rotates it 18 times across a 180° spread, blending each rotation into the canvas.
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_pattern.png"
+  alt="A radial fan-like pattern of overlapping cyan rectangles, denser in the centre where the rotations overlap most"
+  caption="18 rotations across 180°. The bright centre is where every contribution overlaps; the outer edges show individual rectangle silhouettes."
+  num={3}
+  role="output"
+/>
+
+**Reflection questions**
+
+- Why is the centre of the fan brighter than the outer edges?
+- What would happen if you swapped the additive blend (`np.clip(canvas + contribution)`) for a plain overwrite (`canvas[mask] = rotated[mask]`)?
+- Why does the rectangle being *off-centre* matter for the fan shape?
+
+<Dropdown summary="Answers">
+
+**Bright centre** — every rotated copy passes through the image centre (that is the pivot). Every contribution adds to those pixels, so they saturate first. The outer pixels only get one or two contributions, so they stay closer to their per-rotation colour.
+
+**Overwrite instead of add** — the picture would look like a single rotated rectangle, because each iteration replaces the previous one. Iteration only builds a composition when the operation accumulates (sum, max, blend), not when it replaces.
+
+**Off-centre rectangle** — a centred rectangle rotates *in place*: every rotation overwrites the same region. Offsetting the rectangle from the pivot is what makes each rotation sweep a different arc, which is what produces the fan silhouette.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three pattern variations">
+
+Edit `rotation_pattern.py` to produce these three pictures. Each goal changes only the marked variables.
+
+**Goals**
+
+1. **Sparse fan** — drop `number_of_rotations` to 6 and watch the gaps open up between the rectangles.
+2. **Warm palette** — change the cyan `[0, 180, 220]` to an orange `[255, 120, 50]`.
+3. **Full circle** — change the 180° spread to 360° so the fan completes into a wheel.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+number_of_rotations = 6
+```
+
+Six rectangles, 30° apart. The fan still reads as radial but the individual silhouettes are clearly separated — you can count six of them.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+shape[rect_top:rect_bottom, rect_left:rect_right] = [255, 120, 50]
+```
+
+Same fan structure, orange instead of cyan. The bright-centre saturation now reads as yellow because the red channel saturates first.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+angle_step = 360 / number_of_rotations
+```
+
+The fan closes into a full wheel. With 18 rotations across 360° the step is 20°, giving you a softer, more symmetrical radial pattern.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Single-shape rotation compositor">
+
+Build a small tool that rotates **one** shape onto a coloured background — no iteration, just clean foreground-over-background compositing.
+
+**Requirements**
+
+- Dark blue background `[30, 30, 50]`.
+- Orange rectangle `[255, 150, 50]`, drawn near the centre.
+- Rotate the shape by 30°.
+- Save the composite as `my_rotation.png`.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from scipy import ndimage
+from PIL import Image
+
+canvas_size = 400
+rotation_angle = 30
+background_color = [30, 30, 50]
+shape_color      = [255, 150, 50]
+
+# TODO 1: create the canvas and fill it with background_color.
+canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+
+# TODO 2: draw a rectangle on a separate black layer (shape_layer)
+#         using shape_layer[top:bottom, left:right] = shape_color.
+shape_layer = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+
+# TODO 3: rotate the shape_layer with ndimage.rotate(..., reshape=False, mode='constant', cval=0).
+
+# TODO 4: build a boolean mask of where the rotated layer has any colour,
+#         then copy those pixels onto canvas — canvas[mask] = rotated[mask].
+
+Image.fromarray(canvas).save('my_rotation.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — fill the background">
+
+NumPy broadcasts a 3-element list across the full RGB volume:
+
+```python
+canvas[:, :] = background_color
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — mask the rotated shape">
+
+The rotated layer is mostly black with the orange rectangle floating somewhere inside. Pick the non-black pixels and copy them over:
+
+```python
+mask = np.any(rotated_shape > 0, axis=2)
+canvas[mask] = rotated_shape[mask]
+```
+
+`np.any(... > 0, axis=2)` collapses the RGB axis with a logical OR — a pixel survives if at least one channel is non-zero.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from scipy import ndimage
+from PIL import Image
+
+canvas_size = 400
+rotation_angle = 30
+background_color = [30, 30, 50]
+shape_color      = [255, 150, 50]
+
+canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+canvas[:, :] = background_color
+
+shape_layer = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+shape_layer[150:250, 180:350] = shape_color
+
+rotated_shape = ndimage.rotate(
+    shape_layer, rotation_angle,
+    reshape=False, mode='constant', cval=0,
+)
+
+mask = np.any(rotated_shape > 0, axis=2)
+canvas[mask] = rotated_shape[mask]
+
+Image.fromarray(canvas).save('my_rotation.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_solution.png"
+  alt="A single orange rectangle, tilted 30 degrees, resting on a dark blue background"
+  caption="One shape, one rotation, one composite. The mask-based copy keeps the background colour visible everywhere the shape is not."
+  num={4}
+  role="output"
+/>
+
+**How it works:**
+
+- The shape sits on its own black layer so the mask trick has a clean signal.
+- `ndimage.rotate(..., cval=0)` fills the rotated-away regions with black, which is what the mask reads as "background — leave alone."
+- The composite is a one-line NumPy assignment because `canvas[mask] = rotated[mask]` only touches the masked indices.
+
+</Dropdown>
+
+#### Make it your own
+
+- Loop `rotation_angle` from 0 to 360 in steps of 10 and save 36 frames; assemble them with `imageio.mimsave` for a spinning-rectangle GIF.
+- Replace the rectangle with a triangle using the line code from 2.1.2 — the rotation pipeline is shape-agnostic.
+- Use the alpha-blend version from Concept 3 — replace `canvas[mask] = ...` with `canvas = np.clip(canvas + 0.5 * rotated, 0, 255)` — to layer multiple rotated shapes with a soft glow.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/simple_rotation.py" label="simple_rotation.py — quick-start side-by-side" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_pattern.py" label="rotation_pattern.py — 18-rotation fan" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_starter.py" label="rotation_starter.py — Exercise 3 starter" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_solution.py" label="rotation_solution.py — Exercise 3 reference" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+`scipy.ndimage.rotate` is the rotation matrix wrapped in a one-line call, but the four parameters around it carry the design decisions: the angle, the pivot (always image centre — translate first if you want elsewhere), the interpolation order (bilinear is the default sweet spot), and the reshape flag (`False` for stackable same-size outputs, `True` for archival no-clipping). Once one rotation costs one line of code, $N$ rotations are a loop, and additive blending across the loop turns a single rectangle into a fan, a wheel, or any other radial composition. The pattern repeats throughout this module — a tidy single-transform call, plus iteration, plus a blending rule, is most of how generative compositions get built.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- `reshape=True` inside a loop produces outputs of varying sizes that no longer add together — use `reshape=False` for stacking.
+- Skipping the `astype(np.int16)` cast around the additive blend overflows `uint8` and produces black bands where bright regions wrap around to zero.
+- Centring the shape on the image centre defeats the fan — every rotation lands on the same pixels.
+- Default `order=1` softens hard edges; if the lesson calls for crisp pixel art, drop to `order=0` (nearest-neighbour).
+- Confusing screen direction with mathematical direction — positive degrees rotate counter-clockwise in maths and clockwise on screen because image arrays index y downward.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+    <li><span class="tag">[2]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley.</li>
+    <li><span class="tag">[3]</span> SciPy Community. (2024). scipy.ndimage.rotate. *SciPy Documentation*. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html" target="_blank" rel="noopener">docs.scipy.org</a></li>
+    <li><span class="tag">[4]</span> Pearson, M. (2011). *Generative Art: A Practical Guide Using Processing*. Manning.</li>
+    <li><span class="tag">[5]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

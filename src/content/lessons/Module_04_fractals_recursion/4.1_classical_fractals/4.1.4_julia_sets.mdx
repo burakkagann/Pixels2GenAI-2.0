@@ -1,0 +1,332 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Julia Sets"
+objective: "Swap the roles in the Mandelbrot iteration — fix $c$, let $z_0$ vary across the grid — and a whole family of self-similar shapes appears. Each constant $c$ has its own Julia set."
+framework: "hybrid"
+duration: "20–25 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "4.1.3 (Mandelbrot iteration, vectorised NumPy on complex grids)"
+prev:
+  slug: "4.1.3"
+  title: "Mandelbrot Set"
+next:
+  slug: "4.1.5"
+  title: "Sierpinski Triangle"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A **Julia set** is what you get when you run the Mandelbrot iteration with the roles of $c$ and $z$ swapped. In Mandelbrot, $z_0 = 0$ is fixed and you sweep $c$ across the complex plane. In Julia, **$c$ is fixed** and you sweep $z_0$ across the plane instead. Every choice of $c$ gives a different Julia set, and the resulting fractal lives entirely inside the disc $|z| \le 2$. Gaston Julia and Pierre Fatou described these sets in 1918, decades before any computer could draw one [1].
+
+The deep connection: the **Mandelbrot set is the map of which Julia sets are connected**. Pick a $c$ inside the Mandelbrot set and the corresponding Julia set is a single connected blob with intricate boundary detail. Pick a $c$ outside it and the Julia set fractures into "Fatou dust" — a Cantor-like cloud of disconnected points [2]. That correspondence is what makes Julia sets feel like a sibling exercise to 4.1.3 rather than a brand-new algorithm.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Run the escape-time iteration with a fixed $c$ and varying $z_0$.</li>
+  <li>Predict — qualitatively — which $c$ values produce connected vs. dusty Julia sets, using the Mandelbrot map.</li>
+  <li>Apply a phase-shifted sine-rainbow palette to a 2D iteration count array.</li>
+  <li>Connect the Mandelbrot/Julia duality to the broader idea of **parameter space vs. phase space** in dynamical systems.</li>
+</ol>
+
+## Quick start — a classic dendrite <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+SIZE, MAX_ITER = 600, 200
+C = complex(-0.7, 0.27015)            # the parameter is now fixed
+
+# Every pixel is its own starting z_0 (no z_0 = 0 here)
+x = np.linspace(-1.6, 1.6, SIZE)
+y = np.linspace(-1.6, 1.6, SIZE)
+real, imag = np.meshgrid(x, y)
+z = real + 1j * imag
+
+iterations = np.zeros(z.shape, dtype=np.int32)
+for _ in range(MAX_ITER):
+    bounded = np.abs(z) <= 2
+    z[bounded] = z[bounded]**2 + C    # C is a scalar — broadcasts
+    iterations[bounded] += 1
+
+out = np.zeros((SIZE, SIZE), dtype=np.uint8)
+outside = iterations < MAX_ITER
+out[outside] = (iterations[outside] / MAX_ITER * 255).astype(np.uint8)
+Image.fromarray(out, mode='L').save('simple_julia.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/simple_julia.png"
+  alt="A Julia set rendered in grayscale showing the connected, branchy dendrite shape produced by c equals minus zero point seven plus zero point two seven i"
+  caption="The Julia set for $c = -0.7 + 0.27015i$ — a connected dendrite with infinite boundary detail."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Compare line-by-line to the Mandelbrot quick-start (4.1.3). The only differences: the grid is now `z` instead of `c`, and the iteration uses a **scalar** `C` that broadcasts across every grid point. Same algorithm, swapped roles.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Mandelbrot vs. Julia: swap the variable
+
+The Mandelbrot iteration runs "next $z$ = current $z$ squared plus $c$" with two pieces of state per pixel: $z$, which evolves, and $c$, which stays constant for that pixel. In **Mandelbrot**, every pixel has a different $c$ and they all start from the same $z_0 = 0$. In **Julia**, every pixel starts from a different $z_0$ and they all use the same $c$.
+
+That single swap changes everything. The Mandelbrot set is a **parameter-space picture**: each pixel asks "how does the system behave for this value of the parameter $c$?" The Julia set is a **phase-space picture**: each pixel asks "how does the orbit behave starting from this initial condition $z_0$?" Both diagrams come from the same quadratic map, and both use the same $|z| > 2$ escape test [3].
+
+<CodeBlock lang="python" file="side_by_side.py">
+```python
+# Mandelbrot core: z varies, c is the grid
+z = np.zeros_like(c)
+for _ in range(N):
+    bounded = np.abs(z) <= 2
+    z[bounded] = z[bounded]**2 + c[bounded]    # c is an array
+
+# Julia core: z is the grid, c is fixed
+z = real + 1j * imag                            # z grid
+for _ in range(N):
+    bounded = np.abs(z) <= 2
+    z[bounded] = z[bounded]**2 + C              # C is a scalar — broadcasts
+```
+</CodeBlock>
+
+The code is almost identical; the meaning is completely different.
+
+<Admonition type="dyk" title="Did you know · Julia sets before computers">
+Gaston Julia published *Mémoire sur l'itération des fonctions rationnelles* in 1918 — a 199-page monograph fully characterising what we now call Julia sets, but with no computer to render them. He worked entirely with hand-drawn diagrams and symbolic analysis [1]. The pictures we take for granted today did not exist until Mandelbrot rendered them at IBM in the late 1970s.
+</Admonition>
+
+### Concept 2 — The Mandelbrot/Julia correspondence
+
+There is a precise theorem that links the two sets:
+
+> **A Julia set is connected if and only if the corresponding $c$ lies inside the Mandelbrot set.**
+
+The Mandelbrot set is the **connectivity locus** of the Julia family [2]. Pick a $c$ deep inside the cardioid and the Julia set is a connected blob with a smooth-ish boundary. Pick a $c$ along the boundary of the Mandelbrot set and the Julia set is intricate, dendritic, fractal in every direction. Pick a $c$ outside the Mandelbrot set and the Julia set explodes into "Fatou dust" — a Cantor cloud of disconnected points with no interior at all.
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/julia_variations.png"
+  alt="A two by three grid of six Julia sets in grayscale. Each tile uses a different complex parameter c, producing a different connected or dust-like fractal silhouette."
+  caption="Six Julia sets at different $c$ values. Top row: $-0.7+0.27i$, $-0.8+0.16i$, $0.29+0.01i$. Bottom row: $-0.4+0.6i$ (rabbit), $-0.84-0.23i$ (spirals), $0.45+0.14i$ (dust)."
+  num={2}
+  role="output"
+/>
+
+Five of the six $c$ values above sit inside the Mandelbrot set and produce connected Julia sets; the bottom-right $c = 0.45 + 0.14i$ sits just outside and produces dust.
+
+### Concept 3 — Rainbow colouring with phase-shifted sines
+
+The two examples so far use a grayscale ramp — simple, but visually flat. A **phase-shifted sine palette** turns the same iteration data into a vivid cyclic rainbow:
+
+<CodeBlock lang="python" file="palette.py">
+```python
+norm = iterations / MAX_ITER
+outside = iterations < MAX_ITER
+
+image[outside, 0] = (128 + 127*np.sin(norm[outside]*freq + 0)).astype(np.uint8)
+image[outside, 1] = (128 + 127*np.sin(norm[outside]*freq + 2)).astype(np.uint8)
+image[outside, 2] = (128 + 127*np.sin(norm[outside]*freq + 4)).astype(np.uint8)
+```
+</CodeBlock>
+
+Three sines at the same frequency, offset by 0, 2, 4 radians. The offsets are roughly 120° apart — close enough to a colour-wheel triplet to produce a rainbow without explicitly converting through HSV. `freq` controls how many cycles fit across the escape ramp; higher `freq` produces tighter colour bands.
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/colored_julia.png"
+  alt="The same Julia set rendered in vivid cyclic rainbow colours from a phase-shifted sine palette"
+  caption="The $c = -0.7 + 0.27015i$ Julia set with a sine-rainbow palette at frequency 8. Each band corresponds to a contour of equal escape time."
+  num={3}
+  role="output"
+/>
+
+<Admonition type="important">
+The colour palette is decoupled from the maths. The iteration count array `iterations` is the **physical** content; any choice of colour mapping is a presentation layer. Swap the palette without rerunning the iteration loop.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the dendrite, sweep the $c$ family, and build a phase-shifted rainbow palette from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the basic Julia set">
+
+Run `simple_julia.py` as written. The script renders the $c = -0.7 + 0.27015i$ Julia set at 600×600, 200 iterations, grayscale.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/simple_julia.py" label="simple_julia.py — quick-start reference" />
+
+**Reflection questions**
+
+- Compare this lesson's quick-start to the Mandelbrot quick-start in 4.1.3. Which two lines changed?
+- The Julia set is symmetric. Across which point? Why?
+- The viewport is `[-1.6, 1.6]` on both axes. Why does the renderer not need to look outside the disc of radius 2?
+
+<Dropdown summary="Answers">
+
+**The two changed lines** — (a) `z = real + 1j * imag` instead of `z = np.zeros_like(c)`, and (b) `z**2 + C` (scalar) instead of `z**2 + c` (array). Everything else is identical.
+
+**Symmetry around the origin** — the map $z \to z^2 + c$ has the property that $z$ and $-z$ produce the same orbit after the first step (because $(-z)^2 = z^2$). So if $z_0$ is in the Julia set, so is $-z_0$. That gives the set a 180° rotational symmetry around 0.
+
+**Disc of radius 2** — the escape theorem says any orbit that crosses $|z| > 2$ escapes to infinity. So no point with $|z_0| > 2$ can be in the Julia set: it would escape on the first step. Sampling outside that disc just wastes pixels on confirmed escapees.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep the parameter family">
+
+Modify `simple_julia.py` to render Julia sets at four different $c$ values and compare them. Stick with grayscale for fair comparison.
+
+**Goals**
+
+1. **Connected rabbit.** Use $c = -0.4 + 0.6i$. The expected shape resembles a rabbit, hence its name in fractal geometry literature.
+2. **San Marco lagoon.** Use $c = -0.75 + 0i$. This $c$ sits on the real axis at the cusp of the main cardioid; the Julia set has a distinctive double-lobed silhouette.
+3. **Fatou dust.** Use $c = 0.4 + 0.4i$ — well outside the Mandelbrot set. The Julia set should fragment into a sparse cloud of disconnected points.
+4. **Spiral siege.** Use $c = -0.835 - 0.2321i$ and bump `MAX_ITER` to 400. The shape should fill with tightly wound spirals.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+A connected blob with two large oval "ears" sticking out and a long curved tail. The rabbit is a poster child of the Julia family because its silhouette is unmistakable. This $c$ sits inside the period-3 bulb of the Mandelbrot set.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A horizontal figure-eight-ish silhouette with deep cusps. This $c$ is exactly at the boundary between two Mandelbrot bulbs, so the Julia set has a particularly delicate boundary structure. The dynamics here are formally "parabolic" — the orbit slowly spirals toward a fixed point [2].
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Sparse dust — no connected region anywhere. The Mandelbrot/Julia correspondence in action: $c = 0.4 + 0.4i$ has $|c| > 0.5$ and you can verify it is outside the Mandelbrot set by running one Mandelbrot iteration on it (it escapes quickly). The corresponding Julia set is totally disconnected.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A spiral siege. At 200 iterations the boundary looks unresolved; at 400 you see swirling arms that wind tightly around two centres. This $c$ requires more iterations because the orbits spend a long time near the boundary before deciding to escape.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build the rainbow palette from scratch">
+
+Complete the function below to turn an `iterations` array into a phase-shifted sine-rainbow RGB image.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+def rainbow_palette(iterations, max_iter, freq=8.0):
+    """Map a 2D iteration-count array to a sine-rainbow RGB image."""
+    size = iterations.shape[0]
+    image = np.zeros((size, size, 3), dtype=np.uint8)
+
+    # TODO 1: build the normalised escape time (0..1) and the outside mask
+
+    # TODO 2: fill R, G, B channels with phase-offset sines
+    #         offsets 0, 2, 4 radians give a rainbow without HSV conversion
+
+    # TODO 3: leave inside-set pixels at zero (black)
+    return image
+
+# Smoke test — reuse the colored_julia.py loop or call simple_julia.py first
+# Render a different c with the palette you just wrote.
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — the normalisation and mask">
+
+```python
+norm = iterations / max_iter
+outside = iterations < max_iter
+```
+
+`norm` is a `(size, size)` float array in `[0, 1]`. `outside` is the boolean mask of pixels that escaped.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — three phase-offset sines">
+
+```python
+image[outside, 0] = (128 + 127 * np.sin(norm[outside] * freq + 0)).astype(np.uint8)
+image[outside, 1] = (128 + 127 * np.sin(norm[outside] * freq + 2)).astype(np.uint8)
+image[outside, 2] = (128 + 127 * np.sin(norm[outside] * freq + 4)).astype(np.uint8)
+```
+
+`128 + 127 * sin(...)` maps the sine's `[-1, 1]` output into `[1, 255]`. Each channel is the same sine at a different phase offset.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+def rainbow_palette(iterations, max_iter, freq=8.0):
+    size = iterations.shape[0]
+    image = np.zeros((size, size, 3), dtype=np.uint8)
+    norm = iterations / max_iter
+    outside = iterations < max_iter
+    image[outside, 0] = (128 + 127 * np.sin(norm[outside] * freq + 0)).astype(np.uint8)
+    image[outside, 1] = (128 + 127 * np.sin(norm[outside] * freq + 2)).astype(np.uint8)
+    image[outside, 2] = (128 + 127 * np.sin(norm[outside] * freq + 4)).astype(np.uint8)
+    return image
+```
+</CodeBlock>
+
+</Dropdown>
+
+#### Make it your own
+
+- **Slider sweep.** Pick a small loop of $c$ values along a path inside the Mandelbrot set (e.g. interpolating linearly from $-0.7 + 0.27i$ to $-0.4 + 0.6i$) and render one frame for each. Save them as an animated GIF — Julia sets metamorphose continuously as $c$ moves.
+- **Zoom into the boundary.** Just like Mandelbrot, Julia sets have infinitely detailed boundaries. Centre a viewport at a boundary point and shrink the `linspace` range by a factor of 10. Watch self-similar swirls appear at every zoom level.
+- **Smooth shading.** Replace the integer iteration count with the fractional escape value $n + 1 - \log_2 \log_2 |z|$ (using the final $z$ value at escape). The bands disappear and the gradient becomes photo-realistic [3].
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/simple_julia.py" label="simple_julia.py — grayscale dendrite" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/julia_variations.py" label="julia_variations.py — six-tile parameter grid" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/colored_julia.py" label="colored_julia.py — sine-rainbow palette" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A Julia set fixes $c$ and sweeps $z_0$ across the complex plane — the inverse setup of the Mandelbrot iteration. Each $c$ gives a different Julia set. Connected Julia sets correspond to $c$ values **inside** the Mandelbrot set; disconnected "dust" sets correspond to $c$ outside. The rendering code is almost the same as Mandelbrot — `z` is the grid, `c` is a scalar — and the same escape-time threshold $|z| > 2$ applies. Phase-shifted sine palettes decouple the visual presentation from the underlying iteration counts, letting you recolour without recomputing. The Mandelbrot/Julia duality is the cleanest example of the **parameter space vs. phase space** distinction in dynamical systems — and Julia sets set up the broader theme of **iterated function systems** that returns in 4.1.5 (Sierpinski) and 4.3 (L-systems).
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Initialising `z = np.zeros_like(c)`.** That is the Mandelbrot setup. Julia sets start with `z` *as* the grid; there is no separate `c` array to copy from.
+- **Using an array for `c`.** `c` must be a scalar in this lesson. If you accidentally make it a grid you get the Mandelbrot set instead.
+- **Forgetting to clip the viewport.** Pixels outside $|z| = 2$ escape on iteration 1 — they show no detail and waste compute. Keep the `linspace` bounds inside `[-2, 2]`.
+- **Underiterating near the Mandelbrot boundary.** Julia sets for $c$ near the Mandelbrot boundary need 400+ iterations to look right. Inside the bulbs, 100 is usually enough.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Julia, G. (1918). Mémoire sur l'itération des fonctions rationnelles. *Journal de Mathématiques Pures et Appliquées*, 8, 47–245.</li>
+    <li><span class="tag">[2]</span> Milnor, J. (2006). *Dynamics in One Complex Variable* (3rd ed.). Princeton University Press. ISBN 978-0-691-12488-9.</li>
+    <li><span class="tag">[3]</span> Peitgen, H.-O., & Richter, P. H. (1986). *The Beauty of Fractals: Images of Complex Dynamical Systems*. Springer-Verlag. <a href="https://doi.org/10.1007/978-3-642-61717-1" target="_blank" rel="noopener">doi:10.1007/978-3-642-61717-1</a></li>
+    <li><span class="tag">[4]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[5]</span> Devaney, R. L. (1989). *An Introduction to Chaotic Dynamical Systems* (2nd ed.). Addison-Wesley. ISBN 978-0-8133-4085-2.</li>
+    <li><span class="tag">[6]</span> Douady, A., & Hubbard, J. H. (1985). On the dynamics of polynomial-like mappings. *Annales scientifiques de l'École Normale Supérieure*, 18(2), 287–343.</li>
+    <li><span class="tag">[7]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

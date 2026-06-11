@@ -1,0 +1,345 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Height Maps"
+objective: "Treat an fbm noise field as elevation. Render it as grayscale, then quantise the values into colour bands for a topographic map — water, beach, grass, rock, snow."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "6.1.1 (fbm noise), 3.4.3 (contour bands)"
+prev:
+  slug: "6.1.4"
+  title: "Coloured Noise"
+next:
+  slug: "6.2.2"
+  title: "Erosion Simulation"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A **height map** is a 2D array where each cell stores an elevation. The same fbm field that produced clouds in 6.1.1 becomes terrain the moment you decide to read it as altitude rather than brightness. Pair the field with a banded colour map — blue below 0.30 is sea, sandy yellow at 0.40 is beach, green up to 0.75 is grass, brown to 0.90 is rock, white above is snow — and the procedural noise instantly reads as a topographic map [1]. The construction is one line of NumPy per band, and it underlies every game-engine terrain generator and every "infinite world" demo on the web.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Convert an fbm noise field into a height map by treating values as elevation.</li>
+  <li>Render the field as grayscale (height = brightness) and as banded RGB (height = biome colour).</li>
+  <li>Tune fbm parameters — scale, octaves, persistence — to control terrain feature size and roughness.</li>
+  <li>Overlay isolines (from 3.4.3) on the colour map for a topographic-chart look.</li>
+</ol>
+
+## Quick start — grayscale height map <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+# Re-use fbm() from 6.1.1
+
+H, W = 512, 512
+elev = fbm((H, W), scale=140, octaves=6, persistence=0.5, seed=7 + 40)
+
+Image.fromarray((elev * 255).astype(np.uint8), 'L').save('heightmap_gray.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_gray.png"
+  alt="A grayscale image showing rolling terrain-like patterns. Lighter regions look like ridges and peaks; darker regions look like valleys and basins."
+  caption="Six octaves of fbm interpreted as a height map. The lightest pixels are the highest peaks; the darkest pixels are sea-level basins."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The same array can be exported to a 3D engine as a height field — Unity, Blender, Three.js all accept 16-bit grayscale height maps. The 8-bit PNG you save here loses some precision but is fine for visualisation.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Noise *is* terrain
+
+The shift from "noise" to "height map" is purely interpretive. The pixel values are the same; what changes is the *function* you apply on top. As pure noise the field is a texture; as elevation it is a landscape. Real terrain has the same statistical properties as fbm (self-similar, multi-scale detail), so the analogy is not just aesthetic — Benoit Mandelbrot pointed out in 1967 that natural coastlines are mathematically fractal at every scale [2].
+
+```python
+# Same pipeline as 6.1.1's clouds, but now read as altitude.
+elev = fbm(shape, scale, octaves)        # values in [0, 1]
+```
+
+The unit interval gives you a normalised height. To map to "metres above sea level" you would multiply by a target elevation (e.g. 2000) and offset by the sea-level reference.
+
+### Concept 2 — Banded biome colour map
+
+To make the height map *read* as terrain, replace the linear grayscale ramp with banded colours. Each band corresponds to an altitude regime:
+
+```python
+levels = [
+    (0.30, (0.05, 0.20, 0.55)),    # deep water
+    (0.45, (0.10, 0.45, 0.80)),    # shallow water
+    (0.55, (0.85, 0.78, 0.45)),    # beach
+    (0.75, (0.20, 0.50, 0.20)),    # grass
+    (0.90, (0.45, 0.35, 0.25)),    # rock
+    (1.01, (0.95, 0.95, 0.98)),    # snow
+]
+
+rgb = np.zeros((H, W, 3))
+last = 0.0
+for cap, color in levels:
+    mask = (elev <= cap) & (elev > last)
+    rgb[mask] = color
+    last = cap
+```
+
+The masks partition every pixel into exactly one band; the cumulative `last` cursor ensures bands don't overlap. Adjusting the *thresholds* moves the snow line up or down; adjusting the *colours* changes the palette.
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_color.png"
+  alt="A landscape rendered as topographic biome colours: deep blue water around the edges and basins, sandy yellow beaches, green plains, brown rocky highlands, and white snow on the peaks."
+  caption="The height map mapped to six biome bands. Same elevation field; the *interpretation* is what produces the topographic look."
+  num={2}
+  role="output"
+/>
+
+<Admonition type="important">
+The bands are *hard* — every pixel jumps from one colour to the next at a threshold. For smoother shores and snow lines, lerp between adjacent biome colours over a narrow transition window instead of a hard mask.
+</Admonition>
+
+### Concept 3 — Tuning fbm for terrain
+
+The three fbm parameters from 6.1.1 control what kind of terrain you get:
+
+- **`scale`** — feature size. Small scale (30) → small islands. Large scale (140) → continents.
+- **`octaves`** — detail count. 1 → smooth rolling hills. 6 → realistic terrain. 12 → over-detailed, grainy.
+- **`persistence`** — roughness. 0.3 → smooth gentle hills. 0.7 → jagged mountains.
+
+A useful starting set for "Earth-like" terrain: `scale=140, octaves=6, persistence=0.5`. Move from there based on what you want to convey.
+
+<Admonition type="dyk" title="Technical note · Mandelbrot's coastline">
+Benoit Mandelbrot's 1967 paper *"How long is the coastline of Britain?"* showed that natural coastlines have a fractal dimension between 1 and 2 — a curve so wiggly it fills more space than a smooth line but less than a solid region [2]. fbm terrain inherits this property: zoom in and you see the same kind of structure at every scale, mimicking real coastlines.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the grayscale map, swap biome thresholds, then overlay contour lines.
+
+<Exercise n={1} kicker="EXECUTE" title="Render grayscale and colour terrain">
+
+Run `heightmap.py` from the downloads. It produces both the grayscale and biome-coloured versions.
+
+**Reflection questions**
+
+- Why does the biome-coloured version look more like terrain than the grayscale version?
+- What part of the script would you change to lower the snow line by 50 metres?
+- How would the picture change if you bumped `persistence` from 0.5 to 0.7?
+
+<Dropdown summary="Answers">
+
+**Why colour reads as terrain** — the eye *expects* terrain to use natural biome colours: blue for water, green for grass. The grayscale version is a generic elevation function; the colour version cues recognition. Same data, different *meaning*.
+
+**Lower snow line** — drop the cap on the rock band: change `(0.90, ...)` to `(0.85, ...)`. Snow now starts at 85% of max elevation instead of 90%, making more peaks white.
+
+**Persistence 0.7** — higher octaves contribute more. The terrain becomes rougher and rockier; the gentle hills give way to ragged ridges.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three biome edits">
+
+Edit `heightmap.py` to produce these variations.
+
+**Goals**
+
+1. **Tropical island** — lower the water cap to `0.20`, beach to `0.30`, fill the rest with vibrant greens and a small snow cap at `0.95`.
+2. **Arctic** — push every cap up: more white at the top, smaller biome bands lower down.
+3. **Desert** — replace greens with sandy browns; remove the snow band entirely.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+levels = [
+    (0.20, (0.05, 0.20, 0.55)),
+    (0.30, (0.95, 0.85, 0.55)),
+    (0.85, (0.10, 0.55, 0.20)),
+    (0.95, (0.45, 0.35, 0.25)),
+    (1.01, (0.95, 0.95, 0.98)),
+]
+```
+
+Beaches and grasslands dominate; snow only on the tallest peaks. Reads as Hawaii.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+levels = [
+    (0.20, (0.05, 0.20, 0.45)),
+    (0.30, (0.40, 0.55, 0.75)),
+    (0.40, (0.85, 0.85, 0.95)),
+    (1.01, (1.00, 1.00, 1.00)),
+]
+```
+
+Snow takes over above 0.40. The picture reads as a polar landscape.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+levels = [
+    (0.30, (0.30, 0.20, 0.10)),
+    (0.50, (0.75, 0.55, 0.30)),
+    (0.75, (0.85, 0.70, 0.45)),
+    (1.01, (0.65, 0.45, 0.25)),
+]
+```
+
+Browns everywhere. The picture reads as a desert basin — no water, no snow.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Topographic map with contour overlay">
+
+Add isoline contours to the biome-coloured map using the trick from 3.4.3. The contours mark elevation thresholds — every 5% of the height range gets a 1-pixel line.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Assume fbm() and the biome band map produce rgb in shape (H, W, 3)
+H, W = 512, 512
+elev = fbm((H, W), scale=140, octaves=6, seed=7 + 40)
+
+# ... build rgb from biome levels ...
+
+# TODO 1: compute an isoline mask — pixels where (elev * 20).round() % 1 == 0
+#         is too generous. Use modulo 1 against (elev * 20).astype(int) for
+#         every 5% threshold.
+
+# TODO 2: paint those pixels black in the existing rgb array.
+
+Image.fromarray((rgb * 255).astype(np.uint8)).save('heightmap_contours.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — isoline mask">
+
+```python
+# 20 levels across [0, 1] = one every 5%; modulo of (elev * 20).astype(int)
+# transitions are where neighbouring pixels have different integer labels.
+labels = (elev * 20).astype(int)
+up = labels != np.pad(labels[:-1], ((1, 0), (0, 0)), mode='edge')
+down = labels != np.pad(labels[1:],  ((0, 1), (0, 0)), mode='edge')
+left = labels != np.pad(labels[:, :-1], ((0, 0), (1, 0)), mode='edge')
+right = labels != np.pad(labels[:, 1:],  ((0, 0), (0, 1)), mode='edge')
+isolines = up | down | left | right
+rgb[isolines] = [0, 0, 0]
+```
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() helper from 6.1.1 assumed in scope
+
+H, W = 512, 512
+elev = fbm((H, W), scale=140, octaves=6, seed=7 + 40)
+
+levels = [
+    (0.30, (0.05, 0.20, 0.55)),
+    (0.45, (0.10, 0.45, 0.80)),
+    (0.55, (0.85, 0.78, 0.45)),
+    (0.75, (0.20, 0.50, 0.20)),
+    (0.90, (0.45, 0.35, 0.25)),
+    (1.01, (0.95, 0.95, 0.98)),
+]
+rgb = np.zeros((H, W, 3))
+last = 0.0
+for cap, color in levels:
+    mask = (elev <= cap) & (elev > last)
+    rgb[mask] = color
+    last = cap
+
+labels = (elev * 20).astype(int)
+up = labels != np.pad(labels[:-1], ((1, 0), (0, 0)), mode='edge')
+down = labels != np.pad(labels[1:],  ((0, 1), (0, 0)), mode='edge')
+left = labels != np.pad(labels[:, :-1], ((0, 0), (1, 0)), mode='edge')
+right = labels != np.pad(labels[:, 1:],  ((0, 0), (0, 1)), mode='edge')
+isolines = up | down | left | right
+rgb[isolines] = [0, 0, 0]
+
+Image.fromarray((rgb * 255).astype(np.uint8)).save('heightmap_contours.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_contours.png"
+  alt="The biome-coloured height map with thin black contour lines overlaid. The lines form nested closed curves around peaks and valleys, like a hiker's topographic chart."
+  caption="The biome map with isolines marking every 5% elevation change. The result reads as a hiking map — colour for biome, lines for slope."
+  num={3}
+  role="output"
+/>
+
+**How it works:**
+
+- The integer-label trick from 3.4.3 turns the continuous elevation into discrete bands.
+- Comparing each pixel against its 4 neighbours marks boundaries between adjacent bands — exactly the isolines.
+- Painting those pixels black on top of the biome colours gives the topographic-chart effect.
+
+</Dropdown>
+
+#### Make it your own
+
+- Smooth-blend the biome boundaries by lerping between adjacent colours over a 0.03-elevation window — eliminates the hard band edges.
+- Add per-biome texture noise: multiply the rock band by `1 + 0.2 * fbm(...)` for mottled stone.
+- Convert the height map to a 3D mesh in Blender or Three.js by exporting as a 16-bit PNG; the elevation becomes the y-coordinate of each vertex.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_gray.png" label="heightmap_gray.png — quick-start grayscale" />
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_color.png" label="heightmap_color.png — biome banded" />
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/heightmap_contours.png" label="heightmap_contours.png — with isolines" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A height map is just a noise field interpreted as elevation. The fbm pipeline from 6.1.1 produces the same `[0, 1]` field; the change is what you *do* with it — render as grayscale for an elevation map, partition into biome bands for a topographic-colour landscape, overlay isolines for a hiker's chart. Tuning `scale` controls feature size (small = islands, large = continents); `octaves` controls detail count; `persistence` controls roughness. The same field exports cleanly to any 3D engine, becoming actual terrain geometry. Three NumPy expressions on top of fbm and you have a procedural-terrain pipeline that scales from prototype to game engine.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to normalise `elev` to `[0, 1]` — the biome thresholds assume a normalised input.
+- Overlapping biome thresholds — without the `last` cursor, a pixel can match multiple bands and the colour assignment is order-dependent.
+- Using too many octaves — above 8, the texture is grainier than any real terrain.
+- Saving to 8-bit PNG when you need precision — for 3D export, use 16-bit grayscale TIFF or PNG to keep elevation detail.
+- Treating noise as a heightfield when it has not been *normalised* — the thresholds in the biome map assume `elev ∈ [0, 1]`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[2]</span> Mandelbrot, B. B. (1967). How long is the coast of Britain? Statistical self-similarity and fractional dimension. *Science*, 156(3775), 636–638. <a href="https://doi.org/10.1126/science.156.3775.636" target="_blank" rel="noopener">doi:10.1126/science.156.3775.636</a></li>
+    <li><span class="tag">[3]</span> Musgrave, F. K. (1993). Methods for realistic landscape imaging. PhD dissertation, Yale University.</li>
+    <li><span class="tag">[4]</span> Slocum, T. A., McMaster, R. B., Kessler, F. C., & Howard, H. H. (2009). *Thematic Cartography and Geovisualization* (3rd ed.). Pearson.</li>
+    <li><span class="tag">[5]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

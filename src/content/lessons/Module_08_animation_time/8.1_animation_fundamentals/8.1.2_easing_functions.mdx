@@ -1,0 +1,319 @@
+---
+module: "M 08"
+cycle: "II"
+title: "Easing Functions"
+objective: "Map linear time onto curved time so motion accelerates and decelerates naturally. Nine standard curves cover every animation you'll ever ship."
+framework: "hands-on"
+duration: "20–25 min"
+level: "beginner-intermediate"
+prereqs: "8.1.1 (single-frame operators), basic Python"
+prev:
+  slug: "8.1.1"
+  title: "Image Transformations"
+next:
+  slug: "8.1.3"
+  title: "Interpolation Techniques"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+In animation, "moving from A to B over N frames" is rarely what you actually want. A linear interpolation reads as **mechanical** — the object starts at full speed, stops at full speed, with no acceleration or deceleration. Real-world motion is curved: a ball thrown in the air decelerates upward, then accelerates back down; a door closing on a spring eases into the latch; UI panels slide in with momentum and then settle. Every one of these motions follows an **easing function** — a curve that remaps linear time $t \in [0, 1]$ to an eased progress $f(t) \in [0, 1]$ with $f(0) = 0$ and $f(1) = 1$.
+
+Robert Penner's 1999 set of standard easing curves [1] is the de facto vocabulary of every animation toolkit since: Flash, jQuery, GreenSock, CSS, SwiftUI, Framer Motion, and React Native all expose the same family of names — `linear`, `easeInOutQuad`, `easeOutCubic`, `easeOutBounce`. This lesson implements nine of them as NumPy-broadcastable scalar functions and shows the visual difference each one makes.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Implement linear, quadratic, cubic, sine, and bounce easing functions as scalar maps $f: [0,1] \to [0,1]$.</li>
+  <li>Recognise the **ease-in / ease-out / ease-in-out** terminology — *where* in the timeline the curve accelerates.</li>
+  <li>Apply an easing function to any animated parameter by composing `value(t) = start + (end - start) * f(t)`.</li>
+  <li>Predict the perceptual character of a curve from its shape — steep starts feel snappy, gentle starts feel deliberate.</li>
+</ol>
+
+## Quick start — nine curves at a glance <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+
+def linear(t):           return t
+def ease_in_quad(t):     return t * t
+def ease_out_quad(t):    return 1 - (1 - t) ** 2
+def ease_in_cubic(t):    return t ** 3
+def ease_out_cubic(t):   return 1 - (1 - t) ** 3
+def ease_sine(t):        return -(np.cos(np.pi * t) - 1) / 2
+
+# Use one as the time mapping for any animated quantity
+t = np.linspace(0, 1, 60)
+x = 100 + (500 - 100) * ease_out_cubic(t)   # x slides from 100 to 500, decelerating
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_curves.png"
+  alt="A three-by-three grid of easing-function plots — linear, ease-in/out quadratic, ease-in/out cubic, ease-in/out quad combined, sine, and bounce — each plotted as a curve from zero to one with a diagonal reference line"
+  caption="The nine curves. Diagonal grey = linear reference. Blue = the actual ease. Identical end-points; the path between is what changes."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Every easing curve passes through $(0, 0)$ and $(1, 1)$. The motion always starts at the start and ends at the end — what changes is **the velocity profile in between**. Ease-in starts slow; ease-out ends slow; ease-in-out does both.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Linear interpolation is the baseline
+
+Linear is the default and the worst-looking default. The position at time $t$ is simply
+
+`pos(t) = start + (end - start) * t`
+
+The velocity is constant: $v$ = (end − start) / duration, with zero acceleration. Every other easing function is judged relative to this. Visually, linear motion is what tells the viewer "this object is on rails" — appropriate for conveyor belts, scrolling marquees, and computer-generated graphs, but wrong for anything that should look organic or physically driven.
+
+### Concept 2 — Ease-in, ease-out, ease-in-out
+
+Three flavours of curve, each with a power exponent that controls the strength:
+
+- **Ease-in** — `t² , t³, t⁴` — starts slow, ends fast. Useful for objects accelerating *away from rest*. Think: a ball starting to fall, a panel sliding *out* of view.
+- **Ease-out** — `1 - (1-t)², 1 - (1-t)³` — starts fast, decelerates to a stop. Useful for objects arriving and *settling*. Think: a door swinging shut, a notification panel sliding *into* view.
+- **Ease-in-out** — accelerate, then decelerate. The smoothest possible motion between two stationary states. The most natural-feeling default for general UI animation.
+
+<CodeBlock lang="python" file="ease_in_out_cubic.py">
+```python
+def ease_in_out_cubic(t):
+    # Piecewise: first half is t³ scaled to 0..0.5
+    #            second half is 1 - (1-t)³ scaled to 0.5..1
+    return np.where(t < 0.5, 4 * t ** 3, 1 - (-2 * t + 2) ** 3 / 2)
+```
+</CodeBlock>
+
+The exponent controls **how aggressive** the curve is. Quadratic is the subtle, polite version. Cubic is the noticeable, default version. Quartic and quintic look exaggerated, often used for cinematic punch.
+
+<Admonition type="dyk" title="Did you know · easing was invented for Flash">
+Robert Penner published his easing equations in 1999 as Flash ActionScript [1]. Adobe Flash (now defunct) dominated browser animation through the 2000s, and Penner's curves became the implicit standard for web-based motion. Modern frameworks — CSS `cubic-bezier()`, Apple's UIKit timing functions, Framer Motion — all expose the same mathematical curves under the same names, even though Flash itself is gone [2].
+</Admonition>
+
+### Concept 3 — Applying easing to any animated quantity
+
+The contract is uniform across every easing function: take linear progress $t \in [0, 1]$, return eased progress in $[0, 1]$. So the **same easing function works on any quantity**. Position, opacity, scale, rotation, hue, anything that interpolates between two values:
+
+<CodeBlock lang="python" file="animate.py">
+```python
+def animate(start, end, easing, n_frames):
+    """Generate n_frames values from start to end via the given easing."""
+    t = np.linspace(0, 1, n_frames)
+    progress = easing(t)
+    return start + (end - start) * progress
+
+# Position from 100 to 500, snappy stop
+xs = animate(100, 500, ease_out_cubic, 60)
+
+# Opacity from transparent to opaque, gentle finish
+alphas = animate(0, 255, ease_out_quad, 30)
+
+# Scale from 0.1 (tiny) to 1.0 (full size) with a bounce
+scales = animate(0.1, 1.0, bounce, 45)
+```
+</CodeBlock>
+
+The animation loop renders one frame per value. Every later lesson in this module — and every Module 12 lesson with a UI timeline — uses some form of this composition.
+
+<Figure
+  src="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_animation.gif"
+  alt="An animated GIF showing four dots sliding from left to right at the same total duration but with different easing curves — the linear dot moves at constant speed, ease-in-cubic accelerates then jumps to the end, ease-out-cubic starts fast and decelerates, ease-in-out-cubic accelerates then decelerates"
+  caption="Four dots, identical start, identical end, identical total duration. Top to bottom: linear, ease-in cubic, ease-out cubic, ease-in-out cubic. The perceptual difference is everything."
+  num={2}
+  role="gif"
+/>
+
+<Admonition type="important">
+**Don't manually average start and end at the midpoint** — use `start + (end - start) * progress` as one expression. The form `(start + end) * progress / 2` looks similar but breaks when `start != 0`. The linear-interpolation idiom *is* `start + (end - start) * t`.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the plot, sweep curve variants, then build a bounce easing from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the curve plot">
+
+Run `easing_curves.py` to plot the nine curves on a 3×3 grid. Then run `easing_animation.gif` to see four of them animating side-by-side.
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_curves.py" label="easing_curves.py — nine-curve plot" />
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_animation.py" label="easing_animation.py — four-dot comparison" />
+
+**Reflection questions**
+
+- The linear curve hits $f(0.5) = 0.5$. Where on the timeline does `ease_in_cubic` cross 0.5?
+- Why does `ease_out_cubic` feel "snappier" than `ease_out_quad` despite both being decelerating curves?
+- Which of the nine curves would you pick to animate a UI panel **sliding into view** from off-screen? Which for the same panel **sliding back out**?
+
+<Dropdown summary="Answers">
+
+**`ease_in_cubic` at 0.5** — solving $t^3 = 0.5$ gives $t = 0.5^\{1/3\} \approx 0.794$. The midpoint of the *value* happens 79% of the way through the *time* — the object spends most of its time in the first half slowly accelerating before crossing the midpoint near the end.
+
+**Snappier ease-out cubic** — the cubic decelerates more sharply at the end. At $t = 0.5$, ease-out-cubic is at $1 - 0.125 = 0.875$, while ease-out-quad is at $1 - 0.25 = 0.75$. Cubic reaches 87.5% of the way at the midpoint, so the rest of the time is the final 12.5% — snappier perception.
+
+**UI panels** — sliding *in*: ease-out (the panel arrives and settles). Sliding *out*: ease-in (the panel accelerates as it leaves, then disappears). Out-going motion can be ease-in-cubic for emphasis; in-coming motion should be ease-out-quad or ease-out-cubic for natural arrival.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep curve variants">
+
+Modify `easing_animation.py` so it animates four dots with these specific curves (instead of the linear/in-cubic/out-cubic/in-out-cubic default):
+
+**Goals**
+
+1. **Quartic family.** Replace cubics with quartics: $t^4$, $1 - (1-t)^4$, and ease-in-out quartic. The motion should feel even more exaggerated.
+2. **Half-speed comparison.** Double `DURATION_S` from 2.5 to 5.0. Faster easings should now feel more deliberate.
+3. **Sine vs quad.** Add an `ease_sine` row to compare with `ease_in_out_quad`. The two are very close visually — sine is a gentler, smoother version.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Quartic curves are more aggressive than cubics. `t^4` stays close to zero for longer before launching; `1 - (1-t)^4` slams to nearly 1 well before $t = 1$. Visually punchier, useful for cinematic punctuation but too strong for everyday UI motion.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Doubling the duration doesn't change the curve shape, only the time scale. Easing curves are scale-invariant in time — what matters is the *ratio* of velocity at start to end. A 5-second ease-in-out cubic and a 1-second ease-in-out cubic look like the same motion, just at different speeds.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Sine and quad-in-out are visually nearly identical, especially at typical animation durations. Sine has slightly slower acceleration near the start and slightly slower deceleration near the end. For UI work either is fine; choose by team convention.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build the bounce easing from scratch">
+
+Implement Robert Penner's `ease_out_bounce` function — the eased curve that overshoots and bounces back to its target. It's a piecewise quadratic with four segments and is the most-asked-for "playful" easing in the family.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+
+def ease_out_bounce(t):
+    """Robert Penner's four-segment bouncing ease-out."""
+    n1 = 7.5625      # acceleration constant
+    d1 = 2.75        # segment-boundary constant
+
+    out = np.empty_like(t)
+
+    # TODO 1: segment 1 — t < 1/d1, output = n1 * t²
+
+    # TODO 2: segment 2 — t < 2/d1, peak ~0.75
+    # use a shifted t (t' = t - 1.5/d1), output = n1 * t'² + 0.75
+
+    # TODO 3: segment 3 — t < 2.5/d1, peak ~0.9375
+    # t' = t - 2.25/d1, output = n1 * t'² + 0.9375
+
+    # TODO 4: segment 4 — rest, output = n1 * (t - 2.625/d1)² + 0.984375
+
+    return out
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — segment masks">
+
+```python
+mask1 = t < 1 / d1
+mask2 = np.logical_and(~mask1, t < 2 / d1)
+mask3 = np.logical_and(~(mask1 | mask2), t < 2.5 / d1)
+mask4 = ~(mask1 | mask2 | mask3)
+```
+
+Four mutually exclusive boolean masks covering the four segments.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — segment formulae">
+
+Each segment is a parabola scaled by `n1`, with a shifted centre and a vertical offset that grows toward 1:
+
+```python
+out[mask1] = n1 * t[mask1] ** 2
+t2 = t[mask2] - 1.5 / d1
+out[mask2] = n1 * t2 * t2 + 0.75
+t3 = t[mask3] - 2.25 / d1
+out[mask3] = n1 * t3 * t3 + 0.9375
+t4 = t[mask4] - 2.625 / d1
+out[mask4] = n1 * t4 * t4 + 0.984375
+```
+
+The constants 0.75, 0.9375, 0.984375 are the heights from which each successive bounce starts — geometrically halving energy on each impact.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+
+def ease_out_bounce(t):
+    n1, d1 = 7.5625, 2.75
+    out = np.empty_like(t)
+    mask1 = t < 1 / d1
+    mask2 = np.logical_and(~mask1, t < 2 / d1)
+    mask3 = np.logical_and(~(mask1 | mask2), t < 2.5 / d1)
+    mask4 = ~(mask1 | mask2 | mask3)
+    out[mask1] = n1 * t[mask1] ** 2
+    t2 = t[mask2] - 1.5 / d1; out[mask2] = n1 * t2 * t2 + 0.75
+    t3 = t[mask3] - 2.25 / d1; out[mask3] = n1 * t3 * t3 + 0.9375
+    t4 = t[mask4] - 2.625 / d1; out[mask4] = n1 * t4 * t4 + 0.984375
+    return out
+```
+</CodeBlock>
+
+</Dropdown>
+
+#### Make it your own
+
+- **Ease-in bounce.** The mirror: `1 - ease_out_bounce(1 - t)`. The animation starts with small wobbles and accelerates to a smooth landing.
+- **Elastic easing.** Penner's `ease_out_elastic` — adds a sinusoidal overshoot that decays toward the target. Used for "springy" UI panels in iOS.
+- **Custom Bezier.** Implement `cubic_bezier(p1x, p1y, p2x, p2y)` — the same primitive CSS uses. Two control points give you the entire Penner family plus everything in between.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_curves.py" label="easing_curves.py — nine-curve plot" />
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/easing_animation.py" label="easing_animation.py — four-dot animation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+An easing function maps linear time $t \in [0, 1]$ to eased progress $f(t) \in [0, 1]$, with $f(0) = 0$ and $f(1) = 1$. The shape of the curve in between is the **velocity profile** — what makes animation feel natural rather than mechanical. Penner's standard family — linear, in/out/in-out quadratic, cubic, quartic, sine, bounce, elastic — covers virtually every animation you'll ship, and the same names show up in every framework from Flash to SwiftUI. Apply easing to any animated quantity by composing `value = start + (end - start) * easing(t)`. Get this composition right and the rest of Module 08 is parameter scheduling on top of it.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Linear by default.** Linear motion looks mechanical. Default to ease-out-cubic for arriving motion and ease-in-cubic for leaving motion; reserve linear for genuinely mechanical things.
+- **Mismatched ease-in for "arriving" motion.** Ease-in *starts* slow — fine for objects leaving, wrong for objects arriving. Mixing these up is the most common easing bug in early animation work.
+- **Calling the easing twice.** Computing `ease(ease(t))` instead of `ease(t)` over-eases the curve. Don't compose easings unintentionally.
+- **Animating along non-normalised time.** Easing functions expect $t \in [0, 1]$. Always normalise frame index by total frame count first: `t = frame / (n_frames - 1)`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Penner, R. (2002). *Motion, Tweening, and Easing*. In *Robert Penner's Programming Macromedia Flash MX*. McGraw-Hill. ISBN 978-0-07-222356-2.</li>
+    <li><span class="tag">[2]</span> CSS Working Group. (2023). *CSS Easing Functions Level 1*. W3C Working Draft. <a href="https://www.w3.org/TR/css-easing-1/" target="_blank" rel="noopener">w3.org/TR/css-easing-1</a></li>
+    <li><span class="tag">[3]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley. ISBN 978-0-201-12110-0.</li>
+    <li><span class="tag">[4]</span> Lasseter, J. (1987). Principles of traditional animation applied to 3D computer animation. *Proceedings of SIGGRAPH '87*, 35–44. <a href="https://doi.org/10.1145/37402.37407" target="_blank" rel="noopener">doi:10.1145/37402.37407</a></li>
+    <li><span class="tag">[5]</span> Thomas, F., & Johnston, O. (1981). *Disney Animation: The Illusion of Life*. Abbeville Press. ISBN 978-0-89659-232-4.</li>
+    <li><span class="tag">[6]</span> Apple. (2024). *UIKit View Animation Documentation*. <a href="https://developer.apple.com/documentation/uikit/animation_and_haptics" target="_blank" rel="noopener">developer.apple.com</a></li>
+    <li><span class="tag">[7]</span> Material Design. (2024). *Motion: Easing*. <a href="https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration" target="_blank" rel="noopener">m3.material.io</a></li>
+  </ol>
+</section>

@@ -1,0 +1,1497 @@
+{
+  "generatedFor": "content restructure",
+  "count": 149,
+  "fallbacks": [],
+  "entries": [
+    {
+      "id": "1.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.1_color_basics.mdx",
+      "oldAssetDir": "public/lessons/1.1.1",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.1_color_basics",
+      "oldAssetUrl": "/lessons/1.1.1/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.1_color_basics/"
+    },
+    {
+      "id": "1.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.2_color_theory_spaces.mdx",
+      "oldAssetDir": "public/lessons/1.1.2",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.2_color_theory_spaces",
+      "oldAssetUrl": "/lessons/1.1.2/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.2_color_theory_spaces/"
+    },
+    {
+      "id": "1.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.1_random_patterns.mdx",
+      "oldAssetDir": "public/lessons/1.2.1",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.1_random_patterns",
+      "oldAssetUrl": "/lessons/1.2.1/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.1_random_patterns/"
+    },
+    {
+      "id": "1.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata.mdx",
+      "oldAssetDir": "public/lessons/1.2.2",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata",
+      "oldAssetUrl": "/lessons/1.2.2/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata/"
+    },
+    {
+      "id": "1.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.3_reaction_diffusion.mdx",
+      "oldAssetDir": "public/lessons/1.2.3",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.3_reaction_diffusion",
+      "oldAssetUrl": "/lessons/1.2.3/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.3_reaction_diffusion/"
+    },
+    {
+      "id": "1.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags.mdx",
+      "oldAssetDir": "public/lessons/1.3.1",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags",
+      "oldAssetUrl": "/lessons/1.3.1/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/"
+    },
+    {
+      "id": "1.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.2_repeat.mdx",
+      "oldAssetDir": "public/lessons/1.3.2",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.2_repeat",
+      "oldAssetUrl": "/lessons/1.3.2/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.2_repeat/"
+    },
+    {
+      "id": "1.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.3_truchet_tiles.mdx",
+      "oldAssetDir": "public/lessons/1.3.3",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.3_truchet_tiles",
+      "oldAssetUrl": "/lessons/1.3.3/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.3_truchet_tiles/"
+    },
+    {
+      "id": "1.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/1.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.4_wang_tiles.mdx",
+      "oldAssetDir": "public/lessons/1.3.4",
+      "newAssetDir": "public/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.4_wang_tiles",
+      "oldAssetUrl": "/lessons/1.3.4/",
+      "newAssetUrl": "/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.4_wang_tiles/"
+    },
+    {
+      "id": "2.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines.mdx",
+      "oldAssetDir": "public/lessons/2.1.1",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines",
+      "oldAssetUrl": "/lessons/2.1.1/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines/"
+    },
+    {
+      "id": "2.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles.mdx",
+      "oldAssetDir": "public/lessons/2.1.2",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles",
+      "oldAssetUrl": "/lessons/2.1.2/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/"
+    },
+    {
+      "id": "2.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles.mdx",
+      "oldAssetDir": "public/lessons/2.1.3",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles",
+      "oldAssetUrl": "/lessons/2.1.3/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles/"
+    },
+    {
+      "id": "2.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars.mdx",
+      "oldAssetDir": "public/lessons/2.1.4",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars",
+      "oldAssetUrl": "/lessons/2.1.4/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars/"
+    },
+    {
+      "id": "2.1.5",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.1.5.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.5_polygons_polyhedra.mdx",
+      "oldAssetDir": "public/lessons/2.1.5",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.5_polygons_polyhedra",
+      "oldAssetUrl": "/lessons/2.1.5/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.5_polygons_polyhedra/"
+    },
+    {
+      "id": "2.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient.mdx",
+      "oldAssetDir": "public/lessons/2.2.1",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient",
+      "oldAssetUrl": "/lessons/2.2.1/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient/"
+    },
+    {
+      "id": "2.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral.mdx",
+      "oldAssetDir": "public/lessons/2.2.2",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral",
+      "oldAssetUrl": "/lessons/2.2.2/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral/"
+    },
+    {
+      "id": "2.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields.mdx",
+      "oldAssetDir": "public/lessons/2.2.3",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields",
+      "oldAssetUrl": "/lessons/2.2.3/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields/"
+    },
+    {
+      "id": "2.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields.mdx",
+      "oldAssetDir": "public/lessons/2.2.4",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields",
+      "oldAssetUrl": "/lessons/2.2.4/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/"
+    },
+    {
+      "id": "2.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.1_lissajous_curves.mdx",
+      "oldAssetDir": "public/lessons/2.3.1",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.1_lissajous_curves",
+      "oldAssetUrl": "/lessons/2.3.1/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.1_lissajous_curves/"
+    },
+    {
+      "id": "2.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves.mdx",
+      "oldAssetDir": "public/lessons/2.3.2",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves",
+      "oldAssetUrl": "/lessons/2.3.2/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/"
+    },
+    {
+      "id": "2.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation.mdx",
+      "oldAssetDir": "public/lessons/2.3.3",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation",
+      "oldAssetUrl": "/lessons/2.3.3/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation/"
+    },
+    {
+      "id": "2.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/2.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.4_strange_attractors.mdx",
+      "oldAssetDir": "public/lessons/2.3.4",
+      "newAssetDir": "public/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.4_strange_attractors",
+      "oldAssetUrl": "/lessons/2.3.4/",
+      "newAssetUrl": "/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.4_strange_attractors/"
+    },
+    {
+      "id": "3.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation.mdx",
+      "oldAssetDir": "public/lessons/3.1.1",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation",
+      "oldAssetUrl": "/lessons/3.1.1/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/"
+    },
+    {
+      "id": "3.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations.mdx",
+      "oldAssetDir": "public/lessons/3.1.2",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations",
+      "oldAssetUrl": "/lessons/3.1.2/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/"
+    },
+    {
+      "id": "3.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions.mdx",
+      "oldAssetDir": "public/lessons/3.1.3",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions",
+      "oldAssetUrl": "/lessons/3.1.3/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/"
+    },
+    {
+      "id": "3.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects.mdx",
+      "oldAssetDir": "public/lessons/3.1.4",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects",
+      "oldAssetUrl": "/lessons/3.1.4/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/"
+    },
+    {
+      "id": "3.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask.mdx",
+      "oldAssetDir": "public/lessons/3.2.1",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask",
+      "oldAssetUrl": "/lessons/3.2.1/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask/"
+    },
+    {
+      "id": "3.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen.mdx",
+      "oldAssetDir": "public/lessons/3.2.2",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen",
+      "oldAssetUrl": "/lessons/3.2.2/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen/"
+    },
+    {
+      "id": "3.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow.mdx",
+      "oldAssetDir": "public/lessons/3.2.3",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow",
+      "oldAssetUrl": "/lessons/3.2.3/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow/"
+    },
+    {
+      "id": "3.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.2_masking_compositing/3.2.4_blend_modes.mdx",
+      "oldAssetDir": "public/lessons/3.2.4",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.4_blend_modes",
+      "oldAssetUrl": "/lessons/3.2.4/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.4_blend_modes/"
+    },
+    {
+      "id": "3.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol.mdx",
+      "oldAssetDir": "public/lessons/3.3.1",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol",
+      "oldAssetUrl": "/lessons/3.3.1/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol/"
+    },
+    {
+      "id": "3.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle.mdx",
+      "oldAssetDir": "public/lessons/3.3.2",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle",
+      "oldAssetUrl": "/lessons/3.3.2/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/"
+    },
+    {
+      "id": "3.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda.mdx",
+      "oldAssetDir": "public/lessons/3.3.3",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda",
+      "oldAssetUrl": "/lessons/3.3.3/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/"
+    },
+    {
+      "id": "3.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.3_artistic_filters/3.3.4_voronoi_diagrams.mdx",
+      "oldAssetDir": "public/lessons/3.3.4",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.4_voronoi_diagrams",
+      "oldAssetUrl": "/lessons/3.3.4/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.4_voronoi_diagrams/"
+    },
+    {
+      "id": "3.3.5",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.3.5.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation.mdx",
+      "oldAssetDir": "public/lessons/3.3.5",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation",
+      "oldAssetUrl": "/lessons/3.3.5/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/"
+    },
+    {
+      "id": "3.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution.mdx",
+      "oldAssetDir": "public/lessons/3.4.1",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution",
+      "oldAssetUrl": "/lessons/3.4.1/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/"
+    },
+    {
+      "id": "3.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection.mdx",
+      "oldAssetDir": "public/lessons/3.4.2",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection",
+      "oldAssetUrl": "/lessons/3.4.2/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/"
+    },
+    {
+      "id": "3.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines.mdx",
+      "oldAssetDir": "public/lessons/3.4.3",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines",
+      "oldAssetUrl": "/lessons/3.4.3/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/"
+    },
+    {
+      "id": "3.4.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/3.4.4.mdx",
+      "newMdx": "src/content/lessons/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art.mdx",
+      "oldAssetDir": "public/lessons/3.4.4",
+      "newAssetDir": "public/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art",
+      "oldAssetUrl": "/lessons/3.4.4/",
+      "newAssetUrl": "/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/"
+    },
+    {
+      "id": "4.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square.mdx",
+      "oldAssetDir": "public/lessons/4.1.1",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square",
+      "oldAssetUrl": "/lessons/4.1.1/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/"
+    },
+    {
+      "id": "4.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve.mdx",
+      "oldAssetDir": "public/lessons/4.1.2",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve",
+      "oldAssetUrl": "/lessons/4.1.2/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/"
+    },
+    {
+      "id": "4.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot.mdx",
+      "oldAssetDir": "public/lessons/4.1.3",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot",
+      "oldAssetUrl": "/lessons/4.1.3/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/"
+    },
+    {
+      "id": "4.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets.mdx",
+      "oldAssetDir": "public/lessons/4.1.4",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets",
+      "oldAssetUrl": "/lessons/4.1.4/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.4_julia_sets/"
+    },
+    {
+      "id": "4.1.5",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.1.5.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.1_classical_fractals/4.1.5_sierpinski.mdx",
+      "oldAssetDir": "public/lessons/4.1.5",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.5_sierpinski",
+      "oldAssetUrl": "/lessons/4.1.5/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.5_sierpinski/"
+    },
+    {
+      "id": "4.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees.mdx",
+      "oldAssetDir": "public/lessons/4.2.1",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees",
+      "oldAssetUrl": "/lessons/4.2.1/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/"
+    },
+    {
+      "id": "4.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.2_natural_fractals/4.2.2_lightning_bolts.mdx",
+      "oldAssetDir": "public/lessons/4.2.2",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.2_lightning_bolts",
+      "oldAssetUrl": "/lessons/4.2.2/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.2_lightning_bolts/"
+    },
+    {
+      "id": "4.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.2_natural_fractals/4.2.3_fractal_landscapes.mdx",
+      "oldAssetDir": "public/lessons/4.2.3",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.3_fractal_landscapes",
+      "oldAssetUrl": "/lessons/4.2.3/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.3_fractal_landscapes/"
+    },
+    {
+      "id": "4.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation.mdx",
+      "oldAssetDir": "public/lessons/4.2.4",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation",
+      "oldAssetUrl": "/lessons/4.2.4/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.4_diffusion_limited_aggregation/"
+    },
+    {
+      "id": "4.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation.mdx",
+      "oldAssetDir": "public/lessons/4.3.1",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation",
+      "oldAssetUrl": "/lessons/4.3.1/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/"
+    },
+    {
+      "id": "4.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.3_l_systems/4.3.2_koch_snowflake.mdx",
+      "oldAssetDir": "public/lessons/4.3.2",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.2_koch_snowflake",
+      "oldAssetUrl": "/lessons/4.3.2/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.2_koch_snowflake/"
+    },
+    {
+      "id": "4.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/4.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_04_fractals_recursion/4.3_l_systems/4.3.3_penrose_tiling.mdx",
+      "oldAssetDir": "public/lessons/4.3.3",
+      "newAssetDir": "public/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.3_penrose_tiling",
+      "oldAssetUrl": "/lessons/4.3.3/",
+      "newAssetUrl": "/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.3_penrose_tiling/"
+    },
+    {
+      "id": "5.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand.mdx",
+      "oldAssetDir": "public/lessons/5.1.1",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand",
+      "oldAssetUrl": "/lessons/5.1.1/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/"
+    },
+    {
+      "id": "5.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.2_vortex.mdx",
+      "oldAssetDir": "public/lessons/5.1.2",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.2_vortex",
+      "oldAssetUrl": "/lessons/5.1.2/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.2_vortex/"
+    },
+    {
+      "id": "5.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.3_fireworks_simulation.mdx",
+      "oldAssetDir": "public/lessons/5.1.3",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.3_fireworks_simulation",
+      "oldAssetUrl": "/lessons/5.1.3/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.3_fireworks_simulation/"
+    },
+    {
+      "id": "5.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.4_fluid_simulation.mdx",
+      "oldAssetDir": "public/lessons/5.1.4",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.4_fluid_simulation",
+      "oldAssetUrl": "/lessons/5.1.4/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.4_fluid_simulation/"
+    },
+    {
+      "id": "5.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids.mdx",
+      "oldAssetDir": "public/lessons/5.2.1",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids",
+      "oldAssetUrl": "/lessons/5.2.1/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/"
+    },
+    {
+      "id": "5.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.2_fish_schooling.mdx",
+      "oldAssetDir": "public/lessons/5.2.2",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.2_fish_schooling",
+      "oldAssetUrl": "/lessons/5.2.2/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.2_fish_schooling/"
+    },
+    {
+      "id": "5.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.3_ant_colony_optimization.mdx",
+      "oldAssetDir": "public/lessons/5.2.3",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.3_ant_colony_optimization",
+      "oldAssetUrl": "/lessons/5.2.3/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.3_ant_colony_optimization/"
+    },
+    {
+      "id": "5.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball.mdx",
+      "oldAssetDir": "public/lessons/5.3.1",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball",
+      "oldAssetUrl": "/lessons/5.3.1/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/"
+    },
+    {
+      "id": "5.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation.mdx",
+      "oldAssetDir": "public/lessons/5.3.2",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation",
+      "oldAssetUrl": "/lessons/5.3.2/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/"
+    },
+    {
+      "id": "5.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos.mdx",
+      "oldAssetDir": "public/lessons/5.3.3",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos",
+      "oldAssetUrl": "/lessons/5.3.3/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/"
+    },
+    {
+      "id": "5.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation.mdx",
+      "oldAssetDir": "public/lessons/5.3.4",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation",
+      "oldAssetUrl": "/lessons/5.3.4/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/"
+    },
+    {
+      "id": "5.3.5",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.3.5.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.5_magnetic_field_visualization.mdx",
+      "oldAssetDir": "public/lessons/5.3.5",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.5_magnetic_field_visualization",
+      "oldAssetUrl": "/lessons/5.3.5/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.5_magnetic_field_visualization/"
+    },
+    {
+      "id": "5.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.1_eden_growth_model.mdx",
+      "oldAssetDir": "public/lessons/5.4.1",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.1_eden_growth_model",
+      "oldAssetUrl": "/lessons/5.4.1/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.1_eden_growth_model/"
+    },
+    {
+      "id": "5.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.2_differential_growth.mdx",
+      "oldAssetDir": "public/lessons/5.4.2",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.2_differential_growth",
+      "oldAssetUrl": "/lessons/5.4.2/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.2_differential_growth/"
+    },
+    {
+      "id": "5.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.3_space_colonization_algorithm.mdx",
+      "oldAssetDir": "public/lessons/5.4.3",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.3_space_colonization_algorithm",
+      "oldAssetUrl": "/lessons/5.4.3/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.3_space_colonization_algorithm/"
+    },
+    {
+      "id": "5.4.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/5.4.4.mdx",
+      "newMdx": "src/content/lessons/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.4_turing_patterns.mdx",
+      "oldAssetDir": "public/lessons/5.4.4",
+      "newAssetDir": "public/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.4_turing_patterns",
+      "oldAssetUrl": "/lessons/5.4.4/",
+      "newAssetUrl": "/lesson-media/Module_05_simulation_emergent_behavior/5.4_growth_morphogenesis/5.4.4_turing_patterns/"
+    },
+    {
+      "id": "6.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise.mdx",
+      "oldAssetDir": "public/lessons/6.1.1",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise",
+      "oldAssetUrl": "/lessons/6.1.1/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise/"
+    },
+    {
+      "id": "6.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.2_simplex_noise.mdx",
+      "oldAssetDir": "public/lessons/6.1.2",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.2_simplex_noise",
+      "oldAssetUrl": "/lessons/6.1.2/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.2_simplex_noise/"
+    },
+    {
+      "id": "6.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.3_worley_noise.mdx",
+      "oldAssetDir": "public/lessons/6.1.3",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.3_worley_noise",
+      "oldAssetUrl": "/lessons/6.1.3/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.3_worley_noise/"
+    },
+    {
+      "id": "6.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.4_colored_noise.mdx",
+      "oldAssetDir": "public/lessons/6.1.4",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.4_colored_noise",
+      "oldAssetUrl": "/lessons/6.1.4/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.4_colored_noise/"
+    },
+    {
+      "id": "6.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps.mdx",
+      "oldAssetDir": "public/lessons/6.2.1",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps",
+      "oldAssetUrl": "/lessons/6.2.1/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.1_height_maps/"
+    },
+    {
+      "id": "6.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.2_erosion_simulation.mdx",
+      "oldAssetDir": "public/lessons/6.2.2",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.2_erosion_simulation",
+      "oldAssetUrl": "/lessons/6.2.2/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.2_erosion_simulation/"
+    },
+    {
+      "id": "6.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.3_cave_generation.mdx",
+      "oldAssetDir": "public/lessons/6.2.3",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.3_cave_generation",
+      "oldAssetUrl": "/lessons/6.2.3/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.3_cave_generation/"
+    },
+    {
+      "id": "6.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.4_island_generation.mdx",
+      "oldAssetDir": "public/lessons/6.2.4",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.4_island_generation",
+      "oldAssetUrl": "/lessons/6.2.4/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.2_terrain_generation/6.2.4_island_generation/"
+    },
+    {
+      "id": "6.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.1_marble_wood_textures.mdx",
+      "oldAssetDir": "public/lessons/6.3.1",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.1_marble_wood_textures",
+      "oldAssetUrl": "/lessons/6.3.1/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.1_marble_wood_textures/"
+    },
+    {
+      "id": "6.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation.mdx",
+      "oldAssetDir": "public/lessons/6.3.2",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation",
+      "oldAssetUrl": "/lessons/6.3.2/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation/"
+    },
+    {
+      "id": "6.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns.mdx",
+      "oldAssetDir": "public/lessons/6.3.3",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns",
+      "oldAssetUrl": "/lessons/6.3.3/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns/"
+    },
+    {
+      "id": "6.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.4_procedural_materials.mdx",
+      "oldAssetDir": "public/lessons/6.3.4",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.4_procedural_materials",
+      "oldAssetUrl": "/lessons/6.3.4/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.4_procedural_materials/"
+    },
+    {
+      "id": "6.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.1_moire_patterns.mdx",
+      "oldAssetDir": "public/lessons/6.4.1",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.1_moire_patterns",
+      "oldAssetUrl": "/lessons/6.4.1/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.1_moire_patterns/"
+    },
+    {
+      "id": "6.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.2_wave_interference.mdx",
+      "oldAssetDir": "public/lessons/6.4.2",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.2_wave_interference",
+      "oldAssetUrl": "/lessons/6.4.2/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.2_wave_interference/"
+    },
+    {
+      "id": "6.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/6.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.3_cymatics_visualization.mdx",
+      "oldAssetDir": "public/lessons/6.4.3",
+      "newAssetDir": "public/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.3_cymatics_visualization",
+      "oldAssetUrl": "/lessons/6.4.3/",
+      "newAssetUrl": "/lesson-media/Module_06_noise_procedural_generation/6.4_wave_interference_patterns/6.4.3_cymatics_visualization/"
+    },
+    {
+      "id": "7.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.1_kmeans_clustering.mdx",
+      "oldAssetDir": "public/lessons/7.1.1",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.1_kmeans_clustering",
+      "oldAssetUrl": "/lessons/7.1.1/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.1_kmeans_clustering/"
+    },
+    {
+      "id": "7.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.2_meanshift_segmentation.mdx",
+      "oldAssetDir": "public/lessons/7.1.2",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.2_meanshift_segmentation",
+      "oldAssetUrl": "/lessons/7.1.2/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.2_meanshift_segmentation/"
+    },
+    {
+      "id": "7.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection.mdx",
+      "oldAssetDir": "public/lessons/7.1.3",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection",
+      "oldAssetUrl": "/lessons/7.1.3/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection/"
+    },
+    {
+      "id": "7.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.1_decision_tree_classifier.mdx",
+      "oldAssetDir": "public/lessons/7.2.1",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.1_decision_tree_classifier",
+      "oldAssetUrl": "/lessons/7.2.1/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.1_decision_tree_classifier/"
+    },
+    {
+      "id": "7.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.2_random_forests.mdx",
+      "oldAssetDir": "public/lessons/7.2.2",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.2_random_forests",
+      "oldAssetUrl": "/lessons/7.2.2/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.2_random_forests/"
+    },
+    {
+      "id": "7.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.3_svm_style_detection.mdx",
+      "oldAssetDir": "public/lessons/7.2.3",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.3_svm_style_detection",
+      "oldAssetUrl": "/lessons/7.2.3/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.2_classification_recognition/7.2.3_svm_style_detection/"
+    },
+    {
+      "id": "7.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.1_pca_color_palette.mdx",
+      "oldAssetDir": "public/lessons/7.3.1",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.1_pca_color_palette",
+      "oldAssetUrl": "/lessons/7.3.1/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.1_pca_color_palette/"
+    },
+    {
+      "id": "7.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.2_tsne_visualization.mdx",
+      "oldAssetDir": "public/lessons/7.3.2",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.2_tsne_visualization",
+      "oldAssetUrl": "/lessons/7.3.2/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.2_tsne_visualization/"
+    },
+    {
+      "id": "7.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.3_umap_visualizations.mdx",
+      "oldAssetDir": "public/lessons/7.3.3",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.3_umap_visualizations",
+      "oldAssetUrl": "/lessons/7.3.3/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.3_dimensionality_reduction/7.3.3_umap_visualizations/"
+    },
+    {
+      "id": "7.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.1_monte_carlo_sampling.mdx",
+      "oldAssetDir": "public/lessons/7.4.1",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.1_monte_carlo_sampling",
+      "oldAssetUrl": "/lessons/7.4.1/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.1_monte_carlo_sampling/"
+    },
+    {
+      "id": "7.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains.mdx",
+      "oldAssetDir": "public/lessons/7.4.2",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains",
+      "oldAssetUrl": "/lessons/7.4.2/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains/"
+    },
+    {
+      "id": "7.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/7.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.3_hidden_markov_models.mdx",
+      "oldAssetDir": "public/lessons/7.4.3",
+      "newAssetDir": "public/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.3_hidden_markov_models",
+      "oldAssetUrl": "/lessons/7.4.3/",
+      "newAssetUrl": "/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.3_hidden_markov_models/"
+    },
+    {
+      "id": "8.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations.mdx",
+      "oldAssetDir": "public/lessons/8.1.1",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations",
+      "oldAssetUrl": "/lessons/8.1.1/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/"
+    },
+    {
+      "id": "8.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions.mdx",
+      "oldAssetDir": "public/lessons/8.1.2",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions",
+      "oldAssetUrl": "/lessons/8.1.2/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.2_easing_functions/"
+    },
+    {
+      "id": "8.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.1_animation_fundamentals/8.1.3_interpolation_techniques.mdx",
+      "oldAssetDir": "public/lessons/8.1.3",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.3_interpolation_techniques",
+      "oldAssetUrl": "/lessons/8.1.3/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.3_interpolation_techniques/"
+    },
+    {
+      "id": "8.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets.mdx",
+      "oldAssetDir": "public/lessons/8.1.4",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets",
+      "oldAssetUrl": "/lessons/8.1.4/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets/"
+    },
+    {
+      "id": "8.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly.mdx",
+      "oldAssetDir": "public/lessons/8.2.1",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly",
+      "oldAssetUrl": "/lessons/8.2.1/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/"
+    },
+    {
+      "id": "8.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom.mdx",
+      "oldAssetDir": "public/lessons/8.2.2",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom",
+      "oldAssetUrl": "/lessons/8.2.2/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/"
+    },
+    {
+      "id": "8.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.2_organic_motion/8.2.3_walk_cycles.mdx",
+      "oldAssetDir": "public/lessons/8.2.3",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.3_walk_cycles",
+      "oldAssetUrl": "/lessons/8.2.3/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.3_walk_cycles/"
+    },
+    {
+      "id": "8.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.2_organic_motion/8.2.4_breathing_pulsing.mdx",
+      "oldAssetDir": "public/lessons/8.2.4",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.4_breathing_pulsing",
+      "oldAssetUrl": "/lessons/8.2.4/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.4_breathing_pulsing/"
+    },
+    {
+      "id": "8.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles.mdx",
+      "oldAssetDir": "public/lessons/8.3.1",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles",
+      "oldAssetUrl": "/lessons/8.3.1/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/"
+    },
+    {
+      "id": "8.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.3_cinematic_effects/8.3.2_thank_you.mdx",
+      "oldAssetDir": "public/lessons/8.3.2",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.2_thank_you",
+      "oldAssetUrl": "/lessons/8.3.2/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.2_thank_you/"
+    },
+    {
+      "id": "8.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals.mdx",
+      "oldAssetDir": "public/lessons/8.3.3",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals",
+      "oldAssetUrl": "/lessons/8.3.3/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals/"
+    },
+    {
+      "id": "8.3.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.3.4.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.3_cinematic_effects/8.3.4_morphing_transitions.mdx",
+      "oldAssetDir": "public/lessons/8.3.4",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.4_morphing_transitions",
+      "oldAssetUrl": "/lessons/8.3.4/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.4_morphing_transitions/"
+    },
+    {
+      "id": "8.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.4_generative_animation/8.4.1_music_visualization.mdx",
+      "oldAssetDir": "public/lessons/8.4.1",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.1_music_visualization",
+      "oldAssetUrl": "/lessons/8.4.1/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.1_music_visualization/"
+    },
+    {
+      "id": "8.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.4_generative_animation/8.4.2_data_driven_animation.mdx",
+      "oldAssetDir": "public/lessons/8.4.2",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.2_data_driven_animation",
+      "oldAssetUrl": "/lessons/8.4.2/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.2_data_driven_animation/"
+    },
+    {
+      "id": "8.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/8.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals.mdx",
+      "oldAssetDir": "public/lessons/8.4.3",
+      "newAssetDir": "public/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals",
+      "oldAssetUrl": "/lessons/8.4.3/",
+      "newAssetUrl": "/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals/"
+    },
+    {
+      "id": "9.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.1_perceptron_scratch.mdx",
+      "oldAssetDir": "public/lessons/9.1.1",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.1_perceptron_scratch",
+      "oldAssetUrl": "/lessons/9.1.1/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.1_perceptron_scratch/"
+    },
+    {
+      "id": "9.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.2_backpropagation_visualization.mdx",
+      "oldAssetDir": "public/lessons/9.1.2",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.2_backpropagation_visualization",
+      "oldAssetUrl": "/lessons/9.1.2/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.2_backpropagation_visualization/"
+    },
+    {
+      "id": "9.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.3_activation_functions_art.mdx",
+      "oldAssetDir": "public/lessons/9.1.3",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.3_activation_functions_art",
+      "oldAssetUrl": "/lessons/9.1.3/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.3_activation_functions_art/"
+    },
+    {
+      "id": "9.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks.mdx",
+      "oldAssetDir": "public/lessons/9.2.1",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks",
+      "oldAssetUrl": "/lessons/9.2.1/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/"
+    },
+    {
+      "id": "9.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.2_network_architectures/9.2.2_convolutional_networks_visualization.mdx",
+      "oldAssetDir": "public/lessons/9.2.2",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.2_convolutional_networks_visualization",
+      "oldAssetUrl": "/lessons/9.2.2/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.2_convolutional_networks_visualization/"
+    },
+    {
+      "id": "9.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.2_network_architectures/9.2.3_recurrent_networks_sequences.mdx",
+      "oldAssetDir": "public/lessons/9.2.3",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.3_recurrent_networks_sequences",
+      "oldAssetUrl": "/lessons/9.2.3/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.3_recurrent_networks_sequences/"
+    },
+    {
+      "id": "9.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization.mdx",
+      "oldAssetDir": "public/lessons/9.3.1",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization",
+      "oldAssetUrl": "/lessons/9.3.1/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/"
+    },
+    {
+      "id": "9.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.2_gradient_descent_animation.mdx",
+      "oldAssetDir": "public/lessons/9.3.2",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.2_gradient_descent_animation",
+      "oldAssetUrl": "/lessons/9.3.2/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.2_gradient_descent_animation/"
+    },
+    {
+      "id": "9.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.3_overfitting_underfitting_demos.mdx",
+      "oldAssetDir": "public/lessons/9.3.3",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.3_overfitting_underfitting_demos",
+      "oldAssetUrl": "/lessons/9.3.3/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.3_overfitting_underfitting_demos/"
+    },
+    {
+      "id": "9.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation.mdx",
+      "oldAssetDir": "public/lessons/9.4.1",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation",
+      "oldAssetUrl": "/lessons/9.4.1/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation/"
+    },
+    {
+      "id": "9.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.2_feature_map_art.mdx",
+      "oldAssetDir": "public/lessons/9.4.2",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.2_feature_map_art",
+      "oldAssetUrl": "/lessons/9.4.2/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.2_feature_map_art/"
+    },
+    {
+      "id": "9.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/9.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.3_network_attention_visualization.mdx",
+      "oldAssetDir": "public/lessons/9.4.3",
+      "newAssetDir": "public/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.3_network_attention_visualization",
+      "oldAssetUrl": "/lessons/9.4.3/",
+      "newAssetUrl": "/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.3_network_attention_visualization/"
+    },
+    {
+      "id": "10.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.1_node_networks.mdx",
+      "oldAssetDir": "public/lessons/10.1.1",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.1_node_networks",
+      "oldAssetUrl": "/lessons/10.1.1/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.1_node_networks/"
+    },
+    {
+      "id": "10.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.2_python_integration_basics.mdx",
+      "oldAssetDir": "public/lessons/10.1.2",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.2_python_integration_basics",
+      "oldAssetUrl": "/lessons/10.1.2/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.2_python_integration_basics/"
+    },
+    {
+      "id": "10.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.3_performance_monitoring.mdx",
+      "oldAssetDir": "public/lessons/10.1.3",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.3_performance_monitoring",
+      "oldAssetUrl": "/lessons/10.1.3/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.1_td_environment_workflow/10.1.3_performance_monitoring/"
+    },
+    {
+      "id": "10.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.1_core_exercises_realtime.mdx",
+      "oldAssetDir": "public/lessons/10.2.1",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.1_core_exercises_realtime",
+      "oldAssetUrl": "/lessons/10.2.1/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.1_core_exercises_realtime/"
+    },
+    {
+      "id": "10.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td.mdx",
+      "oldAssetDir": "public/lessons/10.2.2",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td",
+      "oldAssetUrl": "/lessons/10.2.2/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/"
+    },
+    {
+      "id": "10.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.3_planet_simulation_td.mdx",
+      "oldAssetDir": "public/lessons/10.2.3",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.3_planet_simulation_td",
+      "oldAssetUrl": "/lessons/10.2.3/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.3_planet_simulation_td/"
+    },
+    {
+      "id": "10.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.4_fractals_realtime.mdx",
+      "oldAssetDir": "public/lessons/10.2.4",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.4_fractals_realtime",
+      "oldAssetUrl": "/lessons/10.2.4/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.4_fractals_realtime/"
+    },
+    {
+      "id": "10.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.1_script_operators.mdx",
+      "oldAssetDir": "public/lessons/10.3.1",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.1_script_operators",
+      "oldAssetUrl": "/lessons/10.3.1/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.1_script_operators/"
+    },
+    {
+      "id": "10.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.2_array_processing.mdx",
+      "oldAssetDir": "public/lessons/10.3.2",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.2_array_processing",
+      "oldAssetUrl": "/lessons/10.3.2/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.2_array_processing/"
+    },
+    {
+      "id": "10.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.3_custom_components.mdx",
+      "oldAssetDir": "public/lessons/10.3.3",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.3_custom_components",
+      "oldAssetUrl": "/lessons/10.3.3/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.3_numpy_td_pipeline/10.3.3_custom_components/"
+    },
+    {
+      "id": "10.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.1_ui_building.mdx",
+      "oldAssetDir": "public/lessons/10.4.1",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.1_ui_building",
+      "oldAssetUrl": "/lessons/10.4.1/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.1_ui_building/"
+    },
+    {
+      "id": "10.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.2_parameter_mapping.mdx",
+      "oldAssetDir": "public/lessons/10.4.2",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.2_parameter_mapping",
+      "oldAssetUrl": "/lessons/10.4.2/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.2_parameter_mapping/"
+    },
+    {
+      "id": "10.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/10.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.3_preset_systems.mdx",
+      "oldAssetDir": "public/lessons/10.4.3",
+      "newAssetDir": "public/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.3_preset_systems",
+      "oldAssetUrl": "/lessons/10.4.3/",
+      "newAssetUrl": "/lesson-media/Module_10_touchdesigner_fundamentals/10.4_interactive_controls/10.4.3_preset_systems/"
+    },
+    {
+      "id": "11.1.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.1.1.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing.mdx",
+      "oldAssetDir": "public/lessons/11.1.1",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing",
+      "oldAssetUrl": "/lessons/11.1.1/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/"
+    },
+    {
+      "id": "11.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.1_input_devices/11.1.2_audio_reactivity.mdx",
+      "oldAssetDir": "public/lessons/11.1.2",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.2_audio_reactivity",
+      "oldAssetUrl": "/lessons/11.1.2/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.2_audio_reactivity/"
+    },
+    {
+      "id": "11.1.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.1.3.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.1_input_devices/11.1.3_midi_osc_control.mdx",
+      "oldAssetDir": "public/lessons/11.1.3",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.3_midi_osc_control",
+      "oldAssetUrl": "/lessons/11.1.3/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.3_midi_osc_control/"
+    },
+    {
+      "id": "11.1.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.1.4.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.1_input_devices/11.1.4_kinect_leap_motion.mdx",
+      "oldAssetDir": "public/lessons/11.1.4",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.4_kinect_leap_motion",
+      "oldAssetUrl": "/lessons/11.1.4/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.4_kinect_leap_motion/"
+    },
+    {
+      "id": "11.2.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.2.1.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.2_computer_vision_td/11.2.1_motion_detection.mdx",
+      "oldAssetDir": "public/lessons/11.2.1",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.1_motion_detection",
+      "oldAssetUrl": "/lessons/11.2.1/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.1_motion_detection/"
+    },
+    {
+      "id": "11.2.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.2.2.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking.mdx",
+      "oldAssetDir": "public/lessons/11.2.2",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking",
+      "oldAssetUrl": "/lessons/11.2.2/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking/"
+    },
+    {
+      "id": "11.2.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.2.3.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection.mdx",
+      "oldAssetDir": "public/lessons/11.2.3",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection",
+      "oldAssetUrl": "/lessons/11.2.3/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/"
+    },
+    {
+      "id": "11.2.4",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.2.4.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.2_computer_vision_td/11.2.4_optical_flow.mdx",
+      "oldAssetDir": "public/lessons/11.2.4",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.4_optical_flow",
+      "oldAssetUrl": "/lessons/11.2.4/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.4_optical_flow/"
+    },
+    {
+      "id": "11.3.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.3.1.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.3_physical_computing/11.3.1_arduino_integration.mdx",
+      "oldAssetDir": "public/lessons/11.3.1",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.1_arduino_integration",
+      "oldAssetUrl": "/lessons/11.3.1/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.1_arduino_integration/"
+    },
+    {
+      "id": "11.3.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.3.2.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control.mdx",
+      "oldAssetDir": "public/lessons/11.3.2",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control",
+      "oldAssetUrl": "/lessons/11.3.2/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control/"
+    },
+    {
+      "id": "11.3.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.3.3.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics.mdx",
+      "oldAssetDir": "public/lessons/11.3.3",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics",
+      "oldAssetUrl": "/lessons/11.3.3/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics/"
+    },
+    {
+      "id": "11.4.1",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.4.1.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.4_network_communication/11.4.1_multi_machine_setups.mdx",
+      "oldAssetDir": "public/lessons/11.4.1",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.1_multi_machine_setups",
+      "oldAssetUrl": "/lessons/11.4.1/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.1_multi_machine_setups/"
+    },
+    {
+      "id": "11.4.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.4.2.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.4_network_communication/11.4.2_websocket_webrtc.mdx",
+      "oldAssetDir": "public/lessons/11.4.2",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.2_websocket_webrtc",
+      "oldAssetUrl": "/lessons/11.4.2/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.2_websocket_webrtc/"
+    },
+    {
+      "id": "11.4.3",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/11.4.3.mdx",
+      "newMdx": "src/content/lessons/Module_11_interactive_systems/11.4_network_communication/11.4.3_remote_control_interfaces.mdx",
+      "oldAssetDir": "public/lessons/11.4.3",
+      "newAssetDir": "public/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.3_remote_control_interfaces",
+      "oldAssetUrl": "/lessons/11.4.3/",
+      "newAssetUrl": "/lesson-media/Module_11_interactive_systems/11.4_network_communication/11.4.3_remote_control_interfaces/"
+    },
+    {
+      "id": "12.1.2",
+      "fromV1": true,
+      "oldMdx": "src/content/lessons/12.1.2.mdx",
+      "newMdx": "src/content/lessons/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art.mdx",
+      "oldAssetDir": "public/lessons/12.1.2",
+      "newAssetDir": "public/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art",
+      "oldAssetUrl": "/lessons/12.1.2/",
+      "newAssetUrl": "/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/"
+    }
+  ]
+}

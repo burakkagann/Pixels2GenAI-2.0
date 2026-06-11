@@ -1,7 +1,19 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const lessons = defineCollection({
-  type: 'content',
+  loader: glob({
+    pattern: '**/*.mdx',
+    base: './src/content/lessons',
+    // The numeric leaf id is the lesson's stable identity and its URL slug:
+    // "Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines.mdx" → "2.1.1".
+    // Depth-agnostic so the collection keeps building mid-reorganization.
+    generateId: ({ entry }) => {
+      const match = entry.split('/').pop()!.match(/^(\d+(?:\.\d+)*)/);
+      if (!match) throw new Error(`Lesson filename must start with a numeric id: ${entry}`);
+      return match[1];
+    },
+  }),
   schema: z.object({
     /** Display label, e.g. "M 04". */
     module: z.string(),

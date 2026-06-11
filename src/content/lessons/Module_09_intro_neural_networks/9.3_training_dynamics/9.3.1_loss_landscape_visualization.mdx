@@ -1,0 +1,202 @@
+---
+module: "M 09"
+cycle: "II"
+title: "Loss Landscape Visualisation"
+objective: "Plot the loss surface a neural network sees during training. A 2D slice through the high-dimensional parameter space reveals the bowls, plateaus, and saddles that explain why gradient descent sometimes converges and sometimes gets stuck."
+framework: "conceptual"
+duration: "25–35 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "9.1.2 (backprop), 3.4.3 (contours)"
+prev:
+  slug: "9.2.3"
+  title: "Recurrent Networks"
+next:
+  slug: "9.3.2"
+  title: "Gradient Descent"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+*What does a neural network's loss surface look like?* The space of possible parameter settings is high-dimensional — millions of weights for even a small network. The *loss* is a scalar function of all those parameters. You can't picture millions of dimensions, but you can slice the surface along two arbitrary directions and plot a 2D map of the loss [1]. The result reveals the geometry the optimiser is navigating: bowls, ridges, plateaus, saddle points, narrow valleys. Loss-landscape visualisations partly explain why some networks train easily and others don't.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Build a synthetic 2-parameter loss surface to develop intuition.</li>
+  <li>Sample two random directions in parameter space and plot a 2D slice through the trained model.</li>
+  <li>Distinguish local minima, saddle points, and plateaus from a loss-contour visualisation.</li>
+  <li>Connect landscape geometry to optimiser behaviour — why SGD escapes some bad regions and not others.</li>
+</ol>
+
+## Part 1 — A synthetic 2D loss surface <a id="part-1"></a>
+
+Before plotting a real network's loss landscape, work with a 2-parameter toy:
+
+```python
+import numpy as np
+
+w1, w2 = np.linspace(-3, 3, 400), np.linspace(-3, 3, 400)
+W1, W2 = np.meshgrid(w1, w2)
+
+loss = (W1**2 + W2**2) * 0.1 \
+     + 0.7 * np.exp(-((W1 - 1.5)**2 + (W2 - 1.0)**2)) \
+     + 0.5 * np.exp(-((W1 + 1.2)**2 + (W2 + 1.4)**2)) \
+     - 0.6 * np.exp(-((W1 - 0.3)**2 + (W2 - 0.4)**2) * 2.5)
+```
+
+This function has a global minimum near `(0.3, 0.4)`, a saddle point near the origin, and two local maxima from the positive Gaussian bumps. The negative Gaussian creates an attractive well.
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/loss_landscape_2d.png"
+  alt="A grayscale image of a 2D loss landscape: lighter regions at high loss, darker regions at low loss. There are visible features: a smooth basin, a few peaks, and saddle-shaped regions."
+  caption="A toy 2-parameter loss surface. Bright = high loss; dark = low loss. The training optimiser is trying to slide downhill on this surface."
+  num={1}
+  role="output"
+/>
+
+## Part 2 — Contours and colour <a id="part-2"></a>
+
+Stepped contours from 3.4.3 make the basins and ridges visible:
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/loss_landscape_contours.png"
+  alt="The same loss landscape, now rendered as discrete contour bands. The level sets are clearly visible: nested closed curves around minima, X-shaped patterns near saddles."
+  caption="Contour bands reveal the level sets. Nested closed curves indicate a minimum or maximum; saddles look like crossing X-shapes."
+  num={2}
+  role="output"
+/>
+
+A colour ramp adds an extra channel of information. Warm colours for peaks, cool colours for valleys; the eye reads the topology at a glance.
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/loss_landscape_color.png"
+  alt="The loss landscape rendered with a warm-to-cool palette: red and orange peaks, deep blue and purple valleys. The topography is immediately legible."
+  caption="Loss landscape with a heatmap palette. Same information as before; faster to read."
+  num={3}
+  role="output"
+/>
+
+<Admonition type="important">
+The toy is 2-dimensional. A real network has millions of weights. Plotting a 2D slice along *random* directions in parameter space tends to make even very complex landscapes look like simple bowls — most random directions hit regions of locally smooth, convex-looking loss. The interesting structure is in specific directions [1, 2].
+</Admonition>
+
+## Part 3 — Slicing a real network <a id="part-3"></a>
+
+To visualise a real network's loss surface, pick two random directions `d_1, d_2` in parameter space, set the trained weights to `θ + α·d_1 + β·d_2`, and evaluate the loss at every `(α, β)`. Plot the resulting 2D field:
+
+```python
+def loss_slice(net, theta_star, d1, d2, batch, alphas, betas):
+    L = np.zeros((len(alphas), len(betas)))
+    for i, a in enumerate(alphas):
+        for j, b in enumerate(betas):
+            net.set_params(theta_star + a*d1 + b*d2)
+            L[i, j] = net.loss(batch)
+    return L
+```
+
+The directions `d_1, d_2` are usually picked as random vectors *normalised per-layer* so each layer's contribution is comparable [1]. The trained minimum `θ*` sits at `(0, 0)`; the surrounding landscape shows how the loss changes as you perturb the weights.
+
+**What you typically see:**
+
+- For networks with skip connections (ResNet): smooth, near-convex loss landscape — easy to optimise.
+- For networks without skip connections (plain VGG): rugged, with many narrow ridges and small minima — much harder to optimise [1].
+- For untrained random initialisations: chaotic with no clear minimum nearby.
+
+<Admonition type="dyk" title="Technical note · the flat-vs-sharp debate">
+There is an active debate in deep learning research about whether *flat* minima (basins with low curvature) generalise better than *sharp* minima (basins with high curvature). The 2017 paper *"On Large-Batch Training for Deep Learning"* by Keskar et al. argued that large batch sizes find sharp minima that don't generalise as well as the flat minima found by small-batch SGD. The debate is unresolved, but loss-landscape visualisation is the main tool for the discussion [3].
+</Admonition>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Render the 2D toy landscape">
+
+Run `landscape.py` from the downloads. It builds the toy 2-parameter loss function and renders it as both grayscale and colour.
+
+**Reflection questions**
+
+- Which features in the landscape are local minima, and which are saddles?
+- Why is the global minimum *not* at the origin, even though the `W₁² + W₂²` term has its minimum there?
+- What would a *flat plateau* look like in this visualisation?
+
+<Dropdown summary="Answers">
+
+**Minima vs saddles** — at a minimum, the loss decreases in *every* direction from that point; in contours, you see nested closed curves. At a saddle, the loss decreases in some directions and increases in others; in contours, you see a crossing X-shape. The synthetic landscape has both.
+
+**Global min not at origin** — the negative Gaussian centred at `(0.3, 0.4)` pulls the minimum to that location. The base `W₁² + W₂²` bowl is just one component of the total.
+
+**Flat plateau** — a region of constant or near-constant loss. In contours, plateaus appear as wide bands of the same colour. Gradient descent slows down here (gradient ≈ 0) and can get stuck.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Build your own loss landscape">
+
+Construct a synthetic loss with these features:
+
+**Goals**
+
+1. **Two distinct local minima** — add two negative Gaussians at different locations.
+2. **A saddle** — combine `W₁² − W₂²` for the classic hyperbolic saddle.
+3. **A valley** — `(W₁ − 2·W₂)²` makes a long narrow trough.
+
+<Dropdown summary="Example expressions">
+
+```python
+two_minima = - np.exp(-((W1+1)**2 + W2**2)) - np.exp(-((W1-1)**2 + W2**2))
+saddle = W1**2 - W2**2
+valley = (W1 - 2*W2)**2
+combined = two_minima + 0.1 * saddle + 0.05 * valley
+```
+
+Plotting `combined` shows a landscape with two attractive minima, a saddle that's been pulled into the surface, and a guiding valley direction. The exercise builds intuition for the *kinds* of features real neural-network landscapes have.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Compare loss landscapes of two networks">
+
+Pretend you have two trained networks: one with skip connections (smooth landscape), one without (rugged landscape). Build a synthetic loss for each and render them side by side.
+
+<Dropdown summary="Approach">
+
+```python
+def smooth_landscape(W1, W2):
+    return 0.5 * (W1**2 + W2**2)
+
+def rugged_landscape(W1, W2, rng):
+    # Smooth base + many small Gaussian bumps from noise
+    base = 0.5 * (W1**2 + W2**2)
+    bumps = sum(0.3 * np.exp(-((W1-rng.uniform(-3, 3))**2 + (W2-rng.uniform(-3, 3))**2) * 4)
+                for _ in range(30))
+    return base + bumps
+```
+
+The smooth landscape converges from any starting point. The rugged landscape has many traps. Render both with the same axes and palette for direct comparison.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/loss_landscape_2d.png" label="loss_landscape_2d.png — synthetic surface" />
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.1_loss_landscape_visualization/loss_landscape_contours.png" label="loss_landscape_contours.png — contour overlay" />
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Li, H., Xu, Z., Taylor, G., et al. (2018). Visualizing the loss landscape of neural nets. *NeurIPS 31*, 6389–6399.</li>
+    <li><span class="tag">[2]</span> Goodfellow, I., Vinyals, O., & Saxe, A. M. (2015). Qualitatively characterizing neural network optimization problems. *ICLR*.</li>
+    <li><span class="tag">[3]</span> Keskar, N. S., Mudigere, D., Nocedal, J., et al. (2017). On large-batch training for deep learning: Generalization gap and sharp minima. *ICLR*.</li>
+    <li><span class="tag">[4]</span> Dauphin, Y. N., Pascanu, R., Gulcehre, C., et al. (2014). Identifying and attacking the saddle point problem in high-dimensional non-convex optimization. *NeurIPS 27*.</li>
+    <li><span class="tag">[5]</span> Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.</li>
+    <li><span class="tag">[6]</span> Choromanska, A., Henaff, M., Mathieu, M., et al. (2015). The loss surfaces of multilayer networks. *AISTATS*, 192–204.</li>
+  </ol>
+</section>

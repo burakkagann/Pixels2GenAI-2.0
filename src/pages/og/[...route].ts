@@ -24,7 +24,8 @@ const pages: Record<string, { title: string; description: string }> = {
 };
 
 for (const lesson of lessons) {
-  const slug = lesson.id.replace(/\.mdx?$/, '');
+  // lesson.id is the numeric leaf id (e.g. "2.1.1") via the glob loader.
+  const slug = lesson.id;
   pages[`lessons/${slug}`] = {
     title: `${slug} · ${lesson.data.title}`,
     description: lesson.data.objective,

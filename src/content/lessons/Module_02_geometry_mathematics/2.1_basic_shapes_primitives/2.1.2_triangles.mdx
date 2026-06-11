@@ -1,0 +1,424 @@
+---
+module: "M 02"
+cycle: "I"
+title: "Drawing Triangles"
+objective: "Fill a triangle as the intersection of three half-planes using the edge function — the same algorithm GPUs run in hardware millions of times per frame — then stack triangles into a layered mountain landscape."
+framework: "hands-on"
+duration: "18–22 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "2.1.1 (line drawing), basic NumPy broadcasting"
+prev:
+  slug: "2.1.1"
+  title: "Drawing Lines"
+next:
+  slug: "2.1.3"
+  title: "Drawing Circles"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Every 3D mesh you have ever seen — from polygon-era game characters to film-quality digital doubles — is broken into triangles before the GPU touches it. The reason is geometric, not graphical: three points always define exactly one flat plane, so the rasterizer can decide which pixels belong to a triangle without ambiguity. The deciding step is called the **edge function**, a 1988 algorithm from Pixar that is now baked into the silicon of every modern GPU [1]. In this lesson you will implement the edge function in NumPy, contrast it with a much shorter `x + x.T` trick that only works for right triangles, and stack triangles into a mountain silhouette using the painter's algorithm.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Express a triangle as the intersection of three half-planes, each defined by an edge.</li>
+  <li>Implement Pineda's edge function to rasterize an arbitrary triangle on a 2D pixel grid.</li>
+  <li>Recognise the `x + x.T` broadcasting pattern as a compact form for axis-aligned right triangles.</li>
+  <li>Apply the painter's algorithm — back to front compositing — to layered triangle scenes.</li>
+</ol>
+
+## Quick start — fill a triangle <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+height, width = 400, 400
+y_coords, x_coords = np.meshgrid(np.arange(height), np.arange(width), indexing='ij')
+
+# Vertices in clockwise order
+v1 = (200, 50)    # top
+v2 = (350, 350)   # bottom right
+v3 = (50, 350)    # bottom left
+
+def edge(x, y, x1, y1, x2, y2):
+    """Negative when (x, y) is to the right of edge (x1, y1) → (x2, y2)."""
+    return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+
+e1 = edge(x_coords, y_coords, *v1, *v2) <= 0
+e2 = edge(x_coords, y_coords, *v2, *v3) <= 0
+e3 = edge(x_coords, y_coords, *v3, *v1) <= 0
+
+mask = e1 & e2 & e3
+
+canvas = np.zeros((height, width), dtype=np.uint8)
+canvas[mask] = 255
+
+Image.fromarray(canvas).save('simple_triangle.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/simple_triangle.png"
+  alt="A white filled triangle pointing upward on a black 400 by 400 canvas"
+  caption="A filled triangle — the intersection of three half-planes, computed for every pixel in parallel via NumPy broadcasting."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The triangle is *never drawn*. Three independent edge tests label every pixel as inside or outside; the triangle is what survives an `&` of those three masks. Same logic, no rasterizer loop.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — A triangle is three half-planes intersected
+
+Pick any line through two points $(x_1, y_1)$ and $(x_2, y_2)$. The plane on either side of that line is a **half-plane**. The edge function
+
+$$E(x, y) = (x - x_1)(y_2 - y_1) - (y - y_1)(x_2 - x_1)$$
+
+is positive on one half-plane, negative on the other, and zero exactly on the line itself [1]. It is just the 2D cross product of the edge vector and the vector from the start of the edge to the test point, so its sign tells you which way the test point lies.
+
+A triangle is the intersection of three half-planes. If you list its vertices clockwise, inside points satisfy $E \leq 0$ for all three edges. Counterclockwise winding flips the convention to $E \geq 0$. The choice of `<=` (rather than strict `<`) is deliberate: it includes pixels exactly on the boundary, which avoids visible seams between adjacent triangles in a mesh [2].
+
+<Admonition type="dyk" title="Technical note · GPUs and the edge function">
+Juan Pineda published the edge-function rasterizer at SIGGRAPH 1988 [1]. It is embarrassingly parallel — each pixel's three edge tests are independent — which is exactly what dedicated raster hardware wants. Every modern GPU implements a refined version of the same algorithm at the silicon level; this is why filling a million triangles per frame is realistic.
+</Admonition>
+
+### Concept 2 — `x + x.T` as a broadcast trick
+
+When the triangle is right-angled and aligned to the axes, you do not need three edge tests — only one. Build a column vector of row indices and add it to its own transpose:
+
+<CodeBlock lang="python" file="x_plus_xt_demo.py">
+```python
+import numpy as np
+
+x = np.arange(400).reshape(400, 1)   # shape (400, 1)
+distance_matrix = x + x.T             # shape (400, 400)
+# element at [i, j] equals i + j
+```
+</CodeBlock>
+
+Broadcasting expands `x` along axis 1 and `x.T` along axis 0; the sum has element `(i, j) = i + j`. Threshold it — say `i + j <= 400` — and you get a right triangle with its hypotenuse on the anti-diagonal.
+
+<Figure
+  src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_matrix.png"
+  alt="A white right triangle in the upper-left corner of the canvas, with hypotenuse running from upper-right to lower-left"
+  caption="The `x + x.T` pattern: every pixel knows its `row + col`, and the threshold is the diagonal cut."
+  num={2}
+  role="output"
+/>
+
+The pattern is compact and very fast, but its expressive range is narrow. The boundary is always the anti-diagonal — you cannot rotate it, you cannot place the vertices freely. For anything other than axis-aligned right triangles, fall back to the edge function. Use this trick when you actually want a right triangle; reach for `edge()` otherwise.
+
+### Concept 3 — Layered triangles and the painter's algorithm
+
+Once `draw_triangle` exists, composition is a question of order. To build a mountain silhouette you draw the **distant** mountain first, then a closer one over it, then a closer one over that. Each new triangle overwrites pixels from earlier ones, so the most recently drawn shape ends up on top. This is the **painter's algorithm** — render back to front, just as a painter would lay a backdrop before foreground details [3].
+
+For a 4-mountain landscape, sort by depth before drawing:
+
+<CodeBlock lang="python" file="painter_demo.py">
+```python
+mountains = [
+    {'peak': (400, 80),  'left': (250, 400), 'right': (500, 400), 'color': (100, 100, 120)},  # back
+    {'peak': (150, 120), 'left': (0,   400), 'right': (320, 400), 'color': (70,  80,  90)},
+    {'peak': (300, 180), 'left': (150, 400), 'right': (480, 400), 'color': (40,  45,  50)},
+    {'peak': (80,  250), 'left': (0,   400), 'right': (200, 400), 'color': (30,  35,  40)},  # front
+]
+for m in mountains:
+    draw_triangle(canvas, m['peak'], m['right'], m['left'], m['color'])
+```
+</CodeBlock>
+
+Reverse the iteration order and the foreground gets buried behind the background — same data, wrong result. The painter's algorithm fails when triangles can mutually occlude each other (interlocking shapes), which is why GPUs use **z-buffering** for full 3D scenes. For a 2D silhouette landscape, painter's order is exactly enough.
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: rasterize a triangle, vary it, then layer triangles into a landscape.
+
+<Exercise n={1} kicker="EXECUTE" title="Run both triangle methods">
+
+Run `simple_triangle.py` and `triangle_matrix.py`. Compare the two outputs side by side.
+
+<CodeBlock lang="python" file="exercise1_execute.py">
+```python
+import numpy as np
+from PIL import Image
+
+height, width = 400, 400
+y_coords, x_coords = np.meshgrid(np.arange(height), np.arange(width), indexing='ij')
+
+v1, v2, v3 = (200, 50), (350, 350), (50, 350)
+
+def edge(x, y, x1, y1, x2, y2):
+    return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+
+e1 = edge(x_coords, y_coords, *v1, *v2) <= 0
+e2 = edge(x_coords, y_coords, *v2, *v3) <= 0
+e3 = edge(x_coords, y_coords, *v3, *v1) <= 0
+mask = e1 & e2 & e3
+
+canvas = np.zeros((height, width), dtype=np.uint8)
+canvas[mask] = 255
+Image.fromarray(canvas).save('simple_triangle.png')
+```
+</CodeBlock>
+
+**Reflection questions**
+
+- What shape does `x + x.T` produce, and why is it always axis-aligned?
+- What happens to the edge-function output if you reverse the vertex order to counterclockwise?
+- Why use `<=` rather than strict `<` in the edge tests?
+
+<Dropdown summary="Answers">
+
+**`x + x.T`** — element `(i, j)` equals `i + j`, which is constant on the anti-diagonal. Thresholding produces a half-plane bounded by that diagonal. You can shift the threshold, but the diagonal direction is fixed by the broadcast pattern.
+
+**Counterclockwise vertices** — every edge function flips sign. The triangle you wanted to draw becomes the *complement* of the canvas. The fix is `>= 0` instead of `<= 0` on all three tests, or simply re-list the vertices clockwise.
+
+**`<=` vs `<`** — with strict `<`, pixels exactly on an edge fail the test and stay black. When two triangles share an edge in a mesh, both reject the shared pixels and you get a visible seam. `<=` closes the boundary; a small fill-rule convention (e.g. "top-left rule") avoids double-counting shared edges in real rasterizers.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three quick variations">
+
+Edit `exercise1_execute.py` to produce these three pictures.
+
+**Goals**
+
+1. **Inverted** — a triangle pointing *down* of the same size.
+2. **Smaller and centred** — a 100-pixel-tall triangle centred at `(200, 200)`.
+3. **Coloured** — a red triangle on a white RGB canvas.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Move the apex to the bottom and the base to the top:
+
+```python
+v1 = (200, 350)   # apex now at the bottom
+v2 = (350, 50)    # top right
+v3 = (50, 50)     # top left
+```
+
+The vertex order is still clockwise — you swapped the *positions*, not the *order*.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Place vertices on a 100-pixel-tall isoceles triangle centred at `(200, 200)`:
+
+```python
+v1 = (200, 150)
+v2 = (250, 250)
+v3 = (150, 250)
+```
+
+The mask is computed the same way; the figure is just smaller.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Switch the canvas to RGB and assign three-channel colour:
+
+```python
+canvas = np.full((400, 400, 3), 255, dtype=np.uint8)   # white background
+canvas[mask] = [255, 0, 0]                              # red triangle
+Image.fromarray(canvas, mode='RGB').save('red_triangle.png')
+```
+
+The mask remains a 2D boolean; advanced indexing assigns the same `[255, 0, 0]` triple to every selected pixel.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Layered mountain silhouette">
+
+Build a **mountain landscape**: a gradient sky and at least three overlapping mountain triangles drawn back to front.
+
+**Goal:** a 500×400 RGB canvas with a vertical sky gradient (midnight blue at the top, sunset orange at the bottom) and three or more mountain triangles in front of it.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+def draw_filled_triangle(canvas, v1, v2, v3, color):
+    """Fill the triangle (v1, v2, v3) with `color` on an RGB canvas."""
+    # TODO 1: build x, y coordinate grids with np.meshgrid
+    # TODO 2: define an edge() helper and compute the three edge tests
+    # TODO 3: combine with & into a mask, then assign color where the mask is True
+    pass
+
+def create_gradient_sky(height, width):
+    """Vertical gradient from midnight blue (top) to sunset orange (bottom)."""
+    sky = np.zeros((height, width, 3), dtype=np.uint8)
+    # TODO 4: interpolate per-row between top and bottom colours, write into sky[y, :]
+    return sky
+
+height, width = 400, 500
+canvas = create_gradient_sky(height, width)
+
+# TODO 5: define at least 3 mountains as dicts with peak/left/right/color,
+# then draw them back to front by calling draw_filled_triangle for each.
+
+Image.fromarray(canvas).save('triangle_mountain.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — generalise the edge function">
+
+The same `edge()` helper from the quick start, parameterised by canvas size:
+
+```python
+def draw_filled_triangle(canvas, v1, v2, v3, color):
+    h, w = canvas.shape[:2]
+    y_coords, x_coords = np.meshgrid(np.arange(h), np.arange(w), indexing='ij')
+    def edge(x, y, x1, y1, x2, y2):
+        return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+    e1 = edge(x_coords, y_coords, *v1, *v2) <= 0
+    e2 = edge(x_coords, y_coords, *v2, *v3) <= 0
+    e3 = edge(x_coords, y_coords, *v3, *v1) <= 0
+    canvas[e1 & e2 & e3] = color
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — the gradient sky">
+
+Linear interpolation between two RGB triples, one row at a time:
+
+```python
+def create_gradient_sky(h, w):
+    sky = np.zeros((h, w, 3), dtype=np.uint8)
+    top = np.array([25, 25, 112])
+    bot = np.array([255, 140, 50])
+    for y in range(h):
+        t = y / h
+        sky[y, :] = ((1 - t) * top + t * bot).astype(np.uint8)
+    return sky
+```
+
+You can also do this vectorised with `np.linspace`, but the loop is easy to read.
+
+</Dropdown>
+
+<Dropdown summary="Hint 3 — draw order matters">
+
+Sort your mountain list so the *furthest* mountain is first and the *closest* is last. Iterate in that order, calling `draw_filled_triangle` per entry. Reversing the list moves the foreground behind the background, which gives the painter's algorithm away the instant you see it.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+def draw_filled_triangle(canvas, v1, v2, v3, color):
+    h, w = canvas.shape[:2]
+    y_coords, x_coords = np.meshgrid(np.arange(h), np.arange(w), indexing='ij')
+
+    def edge(x, y, x1, y1, x2, y2):
+        return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+
+    e1 = edge(x_coords, y_coords, *v1, *v2) <= 0
+    e2 = edge(x_coords, y_coords, *v2, *v3) <= 0
+    e3 = edge(x_coords, y_coords, *v3, *v1) <= 0
+    canvas[e1 & e2 & e3] = color
+
+def create_gradient_sky(h, w):
+    sky = np.zeros((h, w, 3), dtype=np.uint8)
+    top = np.array([25, 25, 112])
+    bot = np.array([255, 140, 50])
+    for y in range(h):
+        t = y / h
+        sky[y, :] = ((1 - t) * top + t * bot).astype(np.uint8)
+    return sky
+
+h, w = 400, 500
+canvas = create_gradient_sky(h, w)
+
+mountains = [
+    {'peak': (400,  80), 'left': (250, 400), 'right': (500, 400), 'color': (100, 100, 120)},
+    {'peak': (150, 120), 'left': (0,   400), 'right': (320, 400), 'color': (70,  80,  90)},
+    {'peak': (300, 180), 'left': (150, 400), 'right': (480, 400), 'color': (40,  45,  50)},
+    {'peak': (80,  250), 'left': (0,   400), 'right': (200, 400), 'color': (30,  35,  40)},
+]
+for m in mountains:
+    draw_filled_triangle(canvas, m['peak'], m['right'], m['left'], m['color'])
+
+Image.fromarray(canvas).save('triangle_mountain.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_mountain.png"
+  alt="A mountain silhouette with four overlapping triangular mountains in front of a vertical blue-to-orange sky gradient"
+  caption="Four triangles plus a gradient — the painter's algorithm gives the depth ordering for free."
+  num={3}
+  role="output"
+/>
+
+**How it works:**
+
+- `draw_filled_triangle` rasterises a triangle by running three edge tests over the full coordinate grid and assigning the fill colour where all three pass.
+- `create_gradient_sky` produces the backdrop with a per-row linear interpolation between two RGB triples.
+- The mountain list is sorted *back to front*; iterating in that order means each subsequent triangle paints over what came before.
+
+</Dropdown>
+
+#### Make it your own
+
+- Add a circular sun by computing `(x - cx)**2 + (y - cy)**2 < r**2` and assigning a colour where the mask is true.
+- Reflect each mountain below a "water line" with a darker, more saturated colour for a lake-foreground composition.
+- Animate by sweeping the sky gradient: regenerate the canvas with shifted `top`/`bot` colours and save a sequence of frames.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/simple_triangle.py" label="simple_triangle.py — edge-function rasterizer" />
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_matrix.py" label="triangle_matrix.py — x + x.T pattern" />
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_mountain.py" label="triangle_mountain.py — layered landscape" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A triangle is the intersection of three half-planes. Pineda's edge function decides which side of an edge any point lies on, and ANDing three such tests labels every pixel of the canvas in parallel — the same algorithm that GPU silicon implements millions of times per frame. The `x + x.T` broadcast trick gives a much shorter expression for axis-aligned right triangles but cannot rotate the boundary. For composing scenes from multiple triangles, the painter's algorithm — render back to front — handles 2D occlusion with no extra machinery, the same way an oil painter lays a sky before painting mountains in front of it.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Inconsistent winding order across triangles — keep them all clockwise (or all counterclockwise) so a single `<=` test works for every triangle.
+- Forgetting `Image.fromarray(canvas, mode='RGB')` on colour canvases — Pillow can otherwise misinterpret a `(H, W, 3)` array.
+- Drawing the foreground first — closer mountains end up *behind* distant ones.
+- Float vertices feeding the edge function — fine numerically, but rounded pixel boundaries can drift; use integer vertices when you want pixel-exact silhouettes.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Pineda, J. (1988). A parallel algorithm for polygon rasterization. *ACM SIGGRAPH Computer Graphics*, 22(4), 17–20. <a href="https://doi.org/10.1145/378456.378457" target="_blank" rel="noopener">doi:10.1145/378456.378457</a></li>
+    <li><span class="tag">[2]</span> Shirley, P., & Marschner, S. (2009). *Fundamentals of Computer Graphics* (3rd ed.). A K Peters/CRC Press.</li>
+    <li><span class="tag">[3]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley.</li>
+    <li><span class="tag">[4]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+    <li><span class="tag">[5]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585(7825), 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+    <li><span class="tag">[6]</span> NumPy Community. (2024). Broadcasting. *NumPy Documentation*. <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" target="_blank" rel="noopener">numpy.org</a></li>
+    <li><span class="tag">[7]</span> Clark, A., et al. (2024). *Pillow Documentation*. <a href="https://pillow.readthedocs.io/" target="_blank" rel="noopener">pillow.readthedocs.io</a></li>
+  </ol>
+</section>

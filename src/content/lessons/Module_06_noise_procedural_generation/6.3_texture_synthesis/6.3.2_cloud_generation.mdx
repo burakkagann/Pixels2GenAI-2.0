@@ -1,0 +1,322 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Cloud Generation"
+objective: "Threshold an fbm field at ~0.45 and amplify with `clip((z − t) * gain, 0, 1)` to produce a soft cloud mask. Composite over a vertical sky gradient and the result reads as a flat-bottomed cumulus formation."
+framework: "hands-on"
+duration: "16–20 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "6.1.1 (fbm), 3.2.1 (masks)"
+prev:
+  slug: "6.3.1"
+  title: "Marble & Wood"
+next:
+  slug: "6.3.3"
+  title: "Abstract Patterns"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Real cumulus clouds have a curious property: most of the sky is empty, but the cloud regions are *bright white with a flat bottom*. The procedural recipe captures this in two lines. Take an fbm field; threshold below `t` for "no cloud," and apply linear amplification above `t` for "cloud body":
+
+```
+cloud = clip((z − t) × gain, 0, 1)
+```
+
+The thresholding is what creates the discrete cloud edges; the gain is what flattens the cloud body to near-white. Composite over a sky gradient and you have a credible cumulus sky [1]. The same trick generalises to smoke, fog, and any volumetric look where "most of the field is empty, the rest is a soft glow."
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Build a vertical sky gradient by linear interpolation between two RGB stop colours.</li>
+  <li>Threshold an fbm field with `clip((z − t) * gain, 0, 1)` and read it as a continuous cloud-density mask.</li>
+  <li>Alpha-composite the cloud mask over the sky to get the final image.</li>
+  <li>Tune `t` (cloud coverage) and `gain` (cloud sharpness) for different cloud types.</li>
+</ol>
+
+## Quick start — clouds over sky <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 300, 600
+
+# Vertical sky gradient: deep blue at top, paler near horizon
+sky_top = np.array([0.40, 0.60, 0.90])
+sky_bot = np.array([0.85, 0.92, 1.00])
+yy = np.linspace(0, 1, H)[:, None, None]
+sky = sky_top * (1 - yy) + sky_bot * yy
+sky = np.broadcast_to(sky, (H, W, 3)).copy()
+
+# fbm cloud density, thresholded and amplified
+cloud = fbm((H, W), scale=80, octaves=5, seed=7 + 90)
+cloud = np.clip((cloud - 0.45) * 4, 0, 1)            # threshold + gain
+
+# Composite: white cloud over sky
+cloud_rgb = np.stack([cloud, cloud, cloud], axis=-1)
+sky = sky * (1 - cloud_rgb) + cloud_rgb * 1.0
+
+Image.fromarray((np.clip(sky, 0, 1) * 255).astype(np.uint8)).save('clouds_over_sky.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation/clouds_over_sky.png"
+  alt="A panoramic sky scene with a gradient from deep blue at the top to pale near the horizon, with bright white cumulus-style clouds floating in the upper portion of the image."
+  caption="Thresholded fbm composited over a sky gradient. The threshold is the discrete cloud edge; the gain flattens the cloud bodies to near-white."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The cloud body is *not* a soft Perlin blob — it is a *binary-like* mask with soft edges. The `clip((z − t) * gain, 0, 1)` line is what creates the cloud silhouette; the gain controls how sharp the boundary is.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Vertical sky gradient
+
+A clear sky transitions from deep saturated blue at the zenith to paler near-white blue at the horizon. The simplest credible sky is a vertical lerp between two stops:
+
+```python
+sky_top = np.array([0.40, 0.60, 0.90])      # zenith
+sky_bot = np.array([0.85, 0.92, 1.00])      # horizon
+yy = np.linspace(0, 1, H)[:, None, None]    # 0 at top, 1 at bottom
+sky = sky_top * (1 - yy) + sky_bot * yy
+```
+
+The lerp is the same construction from 2.2.1 (gradients), now applied to a colour pair. Broadcasting handles the per-column extension automatically.
+
+For sunsets, swap `sky_top` to deep purple and `sky_bot` to vivid orange. For storms, both stops go grey. The composition trick is the same — only the colours change [2].
+
+### Concept 2 — Threshold + gain = cloud mask
+
+Plain fbm gives a smooth field in `[0, 1]` with detail at all scales. Real clouds are *not* smooth — they have crisp boundaries between "cloud" and "empty sky." The two-parameter conversion:
+
+```python
+cloud = np.clip((z - t) * gain, 0, 1)
+```
+
+- `(z - t)` shifts the field so anything below `t` becomes negative.
+- `* gain` amplifies the values that survive — a small positive remainder gets pushed close to 1, the negatives stay negative.
+- `np.clip(..., 0, 1)` clamps the output to a valid `[0, 1]` mask.
+
+`t = 0.45` means roughly the top half of the fbm field becomes cloud. `gain = 4` means anything 0.25 above threshold reaches full intensity. The combination gives a hard cloud edge with a small soft-shoulder region [3].
+
+| t   | gain | Look |
+|-----|------|------|
+| 0.6 | 8    | Sparse, sharp clouds |
+| 0.45| 4    | Standard cumulus (quick start) |
+| 0.3 | 2    | Overcast, soft edges |
+| 0.2 | 1    | Light fog everywhere |
+
+### Concept 3 — Alpha compositing the cloud over the sky
+
+With the cloud mask in `[0, 1]`, the composite is one line:
+
+```python
+out = sky * (1 - cloud_rgb) + cloud_rgb * cloud_color
+```
+
+This is the Porter-Duff *over* operator from 3.2.2/3.2.4. Where the cloud mask is 0 (no cloud), `sky` shows through unchanged. Where the cloud mask is 1, `cloud_color` (white) wins. In between, the two are alpha-blended proportionally.
+
+For grey storm clouds, replace `cloud_color = [1, 1, 1]` with `cloud_color = [0.6, 0.6, 0.6]`. For sunset clouds, try `cloud_color = [1.0, 0.6, 0.4]`.
+
+<Admonition type="dyk" title="Technical note · how this differs from volumetric clouds">
+Real volumetric clouds — used in modern games and film — march rays through a 3D density field, accumulating colour and attenuating light based on scattering integrals. The 2D fake here skips all of that physics; it composites a single-layer cloud mask over a flat sky. The result is convincing for backgrounds and stylised scenes but obviously not for VFX-quality cloud rendering [4].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the sky, tune `t` and `gain`, then add a sunset.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the sky generator">
+
+Run `clouds.py` from the downloads. Inspect the output.
+
+**Reflection questions**
+
+- Why does the threshold produce *hard* cloud edges even though fbm is smooth?
+- What does setting `gain = 1` (no amplification) do?
+- What proportion of the sky is cloudy with `t = 0.45`?
+
+<Dropdown summary="Answers">
+
+**Hard edges** — the threshold creates a step function: below `t` everything goes to 0, above `t` everything starts climbing. The gain steepens the climb so the transition zone (where the cloud is partially opaque) is narrow. Without the threshold, the field would smoothly cover the whole sky with no clear cloud silhouettes.
+
+**Gain 1** — values above `t` map linearly to `[0, 1]`. The cloud body has a *gradient* from threshold to white instead of solid white. Reads as fog, not cumulus.
+
+**Coverage at t = 0.45** — since fbm is roughly uniform in `[0, 1]`, about 55% of pixels exceed 0.45. But the threshold catches *low-frequency* groups (since fbm is smooth), so the visible coverage looks like 30-40% — a typical cumulus sky.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three sky variations">
+
+Edit `clouds.py` for each goal.
+
+**Goals**
+
+1. **Overcast** — `t = 0.30, gain = 2`. More coverage, softer edges.
+2. **Sparse fair-weather** — `t = 0.60, gain = 8`. Few clouds, very crisp edges.
+3. **Storm grey** — set the cloud composite colour to `[0.6, 0.6, 0.6]` instead of white.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+cloud = np.clip((z - 0.30) * 2, 0, 1)
+```
+
+Sky almost completely covered; clouds blend at their edges with fluffy soft outlines. Reads as overcast.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+cloud = np.clip((z - 0.60) * 8, 0, 1)
+```
+
+Few clouds, each one with a sharp white silhouette and very little soft edge. Reads as a clean summer day.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+storm_color = np.array([0.6, 0.6, 0.6])
+sky = sky * (1 - cloud_rgb) + cloud_rgb * storm_color
+```
+
+Clouds are dark grey instead of white. The mood instantly turns ominous.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Sunset sky with golden clouds">
+
+Build a sunset version: the sky transitions from deep purple at the zenith to vivid orange near the horizon, and the clouds pick up a golden tint where they sit over the bright horizon band.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 300, 600
+
+# TODO 1: sky gradient from deep purple (top) to vivid orange (bottom).
+
+# TODO 2: cloud mask via threshold + gain.
+
+# TODO 3: cloud *colour* that depends on vertical position — golden near the bottom,
+#         pale lavender near the top.
+
+# TODO 4: composite.
+
+Image.fromarray(rgb).save('sunset_clouds.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — vertical cloud colour gradient">
+
+```python
+cloud_top = np.array([0.85, 0.80, 0.95])    # pale lavender (high)
+cloud_bot = np.array([1.00, 0.80, 0.40])    # golden (low)
+yy = np.linspace(0, 1, H)[:, None, None]
+cloud_color = cloud_top * (1 - yy) + cloud_bot * yy
+
+out = sky * (1 - cloud_rgb) + cloud_rgb * cloud_color
+```
+
+The cloud colour is now per-row instead of a constant — clouds high in the sky stay pale, clouds near the horizon glow gold.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 300, 600
+
+sky_top = np.array([0.25, 0.10, 0.40])         # deep purple
+sky_bot = np.array([1.00, 0.55, 0.30])         # vivid orange
+yy = np.linspace(0, 1, H)[:, None, None]
+sky = sky_top * (1 - yy) + sky_bot * yy
+sky = np.broadcast_to(sky, (H, W, 3)).copy()
+
+cloud = fbm((H, W), scale=80, octaves=5, seed=44)
+cloud = np.clip((cloud - 0.45) * 4, 0, 1)
+cloud_rgb = np.stack([cloud, cloud, cloud], axis=-1)
+
+cloud_top = np.array([0.85, 0.80, 0.95])
+cloud_bot = np.array([1.00, 0.80, 0.40])
+cloud_color = cloud_top * (1 - yy) + cloud_bot * yy
+
+out = sky * (1 - cloud_rgb) + cloud_rgb * cloud_color
+Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8)).save('sunset_clouds.png')
+```
+</CodeBlock>
+
+**How it works:**
+
+- Sky is the same vertical lerp, with sunset-coloured stops.
+- Cloud mask is unchanged; what changes is the cloud *colour*, which is also a vertical lerp.
+- The composite multiplies cloud RGB by the cloud-colour gradient, so each cloud takes on its local sunset tint.
+
+</Dropdown>
+
+#### Make it your own
+
+- Add a *second* lower-frequency fbm with a wider threshold — that becomes a base layer of haze underneath the cumulus clouds.
+- Move the cloud-mask threshold from a constant to a *vertical gradient* — more clouds in the lower half, fewer near the zenith. Matches real cumulus distribution.
+- Generate a frame sequence by gradually shifting `seed` for the cloud noise; the clouds appear to drift across the sky.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation/clouds_over_sky.png" label="clouds_over_sky.png — quick-start sky" />
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.2_cloud_generation/cloud_density.png" label="cloud_density.png — cloud mask only" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Procedural cumulus clouds are two ingredients: an fbm field thresholded with `clip((z − t) * gain, 0, 1)` for the cloud mask, and a vertical sky gradient as the background. Compositing the mask over the sky with alpha blending (the Porter-Duff over operator from 3.2.2) gives the final image. Tune `t` for cloud coverage (lower = more cloudy) and `gain` for edge sharpness (higher = crisper). Change cloud colour for mood — white for fair weather, grey for storm, golden for sunset. The two-parameter mask trick scales beyond clouds to any volumetric look — smoke, fog, even fire — where you want "mostly empty plus localised dense regions."
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to broadcast `sky` to `(H, W, 3)` — the gradient evaluates as `(H, 1, 3)` and shape errors follow.
+- Setting `t` too high — almost no clouds, just empty sky.
+- Setting `gain` too low — clouds look like soft Perlin blobs, not crisp cumulus.
+- Compositing with `sky * cloud + cloud_color` instead of `sky * (1 - cloud) + cloud_color * cloud` — wrong alpha math, clouds look additive instead of over.
+- Using `np.where(cloud > 0.5, cloud_color, sky)` instead of alpha-composite — gives hard edges and loses the soft-shoulder zone.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[2]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[3]</span> Reinhard, E., Ward, G., Pattanaik, S., & Debevec, P. (2010). *High Dynamic Range Imaging* (2nd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[4]</span> Schneider, A., & Vos, N. (2015). The real-time volumetric cloudscapes of Horizon: Zero Dawn. *SIGGRAPH 2015 Course Notes*.</li>
+    <li><span class="tag">[5]</span> Porter, T., & Duff, T. (1984). Compositing digital images. *ACM SIGGRAPH Computer Graphics*, 18(3), 253–259.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.</li>
+  </ol>
+</section>

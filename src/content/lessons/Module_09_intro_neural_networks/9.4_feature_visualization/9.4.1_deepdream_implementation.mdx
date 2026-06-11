@@ -1,0 +1,198 @@
+---
+module: "M 09"
+cycle: "II"
+title: "DeepDream — Gradient Ascent on Activations"
+objective: "Reverse the optimisation: instead of adjusting weights to reduce loss, adjust *pixels* to maximise activations. The classic 'DeepDream' technique pulls hallucinated features out of any input image — Google's 2015 demonstration that birds and dogs were lurking in trained networks."
+framework: "conceptual"
+duration: "25–35 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "9.2.2 (CNNs), 9.3.2 (gradient descent)"
+prev:
+  slug: "9.3.3"
+  title: "Overfitting / Underfitting"
+next:
+  slug: "9.4.2"
+  title: "Feature Map Art"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+*If a trained CNN can recognise birds, can we make any image more bird-like?* Google researcher Alexander Mordvintsev's 2015 answer was: yes, by *running gradient ascent on the input pixels instead of the weights*. The objective: maximise the activation of one or more neurons in the network. Start with a noise field or a photo, iterate, and the network's preferred patterns — eyes, scales, dog faces, feathers — bleed into the image. The technique was dubbed **DeepDream** [1] and produced some of the most arresting AI art of the 2010s, but its deeper value is *interpretability*: it shows what the network has learned to recognise.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish optimising *weights* (training) from optimising *inputs* (DeepDream).</li>
+  <li>Run gradient ascent on the input image to amplify a target activation.</li>
+  <li>Apply *octaves* and *jitter* tricks to produce coherent dream-like patterns at multiple scales.</li>
+  <li>Connect DeepDream to feature visualisation and adversarial examples — same gradient, different goals.</li>
+</ol>
+
+## Part 1 — Two ways to use gradients <a id="part-1"></a>
+
+Training a neural network minimises the loss `L(input, target)` by adjusting *weights*:
+
+```
+weights ← weights - lr * ∂L/∂weights
+```
+
+DeepDream does the opposite: it adjusts the *input* to *maximise* an activation `A` somewhere in the network:
+
+```
+input ← input + lr * ∂A/∂input
+```
+
+Same chain rule, same NumPy code — but the optimisation variable is now the image, not the weights. The "loss" is something like *negative activation magnitude*:
+
+```python
+def dream_step(image, network, layer_idx, lr=0.5):
+    activations = network.forward_to_layer(image, layer_idx)
+    grad = np.sign(activations) * lr   # simplified pseudo-gradient
+    return np.clip(image + grad, 0, 1)
+```
+
+After enough iterations, the image is full of patterns the network *wants to see* in that layer [2].
+
+## Part 2 — Multiscale (octaves) <a id="part-2"></a>
+
+Direct gradient ascent on full-resolution images tends to produce noisy, incoherent patterns. The fix is to *process at multiple scales*: downsample, dream, upsample, repeat. This is the *octaves* technique from the original DeepDream code:
+
+```python
+def dream_octaves(image, n_octaves=5, octave_scale=1.4):
+    octaves = [image]
+    for _ in range(n_octaves - 1):
+        octaves.append(downsample(octaves[-1], scale=1/octave_scale))
+    # Process from smallest to largest
+    detail = np.zeros_like(octaves[-1])
+    for octave in reversed(octaves):
+        detail = upsample(detail, octave.shape)
+        image = octave + detail
+        for _ in range(20):
+            image = dream_step(image)
+        detail = image - octave
+    return image
+```
+
+This propagates structure from the smallest scale (where it's coherent) to the largest. The result has dream-like patterns at every spatial scale [3].
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation/dream_before_after.png"
+  alt="A grayscale image showing the output of an iterative low-pass amplification process: gradually emerging swirling patterns from initial noise."
+  caption="The DeepDream pattern: iteratively amplifying low-frequency components reveals coherent flowing structures. With a trained network, those structures would be dogs and birds."
+  num={1}
+  role="output"
+/>
+
+## Part 3 — Coloured dreams <a id="part-3"></a>
+
+Adding colour via a per-channel transformation turns the grayscale dream into something more psychedelic:
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation/dream_color.png"
+  alt="A coloured version of the dream pattern: each region of the grayscale dream pattern is now rendered in vivid blues, purples, greens, and oranges, with swirling shapes throughout."
+  caption="DeepDream output with a colour palette applied. The same shape data; the colour mapping makes it pop."
+  num={2}
+  role="output"
+/>
+
+The colour mapping is not part of the network — it's a post-processing step. But the *shapes* the network produces, when given different layers as targets, are wildly different:
+
+- **Early layers** — edges, oriented stripes, simple textures.
+- **Middle layers** — eyes, mouths, animal parts.
+- **Late layers** — whole dogs, birds, complex scenes.
+
+This hierarchy is exactly what the CNN learned to detect during training [4].
+
+<Admonition type="dyk" title="Technical note · DeepDream's afterlife">
+DeepDream was released as a Google blog post in 2015 and went viral immediately. The technique has since been adapted into *feature visualisation* tools used to understand what neurons inside trained networks have learned. Modern interpretability research (e.g. Olah et al.'s *Distill* essays) uses the same gradient-ascent approach but with better regularisation and visualisation [5].
+</Admonition>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Run the iterative amplification">
+
+Run `dream.py` from the downloads. It starts with a noise image and iteratively amplifies low-frequency components via FFT-based smoothing — a hand-rolled version of the DeepDream loop.
+
+**Reflection questions**
+
+- The output starts as noise and ends with coherent flowing patterns. What is the amplification step doing?
+- Why does the script use FFT to extract low frequencies?
+- What would the output look like if you didn't iterate (just one step)?
+
+<Dropdown summary="Answers">
+
+**Amplification** — each step extracts the smoothest part of the image and adds it back, amplifying the slow-varying components. Over many iterations, fast random noise damps out and the slow coherent patterns dominate.
+
+**FFT for low-pass** — Module 3.4.4's FFT trick is the standard way to extract a frequency band. The Gaussian mask in frequency space passes only low frequencies; the inverse transform gives the smoothed image.
+
+**One step** — only a tiny visible change. The patterns emerge from *iteration*; one step does not produce dreams.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Tune the dream">
+
+Edit `dream.py` for these goals.
+
+**Goals**
+
+1. **More iterations** — run for 200 steps instead of 80. Does the pattern keep evolving?
+2. **Different starting point** — start from a photograph instead of noise.
+3. **Per-region targets** — apply the dream to the *centre region* of the image only.
+
+<Dropdown summary="Expected outcomes">
+
+- **More iterations**: the pattern becomes more saturated and detailed but eventually saturates. The image approaches a fixed point.
+- **Photo input**: the original photo gradually morphs as dream patterns bleed in. This is the canonical DeepDream effect on real images.
+- **Centre region only**: amplify gradients only inside a mask. The centre dreams; the edges stay original. Useful for guided dream effects.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Real DeepDream with a tiny CNN">
+
+Build a tiny CNN from 9.2.2, train it briefly on a few classes (or even random labels), and then run DeepDream on its activations. Compare the output to the no-network amplification from the quick start.
+
+<Dropdown summary="Approach and outcome">
+
+```python
+def deep_dream(net, image, layer_idx, steps=80, lr=0.5):
+    img = image.copy()
+    for _ in range(steps):
+        activations = net.forward_to(img, layer_idx)
+        # Gradient ascent: increase activation magnitude
+        grad = compute_input_gradient(net, img, activations, layer_idx)
+        img = img + lr * (grad / (grad.std() + 1e-8))
+        img = np.clip(img, 0, 1)
+    return img
+```
+
+If the CNN is trained on classes (even synthetic ones), the output develops *consistent structures* that look like that class's features. Early-layer targets give oriented stripes; late-layer targets give larger blob-like structures. Even a tiny network shows the hierarchy.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation/dream_before_after.png" label="dream_before_after.png — grayscale dream" />
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.4_feature_visualization/9.4.1_deepdream_implementation/dream_color.png" label="dream_color.png — coloured dream" />
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Mordvintsev, A., Olah, C., & Tyka, M. (2015). Inceptionism: Going deeper into neural networks. *Google AI Blog*.</li>
+    <li><span class="tag">[2]</span> Erhan, D., Bengio, Y., Courville, A., & Vincent, P. (2009). Visualizing higher-layer features of a deep network. *University of Montreal Technical Report 1341*.</li>
+    <li><span class="tag">[3]</span> Olah, C., Mordvintsev, A., & Schubert, L. (2017). Feature visualization. *Distill*. <a href="https://distill.pub/2017/feature-visualization/" target="_blank" rel="noopener">distill.pub</a></li>
+    <li><span class="tag">[4]</span> Zeiler, M. D., & Fergus, R. (2014). Visualizing and understanding convolutional networks. *ECCV*, 818–833.</li>
+    <li><span class="tag">[5]</span> Goh, G., Cammarata, N., Voss, C., et al. (2021). Multimodal neurons in artificial neural networks. *Distill*.</li>
+    <li><span class="tag">[6]</span> Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.</li>
+  </ol>
+</section>

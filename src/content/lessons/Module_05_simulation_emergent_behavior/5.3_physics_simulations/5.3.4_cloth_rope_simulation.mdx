@@ -1,0 +1,269 @@
+---
+module: "M 05"
+cycle: "I"
+title: "Cloth / Rope Simulation"
+objective: "Build a hanging cloth out of Verlet point masses connected by distance constraints. Iterate the constraints to convergence each frame."
+framework: "hands-on"
+duration: "20–25 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.3.1 (Euler integration), basic linear algebra"
+prev:
+  slug: "5.3.3"
+  title: "Double Pendulum Chaos"
+next:
+  slug: "5.3.5"
+  title: "Magnetic Field Visualization"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The cleanest cloth simulation in computer graphics — used in *Hitman: Codename 47*, then *Half-Life 2*, then nearly every later AAA engine — is Thomas Jakobsen's 2001 method [1]. The trick: model cloth as a grid of point masses connected by **rigid distance constraints**, integrate with **Verlet** (which stores only positions, not velocities), and enforce the constraints by an iterative relaxation pass. No Hooke springs, no stiffness coefficients to tune, no implicit solver — just *move each pair of connected points until they are exactly the right distance apart, then do it again twelve times*. The cloth ends up stable, drapes naturally under gravity, and behaves correctly under collisions and pinning.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Store cloth state as a grid of point positions, plus the same grid from the previous frame (no explicit velocity).</li>
+  <li>Apply Verlet integration: `new = old + (old - older) * damping + accel`.</li>
+  <li>Enforce rigid distance constraints by projecting connected pairs back to their rest length, iterated to convergence.</li>
+  <li>Pin selected points (corners) by simply resetting them after each relaxation pass.</li>
+</ol>
+
+## Quick start — Verlet plus relaxation <a id="quick-start"></a>
+
+The whole physics fits in two functions, each a few lines long.
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+# integrate
+new = positions + (positions - previous) * DAMPING + GRAVITY
+previous = positions
+positions = new
+
+# relax: enforce every spring's length, twelve times over
+for _ in range(RELAX_ITERS):
+    for each pair (p1, p2) connected by a spring:
+        delta = p2 - p1
+        d = np.linalg.norm(delta)
+        correction = (d - SPACING) / d * delta * 0.5
+        p1 += correction
+        p2 -= correction
+    for each pinned point:
+        reset its position to the anchor
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/cloth.gif"
+  alt="Animated cloth simulation showing a blue grid pinned at top two corners, drooping and rippling under gravity and a slight wind"
+  caption="An 18×14 cloth pinned at two corners. Verlet + 18 relaxation iterations per frame, 220 frames at 30 fps."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Note that the cloth does **not** stretch unrealistically even though there is no stiffness parameter. The relaxation makes the springs *exactly* the right length on every frame — it is a constraint, not a force. That property is why Jakobsen's method dominated cloth in games for two decades.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Verlet integration: position-only state
+
+Standard Euler stores position **and** velocity, integrating both. Verlet stores **the current position and the previous position** — velocity is implicit (`v = p - p_prev`). This sounds like a trivial change, but it makes constraint handling easy: when you move a point to satisfy a constraint, the implicit velocity automatically updates without any extra bookkeeping.
+
+<CodeBlock lang="python" file="verlet_demo.py">
+```python
+new = positions + (positions - previous) * DAMPING + GRAVITY
+previous = positions
+positions = new
+```
+</CodeBlock>
+
+`(positions - previous)` is the displacement vector from last frame — the implicit velocity. Multiplying by `DAMPING < 1` introduces a small drag. Adding `GRAVITY` is the only force in the integrator.
+
+<Admonition type="dyk" title="Did you know? · Verlet in cosmology">
+Loup Verlet introduced this integrator in 1967 for molecular-dynamics simulations of liquid argon [2]. It is symplectic — energy-preserving on average — which is why molecular dynamics, planetary mechanics, and cloth simulation all use it. Verlet's original method is two lines of code and has not been improved in 60 years.
+</Admonition>
+
+### Concept 2 — Distance constraints, not springs
+
+A spring is an *approximation* of a rigid distance: Hooke's law applies a force proportional to the deviation, and the spring oscillates around the rest length. Tuning spring stiffness is a nightmare — too soft and the cloth stretches, too stiff and the simulation explodes (because Euler can not handle stiff systems without tiny time steps).
+
+Distance **constraints** sidestep the whole question. They say: this pair of points is *exactly* SPACING apart, period. Enforce it by moving each point halfway toward the constrained distance.
+
+<CodeBlock lang="python" file="constraint_demo.py">
+```python
+delta = p2 - p1
+d = np.linalg.norm(delta)
+correction = (d - SPACING) / d * delta * 0.5
+p1 += correction
+p2 -= correction
+```
+</CodeBlock>
+
+If `d > SPACING` (stretched), the correction pulls the points together. If `d < SPACING` (compressed), it pushes them apart. The `0.5` splits the correction evenly between the two points; for pinned points (which cannot move), apply the full correction to the other point only.
+
+<Admonition type="important">
+Distance constraints are non-linear and pairwise. Fixing one constraint can break another. The fix: iterate. Each pass corrects all constraints once, accepting that some are now slightly wrong. Twelve to twenty passes per frame produces visually stable cloth.
+</Admonition>
+
+### Concept 3 — Pinning by overwrite
+
+Pinning a vertex (e.g. the top corners of a hanging cloth) requires no special code. After each constraint pass, *overwrite* the pinned points back to their anchor position. The next pass propagates the pin's effect to neighbours.
+
+<CodeBlock lang="python" file="pin_demo.py">
+```python
+for (r, c) in pins:
+    positions[r, c] = anchor_for(r, c)
+```
+</CodeBlock>
+
+The pin is an infinitely rigid constraint to a fixed point. In implementation terms it is a single line. Compare this to the spring world, where pinning means "very, very stiff spring to anchor" with all the tuning problems that come with it.
+
+<Admonition type="note">
+Pinning by overwrite has a side-effect: it implicitly removes momentum from the pinned point. That is biologically correct — the pin is a hand, a nail, a nail at the top of a hanging tapestry — none of which transfer momentum to whatever they hold.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order.
+
+<Exercise n={1} kicker="EXECUTE" title="Hang the cloth">
+
+Download `cloth.py` and run it. It writes `cloth.gif`.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/cloth.py" label="cloth.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Why does increasing `RELAX_ITERS` make the cloth visibly more rigid?
+- What happens if you set `DAMPING = 1.0`?
+- The cloth never quite stops swaying — why?
+
+<Dropdown summary="Answers">
+
+**More iterations → more rigid** — each pass closes the gap between current spring lengths and `SPACING`. After 5 passes the cloth is stretchy; after 18 it is firm. Past ~30 you cannot see further improvement and you are wasting compute.
+
+**`DAMPING = 1.0`** — no energy loss. The cloth oscillates forever once perturbed. Useful for ideal-cloth experiments; visually wrong because real cloth dissipates energy through friction between fibres.
+
+**Never quite stops** — `DAMPING = 0.985` removes 1.5% of implicit-velocity each frame. After 100 frames the residual velocity is `0.985^100 ≈ 22%` of original. The eye picks up tiny sways even at very small magnitudes.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Reshape the cloth">
+
+**Goals**
+
+1. **Hanging rope**: `COLS = 2, ROWS = 60, SPACING = 8`. Two parallel columns of constraints with no horizontal cross-bracing — a rope.
+2. **Heavier cloth**: `GRAVITY = [0, 0.9]`. Visibly more deformation.
+3. **Wind gust**: replace the wind random with a sinusoidal `wind = 0.4 * sin(frame / 12)`. The cloth ripples in waves.
+4. **Single pin**: pin only `(0, 0)`. The cloth swings as a pendulum.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+A rope. With only vertical constraints the structure cannot resist twisting or bending sideways, so it behaves like a real rope — flexible along its length, freely swinging.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+The cloth sags much further between the two pins. Verlet handles the increased load without instability — the relaxation iterates take care of it. With springs and Euler you would have to either reduce `dt` or increase stiffness.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Travelling waves cross the cloth. Periodic wind injects energy at the cloth's own frequency and the response is a standing-wave pattern — the cloth has resonance modes determined by its size and tension.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A pendulum with internal structure. The whole cloth swings about the single pin. Over time the swing damps out (because `DAMPING < 1`) but does so much more slowly than the local relaxation.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement the relaxation pass">
+
+Use `cloth_starter.py`. The Verlet integrator and rendering are wired up. `relax()` is stubbed.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/cloth_starter.py" label="cloth_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+1. Run a loop `RELAX_ITERS` times.
+2. In each iteration: for every horizontal-neighbour pair and every vertical-neighbour pair, compute the correction vector and apply it.
+3. After each iteration, re-pin the top two corners.
+
+<Dropdown summary="Hint — vector correction">
+
+```python
+delta = positions[r, c + 1] - positions[r, c]
+d = np.linalg.norm(delta) + 1e-6
+correction = (d - SPACING) / d * delta * 0.5
+positions[r, c]     += correction
+positions[r, c + 1] -= correction
+```
+
+The `+1e-6` guards against `d=0` (two points coincide). The `* 0.5` splits the move between the two endpoints; for pinned points you would do the full move on the non-pinned end only, but our pin-by-overwrite approach handles that for us.
+
+</Dropdown>
+
+<Dropdown summary="Hint — re-pin">
+
+```python
+for (r, c) in [(0, 0), (0, COLS - 1)]:
+    positions[r, c] = (CLOTH_OFFSET[0] + c * SPACING,
+                       CLOTH_OFFSET[1] + r * SPACING)
+```
+
+</Dropdown>
+
+#### Make it your own
+
+- **Tear constraint**: if any spring stretches beyond 2× rest length, remove it from the constraint set. The cloth rips when overstressed.
+- **Self-collision**: prevent any two non-adjacent vertices from getting within SPACING — implement as another constraint pass with a one-sided correction.
+- **Diagonal cross-bracing**: add constraints between `(r, c)` and `(r+1, c+1)`. The cloth becomes much stiffer in shear.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/cloth.py" label="cloth.py — full reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.4_cloth_rope_simulation/cloth_starter.py" label="cloth_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Jakobsen's cloth method is Verlet integration plus iterative distance-constraint relaxation. Each step: integrate the unconstrained motion, then iterate the constraint projections to convergence. The position-only Verlet state lets constraints simply move points around — the implicit velocity updates for free. Pinning is overwrite. Tearing is constraint removal. Self-collision is another constraint pass. The whole simulation framework is sixty lines of Python, and it generalises directly from cloth into rope, soft bodies, and inextensible-fibre simulation — the same scheme has shipped in every major game-physics engine since 2001.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to apply the half-split `* 0.5` for non-pinned pairs. One point absorbs the full correction and the other does not move — the cloth slowly translates as a whole.
+- Too few `RELAX_ITERS`. The cloth visibly stretches under load; the simulation looks soft and wrong.
+- Not re-pinning after each relaxation pass. The pin drifts because constraints move it.
+- `DAMPING = 1.0`. The cloth never comes to rest.
+- Storing velocity explicitly. You now have to recompute it after every constraint pass — the whole reason Verlet is convenient is that you do not.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Jakobsen, T. (2001). Advanced character physics. *Proceedings of the Game Developers Conference 2001*. <a href="https://web.archive.org/web/20080410171619/http://www.teknikus.dk/tj/gdc2001.htm" target="_blank" rel="noopener">teknikus.dk/tj/gdc2001</a></li>
+    <li><span class="tag">[2]</span> Verlet, L. (1967). Computer experiments on classical fluids. I. *Physical Review*, 159(1), 98–103. <a href="https://doi.org/10.1103/PhysRev.159.98" target="_blank" rel="noopener">doi:10.1103/PhysRev.159.98</a></li>
+    <li><span class="tag">[3]</span> Müller, M., Heidelberger, B., Hennix, M., & Ratcliff, J. (2007). Position-based dynamics. *Journal of Visual Communication and Image Representation*, 18(2), 109–118. <a href="https://doi.org/10.1016/j.jvcir.2007.01.005" target="_blank" rel="noopener">doi:10.1016/j.jvcir.2007.01.005</a></li>
+    <li><span class="tag">[4]</span> Provot, X. (1995). Deformation constraints in a mass-spring model to describe rigid cloth behavior. In *Graphics Interface '95*.</li>
+    <li><span class="tag">[5]</span> Witkin, A. (1997). Physically Based Modeling: Principles and Practice. *SIGGRAPH Course Notes*.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

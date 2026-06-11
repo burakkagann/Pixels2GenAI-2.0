@@ -1,0 +1,263 @@
+---
+module: "M 11"
+cycle: "II"
+title: "DMX Lighting Control"
+objective: "Drive theatrical lighting fixtures: 512 channels of 0-255 brightness per universe, sent at 44 Hz. The protocol behind every stage show, concert, and live event since 1986."
+framework: "hands-on"
+duration: "22–28 min"
+level: "intermediate"
+prereqs: "11.3.1 (Arduino-like sensors), basic Python"
+prev:
+  slug: "11.3.1"
+  title: "Arduino Integration"
+next:
+  slug: "11.3.3"
+  title: "Projection Mapping"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+**DMX-512** is the protocol that controls every theatre dimmer, every concert moving-head fixture, and most architectural lighting since 1986 [1]. The protocol is simple: a single XLR cable carries a stream of **512 channels**, each one a single byte (0–255), refreshed at ~44 Hz. A "universe" is one such 512-channel link. Big shows use multiple universes (8–32 is common); the largest shows use hundreds.
+
+Every fixture has a starting **address** (channel 1 through 512) and consumes a fixed number of channels — a simple PAR can uses 3 channels (R, G, B); an RGBW fixture uses 4 (R, G, B, intensity); a moving-head fixture might use 16+ (pan, tilt, RGB, gobo, zoom, focus, etc.). Send the right bytes to the right channels and the rig lights up. This lesson uses synthesised fixtures so you can build the cue logic without a real DMX interface.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Recognise the DMX-512 protocol: 512 channels × 1 byte each, refreshed at 44 Hz.</li>
+  <li>Map a fixture's starting address + channel layout to specific channels in the universe array.</li>
+  <li>Build a **cue stack**: a sequence of named lighting states with timed transitions between them.</li>
+  <li>Render a "stage plot" visualisation showing fixture positions, current colours, and active cue name.</li>
+</ol>
+
+## Quick start — 8-fixture rig with a cue stack <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+def cue_at_frame(idx, n=90):
+    t = idx / n
+    if t < 0.25:    return blue_wash()
+    elif t < 0.5:   return warm_alternation()
+    elif t < 0.75:  return chase(int((t - 0.5) * 4 * N_FIX) % N_FIX)
+    else:           return strobe(flash=(idx % 4) < 2)
+
+# Inside the show loop:
+for frame in range(N_FRAMES):
+    fixture_states = cue_at_frame(frame)
+    universe = pack_to_dmx(fixture_states)        # → 512-byte array
+    interface.send(universe)                       # 44 Hz to the rig
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control/dmx_rig.gif"
+  alt="An animated stage plot showing 8 lighting fixtures arranged in a horizontal row above an outlined stage area. Coloured light cones project downward from each fixture. The animation cycles through four cues: first all blue wash, then warm alternating reds and oranges, then a chase pattern where one fixture at a time flashes magenta, then a white strobe with full brightness pulsing"
+  caption="90 frames covering 4 cues. Each cue is a different DMX channel state — same architecture as a real lighting console."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The Python side computes **what every fixture should look like** every frame; the DMX interface (Enttec USB Pro, Open Lighting Architecture, or even Art-Net over Ethernet) handles **getting the bytes onto the wire** at 44 Hz. The same `pack_to_dmx` function works whether the destination is a USB interface, a network bridge, or this synthesised renderer.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The 512-channel universe
+
+A DMX universe is a 512-element byte array. Index 1 (DMX channels are 1-indexed) is channel 1; index 512 is channel 512. Each byte is 0–255. The whole array is transmitted every ~22 ms.
+
+Map fixtures to channels by their **starting address**:
+
+<CodeBlock lang="python" file="packing.py">
+```python
+def pack_to_dmx(fixture_states, fixture_addresses):
+    universe = bytearray(512)
+    for (r, g, b, intensity), addr in zip(fixture_states, fixture_addresses):
+        universe[addr - 1] = r           # DMX channels are 1-indexed
+        universe[addr] = g
+        universe[addr + 1] = b
+        universe[addr + 2] = intensity
+    return bytes(universe)
+```
+</CodeBlock>
+
+Real production rigs are addressed by physically setting DIP switches or a digital menu on each fixture. The Python code only needs to know which address each fixture starts at.
+
+### Concept 2 — Fixture channel layouts
+
+Every fixture model has a **channel layout** — what each consecutive channel means. Common layouts:
+
+- **3-ch RGB PAR**: R, G, B.
+- **4-ch RGBW**: R, G, B, intensity (or sometimes W = white channel).
+- **6-ch RGBWAU**: R, G, B, W, amber, UV.
+- **16-ch moving head**: pan, tilt, pan-fine, tilt-fine, R, G, B, dimmer, strobe, gobo, gobo-rotate, prism, zoom, focus, function, speed.
+
+Always check the **fixture profile** (a small file from the manufacturer, or a community-maintained one in QLC+ or Vectorworks) before addressing. Mis-addressing makes "tilt" the same channel as "blue" — your fixture moves when you ask it to change colour.
+
+<Admonition type="dyk" title="Did you know · DMX descends from 1980s theatre tech">
+DMX-512 was standardised by USITT (United States Institute for Theatre Technology) in 1986, succeeding analog 0-10 V dimmer control [2]. The 512-channel limit was set by RS-485 serial bus timing constraints. Modern stage shows routinely use 32+ universes (16,384 channels) via Art-Net over Ethernet, but the per-universe protocol is unchanged. The Wireless DMX standards (LumenRadio CRMX, Wireless Solution W-DMX) wrap the same byte stream in a low-latency RF transport [3].
+</Admonition>
+
+### Concept 3 — Cues and transitions
+
+A **cue** is a named lighting state: "fixtures 1–4 blue at 80%, fixtures 5–8 amber at 50%." A show is a sequence of cues with **transitions** — fade times — between them. The cue stack is essentially a state machine.
+
+<CodeBlock lang="python" file="cue.py">
+```python
+CUES = [
+    {'name': 'opening', 'duration_s': 4, 'state': blue_wash},
+    {'name': 'verse',   'duration_s': 8, 'state': warm_alternation, 'fade_s': 2},
+    {'name': 'chorus',  'duration_s': 6, 'state': chase, 'fade_s': 0.5},
+    {'name': 'blackout', 'duration_s': 1, 'state': all_off, 'fade_s': 0.2},
+]
+
+def state_at_time(t_seconds, cues):
+    # Find current cue + interpolate from previous if mid-fade
+    ...
+```
+</CodeBlock>
+
+The same interpolation tricks from 8.1.2 (easing) and 8.1.3 (linear interp) apply to lighting: a cue fade from blue to amber is per-channel linear interpolation between the two state arrays, optionally with an easing curve for "snappy in, slow out" looks.
+
+<Admonition type="important">
+Professional lighting consoles (ETC Eos, MA Lighting grandMA3, Avolites Diamond) are giant state machines that store thousands of cues, palettes, effects, and macros. The Python version here is the same idea in 20 lines: state functions + a cue list + a frame-time loop.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the demo, add a fixture, then implement a fade transition.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the stage plot demo">
+
+Run `dmx_rig.py`. The script renders 4 cues across 90 frames.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control/dmx_rig.py" label="dmx_rig.py — 8-fixture cue stack" />
+
+**Reflection questions**
+
+- The rig uses 8 RGBW fixtures × 4 channels each = 32 channels. How many such rigs fit in one DMX universe?
+- The strobe cue alternates between full and 30 intensity every 2 frames. At 24 fps, what's the strobe rate in Hz?
+- Why is "warm alternation" a less stressful cue than "strobe" for a long-running ambient piece?
+
+<Dropdown summary="Answers">
+
+**Rigs per universe** — 512 / 32 = 16 rigs of 8 fixtures each. In practice you usually have more diverse fixture types (some 3-ch, some 16-ch), so a universe might host 10–30 fixtures total. Larger shows partition fixtures across many universes.
+
+**Strobe rate** — full/dim every 2 frames at 24 fps → 12 cycles per second → 12 Hz. Real strobes go up to 25 Hz for "fast strobe" effects; epilepsy-safe shows cap at 4 Hz [4].
+
+**Strobe vs. alternation** — warm alternation is slow (full cue cycle over 22 frames ≈ 1 second), low-amplitude (colour variation, not intensity). Strobe has 100% intensity modulation at 12 Hz — designed to grab attention. Comfortable for moments; stressful for hours.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep rig parameters">
+
+**Goals**
+
+1. **More fixtures.** Increase `N_FIX` from 8 to 16. The stage gets denser; each fixture's role becomes smaller.
+2. **Slower chase.** In the chase cue, slow the beat by halving the cycle rate. The chase feels more deliberate.
+3. **Add a 5th cue.** Add a "wave" cue where the brightness ripples left-to-right via `sin(2π * (t + i / N_FIX))`.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Denser stage with more lighting control. Concert tour stages routinely use 50+ fixtures across a single trussing.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Calmer chase. Fast chases feel energetic; slow chases feel epic. The pacing is everything.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+A "wave" of brightness sweeping across the stage. Built from a single `sin` per fixture; reads as cinematic ocean motion.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement a cue fade">
+
+Currently cues snap instantly at the cue boundary. Add **fade transitions**: each cue takes some number of frames to crossfade from the previous state to the new one.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+def fade_between(prev_state, next_state, t):
+    """Interpolate between two states; t in [0, 1]."""
+    # TODO 1: each state is a list of (r, g, b, intensity) tuples
+    # TODO 2: linear interpolation per channel
+    # TODO 3: return the blended state
+    pass
+```
+</CodeBlock>
+
+<Dropdown summary="Hints">
+
+```python
+def fade_between(prev_state, next_state, t):
+    return [
+        (int(prev[0] * (1 - t) + nxt[0] * t),
+         int(prev[1] * (1 - t) + nxt[1] * t),
+         int(prev[2] * (1 - t) + nxt[2] * t),
+         int(prev[3] * (1 - t) + nxt[3] * t))
+        for prev, nxt in zip(prev_state, next_state)
+    ]
+```
+
+Wrap your existing cue lookup: when the frame is within `FADE_FRAMES` of a cue boundary, compute the partial blend.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The combined system handles smooth transitions between any two cues. Production consoles add per-channel fade times so you can fade colour quickly but dimmer slowly, or vice versa.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Real Enttec USB Pro.** Replace the synthesized renderer with `pyenttec` or `PyDMX`. Same Python code drives a 32-channel universe to a real fixture rig.
+- **Art-Net over Ethernet.** Use `python-artnet` to send DMX over the network. Lets a single PC drive 32+ universes.
+- **Music-reactive.** Pipe the audio reactivity bins from 11.1.2 into the cue selection. Bass triggers chase; treble triggers strobe.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.2_dmx_lighting_control/dmx_rig.py" label="dmx_rig.py — synthetic stage rig" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+DMX-512 is a 512-byte universe refreshed at 44 Hz. Each fixture occupies a contiguous slice of channels starting at its address. A cue is a named lighting state; a show is a sequence of cues with timed transitions. The same `pack_to_dmx` function drives an Enttec USB interface, an Art-Net Ethernet bridge, or this synthesized renderer — only the destination differs. Mapping fixture state to channel state is straightforward Python; the protocol-level timing is handled by whichever driver you ship to.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Off-by-one addressing.** DMX channels are 1-indexed; Python arrays are 0-indexed. Always `universe[addr - 1] = ...`.
+- **Wrong channel layout.** Mis-addressing a moving head turns colour changes into pan-tilt sweeps. Always check the fixture profile.
+- **Sending too fast or too slow.** Most fixtures handle 30 fps; some need exactly 44 Hz. Match what your destination expects.
+- **No blackout cue.** Every show needs a "all off" cue for emergency stop or end-of-show. Don't forget it.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> USITT. (1986). *USITT DMX512 Recommended Practice for Digital Data Transmission Standard*. United States Institute for Theatre Technology.</li>
+    <li><span class="tag">[2]</span> ESTA. (2008). *ANSI E1.11 — Entertainment Technology USITT DMX512-A*. Entertainment Services and Technology Association.</li>
+    <li><span class="tag">[3]</span> ESTA. (2017). *ANSI E1.31 — Lightweight Streaming Protocol for Transport of DMX512 Using ACN*. Entertainment Services and Technology Association.</li>
+    <li><span class="tag">[4]</span> Wilkins, A. J., Veitch, J., & Lehman, B. (2010). LED lighting flicker and potential health concerns. *IEEE Energy Conversion Congress and Exposition*, 171–178. <a href="https://doi.org/10.1109/ECCE.2010.5618050" target="_blank" rel="noopener">doi:10.1109/ECCE.2010.5618050</a></li>
+    <li><span class="tag">[5]</span> Cadena, R. (2012). *Automated Lighting: The Art and Science of Moving Light in Theatre, Live Performance, and Entertainment* (2nd ed.). Focal Press. ISBN 978-0-240-81222-1.</li>
+    <li><span class="tag">[6]</span> Open Lighting Architecture. (2024). *OLA documentation*. <a href="https://www.openlighting.org/ola/" target="_blank" rel="noopener">openlighting.org</a></li>
+    <li><span class="tag">[7]</span> ETC. (2024). *Eos Family Console User Manual*. <a href="https://www.etcconnect.com/" target="_blank" rel="noopener">etcconnect.com</a></li>
+  </ol>
+</section>

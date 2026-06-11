@@ -1,0 +1,348 @@
+---
+module: "M 06"
+cycle: "II"
+title: "Abstract Patterns — Domain Warping"
+objective: "Use one noise field to *displace* the coordinates of another, then sample. The result is the classic Inigo Quilez 'domain warping' effect: smooth fbm gets twisted into organic, swirling abstract patterns."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "6.1.1 (fbm), 3.1.3 (nonlinear distortions)"
+prev:
+  slug: "6.3.2"
+  title: "Cloud Generation"
+next:
+  slug: "6.3.4"
+  title: "Procedural Materials"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+**Domain warping** is one of the most visually striking procedural techniques: sample a noise field at coordinates that have themselves been displaced by *another* noise field. The result twists clean fbm into smoky, swirling, abstract patterns reminiscent of dye in water or interstellar nebulae. Inigo Quilez popularised the technique in a widely-read 2008 article whose title — *"domain warping"* — became the standard name [1]. The implementation is short (a few NumPy lines on top of fbm), but the visual result is dramatic and surprisingly versatile.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Sample a noise field at displaced coordinates: `result = noise(x + warp_x(x, y), y + warp_y(x, y))`.</li>
+  <li>Build the displacement fields with `qx, qy = fbm(...) − 0.5` so they range over both signs.</li>
+  <li>Tune the warp amplitude — small = gentle ripple, large = chaotic swirl.</li>
+  <li>Map the warped field through a two-stop colour ramp for the final abstract image.</li>
+</ol>
+
+## Quick start — single-level domain warp <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 400, 400
+
+# Two independent noise fields used as displacement
+qx = fbm((H, W), scale=90, octaves=4, seed=100) - 0.5
+qy = fbm((H, W), scale=90, octaves=4, seed=101) - 0.5
+
+# Coordinate grid + warp
+y, x = np.indices((H, W)).astype(np.float64)
+warp_amount = 80
+yw = np.clip(y + warp_amount * qy, 0, H - 1).astype(int)
+xw = np.clip(x + warp_amount * qx, 0, W - 1).astype(int)
+
+# Sample a base noise field at the displaced coordinates
+base = fbm((H, W), scale=50, octaves=4, seed=102)
+warped = base[yw, xw]
+
+Image.fromarray((warped * 255).astype(np.uint8), 'L').save('domain_warp.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns/domain_warp.png"
+  alt="A grayscale abstract image with swirling, smoky patterns. The shapes flow in twisting curves that resemble dye dropped in water, or distant nebulae captured by a telescope."
+  caption="Domain-warped fbm: the base noise's smooth blobs get twisted by the displacement fields into organic swirls."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The core idea is *coordinate substitution*: instead of sampling `base[y, x]`, sample `base[y + dy, x + dx]` where `dy, dx` are noise fields themselves. The same trick generalises to any function — sample colour gradients, distance fields, or even photographs at warped coordinates.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Coordinate substitution
+
+Standard noise sampling produces a smooth field directly:
+
+```python
+base = fbm((H, W), scale=50, octaves=4)        # smooth blobs
+```
+
+Domain warping inserts an extra step *before* sampling. Replace `(x, y)` with displaced coordinates `(x + dx(x, y), y + dy(x, y))`:
+
+```python
+warped[y, x] = base[y + dy(y, x), x + dx(y, x)]
+```
+
+Each output pixel reaches into the base noise at a *shifted* location. The displacement field itself is smooth, so neighbouring pixels reach into nearby base locations — the result remains continuous, but the structure of the base noise gets twisted.
+
+In NumPy this is one line of fancy indexing once you have the integer displaced grids:
+
+```python
+yw = (y + warp_amount * qy).astype(int)
+xw = (x + warp_amount * qx).astype(int)
+warped = base[yw, xw]
+```
+
+The `np.clip` after the displacement prevents out-of-bounds access at the canvas edges [2].
+
+### Concept 2 — Displacement fields are noise too
+
+The displacement fields `qx, qy` are themselves fbm — that is what makes the warp organic instead of geometric. Two independent noise fields (different seeds, otherwise identical parameters) give you a smooth 2D vector field:
+
+```python
+qx = fbm((H, W), scale=90, octaves=4, seed=100) - 0.5
+qy = fbm((H, W), scale=90, octaves=4, seed=101) - 0.5
+```
+
+Subtracting 0.5 centres each field around zero so the displacements can be both positive and negative. Multiplying by `warp_amount` controls the scale — typical values are 30 to 100 for moderate warping.
+
+The displacement field's *scale* matters too. If it's larger than the base noise's features, the warp moves whole blobs around; if smaller, individual blob boundaries get rippled. A 1.5× ratio between displacement and base scale gives a balanced organic look [1].
+
+### Concept 3 — Recursive warping
+
+The Quilez article goes further: warp the *warp* fields themselves. Two-level warping:
+
+```python
+# First warp: displace coordinates that we'll then re-displace
+qx2 = fbm_at(x + 4 * qx, y + 4 * qy, ...)
+qy2 = fbm_at(x + 4 * qx, y + 4 * qy, ...)
+
+# Second warp: use the once-warped fields as new displacement
+warped = base_at(x + 8 * qx2, y + 8 * qy2)
+```
+
+Two-level warping turns the output noticeably more chaotic — eddies inside eddies, fractal swirls. It's also `2×` the noise cost. The quick start uses one level for clarity; production code routinely uses two or three [1].
+
+<Admonition type="dyk" title="Technical note · domain warping in shaders">
+Quilez's article is one of the most-shared procedural-art references on the web. The technique is universal — it appears in *Shadertoy* fragments, Photoshop filters, generative art platforms, and increasingly in neural-network conditioning (where it's used to add controlled distortion to latent maps). The NumPy version here makes the math explicit; in a GPU shader it's three lines [1].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the warped field, tune the amplitude, then colour and warp twice.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the single-level warp">
+
+Run `domain_warp.py` from the quick start.
+
+**Reflection questions**
+
+- The displacement field is smooth fbm, yet the output looks chaotic. Why?
+- What does `warp_amount = 0` produce?
+- Why do we use *two* independent displacement fields `qx` and `qy` instead of just one?
+
+<Dropdown summary="Answers">
+
+**Smooth displacement, chaotic output** — small smooth displacements in the *coordinate* space can produce large discontinuities in *features* of the base noise. A small shift left, then a slightly larger shift left, then back — the base noise's blobs end up sampled at completely different places, and reading the output you see the blob *boundaries* warped chaotically even though each individual displacement is small.
+
+**Amount 0** — no displacement at all. The output is just `base[y, x]` — the unwarped fbm. Useful baseline.
+
+**Two independent fields** — `qx` and `qy` must be independent so the 2D vector at each pixel can point in any direction. Using a single noise field for both would make `(dx, dy)` constrained to a line, and the warp would become directional instead of free.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three warp variations">
+
+Edit the script to produce these pictures.
+
+**Goals**
+
+1. **Gentle ripple** — `warp_amount = 20`. Mild twisting; structure of the base noise still visible.
+2. **Wild swirl** — `warp_amount = 200`. Extreme displacement; the base noise's local structure is unrecognisable.
+3. **Tight warp** — keep `warp_amount = 80` but drop the displacement field's `scale` to `30`. Smaller swirls, faster turning.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+warp_amount = 20
+```
+
+A subtle, almost watercolour effect. Looks like fbm with edges that have been gently smudged.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+warp_amount = 200
+```
+
+The base noise gets torn apart. You can no longer tell what the original structure looked like — only the chaotic warped result.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+qx = fbm((H, W), scale=30, ...) - 0.5
+qy = fbm((H, W), scale=30, ...) - 0.5
+```
+
+Smaller swirls, tighter eddies. The image reads as turbulent fluid rather than gentle smoke.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Two-level warp + colour">
+
+Apply two levels of domain warping and map through a two-stop warm-cool colour ramp.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 400, 400
+y, x = np.indices((H, W)).astype(np.float64)
+
+# TODO 1: build first-level qx, qy.
+# TODO 2: build second-level qx2, qy2 — sample fbm at coordinates shifted by qx, qy.
+# TODO 3: sample base noise at coordinates shifted by qx2, qy2.
+# TODO 4: map through warm-cool colour ramp.
+
+Image.fromarray(rgb_uint8).save('domain_warp_color.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — two-level warp">
+
+```python
+# Level 1
+qx = fbm((H, W), scale=90, octaves=4, seed=100) - 0.5
+qy = fbm((H, W), scale=90, octaves=4, seed=101) - 0.5
+
+# Level 2: sample noise at coordinates shifted by qx, qy
+ya = np.clip(y + 60 * qy, 0, H - 1).astype(int)
+xa = np.clip(x + 60 * qx, 0, W - 1).astype(int)
+qx2 = fbm((H, W), scale=90, octaves=4, seed=200)[ya, xa] - 0.5
+qy2 = fbm((H, W), scale=90, octaves=4, seed=201)[ya, xa] - 0.5
+
+# Final: sample base at coordinates shifted by qx2, qy2
+yb = np.clip(y + 80 * qy2, 0, H - 1).astype(int)
+xb = np.clip(x + 80 * qx2, 0, W - 1).astype(int)
+base = fbm((H, W), scale=50, octaves=4, seed=300)
+warped = base[yb, xb]
+```
+
+</Dropdown>
+
+<Dropdown summary="Hint — colour ramp">
+
+```python
+warm = np.array([0.95, 0.30, 0.40])     # vibrant red
+cool = np.array([0.10, 0.30, 0.55])     # deep blue
+rgb = warped[..., None] * warm + (1 - warped[..., None]) * cool
+rgb_uint8 = (np.clip(rgb, 0, 1) * 255).astype(np.uint8)
+```
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+# fbm() from 6.1.1 in scope
+
+H, W = 400, 400
+y, x = np.indices((H, W)).astype(np.float64)
+
+qx = fbm((H, W), scale=90, octaves=4, seed=100) - 0.5
+qy = fbm((H, W), scale=90, octaves=4, seed=101) - 0.5
+
+ya = np.clip(y + 60 * qy, 0, H - 1).astype(int)
+xa = np.clip(x + 60 * qx, 0, W - 1).astype(int)
+qx2 = fbm((H, W), scale=90, octaves=4, seed=200)[ya, xa] - 0.5
+qy2 = fbm((H, W), scale=90, octaves=4, seed=201)[ya, xa] - 0.5
+
+yb = np.clip(y + 80 * qy2, 0, H - 1).astype(int)
+xb = np.clip(x + 80 * qx2, 0, W - 1).astype(int)
+base = fbm((H, W), scale=50, octaves=4, seed=300)
+warped = base[yb, xb]
+
+warm = np.array([0.95, 0.30, 0.40])
+cool = np.array([0.10, 0.30, 0.55])
+rgb = warped[..., None] * warm + (1 - warped[..., None]) * cool
+
+Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)).save('domain_warp_color.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns/domain_warp_color.png"
+  alt="A two-level domain-warped abstract image, coloured in vibrant red-and-deep-blue. The shapes swirl in eddies-within-eddies, like coloured liquids mixing."
+  caption="Two-level warp + warm/cool palette. Each level of warping doubles the visual complexity."
+  num={2}
+  role="output"
+/>
+
+**How it works:**
+
+- Level 1: standard displacement field from fbm.
+- Level 2: sample two new fbm fields at coordinates *already displaced* by level 1. The result is a more complex displacement vector field.
+- Final: sample the base noise at coordinates displaced by the level-2 fields.
+- The colour ramp turns the `[0, 1]` field into a dramatic two-tone abstract.
+
+</Dropdown>
+
+#### Make it your own
+
+- Animate by gradually shifting the seed of one of the displacement fields — the swirls slowly evolve.
+- Combine with the marble/wood pattern from 6.3.1: warp the marble texture's carrier coordinate. The veins twist into impossible knots.
+- Use the warped field as a *colour-ramp lookup* for a real photograph — looks like the photo has been melted into smoke.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns/domain_warp.png" label="domain_warp.png — single-level warp" />
+<Download href="/lesson-media/Module_06_noise_procedural_generation/6.3_texture_synthesis/6.3.3_abstract_patterns/domain_warp_color.png" label="domain_warp_color.png — coloured two-level warp" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Domain warping samples a noise field at coordinates that have been displaced by *other* noise fields. Two independent fbm fields `qx, qy` (centred around 0) give you a 2D displacement vector at each pixel. Add `warp_amount × (qx, qy)` to the coordinate grid and sample the base noise at the shifted positions — the smooth fbm becomes a swirling abstract. Tune `warp_amount` for severity (20 gentle, 100+ chaotic) and the displacement field's scale for swirl size (small = tight eddies, large = broad movements). Recursive warping (using one warp's output as another warp's input) compounds the complexity. The technique is universal in procedural art and shows up everywhere from Shadertoy demos to neural-network conditioning.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to subtract 0.5 from the displacement fields — they end up biased one direction.
+- Out-of-bounds indexing — without `np.clip` the integer displaced coordinates can land outside `[0, H)` or `[0, W)`.
+- Reusing the same seed for `qx` and `qy` — they become identical fields and the displacement collapses to a 1D pattern.
+- Using `np.float64` indexing for the final sample — NumPy needs integer indices. Cast to `int` *after* the clip.
+- Too small a displacement field scale — the displacement becomes high-frequency noise and the output is just static.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Quilez, I. (2008). Domain warping. *iquilezles.org*. <a href="https://iquilezles.org/articles/warp/" target="_blank" rel="noopener">iquilezles.org</a></li>
+    <li><span class="tag">[2]</span> Ebert, D. S., Musgrave, F. K., Peachey, D., Perlin, K., & Worley, S. (2003). *Texturing and Modeling: A Procedural Approach* (3rd ed.). Morgan Kaufmann.</li>
+    <li><span class="tag">[3]</span> Perlin, K. (1985). An image synthesizer. *ACM SIGGRAPH Computer Graphics*, 19(3), 287–296.</li>
+    <li><span class="tag">[4]</span> Akenine-Möller, T., Haines, E., & Hoffman, N. (2018). *Real-Time Rendering* (4th ed.). CRC Press.</li>
+    <li><span class="tag">[5]</span> Lagae, A., Lefebvre, S., Cook, R., et al. (2010). A survey of procedural noise functions. *Computer Graphics Forum*, 29(8), 2579–2600.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.</li>
+  </ol>
+</section>

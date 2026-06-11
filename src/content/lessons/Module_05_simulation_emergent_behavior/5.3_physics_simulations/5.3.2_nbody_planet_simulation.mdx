@@ -1,0 +1,249 @@
+---
+module: "M 05"
+cycle: "I"
+title: "N-Body Planet Simulation"
+objective: "Simulate N gravitationally-attracting bodies with vectorised pairwise forces and leapfrog integration. Watch orbits form, precess, and decay."
+framework: "hands-on"
+duration: "20–25 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.3.1 (Euler integration), NumPy broadcasting"
+prev:
+  slug: "5.3.1"
+  title: "Bouncing Ball"
+next:
+  slug: "5.3.3"
+  title: "Double Pendulum Chaos"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Newton solved the **two-body problem** analytically in 1687 — given two point masses, you can write down their trajectories in closed form. He could not solve the **three-body problem**, and three centuries later neither can anyone else: Poincaré proved in 1890 that the three-body problem has no analytical solution in elementary functions [1]. The only way forward is numerical simulation. In this lesson you will compute pairwise inverse-square forces with one NumPy expression, integrate with **leapfrog** (also called velocity Verlet) — a method that conserves energy far better than Euler — and watch four small planets orbit one heavy "sun". The same architecture scales to galaxies of 10⁶ bodies on a GPU; the algorithm has not changed in three centuries.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Compute pairwise gravitational acceleration in one vectorised NumPy expression.</li>
+  <li>Use a softening parameter to avoid the singularity at zero distance.</li>
+  <li>Implement leapfrog (velocity Verlet) integration — second-order accurate, time-reversible, energy-conserving.</li>
+  <li>Pick initial velocities that produce stable circular orbits rather than crashes or escape trajectories.</li>
+</ol>
+
+## Quick start — pairwise gravity in three lines <a id="quick-start"></a>
+
+For each pair of bodies `i, j`, the acceleration on `i` is `G · m_j · (r_j − r_i) / |r_j − r_i|³`. Sum over all `j ≠ i`. NumPy's broadcasting makes the whole loop disappear.
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+deltas = positions[None, :, :] - positions[:, None, :]    # (n, n, 2)
+r2 = (deltas ** 2).sum(axis=-1) + SOFTENING ** 2          # (n, n)
+inv_r3 = r2 ** -1.5
+np.fill_diagonal(inv_r3, 0.0)
+acc = G * (deltas * inv_r3[..., None] * masses[None, :, None]).sum(axis=1)
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/nbody.gif"
+  alt="Animated N-body simulation with one central yellow sun and four coloured planets tracing elliptical orbits against a dark background"
+  caption="One heavy central body and four orbiting planets. 240 frames at 30 fps. Watch the inner planets perturb each other's orbits."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The trails are produced by canvas fading (multiply each pixel by `0.92` per frame). The fade rate sets the visible orbit-history — 0.92 gives ~12 frames of memory, 0.98 keeps trails for closer to 50.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Vectorised pairwise forces
+
+The naive double loop computes `O(n²)` accelerations and runs in pure Python — slow. NumPy's broadcasting compresses it into one expression that runs in C.
+
+<CodeBlock lang="python" file="pairwise_demo.py">
+```python
+deltas = positions[None, :, :] - positions[:, None, :]    # deltas[i, j] = r_j - r_i
+r2 = (deltas ** 2).sum(axis=-1) + SOFTENING ** 2          # |r|^2 + epsilon^2
+inv_r3 = r2 ** -1.5                                       # 1 / |r|^3
+np.fill_diagonal(inv_r3, 0.0)                             # no self-attraction
+acc = G * (deltas * inv_r3[..., None] * masses[None, :, None]).sum(axis=1)
+```
+</CodeBlock>
+
+The shape `(n, n, 2)` for deltas is what makes it work: index `[i, j]` is the 2D vector from `i` to `j`. Multiplying by `inv_r3[..., None]` rescales each vector by `1/r³`. Multiplying by `masses[None, :, None]` weights each force by the *source* mass. Summing over axis 1 gathers all contributions to body `i`. One expression replaces a double loop.
+
+<Admonition type="dyk" title="Did you know? · O(n log n) galaxy simulations">
+For very large `n`, the Barnes-Hut tree code groups distant masses into clusters and treats each cluster as a single mass — reducing the cost from `O(n²)` to `O(n log n)`. Modern cosmological simulations of billions of particles use Barnes-Hut or fast-multipole methods exclusively [3]. For our small `n = 5`, the brute-force vectorised version is faster than any tree.
+</Admonition>
+
+### Concept 2 — Softening, not regularisation
+
+Two bodies on a collision course will at some point have `|r| ≈ 0`, and `1/r³` blows up. Real planets are extended objects (not point masses), so there is no actual singularity. We mimic that by adding a **softening parameter** ε² inside the distance:
+
+<CodeBlock lang="python" file="softening_demo.py">
+```python
+r2 = (deltas ** 2).sum(axis=-1) + SOFTENING ** 2
+```
+</CodeBlock>
+
+This is a tiny lie — the force law becomes `m / (r² + ε²)^(3/2)`, which differs from Newton's by a tiny amount when `r ≫ ε` and by a huge amount when `r ≲ ε`. At close range it goes to a finite maximum instead of infinity, which is physically what a soft sphere would do. Set `SOFTENING = 0` and the first near-collision will throw an integer-overflow at you.
+
+<Admonition type="important">
+Pick `SOFTENING` to be a few times the diameter of your bodies. Too small and close encounters explode; too large and the orbits drift away from Newtonian.
+</Admonition>
+
+### Concept 3 — Leapfrog (velocity Verlet)
+
+Euler integration is *first-order* accurate and leaks energy from orbital systems within a few periods — orbits visibly spiral inward or outward. **Leapfrog** (also called velocity Verlet) is *second-order* accurate, **time-reversible**, and **symplectic** — meaning it conserves a discrete approximation of total energy exactly, forever. The cost is three operations instead of two per step [4].
+
+<CodeBlock lang="python" file="leapfrog_demo.py">
+```python
+velocities += 0.5 * a * DT          # kick (half step)
+positions  += velocities * DT       # drift (full step)
+a = accelerations(positions, masses)
+velocities += 0.5 * a * DT          # kick (half step)
+```
+</CodeBlock>
+
+Read it as **kick-drift-kick**: apply half the acceleration to velocity, advance position, recompute acceleration at the new position, apply the second half-kick. The half-steps offset the velocity from the position by `DT/2`, which is what makes the method second-order.
+
+<Admonition type="note">
+Symplectic integrators are essential for long-duration orbital simulations. The Voyager-era Solar System integrations used variants of leapfrog to track planetary positions over hundreds of millions of years without spurious drift [5]. Naive Euler would have predicted Earth crashing into the Sun by the year 2000.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the four planets">
+
+Download `nbody.py` and run it. It writes `nbody.gif` and stills.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/nbody.py" label="nbody.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Some planets orbit faster than others. What determines orbital period — distance, mass, or velocity?
+- The inner planets visibly perturb each other's orbits. Why does the canvas fade help reveal this?
+- What happens if you swap two planets' initial velocities?
+
+<Dropdown summary="Answers">
+
+**Orbital period** — Kepler's third law: `T² ∝ a³` where `a` is the semi-major axis. Distance dominates; the orbiting body's own mass barely matters when the central body is much heavier. Doubling the orbital radius roughly triples the period.
+
+**Why the trail reveals perturbations** — without trails, the orbits look like points moving around. The trail shows that the same orbit, traced over many frames, is not a closed loop — it precesses. Mercury's perihelion precesses by 43 arcseconds per century due to general relativity, and that effect is detectable in our toy simulation as visible drift over a few seconds.
+
+**Swap velocities** — orbital velocity must be perpendicular to the radial vector and have the magnitude `v = sqrt(G * M / r)` for a circular orbit. Swapping velocities between planets at different radii gives one planet too much speed (it escapes) and the other too little (it falls inward into the sun).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Reshape the system">
+
+**Goals**
+
+1. **Larger central mass**: `masses[0] = 500`. The planets orbit faster and tighter.
+2. **Smaller softening**: `SOFTENING = 1.0`. Close encounters fling planets out.
+3. **Euler instead of leapfrog**: replace the kick-drift-kick with `a = ...; v += a*DT; p += v*DT`. Watch orbits decay within seconds.
+4. **Binary star**: replace the central sun with two equal-mass bodies orbiting each other. Add planets at large radius.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Orbital velocities scale as `sqrt(M)`. With the sun's mass more than doubled, the planets orbit roughly 1.5× faster and feel a much steeper potential well. Tight, fast orbits — like Mercury around the Sun.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+The first close pass between two planets throws one or both onto an unbound trajectory. Smaller softening means the simulated bodies behave more like point masses; the force at close range is enormous and a few frames of leapfrog can apply it as a slingshot.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Orbits spiral inward visibly within 50–100 frames. Naive Euler steadily *loses* energy from the system (it is dissipative in the opposite direction of physical reality). Switching back to leapfrog freezes the orbits in place.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A binary star with planets at greater radius. The planets see the two suns as one combined mass at long range, so their orbits are roughly stable. Get close and the binary's gravitational unevenness shakes them — classic chaotic dynamics, the same regime that produces three-body resonances in real planetary systems.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement accelerations()">
+
+Use `nbody_starter.py`. The leapfrog loop and rendering are wired up. `accelerations()` is stubbed — implement it.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/nbody_starter.py" label="nbody_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+1. Compute `deltas[i, j] = positions[j] - positions[i]` using broadcasting.
+2. Compute `r² = sum(deltas²) + SOFTENING²`.
+3. Compute `inv_r3 = r² ** -1.5` and zero its diagonal.
+4. Return `G * sum_j (deltas[i,j] * inv_r3[i,j] * mass[j])`.
+
+<Dropdown summary="Hint — shape mechanics">
+
+```python
+deltas = positions[None, :, :] - positions[:, None, :]   # (n,n,2)
+r2 = (deltas ** 2).sum(axis=-1) + SOFTENING ** 2          # (n,n)
+inv_r3 = r2 ** -1.5                                       # (n,n)
+np.fill_diagonal(inv_r3, 0.0)
+acc = G * (deltas * inv_r3[..., None] * masses[None, :, None]).sum(axis=1)
+return acc
+```
+
+The trickiest part is which axis to sum over. `sum(axis=1)` collapses the "source j" axis, leaving `(n, 2)` — one acceleration vector per body.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Plot orbital energy vs time**. With leapfrog it should oscillate around a constant; with Euler it drifts monotonically.
+- **Three-body resonance**: pick three planet velocities to land in a 3:2:1 resonance and watch the orbits lock.
+- **Tidal disruption**: make one planet huge and one tiny. Run them very close. The tiny one gets stretched into a stream — the simulation captures the basic idea even though we are not modelling extended bodies.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/nbody.py" label="nbody.py — full reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.2_nbody_planet_simulation/nbody_starter.py" label="nbody_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Newtonian N-body gravity is one vectorised NumPy expression: pairwise deltas, distances softened by ε², `1/r³` force law, sum over sources. Leapfrog integration replaces Euler everywhere in orbital simulation because it is symplectic — total energy oscillates around a constant rather than drifting. Initial velocities matter enormously: a circular orbit needs tangential velocity of magnitude `sqrt(GM/r)`, perpendicular to the radius. Get any one of those three wrong and the planet either crashes into the sun or escapes the system. The whole architecture extends from our 5 bodies to the 10⁶-body galaxy simulations in cosmology — only the integrator and the spatial decomposition change.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- No softening. The first close encounter divides by ~0 and the simulation crashes or shoots planets to infinity.
+- Euler instead of leapfrog. Energy drifts and orbits decay (or explode) within seconds.
+- Initial velocity not perpendicular to the radius. The planet's orbit is highly elliptical or fails to be bound.
+- Forgetting to zero the diagonal of `inv_r3`. Every body adds its own self-acceleration (≈ infinity, divided by softening).
+- Sums over the wrong axis. The acceleration array has wrong shape and the simulation breaks silently with NaNs.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Poincaré, H. (1890). Sur le problème des trois corps et les équations de la dynamique. *Acta Mathematica*, 13, 1–270.</li>
+    <li><span class="tag">[2]</span> Aarseth, S. J. (2003). *Gravitational N-Body Simulations*. Cambridge University Press.</li>
+    <li><span class="tag">[3]</span> Barnes, J., & Hut, P. (1986). A hierarchical O(N log N) force-calculation algorithm. *Nature*, 324, 446–449. <a href="https://doi.org/10.1038/324446a0" target="_blank" rel="noopener">doi:10.1038/324446a0</a></li>
+    <li><span class="tag">[4]</span> Verlet, L. (1967). Computer experiments on classical fluids. I. *Physical Review*, 159(1), 98–103. <a href="https://doi.org/10.1103/PhysRev.159.98" target="_blank" rel="noopener">doi:10.1103/PhysRev.159.98</a></li>
+    <li><span class="tag">[5]</span> Sussman, G. J., & Wisdom, J. (1992). Chaotic evolution of the solar system. *Science*, 257(5066), 56–62. <a href="https://doi.org/10.1126/science.257.5066.56" target="_blank" rel="noopener">doi:10.1126/science.257.5066.56</a></li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

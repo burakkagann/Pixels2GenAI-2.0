@@ -1,0 +1,366 @@
+---
+module: "M 03"
+cycle: "I"
+title: "Puzzle — Array Concatenation"
+objective: "Use `np.vstack` and `np.hstack` to assemble image fragments — first as obedient jigsaw pieces with matching dimensions, then as an artistic shuffle that turns a single photo into an abstract puzzle."
+framework: "hands-on"
+duration: "15–18 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "1.1.1 (image shape), 3.3.1 (slicing for grids)"
+prev:
+  slug: "3.3.1"
+  title: "Warhol"
+next:
+  slug: "3.3.3"
+  title: "Hexpanda"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+`np.vstack` glues arrays top-to-bottom; `np.hstack` glues them side-by-side. Together they are NumPy's "assemble images from pieces" pair — the same machinery that powers panorama stitching, contact sheets, and the diagnostic grids you have already built in this module [1, 2]. The mental model in this lesson is the jigsaw puzzle: every piece carries its own `(h, w, 3)` shape, and the dimension *facing the seam* must match for the stack to succeed. Once that constraint clicks, you can slice any image into quadrants, shuffle the pieces, and reassemble them — turning a documentary photo into an abstract collage with three NumPy calls.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Predict the output shape of `np.vstack` and `np.hstack` from the input shapes.</li>
+  <li>Read NumPy's error message when a stack fails — *"all the input array dimensions except for the concatenation axis must match exactly"* — and fix it.</li>
+  <li>Build rows with `hstack`, then stack the rows with `vstack`, to compose any rectangular grid.</li>
+  <li>Slice a photo into quadrants and reassemble them in scrambled order for an artistic puzzle.</li>
+</ol>
+
+## Quick start — combine two puzzle pieces <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image
+
+a = np.array(Image.open('a.png'))    # shape (133, 300, 3)
+b = np.array(Image.open('b.png'))    # shape (133, 300, 3)
+
+print('A:', a.shape, 'B:', b.shape)
+
+row = np.hstack([a, b])               # heights match → widths add
+print('Row:', row.shape)              # (133, 600, 3)
+
+Image.fromarray(row).save('quick_start_output.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/quick_start_output.png"
+  alt="Two coloured gradient strips fused side by side, height 133 pixels and combined width 600 pixels"
+  caption="Pieces A and B placed side by side. Heights match (133 px), so `hstack` succeeds; widths add (300 + 300 = 600 px)."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Both functions take a **list** of arrays: `np.hstack([a, b])` not `np.hstack(a, b)`. Skipping the brackets is the most common typo and produces a misleading error about "missing argument."
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — `vstack` and `hstack` shape rules
+
+`vstack` concatenates along axis 0 (height). For RGB images, all inputs must have the same width (and 3 channels):
+
+```
+(h1, W, 3) + (h2, W, 3) → (h1 + h2, W, 3)
+```
+
+`hstack` concatenates along axis 1 (width). All inputs must have the same height:
+
+```
+(H, w1, 3) + (H, w2, 3) → (H, w1 + w2, 3)
+```
+
+Two pieces with the same `(H, W, 3)` shape are stackable both ways — `vstack` doubles the height, `hstack` doubles the width [3].
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/concatenation_diagram.png"
+  alt="A side-by-side diagram. Left half labelled vstack shows two arrays placed one above the other with their widths matching. Right half labelled hstack shows two arrays placed side by side with their heights matching."
+  caption="`vstack` requires matching widths; `hstack` requires matching heights. The matching dimension is the one *not* being grown."
+  num={2}
+  role="diagram"
+/>
+
+<Admonition type="important">
+NumPy's exact error message when a stack fails is *"all the input array dimensions except for the concatenation axis must match exactly"*. If you see this, the rule of thumb is: `vstack` failed → check widths; `hstack` failed → check heights.
+</Admonition>
+
+### Concept 2 — Compose with `hstack` first, then `vstack`
+
+The reliable recipe for any rectangular grid is row-major:
+
+```python
+top_row    = np.hstack([a, b])        # row 1
+bottom_row = np.hstack([c, d])        # row 2
+grid       = np.vstack([top_row, bottom_row])
+```
+
+It works for *non-uniform* rows too, as long as each row ends up the same total width:
+
+```python
+top    = np.hstack([a, b])               # widths: 300 + 300 = 600
+bottom = np.hstack([c, d, e])            # widths: 300 + 100 + 200 = 600
+grid   = np.vstack([top, bottom])        # ✓ matching widths
+```
+
+The bottom row uses three pieces to match the top row's two pieces — `vstack` only cares about the totals.
+
+<Admonition type="dyk" title="Technical note · `vstack` vs `concatenate`">
+Both `np.vstack([a, b])` and `np.concatenate([a, b], axis=0)` produce the same result; `vstack` is the read-easier alias. NumPy has a third option, `np.r_[a, b]`, which is the most concise but only really shines in interactive notebook work [4].
+</Admonition>
+
+### Concept 3 — Slice + concatenate = puzzle
+
+The whole jigsaw lesson is in two operations: slice the image into pieces with NumPy indexing, reassemble with the stacks.
+
+```python
+H, W = image.shape[:2]
+mid_y, mid_x = H // 2, W // 2
+
+tl = image[:mid_y, :mid_x]
+tr = image[:mid_y, mid_x:]
+bl = image[mid_y:, :mid_x]
+br = image[mid_y:, mid_x:]
+
+# Reassemble in order
+reconstructed = np.vstack([
+    np.hstack([tl, tr]),
+    np.hstack([bl, br]),
+])
+
+# Or shuffle for an artistic puzzle
+abstract = np.vstack([
+    np.hstack([br, tl]),
+    np.hstack([tr, bl]),
+])
+```
+
+The shuffle is the artistic move: every piece keeps its content but lands in the wrong cell, and you get the disjointed look of late-Cubist collage from a single source photograph. Hannah Höch built a whole career on this [5].
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: stack two pieces, build a 2×3 grid, then shuffle a real photo into an abstract puzzle.
+
+<Exercise n={1} kicker="EXECUTE" title="Stack two pieces both ways">
+
+Run `exercise1_two_pieces.py` from the downloads. The script prints the shapes of pieces A and C, then stacks them once with `vstack` and once with `hstack`.
+
+**Reflection questions**
+
+- After `vstack`, which axis grew, and what did the other two axes do?
+- After `hstack`, which axis grew?
+- A and C both have shape `(133, 300, 3)`. Which shape property makes *both* stacking operations valid?
+
+<Dropdown summary="Answers">
+
+**`vstack`** — axis 0 (height) doubled from 133 to 266. Width stayed at 300; channels stayed at 3. Heights *add*; the other axes must already match.
+
+**`hstack`** — axis 1 (width) doubled from 300 to 600. Height stayed at 133; channels stayed at 3.
+
+**Both operations valid** — A and C share *all* their non-channel dimensions. `vstack` only needs matching widths; `hstack` only needs matching heights. When both match, both operations are legal — you choose by the orientation you want.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three grid arrangements">
+
+Using the six pieces from the downloads, build these three pictures.
+
+**Goals**
+
+1. **Row D + E** — `hstack` pieces D (133×100) and E (133×200) into a single row.
+2. **Column A above C** — `vstack` pieces A and C into a tall column.
+3. **2×3 grid** — top row `A + B`, bottom row `C + D + E` (use three pieces to match the top row's width).
+
+<Dropdown summary="Goal 1 — what to expect">
+
+```python
+row = np.hstack([d, e])           # (133, 300, 3)
+```
+
+D and E have the same height (133) but different widths (100 and 200). `hstack` accepts that; the resulting width is 300.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+```python
+col = np.vstack([a, c])           # (266, 300, 3)
+```
+
+A and C are the same shape; the column doubles height while keeping width.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+```python
+top    = np.hstack([a, b])              # (133, 600)
+bottom = np.hstack([c, d, e])           # (133, 100 + 200 + 300 = 600)
+grid   = np.vstack([top, bottom])       # (266, 600)
+```
+
+The bottom row uses *three* pieces to total the top row's width of 600 pixels. `vstack` only cares about the total — any number of pieces is fine inside `hstack`.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Shuffle a photo into a puzzle">
+
+Take any image, slice it into four quadrants, and reassemble them in **shuffled** order for an abstract puzzle. The constraint: every quadrant must appear exactly once.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+image = np.array(Image.open('source_image.png'))
+H, W = image.shape[:2]
+mid_y, mid_x = H // 2, W // 2
+
+# TODO 1: slice into four quadrants.
+# tl = image[..., ...]
+# tr = ...
+# bl = ...
+# br = ...
+
+# TODO 2: reassemble in scrambled order.
+#         Each quadrant must appear exactly once.
+# scrambled = np.vstack([
+#     np.hstack([?, ?]),
+#     np.hstack([?, ?]),
+# ])
+
+# TODO 3: verify the *non-scrambled* reassembly matches the original.
+# correct = np.vstack([np.hstack([tl, tr]), np.hstack([bl, br])])
+# assert np.array_equal(image, correct), 'reassembly does not match'
+
+Image.fromarray(scrambled).save('shuffled_puzzle.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — quadrant slicing">
+
+```python
+tl = image[:mid_y, :mid_x]
+tr = image[:mid_y, mid_x:]
+bl = image[mid_y:, :mid_x]
+br = image[mid_y:, mid_x:]
+```
+
+NumPy is `[row, col]` = `[y, x]`. The top half is `[:mid_y]`, the bottom half is `[mid_y:]`.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — a scrambled order">
+
+```python
+scrambled = np.vstack([
+    np.hstack([br, tl]),       # bottom-right + top-left in row 1
+    np.hstack([tr, bl]),       # top-right + bottom-left in row 2
+])
+```
+
+Each quadrant appears exactly once; nothing repeats. The pieces have matching dimensions because they were sliced from a uniform mid-point, so the stacks succeed.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+image = np.array(Image.open('source_image.png'))
+H, W = image.shape[:2]
+mid_y, mid_x = H // 2, W // 2
+
+tl = image[:mid_y, :mid_x]
+tr = image[:mid_y, mid_x:]
+bl = image[mid_y:, :mid_x]
+br = image[mid_y:, mid_x:]
+
+# Verify correct order rebuilds the original
+correct = np.vstack([np.hstack([tl, tr]), np.hstack([bl, br])])
+assert np.array_equal(image, correct), 'reassembly does not match'
+
+# Artistic shuffle
+scrambled = np.vstack([
+    np.hstack([br, tl]),
+    np.hstack([tr, bl]),
+])
+
+Image.fromarray(scrambled).save('shuffled_puzzle.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise3_comparison.png"
+  alt="A three-panel comparison showing the original photograph, the correctly reassembled version which is identical to the original, and a shuffled version where the quadrants are clearly rearranged into abstract collage"
+  caption="Original (left), correct reassembly (middle, indistinguishable from the original), and the shuffled puzzle (right). Every quadrant is intact; only the cell positions changed."
+  num={3}
+  role="output"
+/>
+
+**How it works:**
+
+- The mid-point slice produces four exactly-equal quadrants (modulo any off-by-one from odd dimensions).
+- The "correct" reassembly is the sanity check — if it does not equal the original, the slicing is buggy.
+- The scramble is the same `vstack(hstack(...))` recipe, just with different lookup order. The resulting array has identical pixel content, only re-tiled.
+
+</Dropdown>
+
+#### Make it your own
+
+- Try a 3×3 split. Now there are 9! = 362 880 possible orderings; shuffle randomly with `np.random.shuffle` on a list of quadrants and you have a procedurally infinite puzzle gallery.
+- Rotate each quadrant by 90° before stacking — `np.rot90(piece, k)` gives a fresh visual on top of the shuffle.
+- Insert thin black gutters between the quadrants by `vstack`ing/`hstack`ing zero-arrays of the appropriate shape, the same way 3.3.1 added a 5-pixel gap.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise1_two_pieces.py" label="exercise1_two_pieces.py — print + stack" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise2_starter.py" label="exercise2_starter.py — 2×3 grid starter" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise3_create_puzzle_solution.py" label="exercise3_create_puzzle_solution.py — shuffle reference" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/source_image.png" label="source_image.png — input photo" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+`np.vstack` and `np.hstack` are NumPy's puzzle-assembly tools — vertical stacks grow height, horizontal stacks grow width, and the dimension perpendicular to the seam must already match. The reliable recipe for any rectangular grid is row-major: build each row with `hstack`, then stack the rows with `vstack`, allowing as many pieces per row as you need provided the totals match. Inverted, the same primitives let you *decompose* an image — slice it into quadrants and stash them in a list — then reassemble with the same calls in any order. Reassemble in the original order to recover the photo; reassemble in any other order and you have an abstract collage with three NumPy calls.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- `np.hstack(a, b)` instead of `np.hstack([a, b])` — the function takes a list, not varargs.
+- Mixing up the axes — `vstack` grows axis 0 (height), `hstack` grows axis 1 (width).
+- Slicing with `[:H, :W]` instead of `[0:H, 0:W]` — equivalent, but the explicit form is more readable when teaching.
+- Forgetting that quadrant slicing on an *odd-sized* image leaves the four pieces with off-by-one widths; pad with one zero column to recover symmetry.
+- Comparing with `==` on whole arrays instead of `np.array_equal(a, b)` — `==` is per-element and produces an array, not a scalar.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+    <li><span class="tag">[2]</span> Szeliski, R. (2006). Image alignment and stitching: A tutorial. *Foundations and Trends in Computer Graphics and Vision*, 2(1), 1–104. <a href="https://doi.org/10.1561/0600000009" target="_blank" rel="noopener">doi:10.1561/0600000009</a></li>
+    <li><span class="tag">[3]</span> NumPy Community. (2024). numpy.vstack. *NumPy Documentation*. <a href="https://numpy.org/doc/stable/reference/generated/numpy.vstack.html" target="_blank" rel="noopener">numpy.org/vstack</a></li>
+    <li><span class="tag">[4]</span> NumPy Community. (2024). numpy.concatenate. *NumPy Documentation*. <a href="https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html" target="_blank" rel="noopener">numpy.org/concatenate</a></li>
+    <li><span class="tag">[5]</span> Lavin, M. (1993). *Cut with the Kitchen Knife: The Weimar Photomontages of Hannah Höch*. Yale University Press.</li>
+    <li><span class="tag">[6]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson.</li>
+  </ol>
+</section>

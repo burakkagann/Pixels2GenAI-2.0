@@ -1,0 +1,267 @@
+---
+module: "M 11"
+cycle: "II"
+title: "Projection Mapping"
+objective: "Warp source content onto an off-angle target surface using a homography. The geometry every projection-mapped installation depends on, from gallery walls to building facades."
+framework: "hands-on"
+duration: "25–30 min"
+level: "intermediate"
+prereqs: "3.1.2 (affine transforms), basic linear algebra"
+prev:
+  slug: "11.3.2"
+  title: "DMX Lighting Control"
+next:
+  slug: "11.4.1"
+  title: "Multi-Machine Setups"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+**Projection mapping** is the technique of using a projector to display imagery onto an irregular, off-axis, or 3D surface — a building facade, a car body, a stage prop — such that the image appears to "wrap" around the surface as if painted directly on it. The technique made its public debut at Disneyland's *Haunted Mansion* (1969 [1]) and exploded into mainstream art with Pablo Valbuena's *Augmented Sculptures* (2006) and a decade of building-facade light shows.
+
+The geometric primitive is a **homography**: a 3×3 matrix that maps points in one plane to points in another plane. Given four corner points of the source content rectangle and four corner points of the target quadrilateral on the surface, you can solve for the homography that warps source onto target. The same matrix maps every interior pixel — apply it in inverse to render. Every projection-mapping software (TouchDesigner, MadMapper, Resolume, vvvv) does some variant of this calculation behind a drag-the-corners UI.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Recognise the homography as the 3×3 matrix transformation that maps four source corners to four destination corners.</li>
+  <li>Solve for the homography from corner correspondences via a linear least-squares system.</li>
+  <li>Apply **inverse sampling**: for each destination pixel, compute the source pixel via the inverse homography and copy.</li>
+  <li>Animate the destination quad to simulate an off-axis projector with a swinging or shifting beam.</li>
+</ol>
+
+## Quick start — warp source onto an angled quad <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+
+def homography_from_corners(src_corners, dst_corners):
+    A, b = [], []
+    for (sx, sy), (dx, dy) in zip(src_corners, dst_corners):
+        A.append([sx, sy, 1, 0, 0, 0, -dx*sx, -dx*sy]); b.append(dx)
+        A.append([0, 0, 0, sx, sy, 1, -dy*sx, -dy*sy]); b.append(dy)
+    h, *_ = np.linalg.lstsq(np.array(A), np.array(b), rcond=None)
+    return np.array([[h[0], h[1], h[2]],
+                     [h[3], h[4], h[5]],
+                     [h[6], h[7], 1.0]])
+
+src_corners = [(0, 0), (W, 0), (W, H), (0, H)]
+dst_corners = [(120, 80), (530, 110), (560, 380), (90, 360)]
+H = homography_from_corners(src_corners, dst_corners)
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics/projection_mapping.gif"
+  alt="An animated projection-mapping demonstration showing a source rectangle containing diagonal orange stripes and a centred white circle labelled PROJ. The image is warped onto a trapezoidal target quad that animates back and forth, simulating an off-axis projector. A yellow outline traces the current target quad. The warped content keeps its visual identity even as the perspective shifts dramatically"
+  caption="60 frames of homography-warped content. As the target quad (yellow outline) tilts, the warped image stays correctly perspective-mapped onto it. Same primitive every projection-mapping tool uses."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The mapping is **per-pixel**, not per-vertex. Every destination pixel inside the target quad gets exactly one source pixel via the inverse homography. The result is a faithful perspective warp that looks geometrically correct from the viewer's vantage point.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The homography matrix
+
+A homography is a 3×3 matrix $H$ that maps homogeneous 2D coordinates from one plane to another:
+
+`[xd, yd, w]^T = H · [xs, ys, 1]^T`
+
+After the matrix multiply, you divide by `w` to get Cartesian coordinates: `(xd/w, yd/w)`. The division is what makes the transform **non-affine** — parallel lines in the source can be made to converge in the destination, producing the trapezoidal/perspective look.
+
+The matrix has 8 degrees of freedom (the bottom-right entry is fixed to 1 by normalisation). Four point correspondences give 8 equations — exactly enough to solve uniquely. With more than 4 correspondences, use least-squares.
+
+### Concept 2 — Solving from corner correspondences
+
+Given four pairs $(x_s, y_s) \to (x_d, y_d)$, set up a linear system in the 8 unknown matrix entries:
+
+<CodeBlock lang="python" file="dlt.py">
+```python
+A = [
+    [sx1, sy1, 1, 0, 0, 0, -dx1*sx1, -dx1*sy1],   # x equation for corner 1
+    [0, 0, 0, sx1, sy1, 1, -dy1*sx1, -dy1*sy1],   # y equation for corner 1
+    # ... same for corners 2, 3, 4 → 8 rows total
+]
+b = [dx1, dy1, dx2, dy2, ...]
+h, *_ = np.linalg.lstsq(A, b, rcond=None)
+```
+</CodeBlock>
+
+The technique is called the **Direct Linear Transform** (DLT) [2]. Numerically stable for normal point spacings; degenerate if any three points are collinear (the matrix becomes singular). Production code uses OpenCV's `cv2.getPerspectiveTransform` for the no-error 4-point case or `cv2.findHomography` for the over-determined case.
+
+<Admonition type="dyk" title="Did you know · the same math drives every selfie filter">
+The face-warping primitive used by Snapchat, Instagram, and FaceApp uses homographies (or their non-linear cousin, **thin-plate splines**) to map a target template's mesh onto detected face landmarks. The same algorithm that warps a logo onto a building also warps a beard onto your chin. The difference is the source of the corner correspondences: in projection mapping you set them by dragging UI handles; in face filters they come from the landmark detector (11.2.3) [3].
+</Admonition>
+
+### Concept 3 — Inverse sampling
+
+For rendering, **don't iterate over source pixels**. The forward mapping puts source pixels at non-integer destination coordinates — gaps and overlaps. Instead, iterate over **destination** pixels: compute the inverse homography $H^{-1}$, and for each destination pixel $(x_d, y_d)$, find its source $(x_s, y_s) = H^{-1} (x_d, y_d, 1)$, and copy:
+
+<CodeBlock lang="python" file="inverse_sample.py">
+```python
+H_inv = np.linalg.inv(H)
+yy, xx = np.mgrid[y0:y1, x0:x1]
+hom = np.stack([xx, yy, np.ones_like(xx)], axis=-1)
+src_hom = hom @ H_inv.T
+src_x = src_hom[..., 0] / src_hom[..., 2]
+src_y = src_hom[..., 1] / src_hom[..., 2]
+
+# Index into source — nearest-neighbour for simplicity; bilinear for quality
+out[y0:y1, x0:x1] = source[src_y.astype(int).clip(0, H-1),
+                            src_x.astype(int).clip(0, W-1)]
+```
+</CodeBlock>
+
+The destination quad bounds the rendering region — only iterate over pixels inside it. Inverse sampling guarantees every destination pixel is filled exactly once. Same technique as the Star Wars perspective crawl (8.3.1).
+
+<Admonition type="important">
+In production projection mapping, the corner correspondences come from a **calibration step**: the user adjusts UI handles while looking at the projection until the corners line up with the physical surface. Software like MadMapper and Resolume hide the matrix math behind drag-the-corners interfaces. The math you wrote here is what's behind the scenes.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the demo, animate the corners, then add multi-quad mapping.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the warp demo">
+
+Run `projection_map.py`. The script synthesizes a content image and warps it onto an animated trapezoidal quad.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics/projection_map.py" label="projection_map.py — homography reference" />
+
+**Reflection questions**
+
+- The script renders 60 frames at 24 fps — about 2.5 seconds. Why use inverse sampling instead of forward?
+- The destination quad is a trapezoid (top edge tilted). What does the warped content look like at the trapezoid's narrow edge?
+- Why does the homography need exactly 4 corner correspondences? Why not 3 or 5?
+
+<Dropdown summary="Answers">
+
+**Inverse vs forward** — forward sampling lands source pixels at non-integer destination positions, causing gaps and overlaps. Inverse sampling iterates the integer destination grid and looks up source — every destination pixel gets exactly one value, no holes.
+
+**Narrow edge** — the source content is compressed into a smaller area at the narrow edge. Visually, it looks like the image is receding into the distance. That perspective compression is exactly what makes the warp read as "projected onto a tilted surface."
+
+**Why 4 corners** — homography has 8 degrees of freedom. Each corner correspondence provides 2 equations (one x, one y). 4 corners × 2 = 8 equations = unique solution. 3 corners (6 equations) under-determine; 5+ corners over-determine, requiring least-squares.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Animate the destination quad">
+
+**Goals**
+
+1. **Different swing rate.** Halve the swing rate so the projection appears to oscillate more slowly.
+2. **Vertical swing.** Add a vertical animation: the bottom-right corner moves up and down.
+3. **Different source content.** Replace the synthesised source with a real photo loaded via `Image.open`.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Calmer, more deliberate projection swing. Useful for documentary-style installations.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+The corner of the target shifts vertically; the warp re-aligns continuously. The animation creates a sense of "the projector is being held by a slightly shaky hand."
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+A real photo gets warped onto the target quad — the canonical projection-mapping use case. Try a logo, a photograph, or a video frame.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Multi-quad mapping">
+
+Real projection mapping uses **multiple target quads** at once — one for each face of a building or each panel of a stage prop. Add a second quad and render both with different content.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+# Inside the frame loop:
+
+# TODO 1: define a second target quad (top half of the canvas)
+# TODO 2: warp the same source onto it (or a different source)
+# TODO 3: composite both warps onto the canvas
+```
+</CodeBlock>
+
+<Dropdown summary="Hints">
+
+```python
+# First quad (bottom area)
+dst1 = [...]
+H1 = homography_from_corners(src_corners, dst1)
+warped1 = warp_image(source_arr, np.linalg.inv(H1), SIZE, dst1)
+
+# Second quad (top area) — use a different source if desired
+source2_arr = np.array(make_alternative_source())
+src2_corners = [(0, 0), (W2, 0), (W2, H2), (0, H2)]
+dst2 = [...]
+H2 = homography_from_corners(src2_corners, dst2)
+warped2 = warp_image(source2_arr, np.linalg.inv(H2), SIZE, dst2)
+
+# Composite by max — assumes black backgrounds
+canvas_arr = np.maximum(canvas_arr, np.maximum(warped1, warped2))
+```
+
+Each quad gets its own homography. The composition step is arbitrary — max-blend, alpha-composite, additive — depending on the look you want.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+Multi-quad mapping is the everyday case for projection mapping: one quad per visible face of a 3D object. The same renderer scales to dozens of quads — each just adds a matrix solve and a sampling pass.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Real-time photo source.** Pipe in a webcam feed (11.1.1) as the source. The projection becomes a "selfie wrapped onto an object."
+- **Bilinear sampling.** Replace nearest-neighbour with bilinear (8.1.3) for smoother warps with less aliasing at edges.
+- **OpenCV warpPerspective.** Replace your hand-rolled `warp_image` with `cv2.warpPerspective`. Same math, vastly faster (SIMD-accelerated C++).
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.3_physical_computing/11.3.3_projection_mapping_basics/projection_map.py" label="projection_map.py — homography reference" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A homography is a 3×3 matrix that maps four source corners to four destination corners, applying perspective distortion to everything in between. Solve via Direct Linear Transform from four point correspondences. Render with inverse sampling: for each destination pixel, compute the source via $H^{-1}$ and copy. The same primitive drives every projection-mapping software, every photo-warping app, and many computer-vision pipelines (stitching panoramas, rectifying scanned documents, AR overlays). Multi-quad mapping handles complex 3D surfaces by partitioning them into planar regions.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Forward sampling.** Produces gaps in the destination image. Always inverse-sample.
+- **Collinear corners.** Three or more corners on a line make the homography matrix singular. Pick non-collinear corners.
+- **Forgetting `/ w` in homogeneous coords.** The perspective division is what produces non-affine warps. Skipping it gives an affine (no perspective) result.
+- **Per-pixel Python loops.** With a 1080p destination, you need vectorised NumPy or OpenCV — pure Python takes minutes per frame.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Disney Imagineering. (1969). *The Haunted Mansion: Grim Grinning Ghosts*. Walt Disney Productions.</li>
+    <li><span class="tag">[2]</span> Hartley, R., & Zisserman, A. (2003). *Multiple View Geometry in Computer Vision* (2nd ed.). Cambridge University Press. ISBN 978-0-521-54051-3.</li>
+    <li><span class="tag">[3]</span> Bookstein, F. L. (1989). Principal warps: Thin-plate splines and the decomposition of deformations. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 11(6), 567–585. <a href="https://doi.org/10.1109/34.24792" target="_blank" rel="noopener">doi:10.1109/34.24792</a></li>
+    <li><span class="tag">[4]</span> Bimber, O., & Raskar, R. (2005). *Spatial Augmented Reality: Merging Real and Virtual Worlds*. A K Peters. ISBN 978-1-56881-230-4.</li>
+    <li><span class="tag">[5]</span> Valbuena, P. (2006). *Augmented Sculpture*. Installation art series.</li>
+    <li><span class="tag">[6]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley. ISBN 978-0-201-12110-0.</li>
+    <li><span class="tag">[7]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer. ISBN 978-3-030-34371-2.</li>
+  </ol>
+</section>

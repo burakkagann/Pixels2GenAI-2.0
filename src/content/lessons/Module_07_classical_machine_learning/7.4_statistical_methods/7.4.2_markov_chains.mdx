@@ -1,0 +1,195 @@
+---
+module: "M 07"
+cycle: "II"
+title: "Markov Chains — Memoryless State Transitions"
+objective: "Model a system where the next state depends only on the current state. Train a transition matrix from data, sample from it to generate sequences, and compute long-run distributions by repeated matrix multiplication."
+framework: "conceptual"
+duration: "30–36 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "7.4.1 (Monte Carlo), linear algebra (eigenvectors)"
+prev:
+  slug: "7.4.1"
+  title: "Monte Carlo Sampling"
+next:
+  slug: "7.4.3"
+  title: "Hidden Markov Models"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *can a memoryless model produce text that almost makes sense?* <a id="big-question"></a>
+
+In 1906, Andrey Markov was arguing with the statistician Pavel Nekrasov about whether the law of large numbers required independence. To prove it did not, Markov took 20,000 letters of Pushkin's *Eugene Onegin*, tabulated which letter followed which, and showed that the resulting *dependent* random walk still obeyed long-run statistical regularities [1]. He had inadvertently invented what we now call the **Markov chain**: a stochastic process where the next state depends only on the current state, not on the full history. The minimal data structure is a square *transition matrix* of probabilities. The applications, a century later, are astonishing: PageRank ranks the web by computing the stationary distribution of a Markov chain over hyperlinks. RNN language models are non-linear extensions of Markov chains. Diffusion image models are Markov chains over noise levels [2].
+
+<Figure
+  src="/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains/markov_transition.png"
+  alt="Square heatmap visualisation of a 25x25 character transition matrix. Rows and columns are labelled by lowercase letters, space, comma, and period. The colour intensity in each cell reflects the probability of column-character following row-character. Common patterns like q→u (very bright) and double-letters along the diagonal are visible."
+  caption="Transition matrix trained on a small corpus of famous opening lines. The cell at row 'q', column 'u' is brightest — q is almost always followed by u in English. Spaces are followed by common starting letters. Punctuation patterns visible in the right-most columns."
+  num={1}
+  role="output"
+/>
+
+This lesson uses a character-level chain to keep the model interpretable and the data structure visible. Real-world Markov chains scale to millions of states (PageRank's webpages) or to continuous state spaces (statistical mechanics, finance), but the architecture is the same: transition matrix + sample step + (sometimes) stationary distribution.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>State the **Markov property** — the future is independent of the past given the present — and recognise it as the defining assumption of every Markov model.</li>
+  <li>Estimate a transition matrix from data by maximum likelihood (with Laplace smoothing for unseen pairs).</li>
+  <li>Sample from a chain to generate a sequence; recognise the output as *locally* plausible and *globally* incoherent.</li>
+  <li>Compute the **stationary distribution** as the left eigenvector of the transition matrix with eigenvalue 1, and link it to PageRank.</li>
+</ol>
+
+## Part 1 — The Markov property <a id="part-1"></a>
+
+A discrete-time stochastic process `X₀, X₁, X₂, ...` is a **Markov chain** if for every `t`:
+
+`P(X_{t+1} | X_t, X_{t-1}, ..., X_0) = P(X_{t+1} | X_t)`
+
+The future depends on the present, not the past. This is a strong assumption — most real-world sequences violate it (the next word in this sentence depends on much more than the previous word) — but it is also a powerful one. It lets you compress an arbitrarily long sequence into a single (`current state` × `next state`) lookup, which is exactly what a transition matrix is.
+
+<CodeBlock lang="python" file="transition_demo.py">
+```python
+def build_transition_matrix(text):
+    chars = sorted(set(text))
+    idx = {c: i for i, c in enumerate(chars)}
+    n = len(chars)
+    counts = np.zeros((n, n))
+    for a, b in zip(text, text[1:]):
+        counts[idx[a], idx[b]] += 1
+    counts += 1.0                                  # Laplace smoothing
+    return chars, counts / counts.sum(axis=1, keepdims=True)
+```
+</CodeBlock>
+
+The Laplace smoothing (`counts += 1`) is critical: without it, any pair that does not appear in training data has probability zero, and the chain can get stuck if it ever lands in a state with no outgoing transitions. Adding 1 to every entry says "every pair is at least a little possible." This is the cheapest variant of *additive smoothing*; production systems use Kneser-Ney or other more sophisticated schemes [3].
+
+<Admonition type="dyk" title="Did you know? · Markov's polemic">
+Markov's 1906 paper was explicitly motivated by a *political* fight. Nekrasov, a religious mathematician, was arguing that statistical regularity required free will (random independent events). Markov, a militant atheist, wanted to demonstrate that even *dependent* sequences exhibit regularity. The Pushkin character-counting experiment was the proof. The Markov chain emerged as the by-product of a methodological debate that today would seem absurd, but it produced one of the most consequential data structures in modern computing [1].
+</Admonition>
+
+## Part 2 — Sampling and the output's character <a id="part-2"></a>
+
+Once you have a transition matrix, sampling is trivial: pick a starting character, look up its row in the matrix, sample the next character from that row, repeat.
+
+<CodeBlock lang="python" file="sample_demo.py">
+```python
+def sample(transition, chars, length, seed_char, rng):
+    idx = {c: i for i, c in enumerate(chars)}
+    out = [seed_char]
+    for _ in range(length - 1):
+        row = transition[idx[out[-1]]]
+        next_idx = rng.choice(len(chars), p=row)
+        out.append(chars[next_idx])
+    return ''.join(out)
+```
+</CodeBlock>
+
+Sample 240 characters from our trained chain and you get text like:
+```
+thd .sthngvt u,n umea arlimyymmne sf mvwapghe.uel tmdu,. lof ie ofkcwabovhvinhywerggofnlvastw...
+```
+
+It is locally English-ish — `th` and `oo` and `re` are common, `qw` and `xb` are not — but it has no global structure. Words barely cohere. Sentences certainly do not. This is the **fundamental limit of first-order Markov text**: a single character of context is not enough to be linguistically coherent. The fixes ascend through history:
+
+- **Higher-order chains**: state = last 5 characters, transition matrix is `(C^5) × C` shaped. Better locally, exponential explosion in state count.
+- **Word-level chains**: state = last word. Captures more structure with fewer states.
+- **n-gram language models**: maximum-likelihood transitions with elaborate smoothing. Dominated NLP from 1960 to 2010.
+- **RNN and LSTM**: continuous hidden state, learned transitions. Dominated 2010 to 2017.
+- **Transformers**: hidden state attends to entire history. Dominated 2017 to present. Still Markov *within* the attended context window.
+
+All of these are descendants of the same recipe.
+
+<Admonition type="important">
+A higher-order Markov chain is still Markov — the **state** just includes more context. "First-order on character pairs" and "second-order on individual characters" are *the same model*. The distinction is conceptual, not mathematical. Generalising: "Markov" is not a property of the process; it is a property of how you define the state.
+</Admonition>
+
+## Part 3 — The stationary distribution and PageRank <a id="part-3"></a>
+
+Run a Markov chain for a long time. Where do you end up? The answer is the **stationary distribution** — a probability vector `π` over states such that `π = π · T`. The state distribution at time `t` converges to `π` regardless of the starting state (under mild assumptions: irreducibility and aperiodicity).
+
+<CodeBlock lang="python" file="stationary_demo.py">
+```python
+pi = np.full(n, 1.0 / n)
+for _ in range(2000):
+    pi = pi @ transition          # state distribution after one more step
+# pi has converged to the stationary distribution
+```
+</CodeBlock>
+
+For our character chain, `π` is the long-run character frequency — basically the empirical letter frequency in English, with spaces being the most common.
+
+<Figure
+  src="/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains/markov_stationary.png"
+  alt="Bar chart of the stationary distribution of the character transition matrix. The largest bar is the space character. e, t, a, o, i, n are the largest letter bars."
+  caption="Stationary distribution of the character chain. Space dominates (most common 'character' in English); among letters, e, t, a, o, i, n form the standard frequency hierarchy."
+  num={2}
+  role="output"
+/>
+
+In 1998, Larry Page and Sergey Brin had the brilliant insight that the *importance* of a web page is the stationary probability of a random walker following hyperlinks ending up on it. **PageRank** is the stationary distribution of a Markov chain over the entire web graph [2]. Compute the chain's left eigenvector with eigenvalue 1, and you have ranked the internet. The same algorithm computes the rank-ability of nodes in social networks, citation graphs, and recommendation graphs.
+
+<Admonition type="note">
+A Markov chain is **ergodic** if it has a unique stationary distribution that any starting state converges to. The two conditions are *irreducibility* (any state can reach any other state) and *aperiodicity* (you can return to a state at irregular intervals). Most natural chains are ergodic; pathological ones (a chain on `{A, B}` with `A → B → A` deterministically) are not, and have multiple oscillating distributions.
+</Admonition>
+
+## Synthesis project — character-level Markov text generator <a id="synthesis"></a>
+
+Build the smallest possible language model: train a first-order character-level Markov chain on a small text corpus, visualise the transition matrix and stationary distribution, and sample from it.
+
+<Download href="/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains/markov_chain.py" label="markov_chain.py — full reference (training + sampling + heatmaps)" />
+<Download href="/lesson-media/Module_07_classical_machine_learning/7.4_statistical_methods/7.4.2_markov_chains/markov_starter.py" label="markov_starter.py — implement build_transition_matrix and sample" />
+
+**Reflection questions**
+
+- Read 240 characters of the sampled output. What does it get right? What does it get wrong?
+- Higher-order Markov chains produce more coherent text. Why don't we just use a 50-character window?
+- The space character has the largest stationary probability. Why is that not surprising?
+
+<Dropdown summary="Answers">
+
+**Right vs wrong** — locally, character pairs are plausible: `th`, `oo`, `re`, `er`. Globally, words don't usually form ("thd .sthngvt" is not English) and grammar is absent. The chain captures character-level co-occurrence but knows nothing about word boundaries, syntax, or semantics. This is the *fundamental* limit of first-order Markov.
+
+**50-char window** — exponential state explosion. With a 25-character vocabulary, a 50-character window has `25^50 ≈ 10^70` possible states. You cannot store, never mind train, a transition matrix that large. Higher-order chains are practical up to maybe length 5 with backoff smoothing; past that, you need a different model class (n-gram with sparse storage, or RNN with continuous state).
+
+**Spaces dominate** — in English, spaces occur roughly once per 5 characters. The stationary distribution is essentially the empirical character frequency, and space is the most common "character." If you trained on text without spaces, `e` would dominate (most common English letter); with spaces in the alphabet, space wins.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Word-level chain**: train on `text.split()` instead of characters. Output is much more readable but smaller vocabulary diversity.
+- **Bigram model**: state = pair of consecutive characters. Better local coherence; state count grows from 25 to 625.
+- **Build PageRank**: treat the transition matrix as a graph, compute the stationary distribution, rank the "nodes" by their long-run probability. The pieces are identical to Google's 1998 algorithm.
+- **Train on a different author**: Dickens vs Tolstoy. The transition matrices are visibly different; the stationary distributions slightly so.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A Markov chain is a stochastic process where the next state depends only on the current state. Estimating the transition matrix from data is straightforward maximum likelihood with Laplace smoothing. Sampling is one-line. The stationary distribution — the chain's long-run behaviour — is the left eigenvector of the transition matrix with eigenvalue 1, computable by repeated matrix multiplication or directly via `np.linalg.eig`. The same architecture underpins PageRank, RNN language models, diffusion models, and most of modern computational physics. First-order character chains produce gibberish; the entire field of language modelling is about scaling the *state* without paying for the state-count explosion.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting Laplace smoothing. Any character pair missing from training has probability zero and the chain gets stuck.
+- Confusing "Markov chain" with "first-order Markov chain". The state can be anything you want; the property is conditional independence given the state.
+- Computing the stationary distribution by simulation when matrix algebra is faster. Use `np.linalg.eig(T.T)` and find the eigenvector with eigenvalue 1.
+- Using a Markov chain on time series with long-range structure (stock prices, climate). The Markov assumption fails and predictions are dominated by short-term noise.
+- Sampling from a transition matrix without normalising rows. The probabilities sum to less than 1 and `np.random.choice(p=...)` raises a strange error.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Markov, A. A. (1906). Extension of the law of large numbers to dependent quantities. *Izvestiya Fiziko-Matematicheskogo Obschestva pri Kazanskom Universitete*, 15, 135–156.</li>
+    <li><span class="tag">[2]</span> Page, L., Brin, S., Motwani, R., & Winograd, T. (1998). *The PageRank Citation Ranking: Bringing Order to the Web*. Technical Report, Stanford InfoLab. <a href="http://ilpubs.stanford.edu:8090/422/" target="_blank" rel="noopener">stanford.edu</a></li>
+    <li><span class="tag">[3]</span> Chen, S. F., & Goodman, J. (1999). An empirical study of smoothing techniques for language modeling. *Computer Speech & Language*, 13(4), 359–393. <a href="https://doi.org/10.1006/csla.1999.0128" target="_blank" rel="noopener">doi:10.1006/csla.1999.0128</a></li>
+    <li><span class="tag">[4]</span> Norris, J. R. (1998). *Markov Chains*. Cambridge University Press.</li>
+    <li><span class="tag">[5]</span> Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.), Chapter 3: Markov Decision Processes. MIT Press.</li>
+    <li><span class="tag">[6]</span> Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*, Chapter 13: Sequential Data. Springer.</li>
+  </ol>
+</section>

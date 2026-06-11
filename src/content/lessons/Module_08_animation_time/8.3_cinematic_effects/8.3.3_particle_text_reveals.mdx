@@ -1,0 +1,274 @@
+---
+module: "M 08"
+cycle: "II"
+title: "Particle Text Reveals"
+objective: "Spawn thousands of particles off-screen; assign each a target pixel in the rasterised text; ease them home. Text materialises out of dust."
+framework: "hands-on"
+duration: "20–25 min"
+level: "intermediate"
+prereqs: "8.2.1 (per-object animation), 8.1.2 (easing)"
+prev:
+  slug: "8.3.2"
+  title: "Thank You"
+next:
+  slug: "8.3.4"
+  title: "Morphing Transitions"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The **particle text reveal** is the dramatic cousin of the flower assembly (8.2.1): instead of rebuilding an arbitrary image from N² tiles, you spawn thousands of *particles* off-screen, assign each one a target position inside a rasterised text bitmap, and animate every particle's path home. The text appears to materialise from a swirling dust storm. Used in every trailer for an action movie since *The Matrix* (1999) and every product reveal video since the iPhone 4 launch.
+
+Mechanically the recipe is short: rasterise the text once, sample N target positions from the set of foreground pixels, generate per-particle start positions outside the canvas, and animate each particle from its start to its target with a stagger and an ease-out curve. Same scatter-converge logic as 8.2.1 — different sampling source.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Rasterise text into a binary bitmap, then sample N target positions from the foreground pixels.</li>
+  <li>Generate per-particle scatter start positions in polar coordinates with random radii.</li>
+  <li>Stagger particle launches so the convergence happens in waves rather than uniformly.</li>
+  <li>Render the composition by setting individual pixels — no shape primitives needed.</li>
+</ol>
+
+## Quick start — particle text <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+# 1. Rasterise text
+img = Image.new('L', (800, 200), 0)
+draw = ImageDraw.Draw(img)
+font = ImageFont.truetype('arial.ttf', 140)
+draw.text((40, 0), 'HELLO', fill=255, font=font)
+arr = np.array(img)
+target_ys, target_xs = np.where(arr > 0)
+
+# 2. Sample N target positions
+rng = np.random.default_rng(31)
+N = 1400
+idx = rng.integers(0, len(target_ys), N)
+target_y, target_x = target_ys[idx], target_xs[idx]
+
+# 3. Polar scatter starts + per-particle delays
+angles = rng.uniform(0, 2 * np.pi, N)
+radii = rng.uniform(400, 900, N)
+start_x = target_x + (radii * np.cos(angles)).astype(int)
+start_y = target_y + (radii * np.sin(angles)).astype(int)
+delays = rng.integers(0, 45, N)
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals/particle_text.gif"
+  alt="An animated GIF showing thousands of warm-coloured pixels swirling inward from the canvas edges, gradually converging into the letterforms of the word 'HELLO' rendered in large bold typography"
+  caption="90 animation frames + 20 hold frames. 1,400 particles, each assigned a different target pixel in the rasterised word HELLO."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The word HELLO never appears in a drawing call. The letters emerge **because that's where the particles happen to land** — the rasterised bitmap is just the *target set*. Every other letter could be substituted by changing the bitmap source.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Text as a target distribution
+
+Rasterising text gives you a 2D binary array where foreground pixels are 1 and background is 0. The set of `(y, x)` coordinates where the array is 1 is your **target distribution** — the positions you want particles to land on:
+
+<CodeBlock lang="python" file="target_distribution.py">
+```python
+img = Image.new('L', (800, 200), 0)
+ImageDraw.Draw(img).text((40, 0), 'HELLO', fill=255, font=font)
+arr = np.array(img)
+ys, xs = np.where(arr > 0)        # all foreground pixels
+```
+</CodeBlock>
+
+To get N particles, **sample with replacement** from `(ys, xs)`. Random sampling produces clustering — some pixels get multiple particles. Uniform sampling would require sorting and is rarely necessary at this scale.
+
+The text doesn't have to be a word — it can be a silhouette, a logo, an emoji, any binary mask. The same architecture supports any target shape.
+
+### Concept 2 — Per-particle scatter with random delays
+
+Each particle has a target, a scatter origin, and a launch delay:
+
+`particle[i] = (target_y, target_x, start_y, start_x, delay)`
+
+Polar coordinates for scatter ensure roughly uniform angular distribution. Per-particle delays make the assembly feel like a continuous flow rather than a synchronised march:
+
+<CodeBlock lang="python" file="staggered_launch.py">
+```python
+delays = rng.integers(0, n_frames // 2, n_particles)
+
+# Per-particle local progress at frame f:
+local = clip((f - delays) / move_frames, 0, 1)
+progress = 1 - (1 - local) ** 3        # ease-out cubic
+```
+</CodeBlock>
+
+Each particle's `local` time starts when the global frame reaches its `delay`. Before that, the particle is invisible. After its `move_frames` duration, it sits at its target. Different delays for different particles mean some are still travelling while others have already arrived — the wave effect.
+
+<Admonition type="dyk" title="Did you know · The Matrix's lobby scene used the same idea">
+The bullet-time sequences in *The Matrix* (1999) used special-effects software that animated thousands of particles independently. The 2003 sequel pushed this to "particle assembly" sequences where bullet casings and shell fragments assembled in mid-air to form objects — the digital cousin of this lesson's animation, with more particles, higher resolution, and a much bigger budget [1].
+</Admonition>
+
+### Concept 3 — Pixel-level rendering
+
+Each particle is one pixel. Per frame, we vectorise: compute every particle's current position with broadcasting, filter out the off-canvas ones, and write into the canvas in one indexed assignment:
+
+<CodeBlock lang="python" file="render.py">
+```python
+cx = (start_x * (1 - progress) + target_x * progress).astype(int)
+cy = (start_y * (1 - progress) + target_y * progress).astype(int)
+inside = (cx >= 0) & (cx < W) & (cy >= 0) & (cy < H)
+canvas[cy[inside], cx[inside]] = colors[inside]
+```
+</CodeBlock>
+
+Four NumPy operations per frame, regardless of particle count. 1,400 particles or 14,000 — the cost per frame is dominated by canvas allocation. This is what makes high-particle-count effects feasible in pure Python.
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the default reveal, change the text, then add particle trails.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the HELLO reveal">
+
+Run `particle_text.py` to render the default 1,400-particle HELLO reveal.
+
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals/particle_text.py" label="particle_text.py — reference implementation" />
+
+**Reflection questions**
+
+- Why does the text become legible only in the last 25% of the animation?
+- The colours are sampled from a "warm" gradient based on particle radius. What does that say about the spatial distribution of colour in the final text?
+- What happens if you reduce `N_PARTICLES` to 200?
+
+<Dropdown summary="Answers">
+
+**Legibility timing** — with delays uniformly distributed in $[0, 45]$ and a 45-frame move duration, all particles arrive between frame 45 and frame 90. Until frame 70 or so, less than half the particles have arrived, so the text isn't recognisable yet. The "reveal moment" is roughly when 80% of particles are within ~10 pixels of their target.
+
+**Colour distribution** — particles starting closer to the canvas have one colour; particles starting further away have another. Once they all converge to the text, the **final text shows a colour gradient correlated with the original scatter direction**. You can see the warm-to-cool gradient if you look closely.
+
+**Fewer particles** — at 200, the text is barely legible. Particle text reveals need enough pixels to *fill the letterforms*. Below ~500 the text looks like a dust cloud rather than letters. Empirically, target 0.5-1 particle per source pixel.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Change the source">
+
+Three variants.
+
+**Goals**
+
+1. **Different text.** Replace `'HELLO'` with your own word, name, or short phrase.
+2. **Multi-word.** Render two words on two lines — modify the `rasterise_text` function to accept multi-line strings.
+3. **Logo.** Replace the rasterised text with a binary mask of a logo PNG. Same convergence, different target shape.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Works with any word. Long words may need a wider canvas; short words look more dramatic because particles travel further on average.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Two-line text reveal. Add `draw.text((40, 0), line1)` and `draw.text((40, 100), line2)` to the rasterise function. Each line gets its own y-offset.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Logo reveals work exactly the same as text reveals — the rasterised bitmap is just a target set. Replace the `draw.text(...)` call with `Image.open('logo.png').convert('L').resize(...)`; particles will converge to the logo's silhouette.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Add particle trails">
+
+Each particle currently draws one pixel per frame. Add a short trail behind each particle so the motion is more visible.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+def render_with_trails(start_x, start_y, target_x, target_y, progress, colors, canvas):
+    """Draw each particle plus a short fading trail behind it."""
+    # TODO 1: compute current position (as before)
+
+    # TODO 2: for each trail offset in [0.05, 0.10, 0.15, 0.20]:
+    #         compute past progress = progress - offset (clamped >= 0)
+    #         compute past position
+    #         alpha = (1 - offset / 0.25)
+    #         draw faded pixels at past positions
+    pass
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — trail loop">
+
+```python
+for trail_off in (0.05, 0.10, 0.15, 0.20):
+    past = np.clip(progress - trail_off, 0, 1)
+    px = (start_x * (1 - past) + target_x * past).astype(int)
+    py = (start_y * (1 - past) + target_y * past).astype(int)
+    inside = (px >= 0) & (px < W) & (py >= 0) & (py < H)
+    fade = 1 - trail_off / 0.25
+    canvas[py[inside], px[inside]] = (colors[inside] * fade).astype(np.uint8)
+```
+
+Four trail positions per particle, each progressively further back in time, each progressively faded.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The trails turn the particle reveal into a more cinematic "shooting star" effect. Watch out for `np.uint8` overflow in the colour multiplication — convert to int32 first if needed.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Reverse reveal.** Play the animation backwards (`frames[::-1]`) — text dissolves into dust.
+- **Multi-stage reveal.** Two consecutive animations: HELLO assembles, then dissolves, then WORLD assembles. Use two target distributions back-to-back.
+- **Particles with shapes.** Replace single pixels with tiny stars, circles, or arrows. Cost is higher but reads as much richer at low particle counts.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.3_particle_text_reveals/particle_text.py" label="particle_text.py — reference implementation" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A particle text reveal samples N target positions from the foreground pixels of rasterised text, then animates each particle from a scattered start position to its assigned target. Polar scatter and per-particle launch delays produce the "swarming dust storm" look. The text is never drawn — it emerges from particle accumulation. Same architecture works for any binary mask: logos, silhouettes, custom shapes. Pure-Python pixel-level rendering scales to thousands of particles with vectorised NumPy. The pattern is the conceptual hinge between staged motion graphics (8.3.2) and large-scale particle effects in modern game engines.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Under-particled.** Fewer than ~500 particles, the text is illegible. Aim for one particle per visible source pixel as a rule of thumb.
+- **Synchronised launches.** Without random delays, particles arrive in one wave — looks like a snap, not a gradual reveal.
+- **Forgetting the in-bounds mask.** Some particles cross the canvas during animation; without the mask, indexed assignment raises.
+- **`colors[i] * fade` overflow.** Multiplying `uint8` by a float silently rounds at 256. Cast to int32 first, then back to uint8.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Wachowski, L. & L. (Directors). (1999). *The Matrix* [Film]. Warner Bros. Pictures.</li>
+    <li><span class="tag">[2]</span> Reeves, W. T. (1983). Particle systems — a technique for modeling a class of fuzzy objects. *ACM Transactions on Graphics*, 2(2), 91–108. <a href="https://doi.org/10.1145/357318.357320" target="_blank" rel="noopener">doi:10.1145/357318.357320</a></li>
+    <li><span class="tag">[3]</span> Akenine-Möller, T., Haines, E., Hoffman, N., et al. (2018). *Real-Time Rendering* (4th ed.). CRC Press. ISBN 978-1-138-62700-0.</li>
+    <li><span class="tag">[4]</span> Pearson, M. (2011). *Generative Art: A Practical Guide Using Processing*. Manning. ISBN 978-1-935182-62-5.</li>
+    <li><span class="tag">[5]</span> Williams, R. (2009). *The Animator's Survival Kit*. Faber & Faber. ISBN 978-0-571-23834-2.</li>
+    <li><span class="tag">[6]</span> Penner, R. (2002). *Motion, Tweening, and Easing*. In *Robert Penner's Programming Macromedia Flash MX*. McGraw-Hill. ISBN 978-0-07-222356-2.</li>
+    <li><span class="tag">[7]</span> Shiffman, D. (2012). *The Nature of Code: Simulating Natural Systems with Processing*. <a href="https://natureofcode.com/" target="_blank" rel="noopener">natureofcode.com</a></li>
+  </ol>
+</section>

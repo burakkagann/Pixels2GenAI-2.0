@@ -10,14 +10,16 @@ import Download from '@/components/lesson/mdx/Download.astro';
 
 export async function getStaticPaths() {
   const lessons = await getCollection('lessons');
+  // lesson.id is the numeric leaf id (e.g. "2.1.1") via the glob loader's
+  // generateId — independent of where the MDX file lives on disk.
   return lessons.map((lesson) => ({
-    params: { slug: lesson.id.replace(/\.mdx?$/, '') },
+    params: { slug: lesson.id },
     props: { lesson },
   }));
 }
 
 const { lesson } = Astro.props;
-const slug = lesson.id.replace(/\.mdx?$/, '');
+const slug = lesson.id;
 const { Content, headings } = await render(lesson);
 ---
 

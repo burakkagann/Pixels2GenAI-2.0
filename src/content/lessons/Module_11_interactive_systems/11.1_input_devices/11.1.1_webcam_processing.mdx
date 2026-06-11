@@ -1,0 +1,307 @@
+---
+module: "M 11"
+cycle: "II"
+title: "Webcam Processing"
+objective: "Turn a webcam into a 30 fps NumPy array stream. Capture → process → display loop, with frame differencing as the canonical 'detect motion' demo."
+framework: "hands-on"
+duration: "25–30 min"
+level: "intermediate"
+prereqs: "3.4.1 (convolution), 8.1.1 (per-frame operators)"
+prev:
+  slug: "8.4.3"
+  title: "Animated Fractals"
+next:
+  slug: "11.1.2"
+  title: "Audio Reactivity"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A webcam is a NumPy array generator. Every 30-millisecond tick it produces a new `(H, W, 3)` array, the same data structure you have manipulated since lesson 1.1.1. The job of an interactive system is to put a transformation between *capture* and *display* — anything from a colour filter to motion detection to a full pose-estimation network. The pipeline is identical regardless of complexity:
+
+`while True: frame = capture(); processed = transform(frame); display(processed)`
+
+This lesson covers the canonical loop with OpenCV's `VideoCapture`, three classes of real-time operators (channel, blur, edge), and the most-used interactive-systems primitive: **frame differencing** for motion detection. The code is OpenCV-flavoured because that's the dominant ecosystem; the *operators* are the NumPy ones you already know.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Open and read a webcam stream via OpenCV's `VideoCapture` API, releasing the device cleanly.</li>
+  <li>Apply real-time per-frame transformations (grayscale, blur, edge detection) without dropping below 30 fps.</li>
+  <li>Implement frame-differencing motion detection: store previous frame, `absdiff`, threshold, overlay.</li>
+  <li>Recognise that every interactive-system input — webcam, mic, MIDI, Kinect — produces the same pipeline shape.</li>
+</ol>
+
+## Quick start — capture loop <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import cv2
+
+cap = cv2.VideoCapture(0)   # 0 = default webcam; can also be a video filename
+
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break
+    cv2.imshow('Webcam', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/pipeline_demo.png"
+  alt="A two-by-two grid demonstrating the motion-detection pipeline on synthetic frames: top-left and top-right show two consecutive frames with an orange disc in slightly different positions, bottom-left shows a binary motion mask highlighting where the disc moved, bottom-right shows the current frame with the moving region overlaid in green"
+  caption="The four-stage motion detection pipeline. Top: two consecutive frames. Bottom-left: binary motion mask. Bottom-right: green overlay on the current frame where motion was detected."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+**No webcam? No problem.** The pipeline works on any `(H, W, 3)` array source. Pass a video filename to `VideoCapture('clip.mp4')`, generate frames synthetically as in `synthetic_webcam.py`, or read from an HTTP stream — the rest of the code doesn't change.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The capture-process-display loop
+
+Every interactive video application has the same three-step inner loop:
+
+1. **Capture.** Read one frame as a NumPy array. `ret, frame = cap.read()` returns `False` on disconnect or end-of-file; **always check `ret`** before processing.
+2. **Process.** Apply zero or more transformations. The frame is `uint8` BGR (OpenCV's quirk — not RGB); convert to grayscale, blur, threshold, anything from your NumPy toolkit.
+3. **Display.** `cv2.imshow(window, image)` paints a window; `cv2.waitKey(1)` gives the GUI 1 ms to update *and* polls for a keypress. **Without `waitKey`, no frame ever displays.**
+
+After the loop, `cap.release()` and `cv2.destroyAllWindows()` clean up. Leaving the device locked is a common bug — the camera is unusable until your Python process exits or the OS recovers.
+
+<Admonition type="dyk" title="Did you know · OpenCV's BGR convention is a 1990s artefact">
+OpenCV's default colour order is **BGR**, not RGB, because the original Intel team in the late 1990s wrote against Windows DIB (Device-Independent Bitmap) which stored pixels as BGR for hardware-blit reasons. The convention stuck through 25+ years of API stability. Modern functions like `cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)` exist precisely because every other Python image library (Pillow, scikit-image, matplotlib) uses RGB [1].
+</Admonition>
+
+### Concept 2 — Real-time per-frame operators
+
+Since each frame is a NumPy array, every Module 03 transformation works in real time. The OpenCV equivalents are usually one line:
+
+<CodeBlock lang="python" file="operators.py">
+```python
+gray    = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)   # luma
+blurred = cv2.GaussianBlur(frame, (21, 21), 0)      # 21x21 Gaussian
+edges   = cv2.Canny(gray, 50, 150)                  # Canny edges
+mirror  = cv2.flip(frame, 1)                        # horizontal flip
+```
+</CodeBlock>
+
+The constraint is **frame budget**: at 30 fps you have ~33 ms per frame for capture + process + display. A 640×480 Gaussian blur takes ~2 ms; a Canny edge detector takes ~5 ms; reading the frame and showing the result eats another ~10 ms. Most interactive applications fit a handful of operators per frame comfortably.
+
+### Concept 3 — Frame-differencing motion detection
+
+The cheapest motion detector compares consecutive frames. Pixels that change significantly between $t-1$ and $t$ are "moving":
+
+<CodeBlock lang="python" file="motion.py">
+```python
+prev_gray = cv2.GaussianBlur(cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY), (21, 21), 0)
+
+while True:
+    ok, cur = cap.read()
+    cur_gray = cv2.GaussianBlur(cv2.cvtColor(cur, cv2.COLOR_BGR2GRAY), (21, 21), 0)
+
+    diff = cv2.absdiff(prev_gray, cur_gray)         # per-pixel |a - b|
+    _, motion = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
+
+    out = cur.copy()
+    out[motion > 0] = [0, 255, 0]                   # green where motion
+
+    prev_gray = cur_gray.copy()
+    cv2.imshow('Motion', out)
+    if cv2.waitKey(1) & 0xFF == ord('q'): break
+```
+</CodeBlock>
+
+Two pre-processing tricks are doing real work here. First, **convert to grayscale** before comparing — colour comparisons would triple the work and add no useful information for motion. Second, **blur** before differencing — a 21×21 Gaussian removes per-pixel sensor noise that would otherwise produce false-positive "motion."
+
+<Figure
+  src="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_pipeline.gif"
+  alt="An animated demonstration of the motion-detection pipeline on a synthetic scene: an orange disc moves left-to-right across a textured wall, with a green overlay highlighting the disc as it moves"
+  caption="40-frame synthetic webcam playback with motion overlay. The orange disc moves through the scene; the green region tracks it via frame differencing."
+  num={2}
+  role="gif"
+/>
+
+<Admonition type="important">
+Frame differencing detects **anything that moves**, including camera shake, lighting flicker, and JPEG compression noise. For robust motion detection in production, use a **background subtraction** technique with a learned model (OpenCV's `cv2.createBackgroundSubtractorMOG2()`) instead of consecutive-frame differencing [2].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the capture loop, add a filter, then build a motion detector.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the capture loop">
+
+Run `webcam_capture.py`. Press `s` to save a frame; `q` to quit. If you don't have a webcam, run `synthetic_webcam.py` instead, which simulates the same pipeline on a synthetic scene.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_capture.py" label="webcam_capture.py — minimal OpenCV capture" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — no-camera demo" />
+
+**Reflection questions**
+
+- What is the shape of `frame`? What dtype?
+- Why does the OpenCV-saved PNG sometimes look red-blue inverted in another viewer?
+- If you remove `cv2.waitKey(1)`, what happens?
+
+<Dropdown summary="Answers">
+
+**Shape and dtype** — `(H, W, 3)` `uint8`. Typical webcams: 480p `(480, 640, 3)`, 720p `(720, 1280, 3)`, 1080p `(1080, 1920, 3)`. Always `uint8` (0–255 per channel).
+
+**Red-blue swap** — OpenCV writes PNGs assuming BGR order. Viewers and other libraries (PIL, matplotlib) read them as RGB. Fix with `cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)` before saving with non-OpenCV writers.
+
+**No `waitKey`** — the OpenCV window never repaints, even though `imshow` is called every iteration. `waitKey` *is* the call that flushes the display queue. Drop it and you get a frozen window.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Add three filters">
+
+Modify `webcam_effects.py` (or the synthetic version) to apply three real-time effects.
+
+**Goals**
+
+1. **Sepia.** Apply the standard sepia matrix per pixel.
+2. **Pixelate.** Resize down to 64×48 with nearest-neighbour, then back up.
+3. **Mirror.** Horizontal flip — selfie convention.
+
+<Dropdown summary="Goal 1 — sepia">
+
+```python
+sepia_matrix = np.array([[0.272, 0.534, 0.131],
+                         [0.349, 0.686, 0.168],
+                         [0.393, 0.769, 0.189]])
+sepia = cv2.transform(frame, sepia_matrix)
+sepia = np.clip(sepia, 0, 255).astype(np.uint8)
+```
+
+`cv2.transform` applies a 3×3 matrix to each pixel's BGR vector. The matrix encodes the warm "old photograph" colour shift.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — pixelate">
+
+```python
+small = cv2.resize(frame, (64, 48), interpolation=cv2.INTER_AREA)
+pixelated = cv2.resize(small, (frame.shape[1], frame.shape[0]),
+                       interpolation=cv2.INTER_NEAREST)
+```
+
+Down-then-up resampling with nearest-neighbour preserves the chunky blocks. Linear interpolation on the up-step would blur them away.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — mirror">
+
+```python
+mirror = cv2.flip(frame, 1)   # 1 = horizontal, 0 = vertical, -1 = both
+```
+
+Mirroring is what video-call apps do so the user sees a "right-side-up" reflection of themselves.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build a motion detector">
+
+Implement the frame-differencing motion detector from scratch using the starter template. The current and previous frames are converted to grayscale, blurred, differenced, and thresholded.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_starter.py" label="webcam_starter.py — frame differencing skeleton" />
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import cv2
+import numpy as np
+
+cap = cv2.VideoCapture(0)
+ok, prev = cap.read()
+prev_gray = cv2.GaussianBlur(cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY), (21, 21), 0)
+
+while True:
+    ok, cur = cap.read()
+    cur_gray = cv2.GaussianBlur(cv2.cvtColor(cur, cv2.COLOR_BGR2GRAY), (21, 21), 0)
+
+    # TODO 1: per-pixel absolute difference between current and previous gray frames
+
+    # TODO 2: threshold the diff to a binary motion mask at value 25
+
+    # TODO 3: copy the current frame, paint green wherever the mask is set
+
+    prev_gray = cur_gray.copy()
+    cv2.imshow('Motion', out)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+```
+</CodeBlock>
+
+<Dropdown summary="Hints">
+
+```python
+diff = cv2.absdiff(prev_gray, cur_gray)
+_, motion = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
+out = cur.copy()
+out[motion > 0] = [0, 255, 0]
+```
+
+`absdiff` and `threshold` are the two key OpenCV calls; advanced-indexed assignment paints the green overlay in one line.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Motion trail.** Accumulate motion masks across the last 10 frames with `trail = trail * 0.9 + motion * 0.1` and display `trail`. Motion leaves a fading ghost.
+- **Audio trigger.** Sum the motion mask each frame; if it exceeds a threshold, play a sound via `pygame.mixer`. The webcam becomes an "activity-aware" instrument.
+- **Background subtraction.** Replace consecutive-frame differencing with `cv2.createBackgroundSubtractorMOG2()`. Static cameras get vastly more robust motion segmentation.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_capture.py" label="webcam_capture.py — minimal capture loop" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_effects.py" label="webcam_effects.py — real-time filters" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/background_subtraction.py" label="background_subtraction.py — motion detection" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — no-camera demo" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A webcam is a NumPy array source: `(H, W, 3)` uint8 frames at 30 fps. The interactive-systems pipeline is **capture → process → display**, repeated forever. OpenCV's `VideoCapture` opens any camera or video file; `imshow` + `waitKey` displays and polls. Frame differencing (`absdiff` + `threshold`) is the cheapest motion detector — grayscale-convert and blur first to suppress sensor noise. Same operators you used in Modules 01–03 now run on a live stream. The next lesson swaps the camera for a microphone; same pipeline shape, different input domain.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Forgetting `cap.release()`.** Locks the device until process exit.
+- **Skipping `cv2.waitKey`.** The window never updates; debugging is mysterious.
+- **Ignoring `ret`.** A `False` return on disconnect crashes the next line.
+- **Comparing colour frames directly.** 3× the work for no benefit; convert to grayscale first.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Bradski, G., & Kaehler, A. (2008). *Learning OpenCV: Computer Vision with the OpenCV Library*. O'Reilly. ISBN 978-0-596-51613-0.</li>
+    <li><span class="tag">[2]</span> Piccardi, M. (2004). Background subtraction techniques: A review. *IEEE International Conference on Systems, Man and Cybernetics*, 4, 3099–3104. <a href="https://doi.org/10.1109/ICSMC.2004.1400815" target="_blank" rel="noopener">doi:10.1109/ICSMC.2004.1400815</a></li>
+    <li><span class="tag">[3]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer. ISBN 978-3-030-34371-2.</li>
+    <li><span class="tag">[4]</span> OpenCV Development Team. (2024). *VideoCapture Class Reference*. <a href="https://docs.opencv.org/4.x/d8/dfe/classcv_1_1VideoCapture.html" target="_blank" rel="noopener">docs.opencv.org</a></li>
+    <li><span class="tag">[5]</span> Gonzalez, R. C., & Woods, R. E. (2018). *Digital Image Processing* (4th ed.). Pearson. ISBN 978-0-13-335672-4.</li>
+    <li><span class="tag">[6]</span> Stauffer, C., & Grimson, W. E. L. (1999). Adaptive background mixture models for real-time tracking. *IEEE CVPR*, 2, 246–252. <a href="https://doi.org/10.1109/CVPR.1999.784637" target="_blank" rel="noopener">doi:10.1109/CVPR.1999.784637</a></li>
+    <li><span class="tag">[7]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

@@ -1,0 +1,377 @@
+---
+module: "M 04"
+cycle: "I"
+title: "Fractal Trees"
+objective: "Recursive branching with three parameters — depth, angle, and length ratio. The same rule produces pines, oaks, and weeping willows depending on how you tune them."
+framework: "hybrid"
+duration: "20–25 min"
+level: "beginner-intermediate"
+load: "3 core concepts"
+prereqs: "4.1.1 (recursion basics), 4.1.5 (iterated function systems)"
+prev:
+  slug: "4.1.5"
+  title: "Sierpinski Triangle"
+next:
+  slug: "4.2.2"
+  title: "Lightning Bolts"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Trees are the natural-world poster child for fractal geometry. The trunk splits into branches, each branch splits into smaller branches, each twig terminates in still-smaller twigs — and at every scale the geometry looks similar. Mandelbrot devoted a chapter of *The Fractal Geometry of Nature* to this exact observation [1]. The reason is not just aesthetic: fractal branching solves a real engineering problem — maximise leaf-surface exposure to sunlight, distribute water through xylem, and stay mechanically stable — with a tiny ruleset, which is why evolution rediscovered it independently in plants, rivers, blood vessels, and lightning bolts [2].
+
+This lesson is the natural sibling of 4.1.5. The Sierpinski triangle was an iterated function system with three contractions. A binary fractal tree is an IFS with **two contractions per parent branch**: rotate left, scale down, recurse; rotate right, scale down, recurse. Once you see that structure, the rest is parameter-tuning.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Implement recursive binary branching with `PIL.ImageDraw` and polar-to-Cartesian step calculations.</li>
+  <li>Tune the three branch parameters — `depth`, `branch_angle`, `length_ratio` — to produce visually distinct tree silhouettes.</li>
+  <li>Add stochastic perturbation (random angle/length jitter) to convert geometric trees into organic ones.</li>
+  <li>Recognise binary trees as a two-contraction IFS — the same paradigm as 4.1.5, with rotation/scaling instead of translation.</li>
+</ol>
+
+## Quick start — a single tree <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+import math
+from PIL import Image, ImageDraw
+
+def draw_branch(draw, x, y, length, angle, depth):
+    if depth == 0:
+        return
+    ex = x + length * math.sin(angle)
+    ey = y - length * math.cos(angle)            # subtract: image y points down
+    draw.line([(x, y), (ex, ey)], fill=(101, 67, 33), width=max(1, depth // 2))
+
+    new_length = length * 0.7
+    draw_branch(draw, ex, ey, new_length, angle - math.radians(25), depth - 1)
+    draw_branch(draw, ex, ey, new_length, angle + math.radians(25), depth - 1)
+
+img = Image.new('RGB', (512, 512), 'white')
+draw_branch(ImageDraw.Draw(img), 256, 462, 120, 0, 8)
+img.save('fractal_tree.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_basic.png"
+  alt="A symmetric fractal tree with brown branches on a white background, depth eight, branch angle twenty five degrees, length ratio zero point seven"
+  caption="The default tree — depth 8, ±25° branch angle, length ratio 0.7. The trunk starts at the bottom centre and grows upward."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The recursion calls itself **twice** per branch — once for the left child, once for the right. Branch count doubles per level: depth 8 means $2^9 - 1 = 511$ branch segments drawn. Track this when you increase depth: every extra level doubles the runtime.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Why trees are fractal
+
+Self-similarity in real trees is not a metaphor — it is the visible signature of the recursive growth program in the plant's apical meristem. At every growth event, the tip either elongates (extending the current branch) or branches (creating two new tips) [3]. The number, angle, and length ratios of these branchings are determined by genetics; the resulting shape is whatever satisfies three competing pressures:
+
+- **Maximise light capture** — wider angles spread leaves into more sky.
+- **Minimise self-shading** — branches that overlap waste their own canopy.
+- **Stay mechanically stable** — too much weight on a long thin branch breaks it.
+
+Hisao Honda's classical 1971 model showed that just three parameters — branching angle, length ratio, and total depth — already produce silhouettes that match real species closely enough for botanical identification [4]. Pines have narrow angles, oaks have wide angles, willows have steep starting angles.
+
+<Admonition type="dyk" title="Did you know · trees, rivers, and arteries are the same IFS">
+Leonardo da Vinci noted in his notebooks that the total cross-sectional area of a tree's branches at any height equals the area of the trunk below it [5]. The same scaling law — branching at angles such that cross-sectional area is preserved — governs river networks (Horton–Strahler laws) and the arterial tree in vertebrates. All three are realisations of the same IFS-like recursion, optimised under different physical constraints.
+</Admonition>
+
+### Concept 2 — The recursive algorithm
+
+The recursion has the standard fractal anatomy: base case + recursive case.
+
+<CodeBlock lang="python" file="anatomy.py">
+```python
+def draw_branch(draw, x, y, length, angle, depth, branch_angle, length_ratio):
+    # Base case
+    if depth == 0:
+        return
+
+    # Compute endpoint with polar-to-Cartesian
+    end_x = x + length * math.sin(angle)
+    end_y = y - length * math.cos(angle)         # subtract: y grows downward
+
+    # Draw this branch
+    thickness = max(1, depth // 2)               # tapers with depth
+    draw.line([(x, y), (end_x, end_y)],
+              fill=(101, 67, 33), width=thickness)
+
+    # Recursive case: two child branches
+    new_length = length * length_ratio
+    draw_branch(draw, end_x, end_y, new_length,
+                angle - branch_angle, depth - 1, branch_angle, length_ratio)
+    draw_branch(draw, end_x, end_y, new_length,
+                angle + branch_angle, depth - 1, branch_angle, length_ratio)
+```
+</CodeBlock>
+
+Three things to notice. First, the angle is measured **from vertical** — `angle = 0` points straight up. The trig formulas $\sin$/$\cos$ assume that convention. Second, `end_y = y - length * cos(angle)` because Pillow's coordinate system has `y` growing downward; subtracting moves the endpoint up. Third, the **thickness** taper `max(1, depth // 2)` is purely cosmetic but doubles the visual realism — real branches taper, and so should yours.
+
+### Concept 3 — Three parameters, infinite trees
+
+The three knobs:
+
+- **Depth** controls how many levels of branching occur. Each level doubles the branch count: depth $n$ produces "two to the n+1 minus one" branches. Past depth 12 the recursion limit and the runtime both become problems.
+- **Branch angle** controls how wide the tree spreads. Small angles (10–15°) give pine-like silhouettes that lift toward the sky. Wide angles (40°+) give oak-like spreading canopies.
+- **Length ratio** controls how quickly the branches shrink. Below 0.5 the tree is sparse and obviously fractal; above 0.8 the children almost equal their parent and the tree fills out into a dense ball.
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/depth_comparison.png"
+  alt="Six small fractal trees arranged in a grid, showing depth three through depth eight with rapidly increasing branch complexity"
+  caption="Depth sweep — 3 through 8. The silhouette settles around depth 6; later depths just thicken the canopy."
+  num={2}
+  role="diagram"
+/>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/angle_comparison.png"
+  alt="Four fractal trees side by side with branch angles of fifteen, twenty five, thirty five, and forty five degrees"
+  caption="Branch-angle sweep — 15° (pine), 25° (default), 35° (broad), 45° (oak)."
+  num={3}
+  role="diagram"
+/>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/ratio_comparison.png"
+  alt="Four fractal trees showing length ratios of zero point five, zero point six, zero point seven, and zero point eight"
+  caption="Length-ratio sweep — 0.5 (sparse) through 0.8 (dense)."
+  num={4}
+  role="diagram"
+/>
+
+<Admonition type="important">
+The tree is **deterministic**. Run it twice with the same parameters and you get the exact same picture. Real trees are not — they are stochastic perturbations of an underlying fractal program. Exercise 3 adds that perturbation by jittering the angle and length ratio at each recursion step.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the default tree, tune the three parameters, then add randomness to make it organic.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the default tree">
+
+Run `fractal_tree.py` and examine the output. The script renders the depth-8, 25°, 0.7-ratio tree above.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree.py" label="fractal_tree.py — reference implementation" />
+
+**Reflection questions**
+
+- How many branches in a depth-8 tree?
+- Why does the code use `y - length * cos(angle)` for the endpoint, not `y + length * cos(angle)`?
+- What would happen if `length_ratio` were greater than 1.0?
+- Identify the **two contractions** of this tree's IFS. Each is a rotation + scaling. What rotation angle and what scale factor?
+
+<Dropdown summary="Answers">
+
+**Branch count** — $2^9 - 1 = 511$ branches. Each level of recursion doubles the branches; the geometric series $1 + 2 + 4 + \ldots + 2^8$ sums to $2^9 - 1$.
+
+**Why subtract** — Pillow's image coordinates have $(0, 0)$ at the **top-left** and $y$ growing downward. Since we want the tree to grow up (toward smaller $y$), we subtract. Forget this and the tree grows underground.
+
+**Length ratio > 1** — children would be longer than their parents. The total tree height would diverge as depth increases; the recursion would either eventually overflow Python's call-stack limit (default ~1000) or fill the canvas with overlapping segments before that.
+
+**The two contractions** — rotate by $-25°$, scale by 0.7; rotate by $+25°$, scale by 0.7. Apply both to the tree, union the results, add the trunk back, and you reproduce the original tree exactly. This is the Hutchinson–Barnsley IFS form.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep parameters to make four trees">
+
+Edit `fractal_tree.py` to produce four named tree styles. Only `branch_angle`, `length_ratio`, `depth`, and `start_angle` should change.
+
+**Goals**
+
+1. **Narrow pine** — `branch_angle = 12°`, `length_ratio = 0.75`, `depth = 9`.
+2. **Spreading oak** — `branch_angle = 40°`, `length_ratio = 0.72`, `depth = 7`.
+3. **Weeping willow** — start with a slight downward `start_angle = math.radians(20)` and use `branch_angle = 50°`, `length_ratio = 0.78`.
+4. **Decorative spiral** — `branch_angle = 15°` on the left child and `branch_angle = 50°` on the right child — asymmetric branching. Hint: pass two different angles into the recursive calls.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+A tall, narrow silhouette — branches stay close to the trunk. Pine trees, conifers, and Italian cypresses look like this in real life because their branching evolved to grow vertically toward the sun in dense forests.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A broad, spreading canopy. Wide branching distributes leaves laterally — exactly what an oak in open ground does because there is no neighbour competition for vertical sunlight.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Branches tilt and droop. Starting at a non-zero angle rotates the whole tree, and a steep branch angle plus moderate ratio gives the characteristic willow silhouette — long, drooping side branches that nearly touch the ground.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A lopsided, spiralling tree. The left children always rotate by a small angle and the right by a large one, breaking bilateral symmetry. The asymmetric IFS still has a well-defined attractor; it just isn't a symmetric one.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Add organic randomness">
+
+Convert the deterministic tree into a stochastic one by jittering each recursion's angle and length ratio. Start from the deterministic version in the starter, then complete the TODOs.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import math
+import random
+from PIL import Image, ImageDraw
+
+def draw_branch_organic(draw, x, y, length, angle, depth, branch_angle, length_ratio):
+    if depth == 0 or length < 2:
+        return
+
+    # TODO 1: jitter the angle by uniform(-0.15, 0.15) radians (~ ±9°)
+
+    # TODO 2: jitter the length ratio by uniform(-0.1, +0.1), clipped to [0.4, 0.9]
+
+    # TODO 3: 10% chance to skip drawing this branch entirely (organic gaps)
+
+    end_x = x + length * math.sin(angle)
+    end_y = y - length * math.cos(angle)
+    draw.line([(x, y), (end_x, end_y)], fill=(101, 67, 33), width=max(1, depth // 2))
+
+    new_length = length * length_ratio
+    draw_branch_organic(draw, end_x, end_y, new_length,
+                        angle - branch_angle, depth - 1, branch_angle, length_ratio)
+    draw_branch_organic(draw, end_x, end_y, new_length,
+                        angle + branch_angle, depth - 1, branch_angle, length_ratio)
+
+random.seed(0)
+img = Image.new('RGB', (512, 512), 'white')
+draw_branch_organic(ImageDraw.Draw(img), 256, 462, 120, 0, 9, math.radians(25), 0.72)
+img.save('natural_tree.png')
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_starter.py" label="fractal_tree_starter.py — deterministic skeleton" />
+
+<Dropdown summary="Hint 1 — jitter the angle">
+
+```python
+angle += random.uniform(-0.15, 0.15)
+```
+
+Insert this *before* computing `end_x`/`end_y`. Each branch picks its own random offset, so the perturbation is independent at every recursion level.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — jitter the length ratio">
+
+```python
+length_ratio = max(0.4, min(0.9, length_ratio + random.uniform(-0.1, 0.1)))
+```
+
+Clipping prevents both shrinkage too fast (branches vanish) and growth (children longer than parents → recursion explosion).
+
+</Dropdown>
+
+<Dropdown summary="Hint 3 — random branch dropout">
+
+```python
+if random.random() < 0.1:
+    return
+```
+
+Insert this **before** drawing. 10% of branches are skipped, producing the characteristic asymmetric gaps of real trees. Raise it to 0.3 for sparse winter trees.
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import math, random
+from PIL import Image, ImageDraw
+
+def draw_branch_organic(draw, x, y, length, angle, depth, branch_angle, length_ratio):
+    if depth == 0 or length < 2:
+        return
+    if random.random() < 0.1:
+        return
+
+    angle += random.uniform(-0.15, 0.15)
+    length_ratio = max(0.4, min(0.9, length_ratio + random.uniform(-0.1, 0.1)))
+
+    end_x = x + length * math.sin(angle)
+    end_y = y - length * math.cos(angle)
+    draw.line([(x, y), (end_x, end_y)], fill=(101, 67, 33), width=max(1, depth // 2))
+
+    new_length = length * length_ratio
+    draw_branch_organic(draw, end_x, end_y, new_length,
+                        angle - branch_angle, depth - 1, branch_angle, length_ratio)
+    draw_branch_organic(draw, end_x, end_y, new_length,
+                        angle + branch_angle, depth - 1, branch_angle, length_ratio)
+
+random.seed(0)
+img = Image.new('RGB', (512, 512), 'white')
+draw_branch_organic(ImageDraw.Draw(img), 256, 462, 120, 0, 9, math.radians(25), 0.72)
+img.save('natural_tree.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/natural_tree.png"
+  alt="A fractal tree with irregular, organic branches — small asymmetries and gaps make it look like a real tree rather than a symmetric mathematical drawing"
+  caption="With angle/length jitter and 10% dropout — the same recursion now looks like a real tree."
+  num={5}
+  role="output"
+/>
+
+</Dropdown>
+
+#### Make it your own
+
+- **Seasonal palette.** Add green-leaf circles when `depth <= 1`. Mix red and yellow circles via `random.random()` for autumn.
+- **Wind.** Multiply every branch's angle by `1 + 0.1 * math.sin(time)` — pass a single global `time` parameter through the recursion. Render frames at $t = 0, 0.1, 0.2, \ldots$ for an animated GIF.
+- **Forest.** Run the tree 10 times at different `start_x` positions with different random seeds. Vary `length_ratio` and `branch_angle` per tree. Stack them at different starting `y` values for a depth-of-field forest.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree.py" label="fractal_tree.py — deterministic reference" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_starter.py" label="fractal_tree_starter.py — Exercise 3 skeleton" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A binary fractal tree is recursion with two children per call — left rotated by $-\theta$, right rotated by $+\theta$, both scaled by `length_ratio`. Three parameters span the entire visual family: depth controls detail, branch angle controls spread, length ratio controls density. Polar-to-Cartesian gives endpoints; Pillow's `ImageDraw.line` does the drawing. The deterministic algorithm produces a symmetric IFS attractor; jittering each recursion step turns it into the stochastic, organic-looking tree that real-world species approximate. Same paradigm as 4.1.5 (Sierpinski) — two contractions instead of three, rotational instead of translational — and the same paradigm that returns in 4.3 (L-systems), where the contractions are encoded as a string-rewriting grammar.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Adding instead of subtracting `cos(angle)`.** Pillow's y-axis points down. Subtract or your tree grows into the floor.
+- **Depth > 11 with the default Python recursion limit (1000).** Two to the twelfth = 4,096 branch calls — manageable, but call stack depth grows linearly with the binary-tree depth. Raise `sys.setrecursionlimit` or refactor to an iterative version if you need very deep trees.
+- **Length ratio ≥ 1.** Children grow longer than parents; recursion explodes. Keep `length_ratio` strictly below 1.
+- **Forgetting `length < 2` short-circuit.** With jitter, a child branch can become microscopically short and waste recursion levels. Bail out when sub-pixel.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
+    <li><span class="tag">[2]</span> West, G. B., Brown, J. H., & Enquist, B. J. (1999). A general model for the structure and allometry of plant vascular systems. *Nature*, 400, 664–667. <a href="https://doi.org/10.1038/23251" target="_blank" rel="noopener">doi:10.1038/23251</a></li>
+    <li><span class="tag">[3]</span> Prusinkiewicz, P., & Lindenmayer, A. (1990). *The Algorithmic Beauty of Plants*. Springer-Verlag. ISBN 978-0-387-97297-8.</li>
+    <li><span class="tag">[4]</span> Honda, H. (1971). Description of the form of trees by the parameters of the tree-like body. *Journal of Theoretical Biology*, 31(2), 331–338. <a href="https://doi.org/10.1016/0022-5193(71)90191-3" target="_blank" rel="noopener">doi:10.1016/0022-5193(71)90191-3</a></li>
+    <li><span class="tag">[5]</span> Eloy, C. (2011). Leonardo's rule, self-similarity, and wind-induced stresses in trees. *Physical Review Letters*, 107(25), 258101. <a href="https://doi.org/10.1103/PhysRevLett.107.258101" target="_blank" rel="noopener">doi:10.1103/PhysRevLett.107.258101</a></li>
+    <li><span class="tag">[6]</span> Barnsley, M. F. (1988). *Fractals Everywhere*. Academic Press. ISBN 978-0-12-079062-9.</li>
+    <li><span class="tag">[7]</span> Shiffman, D. (2012). *The Nature of Code: Simulating Natural Systems with Processing*. <a href="https://natureofcode.com/" target="_blank" rel="noopener">natureofcode.com</a>.</li>
+  </ol>
+</section>

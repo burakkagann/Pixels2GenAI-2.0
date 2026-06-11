@@ -1,8 +1,8 @@
 /**
  * Shared catalog reader for the lesson tooling.
  *
- * Parses the two TypeScript data files (src/data/modules.ts and
- * src/data/subtopics.ts) by extracting their exported literals and evaluating
+ * Parses the two TypeScript data files (src/data/curriculum/modules.ts and
+ * src/data/curriculum/subtopics.ts) by extracting their exported literals and evaluating
  * them as plain JS. The literals are pure data (no type annotations inside the
  * values), so this is reliable without a TS toolchain.
  *
@@ -61,32 +61,72 @@ function extractLiteral(src, name) {
 
 /** Flat module catalog (15 + capstone). */
 export function readModules() {
-  const src = fs.readFileSync(path.join(ROOT, 'src', 'data', 'modules.ts'), 'utf8');
+  const src = fs.readFileSync(path.join(ROOT, 'src', 'data', 'curriculum', 'modules.ts'), 'utf8');
   return extractLiteral(src, 'MODULES');
 }
 
 /** Nested subtopics keyed by module idx. */
 export function readSubtopics() {
-  const src = fs.readFileSync(path.join(ROOT, 'src', 'data', 'subtopics.ts'), 'utf8');
+  const src = fs.readFileSync(path.join(ROOT, 'src', 'data', 'curriculum', 'subtopics.ts'), 'utf8');
   return extractLiteral(src, 'SUBTOPICS');
+}
+
+/**
+ * Walk src/content/lessons/ (Module_xx/x.y_subtopic/x.y.z_leaf.mdx — the
+ * tree mirrors v1's content/ hierarchy) and map each lesson's numeric id
+ * to its absolute file path. The id is the numeric prefix of the basename,
+ * matching the glob loader's generateId in src/content/config.ts.
+ */
+function scanLessonFiles() {
+  const bySlug = new Map();
+  if (!fs.existsSync(LESSONS_DIR)) return bySlug;
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else if (/\.mdx?$/.test(entry.name)) {
+        const m = entry.name.match(/^(\d+(?:\.\d+)*)/);
+        if (m) bySlug.set(m[1], p);
+      }
+    }
+  };
+  walk(LESSONS_DIR);
+  return bySlug;
+}
+
+let lessonFileCache = null;
+function lessonFiles() {
+  if (!lessonFileCache) lessonFileCache = scanLessonFiles();
+  return lessonFileCache;
 }
 
 /** Slugs of the MDX lessons that actually exist on disk. */
 export function readLessonFiles() {
-  if (!fs.existsSync(LESSONS_DIR)) return [];
-  return fs
-    .readdirSync(LESSONS_DIR)
-    .filter((f) => f.endsWith('.mdx') || f.endsWith('.md'))
-    .map((f) => f.replace(/\.mdx?$/, ''));
+  return [...lessonFiles().keys()];
 }
 
-/** Absolute path to a lesson MDX file (mdx preferred). */
+/** Absolute path to a lesson MDX file, or null. */
 export function lessonFilePath(slug) {
-  const mdx = path.join(LESSONS_DIR, `${slug}.mdx`);
-  if (fs.existsSync(mdx)) return mdx;
-  const md = path.join(LESSONS_DIR, `${slug}.md`);
-  if (fs.existsSync(md)) return md;
-  return null;
+  return lessonFiles().get(slug) ?? null;
+}
+
+/**
+ * Asset locations for a lesson. The media tree mirrors the content tree:
+ *   src/content/lessons/<module>/<subtopic>/<leaf>.mdx
+ *   public/lesson-media/<module>/<subtopic>/<leaf>/
+ * Returns { dir, url } or null when the lesson MDX doesn't exist.
+ */
+export function lessonAssetLocation(slug) {
+  const file = lessonFilePath(slug);
+  if (!file) return null;
+  const rel = path
+    .relative(LESSONS_DIR, file)
+    .replace(/\\/g, '/')
+    .replace(/\.mdx?$/, '');
+  return {
+    dir: path.join(PUBLIC_DIR, 'lesson-media', rel),
+    url: `/lesson-media/${rel}/`,
+  };
 }
 
 /** Resolve a site-absolute asset path ("/lessons/x/y.png") to a public/ path. */

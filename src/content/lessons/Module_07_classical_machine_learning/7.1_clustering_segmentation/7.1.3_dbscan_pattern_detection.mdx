@@ -1,0 +1,176 @@
+---
+module: "M 07"
+cycle: "II"
+title: "DBSCAN — Density-Connected Clusters"
+objective: "Drop K-Means' last two assumptions: clusters can now be any shape, and outliers are explicitly labelled as noise. DBSCAN finds clusters by following density-connected paths through the dataset."
+framework: "conceptual"
+duration: "32–38 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "7.1.2 (Mean-Shift), 2D point cloud intuition"
+prev:
+  slug: "7.1.2"
+  title: "Mean-Shift Segmentation"
+next:
+  slug: "7.2.1"
+  title: "Decision Tree Classifier"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *what if a cluster is shaped like a crescent — or two intertwined spirals?* <a id="big-question"></a>
+
+K-Means partitions space by Voronoi cells — straight lines. Mean-Shift carves out modes of a density estimate — wherever the density peaks, but each cluster still ends up looking roughly convex. **Neither algorithm can find a crescent-shaped cluster, an arc, or a ring.** DBSCAN — *Density-Based Spatial Clustering of Applications with Noise* — was Ester, Kriegel, Sander & Xu's answer in 1996 [1], and it stays in nearly every "best clustering algorithm" survey thirty years later. Its core insight: a cluster is whatever you can reach by walking through dense regions; if you have to cross a sparse gap to reach the next point, you have left the cluster. As a side effect, points that nobody can reach from anywhere dense are explicitly **noise**, not part of any cluster.
+
+<Figure
+  src="/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection/dbscan_comparison.png"
+  alt="Side-by-side scatter plots of two interleaving crescent shapes — left panel coloured by K-Means showing a left/right vertical split, right panel coloured by DBSCAN showing the two crescents correctly identified plus grey outliers"
+  caption="Same data, two algorithms. K-Means splits the two crescents down the middle because they sit on different sides of the y-axis. DBSCAN follows density paths and recovers each crescent intact — and labels scattered outliers as noise."
+  num={1}
+  role="output"
+/>
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish K-Means / Mean-Shift / DBSCAN by the shape of the clusters each can recover.</li>
+  <li>Implement DBSCAN as a graph traversal: build an `eps`-neighbourhood graph, then BFS from each unvisited core point.</li>
+  <li>Use the two hyperparameters `eps` (neighbourhood radius) and `min_samples` (density threshold) and predict the effect of varying each.</li>
+  <li>Recognise the three point classifications — **core**, **border**, **noise** — and explain why the distinction matters.</li>
+</ol>
+
+## Part 1 — Three kinds of points <a id="part-1"></a>
+
+DBSCAN labels every point as one of three types:
+
+- **Core**: there are at least `min_samples` points (including itself) within `eps` distance. The dense interior of a cluster.
+- **Border**: not core itself, but lives within `eps` of a core point. The fuzzy edge of a cluster.
+- **Noise**: neither core nor border. Belongs to no cluster.
+
+<Figure
+  src="/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection/dbscan_core_border_noise.png"
+  alt="Single scatter plot showing the same crescents with core points outlined in white, border points partly transparent, and grey noise points scattered around"
+  caption="Core (white-outlined) versus border (translucent) versus noise (grey). The cluster spine is the chain of core points; border points get pulled in but don't propagate the cluster outward."
+  num={2}
+  role="diagram"
+/>
+
+The point classification controls the algorithm's reachability rules: cores can extend a cluster outward; borders are attached to a cluster but cannot extend it further; noise is just noise. That asymmetry is what stops one cluster from "leaking" through a single bridge point into a different cluster.
+
+<Admonition type="dyk" title="Did you know? · DBSCAN's SIGKDD Test of Time award">
+The 1996 DBSCAN paper won the SIGKDD Test of Time Award in 2014 — the conference's highest honour, given to papers that have stood the test of twenty years. The algorithm is the most-cited clustering paper of the late 1990s and remains the default for spatial-database clustering, anomaly detection, and density-based segmentation [1].
+</Admonition>
+
+## Part 2 — The two hyperparameters <a id="part-2"></a>
+
+DBSCAN has exactly two parameters, and they trade off against each other:
+
+- **`eps`** — how close two points must be to be considered neighbours.
+- **`min_samples`** — how many neighbours a point needs to be a core point.
+
+Increase `eps` and clusters merge (more points become reachable). Increase `min_samples` and clusters fragment (fewer points qualify as core). The two parameters control the same thing — density threshold — from different sides.
+
+A well-known heuristic for picking `eps`: compute the distance to every point's `k`-th nearest neighbour (where `k = min_samples`), sort those distances ascending, and plot them. The "elbow" of the curve is a good value for `eps`. Most points cluster at small distances; outliers and noise have large `k`-NN distances and create the upward bend [2].
+
+<CodeBlock lang="python" file="eps_tuning_demo.py">
+```python
+from sklearn.neighbors import NearestNeighbors
+nn = NearestNeighbors(n_neighbors=min_samples).fit(X)
+dists, _ = nn.kneighbors(X)
+sorted_dist = np.sort(dists[:, -1])     # distance to k-th neighbour
+# plot sorted_dist; look for elbow → eps
+```
+</CodeBlock>
+
+`min_samples` is usually set to `2 * dim` for low-dimensional data (so 4 for 2D points, 6 for 3D) and is most important in determining how robust the algorithm is to noise. Very low `min_samples` makes everything a core point and produces over-segmentation; very high `min_samples` makes nothing a core point and labels everything as noise.
+
+<Admonition type="important">
+The algorithm's biggest hidden weakness is **variable density**. If one cluster is sparse and another is dense, no single `eps` works for both — the small `eps` for the dense cluster shatters the sparse one, and the large `eps` for the sparse cluster swallows neighbouring clusters. **HDBSCAN** [3] extends DBSCAN to handle variable density and is the modern default for "I don't know my density".
+</Admonition>
+
+## Part 3 — DBSCAN as graph traversal <a id="part-3"></a>
+
+DBSCAN reduces to a simple graph algorithm. Build an undirected graph whose vertices are the data points; connect any two points within `eps`. **A DBSCAN cluster is a connected component of the subgraph restricted to core points** — plus the border points adjacent to the cluster's core.
+
+<CodeBlock lang="python" file="bfs_demo.py">
+```python
+# Pseudocode
+labels = [NOISE] * n
+cluster_id = 0
+for p in range(n):
+    if labels[p] != NOISE:    # already visited
+        continue
+    if not is_core(p):
+        continue
+    # BFS / expansion from this core point
+    queue = [p]
+    while queue:
+        q = queue.pop()
+        if labels[q] == NOISE:
+            labels[q] = cluster_id
+            if is_core(q):
+                queue.extend(neighbours_within_eps(q))
+    cluster_id += 1
+```
+</CodeBlock>
+
+The algorithm is `O(n²)` naively (the `neighbours_within_eps` operation costs `n` per call) and `O(n log n)` with a spatial index (k-d tree or ball tree for low-dim data, locality-sensitive hashing for high-dim). sklearn's `DBSCAN(algorithm='auto')` picks the right index for you.
+
+## Synthesis project — anomaly detection by density <a id="synthesis"></a>
+
+Use DBSCAN to find a cluster structure in real or synthetic 2D data and report every point that the algorithm classifies as noise — those are your anomalies. Anomaly detection by density is the original use case from the 1996 paper.
+
+<Download href="/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection/dbscan_patterns.py" label="dbscan_patterns.py — DBSCAN vs K-Means on crescents (sklearn-backed)" />
+<Download href="/lesson-media/Module_07_classical_machine_learning/7.1_clustering_segmentation/7.1.3_dbscan_pattern_detection/dbscan_starter.py" label="dbscan_starter.py — implement DBSCAN from scratch" />
+
+**Reflection questions**
+
+- The DBSCAN result has the same number of clusters as K-Means (2), but the cluster shapes are completely different. Why does this matter beyond aesthetics?
+- What happens to the algorithm's output if you increase `eps` from 0.20 to 0.30? From 0.30 to 0.50?
+- DBSCAN never gives the same cluster two different labels across runs *for the same `eps`/`min_samples`*. But the label *number* might change. Why?
+
+<Dropdown summary="Answers">
+
+**Why shape matters** — downstream tasks care about cluster *membership*. If you want to compute "average crescent thickness" and K-Means split each crescent into two arbitrary halves, your statistic is meaningless. DBSCAN preserves the structural unit. Shape-preserving clustering also matters for image segmentation, traffic-flow analysis, and biological-tissue classification.
+
+**Increasing `eps`** — at 0.30, the two crescents merge into one cluster (their tips are within 0.30 of each other through the noise region). At 0.50, even widely-separated outliers connect, and you get one cluster plus very little noise. The algorithm degenerates into "everything is one cluster" past a certain `eps`.
+
+**Stable labels, different numbers** — DBSCAN assigns cluster IDs in the order it discovers them. If the input array's row order changes, the cluster discovered first changes, and the IDs are reshuffled — but the *partition* (which points share a label) is identical. This is true of every clustering algorithm; sklearn doesn't try to canonicalise labels.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Cluster GPS coordinates of cell-tower hits** for a privacy-preserving "approximate location" tool. DBSCAN with `eps = 50 m` finds *places* in the data without needing a map.
+- **HDBSCAN comparison**: run `hdbscan.HDBSCAN` on the same data. The result is similar but the algorithm picks `eps` per cluster — better on variable-density data.
+- **Visualise core / border / noise on every iteration of the BFS** and turn it into a GIF. Reveals exactly how clusters "grow" through the graph.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+DBSCAN is a graph algorithm on the `eps`-neighbourhood graph: clusters are connected components of the core-point subgraph; noise is explicitly labelled. Two hyperparameters, three point classifications, no assumed cluster shape, no required cluster count — the algorithm fits where K-Means and Mean-Shift cannot. Its blind spot is variable density across clusters, and that blind spot is exactly what HDBSCAN fixes. For 2D image-based pattern detection, anomaly detection, and spatial-database clustering, DBSCAN remains the right default thirty years on.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Picking `eps` by intuition. Use the k-NN distance plot heuristic — it usually has a clean elbow.
+- Setting `min_samples = 1`. Every single isolated point becomes its own cluster; noise disappears.
+- Comparing DBSCAN to K-Means by "number of clusters found." If DBSCAN finds 17 clusters and K-Means with K=17 finds the same, the *content* of the clusters is still different.
+- Running DBSCAN on raw distances when feature scales differ. Always standardise (z-score) high-dimensional features first.
+- Using DBSCAN in 100+ dimensions. The neighbourhood graph becomes meaningless under the curse of dimensionality. Switch to spectral or HDBSCAN.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ester, M., Kriegel, H.-P., Sander, J., & Xu, X. (1996). A density-based algorithm for discovering clusters in large spatial databases with noise. *Proceedings of the 2nd International Conference on Knowledge Discovery and Data Mining (KDD-96)*, 226–231.</li>
+    <li><span class="tag">[2]</span> Schubert, E., Sander, J., Ester, M., Kriegel, H.-P., & Xu, X. (2017). DBSCAN revisited, revisited. *ACM Transactions on Database Systems*, 42(3), 1–21. <a href="https://doi.org/10.1145/3068335" target="_blank" rel="noopener">doi:10.1145/3068335</a></li>
+    <li><span class="tag">[3]</span> Campello, R. J. G. B., Moulavi, D., & Sander, J. (2013). Density-based clustering based on hierarchical density estimates. In *Pacific-Asia Conference on Knowledge Discovery and Data Mining* (pp. 160–172). Springer.</li>
+    <li><span class="tag">[4]</span> Sander, J., Ester, M., Kriegel, H.-P., & Xu, X. (1998). Density-based clustering in spatial databases: the algorithm GDBSCAN and its applications. *Data Mining and Knowledge Discovery*, 2(2), 169–194.</li>
+    <li><span class="tag">[5]</span> Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830. <a href="https://jmlr.org/papers/v12/pedregosa11a.html" target="_blank" rel="noopener">jmlr.org</a></li>
+    <li><span class="tag">[6]</span> McInnes, L., & Healy, J. (2017). Accelerated hierarchical density-based clustering. *IEEE International Conference on Data Mining Workshops*, 33–42.</li>
+  </ol>
+</section>

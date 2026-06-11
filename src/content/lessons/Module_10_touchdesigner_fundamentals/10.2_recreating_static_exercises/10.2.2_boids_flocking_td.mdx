@@ -1,0 +1,187 @@
+---
+module: "M 10"
+cycle: "II"
+title: "Boids in TouchDesigner — Physics in CHOPs, Rendering in Instances"
+objective: "Port the NumPy boids simulation from Module 5.2.1 to a TouchDesigner network that runs 5,000 agents at 60 fps. The physics lives in a Script CHOP; the rendering lives in a Geometry COMP with GPU instancing."
+framework: "conceptual"
+duration: "32–38 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "5.2.1 (Boids), 10.1.1, 10.1.2"
+prev:
+  slug: "10.2.1"
+  title: "Core Exercises Realtime"
+next:
+  slug: "10.2.3"
+  title: "Planet Simulation TD"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *how do you scale a 50-agent Python sim to 5,000 agents at 60 fps?* <a id="big-question"></a>
+
+Module 5.2.1 implemented Craig Reynolds' boids in NumPy. The pure-Python simulation handles 50–100 agents at interactive speed; past that it drops below 30 fps and the visualisation stutters. To run *thousands* of boids — for a gallery installation, a music-reactive backdrop, or a VR scene — you need to (a) move the physics into a faster execution context and (b) replace per-agent rendering with batched GPU instancing. TouchDesigner is built for both. The physics moves into a **Script CHOP** that runs once per frame and outputs all agent positions as channel arrays. The rendering moves into a **Geometry COMP** with **GPU instancing** — one draw call for any number of agents.
+
+<Figure
+  src="/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/td_network_diagram.png"
+  alt="TouchDesigner network diagram showing the boids architecture: a Script CHOP outputs x/y/heading channels; those CHOPs feed the Geometry COMP's instancing parameters; the Geometry COMP renders the agents at 60 fps"
+  caption="The Boids-in-TD architecture. Physics is one Script CHOP outputting agent state as numeric channels. Rendering is one Geometry COMP with GPU instancing, drawing all agents in a single draw call."
+  num={1}
+  role="diagram"
+/>
+
+The three boids rules from 5.2.1 — separation, alignment, cohesion — are the same. The data structures are the same (NumPy arrays of positions and velocities). What changes is where the computation lives and how the output is drawn.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Move per-frame physics from a Python script into a Script CHOP whose output is consumed by other operators.</li>
+  <li>Use **GPU instancing** to render N copies of one geometry from one draw call, replacing N draw calls.</li>
+  <li>Identify the performance crossover point where CPU NumPy is no longer fast enough and GPU/native pipelines become necessary.</li>
+  <li>Recognise the three-tier architecture — physics layer, rendering layer, control layer — that underlies all real-time agent simulations.</li>
+</ol>
+
+## Part 1 — Physics in a Script CHOP <a id="part-1"></a>
+
+A Script CHOP runs a Python `onCook` callback every frame. It outputs *channels* — named arrays of float values that other operators can read. For boids, the channels are:
+
+- `tx`, `ty` — position (length N)
+- `vx`, `vy` — velocity (length N)
+- (optional) `heading` — rotation angle for rendering
+
+Inside the script, the per-frame body is essentially the NumPy code from 5.2.1, minus the loop over frames (TD provides that). Read agent state from `me.par.X` storage, compute separation/alignment/cohesion, update velocity and position, write back to the output channels.
+
+<CodeBlock lang="python" file="script_chop_demo.py">
+```python
+# inside a Script CHOP onCook callback
+def onCook(scriptOp):
+    n = me.par.Numagents.eval()
+    pos = positions      # persisted state (module-level NumPy array)
+    vel = velocities
+
+    sep = separation(pos)        # same as 5.2.1
+    align = alignment(pos, vel)
+    coh = cohesion(pos)
+    vel = clip_speed(vel + sep + align + coh, MAX_SPEED)
+    pos = (pos + vel) % WORLD_SIZE
+
+    scriptOp.clear()
+    scriptOp.appendChan('tx').vals = pos[:, 0].tolist()
+    scriptOp.appendChan('ty').vals = pos[:, 1].tolist()
+    scriptOp.appendChan('heading').vals = np.degrees(
+        np.arctan2(vel[:, 1], vel[:, 0])).tolist()
+    return
+```
+</CodeBlock>
+
+The state (`positions`, `velocities`) is stored as module-level NumPy arrays inside the script. They persist between frames because the script lives in the cook cycle, not in a fresh Python process.
+
+<Admonition type="dyk" title="Did you know? · NumPy + TD is the sweet spot">
+A pure-Python boids loop runs about 200 agents at 60 fps. A NumPy-vectorised version runs about 2,000. A Script CHOP-hosted NumPy version runs the same 2,000 *and* feeds directly into a GPU-instanced renderer that scales independently. Combining vectorisation with native rendering is what crosses the 5,000-agent threshold [1].
+</Admonition>
+
+## Part 2 — Rendering with GPU instancing <a id="part-2"></a>
+
+Drawing 5,000 small triangles individually requires 5,000 draw calls. Even at 100 µs per call, that is 500 ms per frame — useless. The cure is **GPU instancing**: one draw call submits one geometry plus a per-instance attribute array (positions, headings, sizes), and the GPU draws all N copies in parallel.
+
+In TouchDesigner you set this up on the **Geometry COMP**:
+
+1. Build the agent geometry as a single SOP — a small triangle or sphere.
+2. On the Geometry COMP, set `Instancing` to `On`.
+3. In the Instance page of parameters, point the `Translate OP` to your physics Script CHOP (the `tx`, `ty` channels become per-instance translations).
+4. Point the `Rotate OP` to the same CHOP (the `heading` channel becomes per-instance rotation).
+5. The COMP now draws all N copies in one GPU draw call.
+
+```
+Script CHOP (physics output)
+  ╲
+   ╲ Translate OP, Rotate OP
+    ╲
+     Geometry COMP (with instancing on) → Render TOP → Out
+```
+
+Modern GPUs handle 50,000–500,000 instances per frame easily. The bottleneck moves entirely from the rendering side to the physics side — exactly where you can apply NumPy and the GPU-friendly algorithms from Module 7.
+
+<Admonition type="important">
+GPU instancing requires the geometry to be small and the per-instance state to be a few floats. If you need richly varied per-agent geometry (different mesh per agent), instancing breaks down and you need an `Instance TOP` array trick or a particle system. For ordinary boids the simple geometry is fine.
+</Admonition>
+
+## Part 3 — Three-tier architecture <a id="part-3"></a>
+
+The Boids-in-TD setup illustrates a pattern that recurs for every real-time agent simulation:
+
+**Physics layer** — Script CHOP (or GLSL Compute TOP for very large counts). Inputs: state from previous frame. Outputs: new state as channels.
+
+**Rendering layer** — Geometry COMP with instancing. Inputs: channels from physics layer. Output: a Render TOP.
+
+**Control layer** — Script DAT and CHOPs. Inputs: external events (MIDI, OSC, audio). Outputs: parameter changes on the physics layer.
+
+<Figure
+  src="/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/numpy_vs_td_comparison.png"
+  alt="Side-by-side architecture diagram comparing the NumPy boids loop (single-threaded Python, all responsibilities mixed) to the TD network (separated physics CHOP, rendering COMP, and control layer)"
+  caption="NumPy version (left) mixes physics, rendering, and control in one loop. TD version (right) splits them into three layers that scale independently."
+  num={2}
+  role="diagram"
+/>
+
+This separation is what lets you scale: optimise the physics layer to run more agents, optimise the rendering layer to draw them faster, and add features in the control layer without touching either. Compare to the NumPy version where adding "respond to audio" means surgery on the inner loop.
+
+## Synthesis project — port your 5.2.1 boids to TD <a id="synthesis"></a>
+
+Take the NumPy boids from lesson 5.2.1, drop the physics function into a Script CHOP, wire the output channels to a Geometry COMP with instancing, and watch 500–5,000 boids fly at 60 fps. The .py download is the standalone reference matching the v1 implementation; the .toe project shows the wired TD network.
+
+<Download href="/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/boids_td_standalone.py" label="boids_td_standalone.py — reference NumPy implementation (for the Script CHOP)" />
+<Download href="/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/boids_td_script.py" label="boids_td_script.py — Script CHOP onCook code" />
+<Download href="/lesson-media/Module_10_touchdesigner_fundamentals/10.2_recreating_static_exercises/10.2.2_boids_flocking_td/boids_td_starter.py" label="boids_td_starter.py — implement the three boids forces from scratch" />
+
+**Reflection questions**
+
+- What is the largest single cost in the pure-NumPy 5.2.1 version that disappears in the TD version?
+- Why is GPU instancing useless for boids if your geometry is one triangle but heroic if it is a complex sphere mesh?
+- At what agent count does pure NumPy stop being competitive with the TD version, and why?
+
+<Dropdown summary="Answers">
+
+**Largest cost that disappears** — rendering. The Python version uses PIL or matplotlib to draw a frame, which costs many milliseconds per agent. TD's instanced renderer is one draw call regardless of count, so the rendering term effectively becomes zero. The physics term is the same in both versions.
+
+**Triangle vs sphere** — for a triangle, the draw-call cost is already tiny and instancing's win is modest. For a sphere with 1000 polygons, the per-agent cost is 1000× larger. Instancing absorbs all 1000 in one draw call, so the speedup is dramatic. Bigger geometry, bigger instancing win.
+
+**Crossover point** — empirically around 500–2000 agents for pure NumPy, depending on the renderer. Past that, the Python rendering loop becomes the bottleneck. TD's instanced renderer pushes the bottleneck back to physics, where NumPy can hold position until about 10,000 agents (per-frame per-pair distance computations are `O(n²)`).
+
+</Dropdown>
+
+#### Make it your own
+
+- **Audio reactivity**: add an Audio In CHOP, compute spectrum, use bass amplitude to modulate `cohesion_weight`. Boids cluster on drum hits.
+- **GLSL Compute physics**: move the Script CHOP body into a GLSL Compute TOP. Now physics runs on the GPU and you can do 50,000 agents.
+- **Predator agent**: one special agent that all boids flee from; the predator chases the centroid of the flock. Classic stability test for any flocking implementation.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Porting boids to TouchDesigner separates physics from rendering. Physics goes into a Script CHOP whose output is per-agent state as named channels. Rendering goes into a Geometry COMP with GPU instancing, which collapses N draw calls into one. The three-tier physics/rendering/control architecture scales each layer independently — the NumPy boids' rendering bottleneck disappears, and you can drive 5,000+ agents at 60 fps. The same pattern generalises to particles, fluid simulation, N-body, and any agent-based system.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Per-agent draw calls instead of instancing. The rendering cost stays `O(N)` and you cannot scale.
+- State stored in script-local variables that disappear each frame. Use module-level globals or `me.storage` for persistent state.
+- Script CHOP reading parameters in Python without `.eval()`. You get the parameter object, not its value.
+- Boids forces computed in a Python loop instead of vectorised NumPy. The `O(N²)` cost compounds; vectorise like 5.2.1.
+- Wiring CHOP channels in wrong order to instancing parameters. Channel order matters; double-check `tx, ty, tz` and `rx, ry, rz` mapping.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Reynolds, C. W. (1987). Flocks, herds and schools: A distributed behavioral model. *ACM SIGGRAPH Computer Graphics*, 21(4), 25–34. <a href="https://doi.org/10.1145/37402.37406" target="_blank" rel="noopener">doi:10.1145/37402.37406</a></li>
+    <li><span class="tag">[2]</span> Derivative Inc. (2024). *TouchDesigner Geometry COMP Documentation*. <a href="https://derivative.ca/UserGuide/Geometry_COMP" target="_blank" rel="noopener">derivative.ca/UserGuide/Geometry_COMP</a></li>
+    <li><span class="tag">[3]</span> Akeley, K., & Hanrahan, P. (1988). Three pieces of the graphics pipeline. *Computer Graphics*, 22(4), 197–204.</li>
+    <li><span class="tag">[4]</span> NVIDIA Corporation. (2022). *Instanced Rendering Best Practices*. <a href="https://developer.nvidia.com/" target="_blank" rel="noopener">developer.nvidia.com</a></li>
+    <li><span class="tag">[5]</span> Reynolds, C. W. (1999). Steering behaviors for autonomous characters. In *Proceedings of Game Developers Conference 1999* (pp. 763–782).</li>
+    <li><span class="tag">[6]</span> Shiffman, D. (2012). *The Nature of Code*, Chapter 6: Autonomous Agents. <a href="https://natureofcode.com/" target="_blank" rel="noopener">natureofcode.com</a></li>
+  </ol>
+</section>

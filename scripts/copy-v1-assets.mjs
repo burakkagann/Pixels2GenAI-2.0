@@ -1,8 +1,9 @@
 // ============================================================
 //  copy-v1-assets.mjs
-//  Data-driven asset migration. Reads thesis_automation/reports/
-//  migration-inventory.json and copies top-level lesson assets
-//  into public/lessons/<slug>/.
+//  Data-driven asset migration. Reads the migration inventory and copies
+//  top-level lesson assets into public/lesson-media/<module>/<subtopic>/<leaf>/
+//  — the v2 asset tree mirrors v1's content/ hierarchy verbatim, so the
+//  destination is the v1 path with "content/" swapped for "public/lesson-media/".
 //
 //  Conservative by default:
 //    - Copies only TOP-LEVEL files from each v1 leaf folder
@@ -35,11 +36,18 @@ const V1_ROOT =
   process.env.V1_ROOT || resolve(V2_ROOT, '..', 'numpy-to-genAI');
 const INVENTORY_PATH = join(
   V2_ROOT,
-  'thesis_automation',
+  'docs',
   'reports',
   'migration-inventory.json'
 );
-const DEST_ROOT = join(V2_ROOT, 'public', 'lessons');
+const DEST_ROOT = join(V2_ROOT, 'public', 'lesson-media');
+
+// v1 "content/Module_xx_…/x.y_…/x.y.z_…" → dest dir under DEST_ROOT.
+// The v2 asset tree mirrors v1's content/ hierarchy exactly.
+function destDirFor(entry) {
+  const rel = entry.v1PathRelative.replace(/^content[\\/]/, '');
+  return join(DEST_ROOT, rel);
+}
 
 // Per-file size cap. Any single file larger than this is skipped
 // with a warning. Catches stray model weights / very large GIFs.
@@ -147,20 +155,20 @@ async function copyDirFlat(srcDir, destDir, { allowPth }) {
 // Process a single lesson.
 // ---------------------------------------------------------------
 async function copyLesson(entry, opts) {
-  const slug = entry.leafId;
   const srcDir = join(V1_ROOT, entry.v1PathRelative);
+  const destDir = destDirFor(entry);
 
   // Top-level copy.
-  const top = await copyDirFlat(srcDir, join(DEST_ROOT, slug), {
+  const top = await copyDirFlat(srcDir, destDir, {
     allowPth: opts.includePth,
   });
 
-  // Opt-in subdirs (preserved as subdirs under public/lessons/<slug>/).
+  // Opt-in subdirs (preserved as subdirs under the lesson's media dir).
   const subStats = [];
   for (const subName of opts.includeSubdirs) {
     const subStat = await copyDirFlat(
       join(srcDir, subName),
-      join(DEST_ROOT, slug, subName),
+      join(destDir, subName),
       { allowPth: opts.includePth }
     );
     subStats.push({ name: subName, ...subStat });

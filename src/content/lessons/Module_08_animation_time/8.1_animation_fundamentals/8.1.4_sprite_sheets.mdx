@@ -1,0 +1,311 @@
+---
+module: "M 08"
+cycle: "II"
+title: "Sprite Sheets"
+objective: "The 2D-game animation primitive: pre-render frames into a grid, then animate by indexing. One memory layout drives 40 years of game graphics."
+framework: "hands-on"
+duration: "20–25 min"
+level: "beginner-intermediate"
+prereqs: "8.1.3 (interpolation), basic NumPy image slicing"
+prev:
+  slug: "8.1.3"
+  title: "Interpolation Techniques"
+next:
+  slug: "8.2.1"
+  title: "Flower Assembly"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A **sprite sheet** packs all the animation frames of a 2D character into a single image arranged on a regular grid. You render once, then animate by cropping a different cell every frame. This sounds prosaic, but it is the single most-used animation pattern in 2D games — Mario, Sonic, Stardew Valley, Hollow Knight, every mobile game with characters, and most of the demoscene productions of the 1980s and 90s all use the same memory layout [1]. The reason: a single texture upload to the GPU plus integer-arithmetic frame indexing is *vastly* cheaper than 8 separate texture uploads with interpolated sampling.
+
+This lesson builds an 8-frame bouncing-ball sprite sheet from scratch, then animates it by indexing. Along the way you'll see the **squash-and-stretch** principle of classical animation — Disney's first principle of motion [2] — applied as a pose-by-pose decoration of the geometry rather than as a real-time deformation.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Lay out frames on a fixed-cell grid in a single composite image.</li>
+  <li>Index into a sprite sheet by frame number using NumPy slicing or `PIL.Image.crop`.</li>
+  <li>Apply **squash and stretch** by varying ellipse radii per pose — the cheapest implementation of classical animation principle #1.</li>
+  <li>Recognise the sprite-sheet pattern as the data-layout cousin of the texture atlas used in modern game engines and CSS sprite icons.</li>
+</ol>
+
+## Quick start — bouncing ball <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+from PIL import Image, ImageDraw
+
+CELL = 96
+N_FRAMES = 8
+
+def render_pose(frame, n=N_FRAMES):
+    img = Image.new('RGBA', (CELL, CELL), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    # Arch: ball lifts off ground, peaks at t=0.5, lands
+    t = frame / (n - 1)
+    height = max(0, -4 * (t - 0.5) ** 2 + 1)
+    rx, ry = (22, 22) if height >= 0.05 else (28, 16)   # squash on impact
+    cx = CELL // 2
+    cy = int(CELL - 18 - height * 50)
+    draw.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], fill=(255, 110, 90))
+    return img
+
+# Build sprite sheet by pasting each pose into a row
+sheet = Image.new('RGBA', (CELL * N_FRAMES, CELL))
+for i in range(N_FRAMES):
+    sheet.paste(render_pose(i), (i * CELL, 0))
+sheet.save('sprite_sheet.png')
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets/sprite_sheet.png"
+  alt="A horizontal strip of eight 96-pixel cells, each showing a coral-coloured ball in a different position along an arc — first cell shows a squashed flat ball on the ground, middle cells show the ball at increasing heights, and the final cell returns the ball back to a squashed pose"
+  caption="Eight-frame bounce sprite sheet. Cells 1 and 8 use squashed-egg geometry (ground contact); cells 4 and 5 are at the peak with round geometry."
+  num={1}
+  role="output"
+/>
+
+<Figure
+  src="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets/bounce_animation.gif"
+  alt="Animated GIF of the coral ball bouncing in a continuous loop — squashing on impact, stretching slightly at the peak, and casting a shadow that fades when the ball is in the air"
+  caption="The same sprite sheet animated by cycling cell index from 0 to 7 at 10 fps."
+  num={2}
+  role="gif"
+/>
+
+<Admonition type="tip">
+Look at the strip carefully: the ball is **flatter** when it touches the ground (cells 1 and 8) and **stretched vertically** at the peak — this is the squash-and-stretch principle of animation. Without it, the bounce would feel rigid and dead. The deformation is **pre-baked** into the sprite: no real-time physics, just two ellipse radius numbers per pose.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The sheet as a memory layout
+
+A sprite sheet is just a 2D array of cells. Conceptually it's a 4D tensor `(rows, cols, cell_h, cell_w, channels)` flattened to `(rows * cell_h, cols * cell_w, channels)` — the same trick as the puzzle / Warhol / Hexpanda lessons in Module 03 (3.3.x). What you trade for the flat layout: instant random access to any frame in $O(1)$ via slicing, single texture upload to GPU memory, and predictable cache behaviour.
+
+For a sheet of `N_FRAMES` cells laid out as a horizontal strip:
+
+`frame_at(i) = sheet[:, i * CELL : (i + 1) * CELL]`
+
+A vertical strip swaps axes. A grid uses `i // COLS` and `i % COLS`. Same indexing logic, different reshape.
+
+### Concept 2 — Squash and stretch via per-pose geometry
+
+Disney's twelve principles of animation, codified by Ollie Johnston and Frank Thomas in *The Illusion of Life* (1981) [2], lead with **squash and stretch**: an object compresses on impact and elongates when moving fast. Skip it, and bouncing balls look like billiard balls dropped on concrete; include it, and they read as bouncy. Cost: two extra numbers per pose.
+
+In our sprite sheet:
+
+<CodeBlock lang="python" file="squash.py">
+```python
+rx, ry = (22, 22) if height >= 0.05 else (28, 16)   # round / squashed
+# 22 vs 28 horizontal: 27% wider when squashed
+# 22 vs 16 vertical:    27% shorter when squashed
+```
+</CodeBlock>
+
+The ratio matters: a 1.27× horizontal stretch combined with a 0.73× vertical squash *preserves the area* — the ball doesn't change its visual mass, only its shape. Volume conservation is what distinguishes natural squash from cartoonish exaggeration.
+
+<Admonition type="dyk" title="Did you know · early arcade hardware was sprite-only">
+The 1979 *Asteroids* hardware had separate processors for vector lines (the spaceship and asteroids) and bitmap sprites (the ship's bullets). The 1980 *Pac-Man* hardware had **8 simultaneous sprite slots** in dedicated silicon — Pac-Man, 4 ghosts, and 3 fruit-bonus slots — drawn over a tile-based background by a fixed-function video chip [3]. Modern GPUs don't have dedicated sprite hardware anymore, but the API surface (offset, scale, atlas index) survives as `instanced rendering` in Vulkan and DirectX 12.
+</Admonition>
+
+### Concept 3 — Playback by frame indexing
+
+Once the sheet exists, animation is a counter:
+
+<CodeBlock lang="python" file="playback.py">
+```python
+for frame_idx in range(N_FRAMES * NUM_LOOPS):
+    cell_index = frame_idx % N_FRAMES               # cycle 0..N-1
+    x_offset = cell_index * CELL
+    frame = sheet.crop((x_offset, 0, x_offset + CELL, CELL))
+    out.append(frame)
+```
+</CodeBlock>
+
+That's it. No interpolation between cells — the animation runs at exactly the rate of the playback loop's frame counter. For 12 frames per second of animation with a 60 fps render loop, hold each cell for 5 render frames before advancing. For variable-speed animation, use 8.1.2's easing curves to map a real-valued progress to an integer cell index: `cell_idx = int(N_FRAMES * easing(t))`.
+
+<Admonition type="important">
+Looped animation requires the **first and last cells to match**. Our bounce sheet has 8 cells; cell 0 is "ball on ground" and cell 7 is "ball just landed back on ground" — visually similar but with a small frame-to-frame difference that makes the loop feel continuous. If cell 0 and cell 7 were identical, the loop would hiccup on every cycle.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: render the sheet, modify the bounce timing, then build a walk-cycle sheet from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Render the bouncing-ball sheet">
+
+Run `sprite_sheet.py` and look at both the strip and the animated GIF.
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets/sprite_sheet.py" label="sprite_sheet.py — 8-frame bounce" />
+
+**Reflection questions**
+
+- The arch height uses `-4 * (t - 0.5)² + 1`. What does each term contribute?
+- Why does the shadow fade when the ball is at the peak?
+- What change would you make to add a *second* bounce, half as tall, inside the same 8 frames?
+
+<Dropdown summary="Answers">
+
+**Arch formula** — `(t - 0.5)²` is a parabola with minimum at `t = 0.5`. Multiplying by `-4` flips and scales it so the maximum is at `t = 0.5`. The `+1` shifts it so the peak is at height 1. At `t = 0` or `t = 1`, the value is `-4 * 0.25 + 1 = 0`. So the formula is "parabolic arch from 0 to 1 and back to 0."
+
+**Fading shadow** — `shadow_alpha = 120 - height * 100`. At `height = 0` (ground), alpha = 120 (dark shadow). At `height = 1` (peak), alpha = 20 (faint). The shadow getting weaker as the ball rises is one of the cheapest 3D-feel cues in 2D animation.
+
+**Two bounces** — replace the parabola with `|sin(2 * π * t)|` for a sinusoidal bounce that touches the ground at `t = 0`, `0.5`, and `1`. Add `* 0.5` to the second half to halve its height: `height = sin(π * t) * (1 if t < 0.5 else 0.5)`.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep the squash ratio">
+
+Modify the squash radii to test the visual effect of volume conservation.
+
+**Goals**
+
+1. **No squash.** Use the same `(22, 22)` for both ground and air. The bounce should feel mechanical.
+2. **Over-squash.** Use `(32, 12)` on impact — a 45% wider, 45% shorter ratio. The bounce should look cartoonish.
+3. **Non-conserving.** Use `(22, 12)` — squash without stretch. The ball should look like it's losing mass on every impact.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The bounce feels dead. Without squash, the ball has no contact-with-floor signal — it just translates vertically without the impact deformation that the eye reads as physical force.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Bouncy, cartoonish. Disney shorts use 35-50% ratios for comedy; modern animation typically stays under 20% for realism. The over-squash exaggerates the contact moment and reads as exaggerated weight.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The ball looks like it's deflating. The eye expects volume conservation — squash one axis means stretching the other. Breaking that expectation produces a subtle "wrong" feeling, which is sometimes useful (e.g., for objects made of mud or jelly that genuinely lose mass on impact).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Build a walk-cycle sprite sheet">
+
+Build a 6-frame walk-cycle sprite sheet for a stick figure with a head, torso, two arms, and two legs. Cycle should loop seamlessly.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+from PIL import Image, ImageDraw
+import math
+
+CELL = 96
+N_FRAMES = 6
+
+def render_walk_pose(frame, n=N_FRAMES):
+    img = Image.new('RGBA', (CELL, CELL), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    t = frame / n        # normalised phase in [0, 1)
+
+    # Body position — slight vertical bob with the walk rhythm
+    bob = int(2 * math.sin(t * 2 * math.pi))
+    cx = CELL // 2
+    cy = CELL // 2 + bob
+
+    # TODO 1: head — small circle centred at (cx, cy - 25)
+
+    # TODO 2: torso — vertical line from neck to hips
+
+    # TODO 3: arms — opposing swings
+    # arm_angle = math.sin(t * 2 * math.pi) * 0.6
+    # Left arm at angle +arm_angle, right arm at -arm_angle
+
+    # TODO 4: legs — opposing swings (90° out of phase from arms)
+    # leg_angle = math.sin((t + 0.5) * 2 * math.pi) * 0.6
+
+    return img
+
+sheet = Image.new('RGBA', (CELL * N_FRAMES, CELL))
+for i in range(N_FRAMES):
+    sheet.paste(render_walk_pose(i), (i * CELL, 0))
+sheet.save('walk_cycle.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — head and torso">
+
+```python
+draw.ellipse([cx - 8, cy - 33, cx + 8, cy - 17], fill=(60, 80, 110))  # head
+draw.line([(cx, cy - 17), (cx, cy + 10)], fill=(60, 80, 110), width=3)  # torso
+```
+
+Keep proportions: head about 1/5 of total height, torso a bit longer.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — opposing arms and legs">
+
+```python
+arm_angle = math.sin(t * 2 * math.pi) * 0.6
+# Right arm forward, left arm back, swapped each half-cycle
+rx = int(cx + math.sin(arm_angle) * 12)
+ry = int(cy + 5 + math.cos(arm_angle) * 12)
+draw.line([(cx, cy), (rx, ry)], fill=(60, 80, 110), width=3)
+
+lx = int(cx - math.sin(arm_angle) * 12)
+ly = int(cy + 5 + math.cos(arm_angle) * 12)
+draw.line([(cx, cy), (lx, ly)], fill=(60, 80, 110), width=3)
+```
+
+Arms swing in opposition. Legs do the same but 180° out of phase (`t + 0.5` instead of `t`).
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The reference implementation above plus the symmetric leg code produces a clean 6-frame walk cycle. For a smoother result, increase `N_FRAMES` to 8 and reduce the per-frame angle change.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Multiple characters.** Render a 4-row sheet: one row per character (e.g., the stick figure, an alien, a robot). Each row shares the same column-index meaning.
+- **Direction-aware.** Mirror the sheet horizontally to get a left-facing version. Toggle by flipping the cell with `cell.transpose(Image.FLIP_LEFT_RIGHT)`.
+- **CSS sprite icon.** Save a sheet of UI icons and reference them in CSS via `background-image: url(sheet.png); background-position: -96px 0;`. Same indexing logic, different render target.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.4_sprite_sheets/sprite_sheet.py" label="sprite_sheet.py — bouncing-ball sheet" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A sprite sheet stores all frames of an animation on a regular grid in a single image. Playback is integer arithmetic: `frame = sheet.crop((cell_index * CELL, 0, (cell_index + 1) * CELL, CELL))`. Pre-baking deformation into the sprite — squash on impact, stretch at peak — implements Disney's first animation principle without runtime physics; volume conservation means the squashed cell is wider by the same factor as it is shorter. The pattern has been the dominant 2D animation primitive since arcade hardware in the late 1970s and survives today as the texture atlas (game engines) and CSS sprite (web frontends).
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **Mismatched cell sizes.** All cells must be the same size, or your `crop` math will fall apart mid-sheet. Always allocate one canonical `CELL` constant.
+- **Identical first and last cells.** Causes a visible hiccup on every loop. End the sequence one step before returning to the start pose.
+- **No transparency.** Opaque sheet backgrounds break compositing over scene art. Use RGBA, save as PNG, keep alpha clean.
+- **Forgetting volume conservation.** Squash without stretch (or vice versa) reads as the object losing mass. Multiply factors to keep total visual area constant.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Loguidice, B., & Barton, M. (2014). *Vintage Game Consoles: An Inside Look at Apple, Atari, Commodore, Nintendo, and the Greatest Gaming Platforms of All Time*. CRC Press. ISBN 978-0-415-85610-0.</li>
+    <li><span class="tag">[2]</span> Thomas, F., & Johnston, O. (1981). *Disney Animation: The Illusion of Life*. Abbeville Press. ISBN 978-0-89659-232-4.</li>
+    <li><span class="tag">[3]</span> Hunt, S. (2014). *Atari, Inc.: Business Is Fun*. Syzygy Press. ISBN 978-0-9854679-2-3.</li>
+    <li><span class="tag">[4]</span> Akenine-Möller, T., Haines, E., Hoffman, N., Pesce, A., Iwanicki, M., & Hillaire, S. (2018). *Real-Time Rendering* (4th ed.). CRC Press. ISBN 978-1-138-62700-0.</li>
+    <li><span class="tag">[5]</span> Foley, J. D., van Dam, A., Feiner, S. K., & Hughes, J. F. (1990). *Computer Graphics: Principles and Practice* (2nd ed.). Addison-Wesley. ISBN 978-0-201-12110-0.</li>
+    <li><span class="tag">[6]</span> Cammarata, L. (2017). *Game Programming Patterns: Update Method*. <a href="https://gameprogrammingpatterns.com/update-method.html" target="_blank" rel="noopener">gameprogrammingpatterns.com</a></li>
+    <li><span class="tag">[7]</span> Lasseter, J. (1987). Principles of traditional animation applied to 3D computer animation. *Proceedings of SIGGRAPH '87*, 35–44. <a href="https://doi.org/10.1145/37402.37407" target="_blank" rel="noopener">doi:10.1145/37402.37407</a></li>
+  </ol>
+</section>

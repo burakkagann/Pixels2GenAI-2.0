@@ -1,0 +1,195 @@
+---
+module: "M 09"
+cycle: "II"
+title: "Overfitting / Underfitting"
+objective: "Fit polynomials of degree 1, 3, and 12 to noisy data and see the classic bias-variance trade-off. Degree 1 underfits — too rigid. Degree 12 overfits — memorises the noise. Degree 3 is just right."
+framework: "conceptual"
+duration: "25–30 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "9.1.1, basic regression"
+prev:
+  slug: "9.3.2"
+  title: "Gradient Descent"
+next:
+  slug: "9.4.1"
+  title: "DeepDream"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+*Why can a flexible model fit the training data perfectly and still perform terribly on new data?* Because there are *many* curves that fit any finite dataset; most of them are *wrong* about the underlying pattern. This is the core insight of statistical learning theory: a model's *capacity* (how flexible it is) trades against its ability to *generalise* (predict on data it hasn't seen) [1]. A linear model is too rigid (underfits); a 12-degree polynomial is too flexible (overfits); a 3-degree polynomial sits in the sweet spot. The same trade-off applies to neural networks — just with millions of parameters and far more subtle dynamics.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Fit polynomials of varying degree to noisy data and observe under-, well-, and overfitting.</li>
+  <li>Track *training* loss and *validation* loss separately; the gap is the overfitting signal.</li>
+  <li>Connect polynomial degree to neural-network *capacity* — width, depth, parameter count.</li>
+  <li>Recognise the three classical fixes — more data, regularisation, early stopping.</li>
+</ol>
+
+## Part 1 — The polynomial fit experiment <a id="part-1"></a>
+
+Generate noisy data from a sine function:
+
+```python
+import numpy as np
+rng = np.random.default_rng(42)
+x = np.linspace(0, 1, 12)
+y_true = np.sin(2 * np.pi * x)
+y = y_true + rng.normal(0, 0.18, size=x.shape)
+```
+
+Now fit polynomials of degree 1, 3, and 12 using `np.polyfit`:
+
+```python
+for deg in [1, 3, 12]:
+    coef = np.polyfit(x, y, deg)
+    y_fit = np.polyval(coef, np.linspace(0, 1, 200))
+```
+
+The results are striking:
+
+<Figure
+  src="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.3_overfitting_underfitting_demos/overfit_underfit.png"
+  alt="A three-panel comparison showing the same noisy data points fit by polynomials of degree 1, 3, and 12. The degree-1 fit is a straight line that misses the curve. The degree-3 fit smoothly follows the underlying sine wave. The degree-12 fit passes through every data point but oscillates wildly between them."
+  caption="Three polynomial fits of the same 12 data points. Degree 1 underfits (too rigid). Degree 3 captures the underlying sine. Degree 12 overfits (memorises noise)."
+  num={1}
+  role="output"
+/>
+
+The degree-12 polynomial passes through all 12 points exactly — it has enough parameters to do that. But between the points, it oscillates wildly. The model has *learned the noise*, not the signal [2].
+
+## Part 2 — Bias-variance trade-off <a id="part-2"></a>
+
+Statisticians decompose model error into two components:
+
+- **Bias** — error from oversimplifying. A linear model has high bias on a sinusoidal task because it can't represent the curve.
+- **Variance** — error from over-flexibility. A 12-degree polynomial has high variance because it changes wildly with small data changes.
+
+Total error = bias² + variance + irreducible noise.
+
+```
+underfit  → high bias,  low variance, high test error
+well fit  → low bias,   low variance, low test error
+overfit   → low bias,   high variance, high test error
+```
+
+The sweet spot minimises the sum. Modern deep learning complicates this story (some massively over-parameterised networks generalise *well*, the "double descent" phenomenon of Belkin et al. 2019 [3]), but the classical bias-variance picture is the foundation [1].
+
+## Part 3 — Diagnosing with train/validation loss <a id="part-3"></a>
+
+You cannot tell overfitting from the training loss alone — overfit models have *low* training loss. You need a *validation* set: data not used during training, used purely for evaluation.
+
+```python
+train_loss = mse(y_train_pred, y_train)
+val_loss   = mse(y_val_pred, y_val)
+```
+
+Plot both over training epochs:
+
+- **Underfitting** — both train and val loss are high. Model lacks capacity.
+- **Well-fit** — both losses are low and similar. Model has the right capacity.
+- **Overfitting** — train loss is low; val loss is high or rising. Model has memorised training data without generalising.
+
+<Admonition type="important">
+The **train-val gap** is the canonical overfitting metric. Gap = 0 means perfect generalisation; gap > 0 means the model has learned something specific to the training set that doesn't transfer. Watching this gap is the central skill of any practical ML engineer [4].
+</Admonition>
+
+<Admonition type="dyk" title="Technical note · double descent">
+Around 2019, several papers showed that *massively over-parameterised* neural networks — networks with far more parameters than data points — sometimes generalise *better* as you add more parameters, contradicting the bias-variance intuition. This phenomenon, called **double descent**, is one of the open theoretical puzzles in deep learning. The classical bias-variance trade-off remains correct for small models; it's the over-parameterised regime that breaks the picture [3].
+</Admonition>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Reproduce the three-panel fit">
+
+Run `polynomial_fits.py` from the downloads. It generates noisy sine data, fits polynomials of degrees 1, 3, and 12, and saves the three-panel plot.
+
+**Reflection questions**
+
+- The degree-1 fit has the highest training loss. Does that mean it generalises worst?
+- The degree-12 fit has the lowest training loss. Does that mean it generalises best?
+- What would happen if you trained on 100 noisy points instead of 12?
+
+<Dropdown summary="Answers">
+
+**Degree 1** — high training loss *and* high test loss. Linear can't capture the curve no matter the data; it's too rigid. Bad generalisation, but in a *consistent* way.
+
+**Degree 12** — lowest training loss, *worst* test loss. The model has memorised the training noise; new points (which have different noise) are predicted poorly. Best fit on the training set; worst out-of-sample.
+
+**More data** — overfitting shrinks because the model can't memorise 100 points the way it could memorise 12. The degree-12 polynomial would still overfit some, but the test error gap would narrow. *More data is the most reliable fix for overfitting* [4].
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="L2 regularisation rescue">
+
+Use *ridge regression* — `np.polyfit` doesn't support regularisation, but you can compute it directly. Add `λ ‖θ‖²` to the loss; this penalises large coefficients.
+
+**Goals**
+
+1. Fit degree-12 polynomial with `λ = 0` (no regularisation).
+2. Fit with `λ = 0.1`.
+3. Fit with `λ = 10`.
+
+Compare the resulting curves.
+
+<Dropdown summary="Implementation">
+
+```python
+def ridge_polyfit(x, y, deg, lam):
+    A = np.vander(x, deg + 1)
+    coef = np.linalg.solve(A.T @ A + lam * np.eye(deg + 1), A.T @ y)
+    return coef
+
+for lam in [0, 0.1, 10]:
+    coef = ridge_polyfit(x, y, 12, lam)
+    ys = np.polyval(coef, np.linspace(0, 1, 200))
+```
+
+- `λ = 0`: same wild oscillations as before.
+- `λ = 0.1`: somewhere between degree 3 and degree 12 in behaviour — a useful sweet spot.
+- `λ = 10`: heavily penalised; the curve flattens out toward a constant, becoming an effective low-degree fit.
+
+This is **weight decay** in neural networks: a single coefficient that controls model effective capacity.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Train/val curves during 'epoch' iteration">
+
+Polynomial fitting is one-shot, but you can simulate "epochs" by adding noise to the training data each step and re-fitting. Plot how train and val loss change as you increase the *effective* capacity.
+
+<Dropdown summary="Outcome">
+
+This mirrors the *training curve* shape of neural networks: train loss decreases monotonically; val loss decreases at first, then rises if the model is over-parameterised. The optimal stopping point is where val loss reaches its minimum — the **early stopping** technique [5].
+
+The exercise is a low-dimensional model of what really happens during neural-network training. The shapes are the same; only the parameter count differs.
+
+</Dropdown>
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.3_training_dynamics/9.3.3_overfitting_underfitting_demos/overfit_underfit.png" label="overfit_underfit.png — three-panel comparison" />
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning* (2nd ed.). Springer.</li>
+    <li><span class="tag">[2]</span> Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*. Springer.</li>
+    <li><span class="tag">[3]</span> Belkin, M., Hsu, D., Ma, S., & Mandal, S. (2019). Reconciling modern machine-learning practice and the classical bias–variance trade-off. *PNAS*, 116(32), 15849–15854.</li>
+    <li><span class="tag">[4]</span> Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.</li>
+    <li><span class="tag">[5]</span> Prechelt, L. (1998). Early stopping — But when? In *Neural Networks: Tricks of the Trade*, 55–69.</li>
+    <li><span class="tag">[6]</span> Vapnik, V. N. (1998). *Statistical Learning Theory*. Wiley.</li>
+  </ol>
+</section>

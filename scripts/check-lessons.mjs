@@ -7,7 +7,8 @@
  * ERRORS (break the site):
  *   - a `lessonSlug` in subtopics.ts with no matching MDX file
  *   - a `firstLesson` in modules.ts with no matching MDX file
- *   - an asset referenced by a lesson (/lessons/<slug>/…) missing from public/
+ *   - an asset referenced by a lesson (/lesson-media/…) missing from public/
+ *   - a legacy "/lessons/<id>/<file>" asset reference (pre-restructure form)
  *   - the same slug wired to more than one leaf
  *
  * WARNINGS (intentional in-progress states — never fail):
@@ -38,7 +39,7 @@ for (const leaf of allLeaves) {
   slugUsage.get(leaf.slug).push(`${leaf.mIdx}:${leaf.id}`);
   if (!leaf.hasFile) {
     errors.push(
-      `Leaf ${leaf.id} (M ${leaf.mIdx}) wires lessonSlug "${leaf.slug}" but src/content/lessons/${leaf.slug}.mdx does not exist.`
+      `Leaf ${leaf.id} (M ${leaf.mIdx}) wires lessonSlug "${leaf.slug}" but no MDX with that id exists under src/content/lessons/.`
     );
   }
 }
@@ -65,7 +66,7 @@ for (const m of view) {
   if (!m.firstLesson) continue;
   if (!lessonFilePath(m.firstLesson)) {
     errors.push(
-      `Module ${m.idx} firstLesson "${m.firstLesson}" has no MDX file at src/content/lessons/${m.firstLesson}.mdx.`
+      `Module ${m.idx} firstLesson "${m.firstLesson}" has no MDX file under src/content/lessons/.`
     );
   }
   const inModule = m.leaves.some((l) => l.slug === m.firstLesson);
@@ -77,7 +78,11 @@ for (const m of view) {
 }
 
 // 4. Asset references inside each shipped MDX must resolve under public/.
-const ASSET_RE = /(?:src|href)\s*=\s*["'](\/lessons\/[^"']+)["']/g;
+//    "/lessons/<id>" (no trailing path) is a page link; assets live under
+//    "/lesson-media/…". A "/lessons/<id>/<file>" form is a stale
+//    pre-restructure asset path and fails the build.
+const ASSET_RE = /(?:src|href)\s*=\s*["'](\/lesson-media\/[^"']+)["']/g;
+const LEGACY_ASSET_RE = /["'](\/lessons\/[^"']+\/[^"']+)["']/g;
 const LESSON_LINK_RE = /(?:src|href)\s*=\s*["']\/lessons\/([^/"']+)\/?["']/g;
 for (const slug of wiredSlugs) {
   const file = lessonFilePath(slug);
@@ -86,13 +91,14 @@ for (const slug of wiredSlugs) {
 
   for (const match of content.matchAll(ASSET_RE)) {
     const ref = match[1];
-    // A bare "/lessons/<slug>" with no file extension is an internal page link,
-    // not an asset — handled separately below.
-    if (/^\/lessons\/[^/]+\/?$/.test(ref)) continue;
     const abs = publicAssetPath(ref);
     if (!fs.existsSync(abs)) {
       errors.push(`Lesson "${slug}" references missing asset: ${ref}`);
     }
+  }
+
+  for (const match of content.matchAll(LEGACY_ASSET_RE)) {
+    errors.push(`Lesson "${slug}" uses a legacy asset path: ${match[1]} (assets now live under /lesson-media/).`);
   }
 
   for (const match of content.matchAll(LESSON_LINK_RE)) {

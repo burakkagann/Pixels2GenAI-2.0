@@ -1,0 +1,297 @@
+---
+module: "M 11"
+cycle: "II"
+title: "Blob Tracking"
+objective: "Find connected components in a binary mask, compute their centroids, assign persistent IDs by nearest-neighbour matching. Tracks survive across frames; identities stick."
+framework: "hands-on"
+duration: "25–30 min"
+level: "intermediate"
+prereqs: "11.2.1 (motion masks), basic Python data structures"
+prev:
+  slug: "11.2.1"
+  title: "Motion Detection"
+next:
+  slug: "11.2.3"
+  title: "Face Detection"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A motion mask (11.2.1) tells you *which pixels* are moving. To do anything useful — count people walking past, follow a hand around the screen, trigger sound when an object enters a region — you need to know *which blob* a given moving pixel belongs to, and you need to track the same blob across frames so it keeps the same identity from frame N to frame N+1.
+
+The pipeline has three stages: **connected-component analysis** to find disjoint blobs in the mask; **centroid calculation** to summarise each blob with a single position + area; and **track association** to match new-frame blobs to existing tracks. The third step is the interesting one — most production trackers handle disappearance, occlusion, and identity swaps with sophisticated rules. This lesson covers the simplest version: greedy nearest-neighbour matching with a distance threshold.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Find connected components in a binary mask using flood-fill or `cv2.findContours`.</li>
+  <li>Compute per-blob centroid (centre of mass) and area; reject too-small blobs as noise.</li>
+  <li>Associate new-frame centroids with existing tracks by greedy nearest-neighbour matching.</li>
+  <li>Render blobs with persistent IDs and motion trails — the canonical visualization for a multi-object tracker.</li>
+</ol>
+
+## Quick start — three-blob tracker <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+def associate(prev_tracks, new_centres, max_dist=80):
+    new_tracks, used = {}, set()
+    for tid, (px, py, _) in prev_tracks.items():
+        best, best_d = None, max_dist
+        for i, (nx, ny, _) in enumerate(new_centres):
+            if i in used: continue
+            d = math.hypot(nx - px, ny - py)
+            if d < best_d:
+                best, best_d = i, d
+        if best is not None:
+            new_tracks[tid] = new_centres[best]
+            used.add(best)
+
+    next_id = max(prev_tracks, default=-1) + 1
+    for i, c in enumerate(new_centres):
+        if i not in used:
+            new_tracks[next_id] = c
+            next_id += 1
+    return new_tracks
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking/blob_tracking.gif"
+  alt="An animated multi-object tracker showing three coloured discs moving along different paths against a dark background: a coral disc sweeps horizontally left to right, a blue disc orbits the centre in a circle, and a yellow disc moves diagonally from bottom-left to top-right. Each disc is circled with a coloured bounding ring labelled with its persistent ID, and trails of dots show each blob's recent path"
+  caption="Three blobs, three persistent IDs, three trails. Greedy nearest-neighbour matching keeps identities stable across the 90 frames."
+  num={1}
+  role="gif"
+/>
+
+<Admonition type="tip">
+The colours and IDs **persist across frames**. ID 0 is always the coral blob; ID 1 is always the blue blob. That persistence is what distinguishes "tracking" from "detection." Detection finds objects per-frame independently; tracking gives them stable identities across frames.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Connected components
+
+A binary mask is a 2D array of True/False values. A **connected component** is a maximal set of True pixels that are 4- or 8-connected (sharing an edge or a corner). Finding them: flood-fill from each unvisited True pixel, mark every reached pixel as visited, record the component:
+
+<CodeBlock lang="python" file="flood_fill.py">
+```python
+def find_components(mask):
+    h, w = mask.shape
+    visited = np.zeros_like(mask, dtype=bool)
+    blobs = []
+    for y in range(h):
+        for x in range(w):
+            if mask[y, x] and not visited[y, x]:
+                # BFS flood-fill
+                stack, xs, ys = [(y, x)], [], []
+                visited[y, x] = True
+                while stack:
+                    cy, cx = stack.pop()
+                    xs.append(cx); ys.append(cy)
+                    for dy, dx in [(-1,0),(1,0),(0,-1),(0,1)]:
+                        ny, nx = cy + dy, cx + dx
+                        if 0 <= ny < h and 0 <= nx < w and mask[ny, nx] and not visited[ny, nx]:
+                            visited[ny, nx] = True
+                            stack.append((ny, nx))
+                blobs.append((xs, ys))
+    return blobs
+```
+</CodeBlock>
+
+For production use, `cv2.connectedComponentsWithStats` does this in C++, returning labels + bounding boxes + centroids + areas in one call.
+
+### Concept 2 — Centroid and area
+
+For each blob, the **centroid** is the mean of its pixel coordinates; the **area** is the pixel count:
+
+`centroid_x = mean(xs); centroid_y = mean(ys); area = len(xs)`
+
+The centroid is a single point summary of the blob's position; the area filters noise (reject blobs smaller than some threshold). Together they're a 3-tuple `(cx, cy, area)` per blob — a compact representation small enough that you can transmit hundreds of blobs over a slow network or process thousands per frame.
+
+<Admonition type="dyk" title="Did you know · the centroid is also the centre of mass">
+For a uniform-density blob, the centroid coincides with the **centre of mass** — the point at which you could balance the blob on a pin. For non-uniform mass distribution (e.g., a person where the head is denser than the limbs), the centroid stays at the geometric centre. Production tracking systems sometimes weight pixels by intensity to compute a brightness-weighted centroid that biases toward the brightest part of the object [1].
+</Admonition>
+
+### Concept 3 — Track association
+
+Given the previous frame's tracks (a dict `id → (x, y, area)`) and the current frame's centroids (a list of `(x, y, area)`), the **association problem** is to decide which centroid corresponds to which track. The naive approach: for each existing track, find the nearest unused centroid within some max distance. Assign it the same ID. Unmatched centroids get new IDs; unmatched tracks are dropped (object left the scene).
+
+<CodeBlock lang="python" file="associate.py">
+```python
+def associate(prev_tracks, new_centres, max_dist=80):
+    new_tracks, used = {}, set()
+    for tid, (px, py, _) in prev_tracks.items():
+        best, best_d = None, max_dist
+        for i, (nx, ny, _) in enumerate(new_centres):
+            if i in used: continue
+            d = math.hypot(nx - px, ny - py)
+            if d < best_d:
+                best, best_d = i, d
+        if best is not None:
+            new_tracks[tid] = new_centres[best]
+            used.add(best)
+    # Assign new IDs to unmatched centres
+    next_id = max(prev_tracks, default=-1) + 1
+    for i, c in enumerate(new_centres):
+        if i not in used:
+            new_tracks[next_id] = c
+            next_id += 1
+    return new_tracks
+```
+</CodeBlock>
+
+The `max_dist` parameter is the safety net: if no centroid is closer than `max_dist`, the track is dropped. Without it, slow objects get assigned to far-away centroids when they briefly disappear. With it, the tracker correctly handles temporary occlusions.
+
+<Admonition type="important">
+Greedy nearest-neighbour fails when two blobs swap positions between frames — both will be assigned the wrong ID. Production trackers (SORT, DeepSORT, ByteTrack) solve this with the **Hungarian algorithm** for optimal global assignment, plus motion prediction with a Kalman filter [2, 3]. For most installation art, the greedy version here is good enough.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the demo, add trails, then implement track lifecycle.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the three-blob tracker">
+
+Run `blob_tracking.py`. Three blobs follow different paths; each gets a persistent ID.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking/blob_tracking.py" label="blob_tracking.py — multi-object tracker" />
+
+**Reflection questions**
+
+- What happens if the blue and yellow blobs cross paths?
+- The tracker uses `max_dist = 80`. What if a blob jumps further than that between frames?
+- Why does the coral blob always keep ID 0?
+
+<Dropdown summary="Answers">
+
+**Path crossings** — greedy nearest-neighbour gets confused: whichever blob is processed first claims the closer centroid; the second gets the other one. If they cross close enough, the IDs may swap and stay swapped. Hungarian algorithm + Kalman prediction would handle this correctly.
+
+**Jump farther than max_dist** — the tracker drops the old track and assigns a new ID. This is the expected behaviour for "object left and a new one entered." If your scenes have fast motion, increase `max_dist`.
+
+**Coral always ID 0** — the first blob found by the flood-fill scan (top-to-bottom, left-to-right) becomes ID 0. Subsequent frames keep the same ID because nearest-neighbour matches it to its previous position. The "first scanned" is always coral because it spends most of its time in the upper-left quadrant.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sweep tracker parameters">
+
+**Goals**
+
+1. **Tight matching.** Drop `max_dist` to 30. Blobs that move fast (the diagonal yellow one) will lose their IDs.
+2. **Loose matching.** Raise `max_dist` to 200. The tracker becomes too forgiving and may merge close blobs.
+3. **Drop small blobs.** Set the minimum area threshold from 25 to 200. Sub-200-pixel noise gets filtered out before tracking.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The yellow blob (diagonal sweep, fastest motion) keeps getting new IDs as the tracker fails to match it across frames. Reads as broken tracking.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+The tracker becomes too forgiving — if a new noise blob appears anywhere in the frame, it might get assigned to an existing track. False track merging.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Noise blobs are filtered out before reaching the tracker; only the three real blobs get IDs. Cleaner output but you lose ability to track small objects.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Add track lifecycle">
+
+Currently a track is created the moment a centroid appears with no nearby existing track. Add a **confirmation period**: a centroid must appear in 3 consecutive frames before getting a persistent ID. Symmetric: a track must miss 5 consecutive frames before being deleted.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+# track state: {'pos': (x, y, area), 'age': int, 'missed': int, 'confirmed': bool}
+
+def update_tracks(prev_tracks, new_centres, max_dist=80,
+                  confirm_age=3, max_missed=5):
+    # TODO 1: match new centres to existing tracks (same logic as before)
+
+    # TODO 2: for matched tracks: age += 1, missed = 0
+    #         if age >= confirm_age: confirmed = True
+
+    # TODO 3: for unmatched tracks: missed += 1
+    #         if missed > max_missed: delete
+
+    # TODO 4: for unmatched centres: create a new unconfirmed track with age=1
+    pass
+```
+</CodeBlock>
+
+<Dropdown summary="Hints">
+
+```python
+for tid in list(prev_tracks.keys()):
+    if tid in matched:
+        prev_tracks[tid]['pos'] = new_pos
+        prev_tracks[tid]['age'] += 1
+        prev_tracks[tid]['missed'] = 0
+        if prev_tracks[tid]['age'] >= confirm_age:
+            prev_tracks[tid]['confirmed'] = True
+    else:
+        prev_tracks[tid]['missed'] += 1
+        if prev_tracks[tid]['missed'] > max_missed:
+            del prev_tracks[tid]
+```
+
+Render only `confirmed` tracks. The result handles brief disappearances (Kalman prediction would do this better, but the missed-counter is the simplest workable version).
+
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+The lifecycle-aware tracker suppresses single-frame flicker and survives 5-frame occlusions. Production trackers like SORT [3] extend this with Kalman-filter position prediction during the missed frames — the track stays where the object was *expected* to be, not where it last was.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Per-blob colour.** Sample the blob's centroid colour from the original frame and use it as the bounding ring colour. The visualization becomes content-aware.
+- **Entry/exit logging.** Print "ID 5 entered" / "ID 5 exited" as tracks are created and destroyed. A line-counter (cross a defined line) gives you a "people walking past" counter.
+- **OpenCV's tracker API.** Replace this code with `cv2.legacy.MultiTracker_create()` + `cv2.legacy.TrackerKCF_create()`. KCF (Kernelized Correlation Filter) is faster and more robust than centroid matching.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.2_blob_tracking/blob_tracking.py" label="blob_tracking.py — multi-object tracker" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Blob tracking is connected-components + centroids + greedy nearest-neighbour association. The pipeline takes a binary mask (from 11.2.1's background subtraction) and outputs a dict of `id → (x, y, area)` that persists across frames. Track lifecycle — confirmation periods, miss counters — adds robustness against single-frame flicker. The greedy version handles installation-art needs; production systems use the Hungarian algorithm + Kalman filters for crowded scenes. Once you have tracks, downstream applications are trivial: count, log, trigger, visualise. The same pattern scales from 3 blobs to 100s with `cv2.connectedComponentsWithStats`.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- **No area threshold.** Single-pixel noise blobs get assigned IDs; you end up with hundreds of stub tracks.
+- **No max_dist.** Lost tracks get assigned to far-away centroids; identities scramble.
+- **Greedy where Hungarian is needed.** Crossing-path scenarios swap IDs. Step up to Hungarian if your scenes have crossings.
+- **No motion model.** Fast-moving objects between frames get dropped. Use Kalman prediction or increase max_dist.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer. ISBN 978-3-030-34371-2.</li>
+    <li><span class="tag">[2]</span> Kuhn, H. W. (1955). The Hungarian method for the assignment problem. *Naval Research Logistics Quarterly*, 2(1–2), 83–97. <a href="https://doi.org/10.1002/nav.3800020109" target="_blank" rel="noopener">doi:10.1002/nav.3800020109</a></li>
+    <li><span class="tag">[3]</span> Bewley, A., Ge, Z., Ott, L., Ramos, F., & Upcroft, B. (2016). Simple online and realtime tracking. *IEEE International Conference on Image Processing*, 3464–3468. <a href="https://doi.org/10.1109/ICIP.2016.7533003" target="_blank" rel="noopener">doi:10.1109/ICIP.2016.7533003</a></li>
+    <li><span class="tag">[4]</span> Wojke, N., Bewley, A., & Paulus, D. (2017). Simple online and realtime tracking with a deep association metric. *IEEE International Conference on Image Processing*, 3645–3649. <a href="https://doi.org/10.1109/ICIP.2017.8296962" target="_blank" rel="noopener">doi:10.1109/ICIP.2017.8296962</a></li>
+    <li><span class="tag">[5]</span> Zhang, Y., Sun, P., Jiang, Y., et al. (2022). ByteTrack: Multi-object tracking by associating every detection box. *European Conference on Computer Vision*, 1–21.</li>
+    <li><span class="tag">[6]</span> Kalman, R. E. (1960). A new approach to linear filtering and prediction problems. *Journal of Basic Engineering*, 82(1), 35–45. <a href="https://doi.org/10.1115/1.3662552" target="_blank" rel="noopener">doi:10.1115/1.3662552</a></li>
+    <li><span class="tag">[7]</span> Bradski, G., & Kaehler, A. (2008). *Learning OpenCV: Computer Vision with the OpenCV Library*. O'Reilly. ISBN 978-0-596-51613-0.</li>
+  </ol>
+</section>
