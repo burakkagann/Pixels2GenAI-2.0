@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
+import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/workshops';
 import '@/styles/workshops.css';
 
@@ -165,7 +166,7 @@ const next = UPCOMING_WORKSHOPS[0];
           <p>Date and venue TBA. One announcement email when it's confirmed.</p>
         </div>
         <div class="u-cta">
-          <a class="btn btn-pri" href="/workshops/signup">Register interest →</a>
+          <a class="btn btn-pri" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
           <span class="u-meta">No newsletter · single mail per workshop</span>
         </div>
       </div>
@@ -189,5 +190,6 @@ const next = UPCOMING_WORKSHOPS[0];
     </section>
   </main>
 
+  <AnnounceModal />
   <Footer />
 </Base>

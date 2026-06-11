@@ -1,0 +1,41 @@
+---
+// Full-page version of the announcements form — the no-JS fallback
+// behind every [data-announce] trigger, and the redirect target for
+// the retired /workshops/signup URL (see netlify.toml). Submits
+// natively to /announce/thanks. A tiny script pre-selects the topic
+// carried in ?topic=…; without JS the default "Both" stands.
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import AnnounceForm from '@/components/chrome/AnnounceForm.astro';
+import '@/styles/announce.css';
+---
+
+<Base
+  title="Announcements · Workshops & exhibitions"
+  description="Leave an email to be notified when the next Pixels2GenAI workshop or exhibition is confirmed. One announcement email per event, no newsletter."
+>
+  <main class="signup-page">
+    <span class="eyebrow">§ Announcements · Workshops &amp; exhibitions</span>
+    <h1>Hear about <em>the next one.</em></h1>
+    <p class="lede">
+      Workshops and exhibitions are announced once a date and a venue are
+      confirmed — one mail per event, no newsletter. Leave an email, choose
+      what you'd like to hear about, and we'll write only when there is
+      something to announce.
+    </p>
+
+    <AnnounceForm />
+  </main>
+
+  <Footer />
+</Base>
+
+<script>
+  const topic = new URLSearchParams(location.search).get('topic');
+  if (topic === 'workshops' || topic === 'exhibitions') {
+    const radio = document.querySelector<HTMLInputElement>(
+      `input[name="topics"][value="${topic}"]`
+    );
+    if (radio) radio.checked = true;
+  }
+</script>

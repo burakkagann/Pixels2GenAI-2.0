@@ -4,6 +4,7 @@ import Footer from '@/components/chrome/Footer.astro';
 import JourneyCube from '@/components/cube/JourneyCube.tsx';
 import WorkshopSpecimen from '@/components/workshops/WorkshopSpecimen.astro';
 import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
+import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 import { MODULES } from '@/data/modules';
 import { SUBTOPICS, countLeaves } from '@/data/subtopics';
 import { RQS, CYCLES } from '@/data/research';
@@ -73,8 +74,13 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       </div>
     </div>
 
-    <!-- CUBE — React island -->
-    <div>
+    <!-- CUBE — React island on an exhibit plate, captioned like a
+         manuscript figure. -->
+    <div class="cube-plate">
+      <div class="cube-caption">
+        <span class="fig-num">Fig. 0</span>
+        <span>The journey object · M 01 → M 12</span>
+      </div>
       <JourneyCube client:idle />
     </div>
   </header>
@@ -85,7 +91,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 1 · <span>Curriculum</span></div>
       <div>
         <h2 class="section-title">From pixels, <em>to inference.</em></h2>
-        <p class="section-desc">The curriculum is composed in three cycles. Each cycle holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. It's linear by design, but experienced programmers can start at a later cycle. Open a module to see its anatomy.</p>
+        <p class="section-desc">The curriculum is composed in three paths. Each path holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. It's linear by design, but experienced programmers can start at a later cycle. Open a module to see its anatomy.</p>
       </div>
     </div>
 
@@ -149,7 +155,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         <div class="station" id={`station-${cy.cycle}`} style={`--cycle: var(--${cy.cycle});`}>
           <div class="station-head">
             <div class="station-left">
-              <span class="station-label">Cycle {cyc}</span>
+              <span class="station-label">Path {cyc}</span>
               <h3 class="station-title">{cy.name}<em>.</em></h3>
               <p class="station-pitch">{cy.pitch}</p>
             </div>
@@ -399,7 +405,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
 
     <div class="workshops-archive">
       <div class="archive-head">
-        <span class="archive-org">P2GA · Workshop archive</span>
+        <span class="archive-org">Pixels2GenAI · Workshop archive</span>
         <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {UPCOMING_WORKSHOPS.length} in planning</span>
       </div>
 
@@ -414,19 +420,32 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 3 · <span>Exhibition</span></div>
       <div>
         <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
-        <p class="section-desc">A one-day exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis. Six artists working across printed and code-driven pieces. The archive begins below; the next exhibition is not yet scheduled.</p>
+        <p class="section-desc">A group exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis: six artists working across printed and code-driven pieces, several built directly from curriculum modules. The archive begins below; the next exhibition is not yet scheduled.</p>
       </div>
     </div>
 
     <div class="exhibitions-archive">
       <div class="exhibition-archive-head">
-        <span class="archive-org">P2GA · Exhibition archive</span>
+        <span class="archive-org">Pixels2GenAI · Exhibition archive</span>
         <span class="archive-count">▌ {String(PAST_EXHIBITIONS.length).padStart(2, '0')} completed</span>
       </div>
 
       {PAST_EXHIBITIONS.map(ex => <ExhibitionSpecimen exhibition={ex} defaultOpen={true} />)}
     </div>
   </section>
+
+  <script is:inline>
+    // Phone widths: the exhibition specimen starts closed — its open body
+    // (poster, case text, plate strip) costs several viewports of scroll.
+    // Progressive enhancement: without JS it simply stays open. The
+    // "In planning" workshop specimen stays open — it carries the
+    // Register CTA.
+    if (matchMedia('(max-width: 640px)').matches) {
+      document.querySelectorAll('.exhibition-specimen[open]').forEach((d) => {
+        d.removeAttribute('open');
+      });
+    }
+  </script>
 
   <!-- ========== RESEARCH ========== -->
   <section class="section" id="research">
@@ -463,5 +482,18 @@ const ALL_LEAVES = MODULES.flatMap(m =>
     </div>
   </section>
 
+  <!-- ========== ANNOUNCEMENTS — shared capture strip ==========
+       The site's one capture moment, directly above the footer.
+       Serves both archives; the CTA opens the AnnounceModal popup
+       (no-JS fallback: the /announce page). -->
+  <div class="announce-band" id="announcements">
+    <aside class="announce-strip" aria-label="Event announcements">
+      <span class="strip-eyebrow"><span class="dot" aria-hidden="true"></span>§ Announcements</span>
+      <p>One mail when the next workshop or exhibition is confirmed — no newsletter, nothing shared, opt out any time.</p>
+      <a class="btn btn-pri" href="/announce" data-announce data-topic="both">Leave your email →</a>
+    </aside>
+  </div>
+
+  <AnnounceModal />
   <Footer />
 </Base>

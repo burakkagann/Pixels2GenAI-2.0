@@ -1,0 +1,29 @@
+---
+// Confirmation page for the native (no-JS) POST from /announce.
+// The popup shows the same copy in place (.am-thanks) instead of
+// navigating here. Also the redirect target for the retired
+// /workshops/thanks URL (see netlify.toml).
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+import '@/styles/announce.css';
+---
+
+<Base
+  title="Thanks · Announcements"
+  description="Your details are on the announcements list. We'll email you when the next Pixels2GenAI workshop or exhibition has a date and a venue."
+>
+  <main class="thanks-page">
+    <span class="mark-pink" aria-hidden="true"></span>
+    <h1>Noted. <em>Thanks.</em></h1>
+    <p>
+      You're on the list. We'll email when the next workshop or exhibition
+      has a date and a venue — and only then. Announcements go out BCC;
+      reply to any of them and we'll take you off the list. In the
+      meantime, the curriculum lives at the home page; the pilot study
+      lives at <a href="/research">/research</a>.
+    </p>
+    <a class="btn btn-pri" href="/">Back to the site →</a>
+  </main>
+
+  <Footer />
+</Base>

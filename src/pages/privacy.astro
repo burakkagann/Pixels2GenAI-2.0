@@ -1,0 +1,240 @@
+---
+// Data-protection notice (GDPR Art. 13) for the announcements form —
+// the only place on the site that collects personal data. Linked from
+// the form's consent line and the footer. Visual register mirrors
+// /imprint (violet site accent, not studio pink — a legal page, not a
+// workshops/exhibitions brand moment).
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+---
+
+<Base
+  title="Privacy"
+  description="What personal data Pixels2GenAI stores, where, for how long, and how to have it removed. The announcements form is the only place on this site that collects personal data."
+>
+  <main class="privacy-page">
+    <article class="privacy">
+      <header class="privacy-head">
+        <div class="privacy-eyebrow">
+          <span class="dot" aria-hidden="true"></span>
+          <span>§ Privacy · Data protection</span>
+        </div>
+        <h1>Privacy <em>·</em> what we store, and why.</h1>
+        <p class="privacy-lede">
+          This site collects personal data in exactly one place: the
+          announcements form. This page describes what is stored, where,
+          for how long, and how to have it removed.
+        </p>
+      </header>
+
+      <section>
+        <h2>Controller</h2>
+        <p>
+          Burak Kağan Yılmazer ·
+          <a href="mailto:burak.kagan@protonmail.com">burak.kagan@protonmail.com</a>.
+          Postal address as stated in the <a href="/imprint">imprint</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>What we collect, and why</h2>
+        <p>
+          If you sign up for announcements, we store the email address you
+          provide, optionally your name, your topic choice (workshops,
+          exhibitions, or both), and any free-text note you leave. The sole
+          purpose is to send you one announcement email when a matching
+          event is confirmed. The legal basis is your consent
+          (Art. 6(1)(a) GDPR), given by submitting the form.
+        </p>
+      </section>
+
+      <section>
+        <h2>How announcements are sent</h2>
+        <p>
+          Announcement emails are sent manually, with all recipients in
+          BCC, so your address is never visible to other subscribers. There
+          is no newsletter, no automation, and no tracking in the emails.
+        </p>
+      </section>
+
+      <section>
+        <h2>Where the data lives</h2>
+        <p>
+          Form submissions are stored by our hosting provider,
+          <a href="https://www.netlify.com/privacy/" target="_blank" rel="noopener">
+            Netlify, Inc. <span class="arr">↗</span>
+          </a>
+          (San Francisco, USA), which processes them on our behalf as part
+          of its Forms service. Netlify participates in the EU–US Data
+          Privacy Framework. No other third party receives your data, and
+          we never share or sell it.
+        </p>
+      </section>
+
+      <section>
+        <h2>Retention</h2>
+        <p>
+          Your details stay on the list until you opt out or until the
+          announcements program ends, at which point the list is deleted.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your rights</h2>
+        <ul>
+          <li>
+            Opt out at any time — reply to any announcement, or email us;
+            we remove you promptly.
+          </li>
+          <li>
+            You may request access to, correction of, or deletion of your
+            data (Art. 15–17 GDPR).
+          </li>
+          <li>
+            You may withdraw consent at any time with effect for the
+            future (Art. 7(3) GDPR).
+          </li>
+          <li>
+            You may lodge a complaint with a supervisory authority
+            (Art. 77 GDPR).
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Everything else</h2>
+        <p>
+          The rest of the site is static. It sets a single localStorage
+          entry for your theme preference, fetches a star count from the
+          public GitHub API, and serves all fonts and assets from its own
+          domain. No analytics, no cookies, no embedded third-party
+          content.
+        </p>
+      </section>
+
+      <p class="privacy-foot">
+        Last revised June 2026 · Pixels2GenAI · Pressmark P2GA-r
+      </p>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .privacy-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px var(--pad-x) 96px;
+  }
+
+  .privacy-head {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+
+  .privacy-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 22px;
+  }
+
+  .privacy-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .privacy h1 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 48px);
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    margin: 0 0 24px;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+
+  .privacy h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .privacy-lede {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--fg);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .privacy section {
+    margin: 0 0 36px;
+  }
+
+  .privacy h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+    color: var(--fg);
+  }
+
+  .privacy p,
+  .privacy li {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--fg-2);
+    margin: 0 0 12px;
+    max-width: 62ch;
+  }
+
+  .privacy ul {
+    margin: 0 0 12px;
+    padding-left: 20px;
+  }
+
+  .privacy a {
+    color: var(--link, var(--accent));
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    transition: border-color .15s;
+  }
+
+  .privacy a:hover {
+    border-bottom-color: currentColor;
+  }
+
+  .privacy .arr {
+    font-size: 0.85em;
+    color: var(--fg-3);
+    margin-left: 2px;
+  }
+
+  .privacy-foot {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin: 48px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+</style>

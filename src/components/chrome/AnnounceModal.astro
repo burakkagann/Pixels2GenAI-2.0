@@ -1,0 +1,114 @@
+---
+/**
+ * Announcements popup — a native <dialog> on the same chassis as the
+ * /workshops gallery lightbox. Include once per page that has
+ * [data-announce] triggers (landing page, /workshops).
+ *
+ * Progressive enhancement: triggers are real links to
+ * /announce?topic=…; this component's script upgrades them to open
+ * the dialog instead and pre-selects the topic they carry in
+ * data-topic. Without JS the links navigate to the full-page form.
+ *
+ * Submission is a Netlify AJAX post (fetch to "/", url-encoded, with
+ * form-name) so the dialog can swap to an in-place thanks state
+ * instead of navigating. On failure an inline error appears and the
+ * typed data is kept. Styles: src/styles/announce.css.
+ */
+import AnnounceForm from '@/components/chrome/AnnounceForm.astro';
+import '@/styles/announce.css';
+---
+
+<dialog class="announce-modal" id="announce-modal" aria-labelledby="announce-modal-title">
+  <button type="button" class="am-close" aria-label="Close">×</button>
+  <div class="am-inner">
+    <div class="am-form-view">
+      <span class="eyebrow">§ Announcements · Workshops &amp; exhibitions</span>
+      <h2 id="announce-modal-title">Hear about <em>the next one.</em></h2>
+      <p class="lede">
+        Events are announced once a date and a venue are confirmed — one
+        mail per event, no newsletter. We write only when there is
+        something to announce.
+      </p>
+      <AnnounceForm autofocus={true} />
+    </div>
+
+    <div class="am-thanks" role="status" hidden>
+      <span class="mark-pink" aria-hidden="true"></span>
+      <h2>Noted. <em>Thanks.</em></h2>
+      <p>
+        You're on the list. We'll email when the next workshop or
+        exhibition has a date and a venue — and only then. Reply to any
+        announcement and we'll take you off the list.
+      </p>
+      <button type="button" class="btn btn-pri am-done">Back to the page →</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('announce-modal') as HTMLDialogElement | null;
+  const form = dlg?.querySelector('form') as HTMLFormElement | null;
+
+  if (dlg && form) {
+    const formView = dlg.querySelector('.am-form-view') as HTMLElement;
+    const thanksView = dlg.querySelector('.am-thanks') as HTMLElement;
+    const errorNote = dlg.querySelector('.am-error') as HTMLElement;
+
+    // Upgrade every trigger link on the page into a popup opener.
+    document.querySelectorAll<HTMLElement>('[data-announce]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const topic = el.dataset.topic ?? 'both';
+        const radio = dlg.querySelector<HTMLInputElement>(
+          `input[name="topics"][value="${topic}"]`
+        );
+        if (radio) radio.checked = true;
+        formView.hidden = false;
+        thanksView.hidden = true;
+        errorNote.hidden = true;
+        dlg.showModal();
+      });
+    });
+
+    dlg.querySelector('.am-close')?.addEventListener('click', () => dlg.close());
+    dlg.querySelector('.am-done')?.addEventListener('click', () => dlg.close());
+
+    // Click on the backdrop (outside the inner panel) closes — same
+    // logic as the /workshops gallery lightbox.
+    dlg.addEventListener('click', (e) => {
+      const inner = dlg.querySelector('.am-inner');
+      if (!inner) return;
+      const r = inner.getBoundingClientRect();
+      const x = (e as MouseEvent).clientX;
+      const y = (e as MouseEvent).clientY;
+      const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+      if (!inside) dlg.close();
+    });
+
+    // Netlify AJAX submission — POST url-encoded to a page that
+    // contains the form; form-name routes it to "announcements".
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorNote.hidden = true;
+      const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const body = new URLSearchParams();
+        new FormData(form).forEach((value, key) => body.append(key, String(value)));
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!res.ok) throw new Error(`Netlify form post failed: ${res.status}`);
+        formView.hidden = true;
+        thanksView.hidden = false;
+        form.reset();
+      } catch {
+        errorNote.hidden = false;
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+</script>

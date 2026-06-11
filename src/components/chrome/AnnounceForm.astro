@@ -1,0 +1,75 @@
+---
+/**
+ * The shared announcements capture form (Netlify Forms,
+ * name="announcements"). Rendered in two places:
+ *
+ *   - inside AnnounceModal.astro (the popup; submits via fetch as a
+ *     Netlify AJAX post, pass autofocus so the email field receives
+ *     focus when the dialog opens)
+ *   - on /announce (the no-JS fallback page; submits natively, the
+ *     POST action lands on /announce/thanks)
+ *
+ * Netlify detects the form from the static HTML at deploy time —
+ * data-netlify + the hidden form-name input are load-bearing, as is
+ * the honeypot. The topic radio defaults to "Both" so the field is
+ * always valid without JS; triggers pre-select a specific topic.
+ * Styles live in src/styles/announce.css (.signup-form).
+ */
+interface Props {
+  autofocus?: boolean;
+}
+
+const { autofocus = false } = Astro.props;
+---
+
+<form
+  name="announcements"
+  method="POST"
+  action="/announce/thanks"
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+  class="signup-form"
+>
+  <input type="hidden" name="form-name" value="announcements" />
+  <p class="honeypot">
+    <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+  </p>
+
+  <label>
+    Email <span class="req">*</span>
+    <input type="email" name="email" required autocomplete="email" autofocus={autofocus} />
+  </label>
+
+  <label>
+    Name <span class="opt">— optional</span>
+    <input type="text" name="name" autocomplete="name" />
+  </label>
+
+  <fieldset>
+    <legend>Announce to me</legend>
+    <div class="topic-options">
+      <label><input type="radio" name="topics" value="workshops" /> Workshops</label>
+      <label><input type="radio" name="topics" value="exhibitions" /> Exhibitions</label>
+      <label><input type="radio" name="topics" value="both" checked /> Both</label>
+    </div>
+  </fieldset>
+
+  <label>
+    What would you hope the next one covers? <span class="opt">— optional</span>
+    <textarea name="interests" rows="3" placeholder="One or two sentences. For workshops, this genuinely shapes the module selection."></textarea>
+  </label>
+
+  <p class="am-error" role="alert" hidden>
+    Sending failed — please try again, or use the plain form at <a href="/announce">/announce</a>.
+  </p>
+
+  <div class="submit-row">
+    <button type="submit" class="btn btn-pri">Add me to the list →</button>
+    <p class="privacy">
+      By submitting you agree that we store these details to send you
+      event announcements — nothing else. One mail per event, sent BCC,
+      never shared. Reply to any announcement to opt out. Details in the
+      <a href="/privacy">privacy note</a>.
+    </p>
+  </div>
+</form>

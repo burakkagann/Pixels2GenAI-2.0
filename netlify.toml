@@ -5,6 +5,20 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Legacy workshop-only signup URLs — superseded by the shared
+# announcements capture (one Netlify form serving workshops AND
+# exhibitions). Old submissions remain in the dashboard under the
+# retired "workshop-interest" form.
+[[redirects]]
+  from = "/workshops/signup"
+  to = "/announce"
+  status = 301
+
+[[redirects]]
+  from = "/workshops/thanks"
+  to = "/announce/thanks"
+  status = 301
+
 # Security headers applied site-wide. CSP is intentionally deferred until
 # fonts are self-hosted and inline-script hashes can be enumerated.
 [[headers]]
