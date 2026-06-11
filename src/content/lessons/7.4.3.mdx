@@ -1,0 +1,172 @@
+---
+module: "M 07"
+cycle: "II"
+title: "Hidden Markov Models — Inference from Noisy Observations"
+objective: "Reveal the hidden state of a Markov chain when you only observe a noisy emission. The Viterbi algorithm recovers the most likely hidden trajectory in O(T·N²) — the canonical example of dynamic programming on a sequence."
+framework: "conceptual"
+duration: "32–38 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "7.4.2 (Markov chains), basic probability"
+prev:
+  slug: "7.4.2"
+  title: "Markov Chains"
+next: null
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *what if the state you care about is hidden?* <a id="big-question"></a>
+
+In 1966, Leonard Baum and colleagues at the Institute for Defense Analyses were studying systems where you do *not* get to observe the underlying state — only a noisy signal that depends on it [1]. A weather satellite cannot directly measure pressure systems, but it can measure cloud cover. A speech recogniser cannot see what phoneme was uttered, only what acoustic wave reached the microphone. A genome annotator cannot see whether a region is a gene, only the nucleotide sequence. They formalised the framework as a **Hidden Markov Model**: a Markov chain over hidden states, plus a per-state emission distribution that produces the observations you actually see. Three classic algorithms — Forward, Viterbi, Baum-Welch — then solve the three questions: *how likely was this observation sequence? what hidden states most likely produced it? how do I learn the model from observations alone?* [2]
+
+<Figure
+  src="/lessons/7.4.3/hmm_sequence.png"
+  alt="Three-row horizontal strip plot showing 60 timesteps of an HMM trajectory. The top row is the true hidden weather state (yellow Sunny, grey Cloudy, blue Rainy). The middle row is the Viterbi-recovered state from observations alone. The bottom row shows the observations (W=Walk, S=Shop, C=Clean). Pink outlines mark timesteps where Viterbi disagrees with truth."
+  caption="HMM in action. Top: true weather sequence (hidden in real life). Middle: Viterbi-recovered sequence from observations alone. Bottom: the observations themselves. Most steps agree; pink-outlined ones are recovery errors."
+  num={1}
+  role="output"
+/>
+
+HMMs dominated speech recognition from 1975 to 2010, when deep RNNs took over for that specific task. They remain the standard model for biological sequence analysis (genes, proteins), for parts-of-speech tagging in low-resource languages, and for many time-series segmentation problems. The conceptual move — *infer hidden states from noisy observations* — recurs everywhere: Kalman filters do the same thing for continuous states, and modern state-space models like S4 and Mamba are continuous-state generalisations of HMMs.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Define an HMM as `(start_prob, transition, emission)` — a Markov chain on hidden states plus a per-state observation distribution.</li>
+  <li>Apply the **Viterbi algorithm** — dynamic programming over `(time × state)` — to find the most likely hidden trajectory given observations.</li>
+  <li>Recognise that Viterbi is *not* the same as picking the most likely state at each timestep independently. The chain's transitions constrain the path.</li>
+  <li>Locate Viterbi as the canonical example of dynamic programming on a sequence — and recognise its cousins (CTC for speech, beam search for translation).</li>
+</ol>
+
+## Part 1 — The three ingredients <a id="part-1"></a>
+
+An HMM is fully specified by three pieces:
+
+- **Start probability** `π` over hidden states. Shape: `(N,)`.
+- **Transition matrix** `A`. `A[i, j]` is the probability that hidden state `i` transitions to hidden state `j`. Shape: `(N, N)`. Same role as in a standard Markov chain.
+- **Emission matrix** `B`. `B[i, k]` is the probability that hidden state `i` emits observation `k`. Shape: `(N, K)` for discrete observations; a Gaussian or any other parametric distribution for continuous observations.
+
+<Figure
+  src="/lessons/7.4.3/hmm_emission.png"
+  alt="A 3x3 matrix coloured by magma colormap with numerical probability values overlaid in white. Rows: Sunny, Cloudy, Rainy. Columns: Walk, Shop, Clean. Diagonal is bright (Sunny→Walk=0.75, Cloudy→Shop=0.65, Rainy→Clean=0.75)."
+  caption="Emission matrix of the weather HMM. The diagonal is brightest — each hidden state most often produces its 'matching' observation — but the off-diagonals are nonzero, so observations are ambiguous about the hidden state."
+  num={2}
+  role="diagram"
+/>
+
+The emission matrix is what makes the model *hidden*. If it were the identity (each state emits its own label), the model degenerates to a regular Markov chain and there is nothing to recover. The off-diagonals are the ambiguity that Viterbi must overcome.
+
+<Admonition type="dyk" title="Did you know? · DARPA and the speech-recognition decade">
+HMMs entered widespread use after the DARPA-funded Speech Understanding Research project (1971–1976), which set the goal of "100-word vocabulary, 90% accuracy" — and largely missed it. The follow-up work at IBM, Bell Labs, and CMU through the 1980s and 1990s reframed speech as an HMM problem, and the technology behind Dragon NaturallySpeaking (1997) and the first commercial Siri (2011) was still HMM-Gaussian-mixture-based [2].
+</Admonition>
+
+## Part 2 — The Viterbi algorithm: DP on a trellis <a id="part-2"></a>
+
+Given an HMM and an observation sequence `o₁, o₂, ..., o_T`, the **Viterbi algorithm** finds the hidden state sequence `s₁, s₂, ..., s_T` that maximises `P(s, o)`. The naive approach (try all `N^T` possible state sequences) is infeasible for any real `T`; Viterbi solves it in `O(T · N²)` by dynamic programming.
+
+The DP state: `δ[t, j]` = log-probability of the most likely state sequence ending in state `j` at time `t`, given the observations up to time `t`.
+
+`δ[t, j] = max_i (δ[t-1, i] + log A[i, j]) + log B[j, o_t]`
+
+The recurrence picks the best predecessor `i` for each `(t, j)`. Store the argmax in a backpointer matrix `ψ[t, j]`. At the end, find the best terminal state, then backtrack through `ψ` to reconstruct the sequence.
+
+<CodeBlock lang="python" file="viterbi_demo.py">
+```python
+def viterbi(obs, start_prob, transition, emission):
+    T, N = len(obs), len(start_prob)
+    delta = np.full((T, N), -np.inf)
+    psi = np.zeros((T, N), dtype=int)
+    delta[0] = np.log(start_prob) + np.log(emission[:, obs[0]])
+    for t in range(1, T):
+        for j in range(N):
+            scores = delta[t - 1] + np.log(transition[:, j])
+            psi[t, j] = scores.argmax()
+            delta[t, j] = scores.max() + np.log(emission[j, obs[t]])
+    path = np.zeros(T, dtype=int)
+    path[-1] = delta[-1].argmax()
+    for t in range(T - 2, -1, -1):
+        path[t] = psi[t + 1, path[t + 1]]
+    return path
+```
+</CodeBlock>
+
+That is the whole algorithm — 15 lines. The log-domain is essential numerically (probabilities for long sequences underflow fast); transition and emission rows must sum to 1; backtracking is what links the forward pass to a concrete state sequence [3].
+
+<Admonition type="important">
+**Viterbi is not the same as picking the most likely state at each timestep.** A greedy state-by-state argmax ignores the transition matrix's constraints. If state A almost never transitions to state B, but observation B is *slightly* more likely at time `t` given state B, greedy decoding picks B and produces an unrealistic transition. Viterbi balances *both* emission and transition likelihoods.
+</Admonition>
+
+## Part 3 — The other two HMM questions <a id="part-3"></a>
+
+Viterbi answers "what hidden states most likely produced these observations?" Two related questions are usually answered together:
+
+**Q2 — How likely is this observation sequence?** Use the **Forward algorithm** — same DP structure as Viterbi but with `sum` instead of `max`. Returns `P(observations | model)`. Used for scoring models against data; used inside Baum-Welch for the E-step.
+
+**Q3 — How do I learn the HMM parameters from observations alone, without any hidden-state labels?** Use the **Baum-Welch algorithm**, a specialisation of Expectation-Maximisation. The E-step computes posterior probabilities over hidden states (Forward-Backward); the M-step updates the transition and emission matrices from the soft counts. Repeat until convergence. This is how HMMs are trained in practice [3].
+
+In our demo, the model parameters are *given* (chosen to look like weather dynamics) and we test Viterbi recovery. A real speech-recognition system would build the HMM from transcribed audio data via Baum-Welch.
+
+<Admonition type="note">
+Viterbi recovery accuracy on the weather HMM is around 65% — substantially better than chance (33%) but far from perfect. The reason: the emission matrix has nonzero off-diagonals. Even with perfect Viterbi decoding, observations are sometimes simply ambiguous (someone went for a walk on a cloudy day) and no algorithm can recover the true hidden state from one observation. The recovery improves with sharper emissions (more diagonal) or with longer context windows that let the transition structure constrain ambiguous observations.
+</Admonition>
+
+## Synthesis project — weather-from-activity inference <a id="synthesis"></a>
+
+Build a 3-state HMM where the hidden states are weather modes (Sunny, Cloudy, Rainy), the emissions are activity choices (Walk, Shop, Clean), and run Viterbi to recover the weather from the activity stream alone.
+
+<Download href="/lessons/7.4.3/hmm_demo.py" label="hmm_demo.py — full reference (sample + Viterbi + accuracy)" />
+<Download href="/lessons/7.4.3/hmm_starter.py" label="hmm_starter.py — implement Viterbi from scratch" />
+
+**Reflection questions**
+
+- Viterbi recovers about 65% of the hidden states. With perfect decoding what's the upper limit, and why?
+- Why is greedy per-timestep decoding (argmax over emissions only) usually worse than Viterbi?
+- Suppose the transition matrix is identity (states never change). What does the HMM degenerate into?
+
+<Dropdown summary="Answers">
+
+**Upper limit** — even an oracle who knows the model perfectly cannot disambiguate observations that have similar likelihood under different hidden states. With our emission matrix, a "Walk" observation is 75% Sunny, 15% Cloudy, 5% Rainy — Viterbi will pick Sunny, but 20% of the time the true state is Cloudy or Rainy. The Bayes-optimal accuracy depends on the marginal distribution over states and the emission ambiguity; it can be computed but is bounded well below 100%.
+
+**Greedy vs Viterbi** — greedy ignores the transition matrix's constraint that "Sunny rarely follows Rainy" or whatever. It will happily flip between distant states if local observations support it. Viterbi accounts for transition costs and produces sequences that *look like* sequences from the chain — temporal coherence emerges from the structure.
+
+**Identity transition** — every state stays itself forever. The HMM degenerates into a fixed distribution over states, sampled once at `t=0`, with all subsequent observations drawn independently from that state's emission distribution. There is no temporal structure left to recover; the model collapses to a mixture model (lesson 7.1.1 sense), and Baum-Welch would converge to a Gaussian Mixture Model fit.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Continuous emissions**: replace the discrete emission matrix with a Gaussian per state. Now the model is a Gaussian HMM — the actual structure used in speech recognition. `sklearn` does not have HMMs natively; install `hmmlearn`.
+- **Baum-Welch**: implement the EM algorithm to learn the transition and emission matrices from observations alone (no hidden-state labels). This is the canonical HMM exercise and surprisingly small.
+- **Part-of-speech tagging**: train an HMM on a tagged corpus (Penn Treebank) where hidden states are POS tags (noun, verb, adjective) and observations are words. Viterbi-decode new sentences to tag them.
+- **Modern context**: read about Mamba / S4 state-space models. They are continuous-state generalisations of HMMs that use convolutional kernels for the transition structure. The conceptual lineage is direct.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+A Hidden Markov Model is a Markov chain over hidden states plus per-state emission distributions over observations. Three questions, three algorithms: **scoring** (Forward), **decoding** (Viterbi), **learning** (Baum-Welch/EM). Viterbi is the canonical dynamic-programming algorithm on a `(time × state)` trellis with `O(T·N²)` complexity. The hidden-state framework generalises far beyond discrete states: Kalman filters do the continuous-state version, particle filters approximate continuous-state Bayesian inference by Monte Carlo, and Mamba/S4 are the modern deep-learning successors. From speech recognition to genome annotation to financial regime detection, the same architecture recurs.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Working in raw probabilities instead of log-probabilities. Long sequences underflow within 50 timesteps.
+- Forgetting to backtrack. Forward DP gives you the best terminal-state probability but not the best path.
+- Comparing Viterbi accuracy on different HMMs without controlling for emission ambiguity. The model determines the ceiling.
+- Treating Viterbi like a classifier. It produces *sequences*; evaluating it pointwise hides its structural strengths.
+- Using HMMs on data with very long-range dependencies. The Markov assumption fails; switch to RNNs, Transformers, or state-space models.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Baum, L. E., & Petrie, T. (1966). Statistical inference for probabilistic functions of finite state Markov chains. *Annals of Mathematical Statistics*, 37(6), 1554–1563. <a href="https://doi.org/10.1214/aoms/1177699147" target="_blank" rel="noopener">doi:10.1214/aoms/1177699147</a></li>
+    <li><span class="tag">[2]</span> Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition. *Proceedings of the IEEE*, 77(2), 257–286. <a href="https://doi.org/10.1109/5.18626" target="_blank" rel="noopener">doi:10.1109/5.18626</a></li>
+    <li><span class="tag">[3]</span> Viterbi, A. J. (1967). Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. *IEEE Transactions on Information Theory*, 13(2), 260–269. <a href="https://doi.org/10.1109/TIT.1967.1054010" target="_blank" rel="noopener">doi:10.1109/TIT.1967.1054010</a></li>
+    <li><span class="tag">[4]</span> Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*, Chapter 13: Sequential Data. Springer.</li>
+    <li><span class="tag">[5]</span> Durbin, R., Eddy, S. R., Krogh, A., & Mitchison, G. (1998). *Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids*. Cambridge University Press.</li>
+    <li><span class="tag">[6]</span> Gu, A., & Dao, T. (2024). Mamba: Linear-time sequence modeling with selective state spaces. *arXiv*. <a href="https://arxiv.org/abs/2312.00752" target="_blank" rel="noopener">arxiv.org/abs/2312.00752</a></li>
+  </ol>
+</section>

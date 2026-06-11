@@ -1,0 +1,158 @@
+---
+module: "M 07"
+cycle: "II"
+title: "Mean-Shift — Finding Modes Without Knowing K"
+objective: "Drop K-Means' biggest assumption: you no longer need to know how many clusters there are. Mean-Shift discovers them by climbing density gradients from every starting point until the climbs converge into a small number of modes."
+framework: "conceptual"
+duration: "30–36 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "7.1.1 (K-Means), NumPy broadcasting"
+prev:
+  slug: "7.1.1"
+  title: "K-Means Clustering"
+next:
+  slug: "7.1.3"
+  title: "DBSCAN Pattern Detection"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *what if you don't know K in advance?* <a id="big-question"></a>
+
+K-Means' single biggest weakness is that you must pre-commit to the number of clusters. In a colour-quantisation context you might *want* K=6, but in pattern detection — "how many distinct cell types are in this microscope slide?" — picking K up front is exactly the question you wanted the algorithm to answer. **Mean-Shift** removes that requirement. Developed by Fukunaga & Hostetler in 1975 [1] and popularised for image segmentation by Comaniciu & Meer in 2002 [2], it asks: *where in feature space is the density highest?* The number of *density modes* is the natural cluster count. Every point belongs to the mode it reaches by climbing the density gradient. No K, no centroids picked at random, no Voronoi cells with straight edges.
+
+<Figure
+  src="/lessons/7.1.2/meanshift_panel.png"
+  alt="Side-by-side comparison of a noisy synthetic image with three coloured blobs (left) and the Mean-Shift segmented output (right) showing three flat regions"
+  caption="Mean-Shift segmentation. The algorithm discovered three density modes in 5D (R, G, B, x, y) feature space — without being told there are three. The output replaces every pixel with its mode's colour."
+  num={1}
+  role="output"
+/>
+
+The cost: Mean-Shift is `O(n²)` per iteration (every point looks at every other point inside its window) and has *one* critical hyperparameter — the **bandwidth** — that does most of the work K used to do. Bandwidth controls the spatial scale at which "density" is measured. Pick it small and every point becomes its own cluster; pick it large and the whole image collapses to one mode. Heuristics like `estimate_bandwidth` exist but are not magic; understanding what bandwidth *is* matters as much as understanding the algorithm.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Reformulate clustering as *density-mode finding* — every cluster is a local maximum of the data density.</li>
+  <li>Implement one Mean-Shift step as "replace this point with the mean of its neighbours inside a window of radius `bandwidth`."</li>
+  <li>Understand bandwidth as the only structural hyperparameter and recognise its dual role: too small fragments, too large under-segments.</li>
+  <li>Use a 5D feature space (R, G, B, x, y) so spatial proximity affects clustering — the basis of image segmentation rather than colour quantisation.</li>
+</ol>
+
+## Part 1 — Clusters as modes of a density function <a id="part-1"></a>
+
+In K-Means, a cluster is defined by its centroid — pick the centroids first, then the clusters fall out. In Mean-Shift, a cluster is defined by where its members **end up** if they each independently follow the density gradient. Mathematically, the **probability density** of the data, estimated by a kernel density estimator, has a few peaks (modes); every point eventually climbs to one peak; the set of peaks is the set of clusters.
+
+For an RGB image: imagine the cloud of pixels in RGB space. A photograph of a sunset has dense regions where the orange-and-purple sky lives, with sparse regions in between. The dense regions are *modes*; the sparse regions are *valleys*. Mean-Shift starts a "climber" at every pixel position and lets each climb to the local mode by repeatedly stepping toward the centre of mass of nearby points. When all climbers stop moving, count the distinct stopping points — that is K.
+
+<Admonition type="dyk" title="Did you know? · Mean-Shift in tracking">
+The 2003 CVPR paper "Real-time tracking of non-rigid objects" by Comaniciu et al. used Mean-Shift to track a moving target in video [2]. The "cluster" was the pixel distribution of the target's appearance; the "mode" moved with the target. This algorithm shipped in commercial security cameras within a year — Mean-Shift is one of the very few ML algorithms whose theoretical paper led directly to a hardware product.
+</Admonition>
+
+## Part 2 — One step of Mean-Shift <a id="part-2"></a>
+
+The core operation is unbelievably simple:
+
+<CodeBlock lang="python" file="step_demo.py">
+```python
+def mean_shift_step(seed, points, bandwidth):
+    dist = np.linalg.norm(points - seed, axis=-1)
+    in_window = points[dist < bandwidth]
+    return in_window.mean(axis=0) if len(in_window) else seed
+```
+</CodeBlock>
+
+That is the algorithm. Pick a window (the "kernel") of radius `bandwidth` around the seed; replace the seed with the mean of all points inside the window; repeat. Each replacement is a small step in the direction of the local density gradient. After 10–30 iterations most seeds have stopped moving — they have reached a mode.
+
+The choice of kernel shape — flat window above, or Gaussian, or Epanechnikov — affects convergence speed but rarely changes the modes. The bandwidth, by contrast, controls everything.
+
+<CodeBlock lang="python" file="full_loop_demo.py">
+```python
+seeds = pixels.copy()                       # start a climber at every pixel
+for _ in range(NUM_ITERS):
+    for i, s in enumerate(seeds):
+        seeds[i] = mean_shift_step(s, pixels, bandwidth)
+# `seeds` has now converged to a small number of distinct points — the modes
+```
+</CodeBlock>
+
+In practice, doing this for every one of 100,000 pixels is `O(n² × iterations)` and prohibitively expensive on real images. sklearn's `MeanShift` fits on a *sub-sample* of points and then snaps every full-image pixel to its nearest converged centroid — the trick we used in [`meanshift_segment.py`](/lessons/7.1.2/meanshift_segment.py).
+
+<Admonition type="important">
+The convergence proof is subtle but reassuring: Mean-Shift is a gradient-ascent algorithm on the kernel density estimate. Under mild conditions (kernel must be convex and monotonic) the iterations are guaranteed to converge to a stationary point of the density [2]. Saddle points are possible but rare in practice.
+</Admonition>
+
+## Part 3 — Bandwidth is the new K <a id="part-3"></a>
+
+Mean-Shift has no `n_clusters` parameter. It has `bandwidth`, which silently sets the cluster count by determining what "nearby" means. The intuition:
+
+- **Bandwidth too small** — each climber only sees a handful of other points. Most climbers stop almost immediately at the nearest tiny density bump. You get a different mode for every cluster of two or three pixels: thousands of "modes", over-segmentation.
+- **Bandwidth too large** — every climber sees every other point. The mean of all points is one big centre of mass. The whole image collapses to one mode: under-segmentation.
+- **Bandwidth in the sweet spot** — the kernel is wide enough to bridge small density wells but narrow enough to keep distinct populations apart. The mode count matches the natural cluster count.
+
+Picking bandwidth is normally done by `sklearn.cluster.estimate_bandwidth`, which uses a heuristic based on the average pairwise distance of a sub-sample. The heuristic has a `quantile` parameter — roughly "what fraction of pairwise distances should be inside the window?" — and tuning it is most of the practical work. In our synthetic 3-blob example, `quantile=0.06` gave 11 modes (too small), `quantile=0.12` gave 2 modes (too large), and a hand-picked `bandwidth=50` produced the desired 3.
+
+<Admonition type="note">
+A useful heuristic when working on images: bandwidth in RGB-space units should be around the **just-noticeable colour difference** between regions you want to keep distinct. If the foreground object differs from the background by ΔE ≈ 40 in CIELAB, set bandwidth to 30–40 in colour-only Mean-Shift. The visual world's perceptual structure constrains the algorithm.
+</Admonition>
+
+## Synthesis project — segment by density mode <a id="synthesis"></a>
+
+Use Mean-Shift on a (R, G, B, x, y) feature space — 5 dimensions, with spatial coordinates weighted to control how much position matters relative to colour — to produce image segmentation (regions that are both colour-coherent *and* spatially compact), not just colour quantisation.
+
+<Download href="/lessons/7.1.2/meanshift_segment.py" label="meanshift_segment.py — full reference (sklearn-backed, 5D features)" />
+<Download href="/lessons/7.1.2/meanshift_starter.py" label="meanshift_starter.py — implement mean_shift_step from scratch" />
+
+**Reflection questions**
+
+- Why does using 5D features (R, G, B, x, y) produce *segmentation* (regions in image space), not just *quantisation* (groups in colour space)?
+- What happens if you set `SPATIAL_WEIGHT = 0` in `meanshift_segment.py`?
+- The `bin_seeding=True` flag in sklearn's `MeanShift` accelerates fitting. What does it do, and what does it cost in accuracy?
+
+<Dropdown summary="Answers">
+
+**Why 5D = segmentation** — two pixels at *different* positions of the same colour become two different feature points if their x and y are far apart. Mean-Shift then puts them in different clusters if the spatial separation exceeds the bandwidth. A red object on the left and a red object on the right become two segments; pure colour Mean-Shift would lump them together.
+
+**SPATIAL_WEIGHT = 0** — falls back to colour-only Mean-Shift (3D). Now distant patches of the same colour merge into one cluster, even if there is empty space between them. Useful for palette extraction; not useful for object segmentation.
+
+**`bin_seeding`** — instead of starting a climber at every pixel, start one at each *bin* of a coarse spatial grid. Many pixels in the same bin would converge to the same mode anyway; starting at the bin centre saves N - bin_count iterations. The cost: if two distinct modes happen to be in the same bin, the binning merges them. In practice this is rare for sane bin sizes (bandwidth / 3).
+
+</Dropdown>
+
+#### Make it your own
+
+- **Adaptive bandwidth**: vary bandwidth across the image — small in detailed regions, large in flat regions. The algorithm becomes scale-aware.
+- **Mean-Shift tracking**: take a 30-frame video and run Mean-Shift on each frame seeded by the previous frame's centroids. You have just built a (slow) object tracker.
+- **LAB colour space**: convert RGB → CIELAB before clustering. CIELAB distances correlate with human perception, so the bandwidth gets a physical meaning ("noticeable difference").
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Mean-Shift is gradient ascent on the kernel density estimate of your data. Every point climbs to the nearest mode; the modes are the clusters; the count emerges from the data. K-Means' biggest weakness — pre-committing to K — is gone, at the cost of one bandwidth hyperparameter that controls everything. The algorithm shines for irregular cluster shapes (clusters can be any density-connected shape, not spherical) and for situations where the cluster count is unknown. Its weakness: `O(n²)` per iteration, real sensitivity to bandwidth, and a tendency to over-segment when density is irregular. Comaniciu & Meer's 2002 paper is the standard reference for image segmentation [2].
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Treating bandwidth as a minor knob. It is the algorithm's main hyperparameter and *will* change the number of clusters.
+- Running Mean-Shift on raw pixel coordinates without scaling. If RGB ranges 0–255 and x ranges 0–1000, the spatial coordinates dominate every distance and the algorithm degenerates into a spatial-only filter.
+- Forgetting that Mean-Shift is `O(n²)`. On a 1 MP image with 1M pixels, every iteration is 10¹² distance evaluations. Always sub-sample (sklearn does this).
+- Comparing Mean-Shift results across runs with different `bin_seeding` settings and assuming the algorithm itself is the issue. Bin seeding *can* change results — it is a speed-accuracy trade.
+- Using Mean-Shift on text or word-embedding data. The kernel density estimator becomes pointless in 300 dimensions (curse of dimensionality). Use a different algorithm (HDBSCAN, spectral) for high-D clustering.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Fukunaga, K., & Hostetler, L. (1975). The estimation of the gradient of a density function, with applications in pattern recognition. *IEEE Transactions on Information Theory*, 21(1), 32–40. <a href="https://doi.org/10.1109/TIT.1975.1055330" target="_blank" rel="noopener">doi:10.1109/TIT.1975.1055330</a></li>
+    <li><span class="tag">[2]</span> Comaniciu, D., & Meer, P. (2002). Mean shift: A robust approach toward feature space analysis. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 24(5), 603–619. <a href="https://doi.org/10.1109/34.1000236" target="_blank" rel="noopener">doi:10.1109/34.1000236</a></li>
+    <li><span class="tag">[3]</span> Cheng, Y. (1995). Mean shift, mode seeking, and clustering. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 17(8), 790–799. <a href="https://doi.org/10.1109/34.400568" target="_blank" rel="noopener">doi:10.1109/34.400568</a></li>
+    <li><span class="tag">[4]</span> Comaniciu, D., Ramesh, V., & Meer, P. (2003). Kernel-based object tracking. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 25(5), 564–577.</li>
+    <li><span class="tag">[5]</span> Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830. <a href="https://jmlr.org/papers/v12/pedregosa11a.html" target="_blank" rel="noopener">jmlr.org</a></li>
+    <li><span class="tag">[6]</span> Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*, Chapter 2: Density Estimation. Springer.</li>
+  </ol>
+</section>

@@ -1,0 +1,156 @@
+---
+module: "M 07"
+cycle: "II"
+title: "PCA — Linear Dimensionality Reduction"
+objective: "Find the axes along which your data varies most. The first principal component captures the most variance, the second captures the most-of-what's-left, and so on. Project onto the top k and you have a k-dimensional summary that loses the least information."
+framework: "conceptual"
+duration: "32–38 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "linear algebra (eigenvectors, SVD), NumPy"
+prev:
+  slug: "7.2.3"
+  title: "SVM Style Detection"
+next:
+  slug: "7.3.2"
+  title: "t-SNE Visualization"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *what are the most important directions in your data?* <a id="big-question"></a>
+
+Many datasets live in fewer dimensions than their feature count suggests. An RGB image of a sunset has three colour channels per pixel, but if the sky is mostly red-and-orange the pixels are nearly all close to a single line in RGB space — they barely use the green dimension. A 512-dimensional word embedding might really vary along only 30 meaningful semantic directions. **Principal Component Analysis** asks: *what are those directions, and how much variance does each one explain?* Karl Pearson published the algorithm in 1901 as "lines and planes of closest fit to systems of points in space" [1]; Harold Hotelling re-derived it in 1933 in a statistical framework [2]. It is the oldest and most ubiquitous dimensionality-reduction method in data analysis, and it is exactly *one* line of NumPy via the SVD.
+
+<Figure
+  src="/lessons/7.3.1/pca_panel.png"
+  alt="Three-panel figure: input gradient image with a small yellow accent at top-left; scatter plot of pixels coloured by their original RGB value, plotted on PC1 vs PC2 axes at top-right; a 12-colour horizontal palette of swatches at bottom showing colours sampled along the PC1 axis"
+  caption="PCA on an image's pixel cloud. PC1 explains 89% of the variance — the dominant colour-gradient axis. PC2 explains 10% (the accent colour). The 12-swatch palette samples along PC1 alone, recovering the dominant gradient as a discrete colour ramp."
+  num={1}
+  role="output"
+/>
+
+For colour palettes — the v1 lesson framing — PCA gives you the *natural* colour axis of an image, the one that best describes its variation. Sampling 12 points along that axis gives a designer's palette that reads the image's mood directly. The same algorithm is the workhorse of compression (PCA on image patches → JPEG-like transforms), denoising (project onto top-k, discard the rest as noise), exploratory data analysis (scatter plots of high-D data), and the preprocessing step before nearly every classical ML algorithm.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Reformulate "dimensionality reduction" as "find the linear projection that retains the most variance."</li>
+  <li>Compute PCA via the SVD: `X_centered = U S Vᵀ`, where `Vᵀ`'s rows are the principal axes in descending order.</li>
+  <li>Interpret the **explained variance ratio** as the fraction of total variance each component captures.</li>
+  <li>Recognise PCA's three limitations: it is linear, it requires centring, and it is sensitive to feature scaling.</li>
+</ol>
+
+## Part 1 — Variance is information <a id="part-1"></a>
+
+PCA's core assumption: a feature that varies a lot carries information; a feature that does not vary at all carries none. If your dataset has one column that is always the same value, you can drop it without losing anything. PCA generalises that to *any* direction in feature space, not just axis-aligned columns.
+
+Concretely, the **first principal component** is the unit vector `v₁` along which the projection of your centred data has maximum variance. Mathematically:
+
+`v₁ = argmax_{||v|| = 1} ||X v||²`
+
+The **second principal component** is the unit vector `v₂` perpendicular to `v₁` along which the projection has maximum variance, and so on. The principal components are the eigenvectors of the data's covariance matrix; the corresponding eigenvalues give the variance along each one [3].
+
+<Admonition type="dyk" title="Did you know? · Hotelling and the 1929 stock market">
+Harold Hotelling's 1933 paper applied PCA to test scores from college entrance exams; the method became one of the foundations of psychometrics. Hotelling had also tried (unsuccessfully) to predict the 1929 stock-market crash using statistical methods — he is one of the rare statisticians to have lost a fortune to his own probability models [2].
+</Admonition>
+
+## Part 2 — PCA via SVD: one expression <a id="part-2"></a>
+
+The shortest path to PCA is the Singular Value Decomposition. For a centred data matrix `X` (n rows of observations × d columns of features):
+
+`X = U S Vᵀ`
+
+where `U` is `(n, d)` orthogonal, `S` is `(d,)` non-negative singular values in descending order, and `Vᵀ` is `(d, d)` orthogonal. The rows of `Vᵀ` are the principal components.
+
+<CodeBlock lang="python" file="pca_svd_demo.py">
+```python
+def pca_from_scratch(X, n_components):
+    Xc = X - X.mean(axis=0)
+    U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
+    scores = Xc @ Vt[:n_components].T
+    explained_variance_ratio = (S ** 2) / (S ** 2).sum()
+    return scores, Vt[:n_components], explained_variance_ratio[:n_components]
+```
+</CodeBlock>
+
+That is it. The data centring matters — without it, the first principal component is dragged toward the centroid rather than the direction of maximum variance.
+
+The **explained variance ratio** of component `i` is `Sᵢ² / Σ Sⱼ²`. In our image example, PC1 accounts for 89% of variance and PC2 for 10%; together they capture 99% of the colour variation. The third component (the blue residual) is noise — drop it without losing meaningful information.
+
+<Admonition type="important">
+Compute PCA via SVD, not via `np.linalg.eig(X.T @ X)`. The SVD is numerically more stable (it never forms the `d × d` covariance matrix explicitly), works on rectangular matrices, and is what sklearn uses internally [4].
+</Admonition>
+
+## Part 3 — Three things PCA cannot do <a id="part-3"></a>
+
+PCA is so widely used that its limitations are easy to overlook. Three to internalise:
+
+**1. PCA is linear.** Principal components are *straight* directions in feature space. If your data lives on a curved manifold — a Swiss roll, a torus, a doughnut — PCA collapses it onto a plane and loses the structure. The fix: kernel PCA, t-SNE (next lesson), UMAP (7.3.3), or Isomap/LLE.
+
+**2. PCA needs scaling.** A feature measured in metres and a feature measured in kilometres will look 1000× more variable than one another. PCA naively gives all the variance to the metres feature. *Always standardise* heterogeneous features before PCA: subtract the mean, divide by the standard deviation.
+
+**3. Variance is not always information.** A feature can vary a lot for reasons unrelated to your task — pixel-intensity variation from lighting, voltage drift in a sensor, recording-day artefacts in EEG. PCA captures all of it, including the irrelevant. The fix: supervised dimensionality reduction (LDA, sufficient dimension reduction) or domain-aware feature engineering.
+
+<Admonition type="note">
+PCA on RGB pixels is one of the cleanest demonstrations of the algorithm because variance is a clean proxy for "colour difference". On heterogeneous datasets (one column of money, one of email-counts, one of age) PCA is much less interpretable; standardisation is mandatory and the components rarely have an intuitive name.
+</Admonition>
+
+## Synthesis project — PCA-derived image palette <a id="synthesis"></a>
+
+Build a tool that takes any image, runs PCA on its pixel cloud in RGB space, and produces (a) a 12-swatch palette sampled along PC1, (b) a scatter of pixels projected onto PC1 vs PC2 coloured by their RGB value, and (c) a reconstruction using only the first one, two, and three PCs (the first reconstruction is grey-scale; the third is essentially the original).
+
+<Download href="/lessons/7.3.1/pca_palette.py" label="pca_palette.py — sklearn-backed reference" />
+<Download href="/lessons/7.3.1/pca_starter.py" label="pca_starter.py — implement PCA via SVD from scratch" />
+
+**Reflection questions**
+
+- The first PC accounts for 89% of the variance. What does the image look like reconstructed using only PC1? Why?
+- Why does the palette sampled along PC1 look like a colour ramp rather than a random selection?
+- If the image had pure-colour blocks (no gradients), what would the PCA scatter look like?
+
+<Dropdown summary="Answers">
+
+**Reconstruct using PC1 only** — every pixel's colour is replaced by its projection onto PC1 (plus the data centroid). The result is a single-axis gradient image — the original's hue is preserved but the secondary variation is gone. It looks like a hand-tinted greyscale; you can recognise the structure but lost the accent colour entirely. That is exactly what "89% variance" feels like.
+
+**PC1 as colour ramp** — sampling 12 points along PC1 walks from the darkest, most-blue-tinted pixel to the brightest, most-orange-tinted pixel along the direction of maximum colour variation. By construction, this is the *one* direction that best summarises the image's colour content. Sampling along it gives a designer-quality gradient.
+
+**Pure-colour blocks** — the pixel cloud would be a small number of dense point-blobs in RGB space, one per block. PCA would still find principal axes, but they would no longer correspond to perceptual gradients — they would just align with the axis between the densest two blobs. Useful intuition: PCA assumes a continuous distribution; for discrete data K-Means or vector quantisation are better palette tools.
+
+</Dropdown>
+
+#### Make it your own
+
+- **PCA on patches**: extract every 8×8 patch from an image, flatten each to 192 dimensions, and PCA. The top components are the natural "spatial primitives" of the image — JPEG's DCT basis falls out approximately.
+- **Eigenfaces**: PCA on a dataset of aligned face images. The top components are Eigenfaces, the textbook example of PCA in computer vision, dating from 1991 [5].
+- **Whitening**: project, then divide by the singular values. The whitened data has identity covariance — useful as preprocessing for downstream ML.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+PCA finds the orthogonal directions of maximum variance in your data and projects onto the top `k`. The computation is one SVD on the centred data matrix; the principal axes are rows of `Vᵀ`; the explained variance ratio is the squared singular values divided by their sum. PCA is linear (a straight projection), centred (the mean is subtracted first), and variance-driven (it captures whatever varies most, relevant or not). For low-dimensional, mostly-linear structure it is the right first tool. For curved manifolds or perceptual-similarity preservation, the next two lessons — t-SNE and UMAP — generalise the idea to non-linear projections.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to centre. The first PC ends up pointing at the centroid rather than the direction of maximum variance.
+- PCA on un-standardised heterogeneous features. The biggest-range feature dominates everything.
+- Reading components as causes. Principal components are statistical artefacts, not physical or semantic axes.
+- Picking `n_components` arbitrarily. Use the explained-variance-ratio plot ("scree plot") and find the knee.
+- Comparing PC scores across two separate PCA fits. The axes are oriented based on data; running PCA on a held-out test set produces *different* axes.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Pearson, K. (1901). On lines and planes of closest fit to systems of points in space. *Philosophical Magazine*, 2(11), 559–572. <a href="https://doi.org/10.1080/14786440109462720" target="_blank" rel="noopener">doi:10.1080/14786440109462720</a></li>
+    <li><span class="tag">[2]</span> Hotelling, H. (1933). Analysis of a complex of statistical variables into principal components. *Journal of Educational Psychology*, 24(6), 417–441. <a href="https://doi.org/10.1037/h0071325" target="_blank" rel="noopener">doi:10.1037/h0071325</a></li>
+    <li><span class="tag">[3]</span> Jolliffe, I. T. (2002). *Principal Component Analysis* (2nd ed.). Springer.</li>
+    <li><span class="tag">[4]</span> Halko, N., Martinsson, P.-G., & Tropp, J. A. (2011). Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions. *SIAM Review*, 53(2), 217–288. <a href="https://doi.org/10.1137/090771806" target="_blank" rel="noopener">doi:10.1137/090771806</a></li>
+    <li><span class="tag">[5]</span> Turk, M., & Pentland, A. (1991). Eigenfaces for recognition. *Journal of Cognitive Neuroscience*, 3(1), 71–86. <a href="https://doi.org/10.1162/jocn.1991.3.1.71" target="_blank" rel="noopener">doi:10.1162/jocn.1991.3.1.71</a></li>
+    <li><span class="tag">[6]</span> Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830. <a href="https://jmlr.org/papers/v12/pedregosa11a.html" target="_blank" rel="noopener">jmlr.org</a></li>
+  </ol>
+</section>

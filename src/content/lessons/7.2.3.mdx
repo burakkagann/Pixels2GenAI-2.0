@@ -1,0 +1,167 @@
+---
+module: "M 07"
+cycle: "II"
+title: "SVMs — Maximum Margin and the Kernel Trick"
+objective: "Find the decision boundary that maximises the margin to the nearest training points; then use the kernel trick to make that boundary curve through feature space without ever computing the high-dimensional embedding explicitly."
+framework: "conceptual"
+duration: "34–40 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "7.2.1 (Decision Trees), linear algebra basics"
+prev:
+  slug: "7.2.2"
+  title: "Random Forests"
+next:
+  slug: "7.3.1"
+  title: "PCA Color Palette"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *what makes one separating line better than another?* <a id="big-question"></a>
+
+If two classes of points are linearly separable in 2D, infinitely many straight lines can separate them. **Support Vector Machines**, introduced by Vapnik and colleagues at AT&T Bell Labs in the late 1980s and formalised in the 1995 paper [1], pick the line whose perpendicular distance to the nearest training point of either class — the **margin** — is as large as possible. The intuition is robustness: a small-margin boundary nearly touches the data, so a tiny perturbation could flip its classification; a large-margin boundary has slack. Statistical learning theory makes this precise — generalisation error is bounded by a function that *decreases* as the margin grows, independent of the dimensionality of the feature space [2].
+
+<Figure
+  src="/lessons/7.2.3/svm_kernel_zoo.png"
+  alt="Four-panel grid showing decision boundaries from four SVM kernels on the same two-crescents dataset: linear (a straight line, large gold support-vector circles on both classes), polynomial degree 3 (a smooth curve), RBF gamma scale (gently curved), RBF gamma=10 (lots of small bubbles)"
+  caption="Same two-crescents dataset, four kernels. Each gold circle marks a support vector. Linear (top-left) cannot fit the curves and accepts errors. Polynomial fits a smooth curve. RBF with default gamma fits beautifully. RBF with high gamma overfits dramatically — each gold circle is its own bubble."
+  num={1}
+  role="output"
+/>
+
+Then the **kernel trick** (Aizerman, Braverman, Rozonoer 1964; Boser, Guyon, Vapnik 1992 [3]) takes the linear maximum-margin classifier and lets it draw curved boundaries — without ever computing the curve in coordinates. Replace the dot product `⟨x, y⟩` with a *kernel function* `K(x, y)` that secretly computes the dot product in a higher-dimensional space, and the same SVM equations now find the maximum margin hyperplane in that space. Project back to 2D and the hyperplane looks like a curve.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Define the margin of a separating hyperplane and recognise the SVM as the maximum-margin classifier.</li>
+  <li>Identify **support vectors** as the only training points the trained model actually depends on.</li>
+  <li>Understand the **kernel trick** as an implicit projection into a higher-dimensional space.</li>
+  <li>Compare the linear, polynomial, and RBF (Gaussian) kernels and recognise their characteristic boundary shapes.</li>
+</ol>
+
+## Part 1 — Maximum margin and support vectors <a id="part-1"></a>
+
+The decision boundary of a binary linear SVM is the hyperplane `w · x + b = 0`. The classifier outputs `sign(w · x + b)`. Among all hyperplanes that classify all training points correctly, the SVM picks the one that maximises `2 / ‖w‖`, the perpendicular distance between the two parallel "margin" planes `w · x + b = ±1` that just touch the nearest training points.
+
+The training points sitting exactly on those margin planes — the ones at perpendicular distance `1 / ‖w‖` from the boundary — are the **support vectors**. The trained classifier only depends on them; remove any non-support training point and the boundary does not move. This is one of the most striking properties of SVMs: a trained model on 10,000 points might depend on only a handful of them.
+
+<CodeBlock lang="python" file="margin_demo.py">
+```python
+clf = SVC(kernel='linear', C=1.0).fit(X, y)
+# clf.support_vectors_   -> the support vector positions
+# clf.coef_, clf.intercept_  -> w and b for the boundary
+# margin = 2.0 / np.linalg.norm(clf.coef_)
+```
+</CodeBlock>
+
+For real-world data that is not linearly separable, the SVM relaxes "all correct" to "soft margin": each violating point pays a penalty proportional to how far it is on the wrong side. The hyperparameter `C` trades off margin width vs. penalty: high `C` means "do not violate", low `C` means "wider margin even at the cost of misclassification". `C` is the SVM's single most important knob [4].
+
+<Admonition type="dyk" title="Did you know? · Vapnik and statistical learning theory">
+Vladimir Vapnik developed Statistical Learning Theory throughout the 1970s and 80s in the Soviet Union, working out exactly when an empirical risk minimiser generalises. The SVM emerged from that framework: it is the algorithm that *constructively* achieves the generalisation bound. Bell Labs hired him in 1990; the 1995 paper was his first major Western publication. Statistical Learning Theory is still the cleanest theoretical foundation in all of ML — predates neural-network theory by decades [1, 2].
+</Admonition>
+
+## Part 2 — The kernel trick <a id="part-2"></a>
+
+Linear SVMs only handle linearly separable problems. To handle curved boundaries, you could explicitly project your data into a higher dimension (e.g. add squared and cross-product features) and train a linear SVM there. For polynomial degree-2 features in 2D, you go from 2 features to 6 — manageable. For degree-3 in 100 features, you go from 100 features to 176,851 — not manageable. For infinite-dimensional projections, never possible.
+
+The kernel trick observes that the SVM's training and prediction equations only ever access the data through *dot products* `⟨x, y⟩`. Replace those dot products with a **kernel function** `K(x, y)` that satisfies Mercer's condition — symmetric, positive semi-definite — and you are equivalently working in a higher-dimensional space where the kernel *is* a dot product, even though you never actually compute the high-dimensional coordinates.
+
+<CodeBlock lang="python" file="rbf_demo.py">
+```python
+def rbf_kernel(X1, X2, gamma):
+    # K(x, y) = exp(-gamma * ||x - y||^2)
+    sq = ((X1[:, None] - X2[None, :]) ** 2).sum(axis=-1)
+    return np.exp(-gamma * sq)
+```
+</CodeBlock>
+
+The **RBF kernel** `K(x, y) = exp(-γ ||x - y||²)` secretly works in an *infinite-dimensional* space — the Taylor series of the exponential gives infinitely many polynomial features. The SVM in that space has an arbitrarily complex decision boundary; the gamma parameter controls how "tight" each support vector's influence is. Small gamma → smooth global boundary; large gamma → tight bubbles around each support vector (the overfitting case in the bottom-right of Figure 1).
+
+<Admonition type="important">
+The kernel trick is one of the deepest ideas in classical ML and recurs everywhere. Gaussian process regression *is* kernel regression. Kernel PCA is PCA in feature space. Neural-tangent-kernel theory shows that wide neural networks behave like kernel methods in a specific limit [5]. Once you have seen the trick, you keep recognising it.
+</Admonition>
+
+## Part 3 — Kernel zoo: linear, polynomial, RBF <a id="part-3"></a>
+
+The choice of kernel determines the boundary shape and is the SVM's primary architectural decision.
+
+- **Linear** — `K(x, y) = ⟨x, y⟩`. Gives a flat hyperplane. Use when features are already engineered to be roughly linear, or in very high dimensions (text classification with TF-IDF features, where the dimension is large enough that linear is already expressive).
+- **Polynomial** — `K(x, y) = (⟨x, y⟩ + c)^d`. Gives a smooth polynomial boundary of degree `d`. Useful for problems where the "right" boundary is some smooth curve.
+- **RBF / Gaussian** — `K(x, y) = exp(-γ ||x - y||²)`. The local-bubble kernel, infinite-dimensional. The default kernel for unknown structure.
+- **Custom** — string kernels for text, graph kernels for molecules, image-patch kernels for vision. Any positive-semi-definite similarity function will do.
+
+Picking γ and `C` for RBF SVM is the most common practical tuning problem. The standard approach is grid search over `(C, γ) ∈ {0.01, 0.1, 1, 10, 100} × {scale, 0.01, 0.1, 1, 10}` with cross-validation [4].
+
+<Figure
+  src="/lessons/7.2.3/svm_circles.png"
+  alt="Concentric-circles dataset with an RBF-SVM decision boundary that exactly traces the gap between the inner ring and the outer ring; many gold support-vector circles on both rings"
+  caption="RBF kernel SVM on concentric circles. A linear SVM cannot separate these classes at all — the kernel trick is what makes the curved boundary possible."
+  num={2}
+  role="output"
+/>
+
+<Admonition type="note">
+"Style detection" — the v1 lesson title — is a real application of SVMs. Train an RBF-kernel SVM on feature vectors extracted from images of different artistic styles (Impressionist vs. Cubist vs. Abstract Expressionist) and the SVM finds the maximum-margin boundary in feature space. Before convolutional networks took over (~2014), SVMs were the dominant method for image classification and got around 70% on PASCAL VOC.
+</Admonition>
+
+## Synthesis project — kernel comparison on a style dataset <a id="synthesis"></a>
+
+Compare four kernels on the same dataset: linear, polynomial degree 3, RBF with `gamma='scale'`, and RBF with `gamma=10`. Render each decision boundary and count the support vectors. The relationship between kernel choice and boundary shape should become viscerally clear.
+
+<Download href="/lessons/7.2.3/svm_style.py" label="svm_style.py — sklearn-backed reference (all four kernels side by side)" />
+<Download href="/lessons/7.2.3/svm_starter.py" label="svm_starter.py — implement the RBF kernel matrix from scratch" />
+
+**Reflection questions**
+
+- In the RBF γ=10 panel, almost every training point is a support vector. What does that tell you about the model's complexity and likely test error?
+- The linear SVM cannot separate the two crescents — accuracy is well below 1.0. Why doesn't a higher `C` fix this?
+- Why is the kernel trick useless for *very* high-dimensional input data (say 100,000 features)?
+
+<Dropdown summary="Answers">
+
+**γ=10 overfits** — when every training point is a support vector, the model has essentially memorised the data. Train accuracy approaches 1.0 because the bubble around each point covers itself; test accuracy collapses because the bubbles do not extend to similar points. The model has high variance — the canonical overfitting signature.
+
+**C cannot rescue linear** — increasing `C` makes the SVM less tolerant of margin violations, but it still has to draw a straight line. No straight line separates two interlocking crescents. The fix is a different kernel, not more `C`. `C` controls how strict you are *given* a fixed model class; it does not change the class.
+
+**Kernel trick at 100k features** — the kernel matrix is `n × n`. Computing it requires `n² × d` operations. With `n = 10,000` and `d = 100,000` that is 10¹³ operations per fit — 30 minutes on a CPU. Worse, the implicit feature space is much higher dimensional than the input, so generalisation suffers. For very high-D input, use a linear SVM (or, in 2026, a transformer) and rely on the input features already being expressive.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Custom string kernel**: implement an edit-distance-based kernel and use it to classify short English / Spanish phrases without any feature extraction. The SVM "trains on raw strings."
+- **One-class SVM**: train an SVM to enclose your training data in the smallest sphere in feature space. Points outside the sphere are anomalies. `sklearn.svm.OneClassSVM`.
+- **SVR (regression SVM)**: same algorithm, slight modification. Predict continuous values with maximum-margin reasoning instead of classes.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+The Support Vector Machine finds the maximum-margin hyperplane separating two classes, depending only on the support vectors that touch the margin. The kernel trick lifts the same algorithm into higher (sometimes infinite) dimensions by replacing dot products with positive-semi-definite kernel functions, producing curved decision boundaries without ever computing the high-D coordinates. The RBF kernel is the default when you do not know the structure; linear is the default in very high dimensions. SVMs reigned in image classification, document classification, and bioinformatics from 1995 to 2014, when deep neural networks took over for problems where data is plentiful and structure is rich. For small-to-medium tabular problems with limited data, SVMs remain a strong baseline in 2026.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Forgetting to standardise features. SVM distances depend on feature scaling; one feature with a huge range dominates the margin geometry.
+- Using `C` and `gamma` defaults without cross-validation. The defaults are sensible but the optimal values can be orders of magnitude different.
+- Training an RBF SVM on 100,000 points and waiting for it. SVM training is between `O(n²)` and `O(n³)`; past ~50,000 points use linear SVM or specialised solvers (LinearSVC, kernel approximation).
+- Reading too much into "support vectors as important examples". They are *boundary* examples, not representative or prototypical examples. A support vector is "the data point closest to the decision rule", not "the most typical class member".
+- Comparing SVM accuracy to neural networks on small datasets and dismissing the neural network because it underperforms. The comparison is honest only with sufficient data.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Cortes, C., & Vapnik, V. (1995). Support-vector networks. *Machine Learning*, 20(3), 273–297. <a href="https://doi.org/10.1007/BF00994018" target="_blank" rel="noopener">doi:10.1007/BF00994018</a></li>
+    <li><span class="tag">[2]</span> Vapnik, V. N. (1998). *Statistical Learning Theory*. Wiley.</li>
+    <li><span class="tag">[3]</span> Boser, B. E., Guyon, I. M., & Vapnik, V. N. (1992). A training algorithm for optimal margin classifiers. In *Proceedings of the Fifth Annual Workshop on Computational Learning Theory* (pp. 144–152). <a href="https://doi.org/10.1145/130385.130401" target="_blank" rel="noopener">doi:10.1145/130385.130401</a></li>
+    <li><span class="tag">[4]</span> Hsu, C.-W., Chang, C.-C., & Lin, C.-J. (2003). *A practical guide to support vector classification*. National Taiwan University. <a href="https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf" target="_blank" rel="noopener">ntu.edu.tw</a></li>
+    <li><span class="tag">[5]</span> Jacot, A., Gabriel, F., & Hongler, C. (2018). Neural tangent kernel: Convergence and generalization in neural networks. *NeurIPS '18*.</li>
+    <li><span class="tag">[6]</span> Schölkopf, B., & Smola, A. J. (2002). *Learning with Kernels: Support Vector Machines, Regularization, Optimization, and Beyond*. MIT Press.</li>
+    <li><span class="tag">[7]</span> Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830. <a href="https://jmlr.org/papers/v12/pedregosa11a.html" target="_blank" rel="noopener">jmlr.org</a></li>
+  </ol>
+</section>
