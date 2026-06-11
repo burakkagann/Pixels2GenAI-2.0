@@ -1,0 +1,275 @@
+---
+module: "M 05"
+cycle: "I"
+title: "Fluid Simulation — Stable Fluids on a Grid"
+objective: "Implement Jos Stam's stable-fluids method — advect, diffuse, project — to push velocity and ink density around a 2D grid and produce realistic swirl."
+framework: "hands-on"
+duration: "22–28 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.1.1 (particle systems), NumPy broadcasting"
+prev:
+  slug: "5.1.3"
+  title: "Fireworks Simulation"
+next:
+  slug: "5.2.1"
+  title: "Boids"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Particle systems give you motion that *looks* like fluid; a real fluid simulation gives you motion that *is* fluid. In 1999 Jos Stam published "Stable Fluids" — a method that solves the Navier-Stokes equations on a 2D grid using three operations per frame: **advect** moves quantities along the velocity field, **diffuse** smooths out spatial gradients, and **project** restores mass conservation by removing the divergent part of the velocity [1]. The method is *unconditionally stable*, meaning it will never blow up no matter what time step you pick — which is the property that made fluid simulation feasible in real-time computer graphics. In this lesson you will implement all three steps, watch two opposing ink jets braid into a stable vortex, and learn why an "ink-in-water" rendering tells you more about the velocity field than any vector arrow ever could.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Store fluid state as two grids: velocity (`vx`, `vy`) and a passive scalar (density, here used as "ink").</li>
+  <li>Implement advection by tracing each cell's value back along the velocity field for one time step.</li>
+  <li>Implement diffusion using Gauss-Seidel relaxation — an iterative averaging that solves the heat equation.</li>
+  <li>Understand projection as the step that keeps mass conserved by removing divergence from the velocity field.</li>
+</ol>
+
+## Quick start — two opposing jets <a id="quick-start"></a>
+
+Every frame, inject ink and velocity at two source points (left and right of centre, pointing toward each other), then run the three operators. The result is a stable braided vortex.
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+for _ in range(NUM_FRAMES):
+    inject_ink_and_velocity()
+    vx = diffuse(vx, VISCOSITY, DT)
+    vy = diffuse(vy, VISCOSITY, DT)
+    vx, vy = project(vx, vy)
+    vx = advect(vx, vx, vy, DT)
+    vy = advect(vy, vx, vy, DT)
+    vx, vy = project(vx, vy)
+    density = diffuse(density, DIFFUSION, DT)
+    density = advect(density, vx, vy, DT)
+    frames.append(render(density))
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/5.1.4/fluid.gif"
+  alt="Animated fluid simulation showing two jets of pink ink colliding and braiding into a stable vortex pattern on a violet background"
+  caption="Two opposing jets, 96×96 grid, 140 frames. The ink visualises the velocity field — wherever ink concentrates, the flow has converged."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The ink is not the fluid — it is a *passive tracer* dragged around by the velocity field. The same simulation with no ink would still have all the physics; you just would not see it. Ink visualisation is how Reynolds, von Kármán, and every fluid dynamicist before computers studied flow.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Advect: move stuff along the flow
+
+Advection answers: "if the velocity at this cell carries fluid here, what value should this cell now hold?" Stam's insight was to flip the question — *trace each cell backward* along the velocity field by one time step, look up the value at that traced-back location (with bilinear interpolation), and assign it to the current cell.
+
+<CodeBlock lang="python" file="advect_demo.py">
+```python
+xs, ys = np.meshgrid(np.arange(GRID), np.arange(GRID), indexing='xy')
+px = xs - dt * GRID * vx                # backward trace
+py = ys - dt * GRID * vy
+# bilinear interpolate `field` at (px, py) → out[ys, xs]
+```
+</CodeBlock>
+
+This is **semi-Lagrangian advection**. It is unconditionally stable: even with a wild velocity field, the worst that happens is that the trace samples are clamped to the grid edges. Forward-Euler advection, by contrast, can move two values into the same cell and lose mass entirely.
+
+<Admonition type="dyk" title="Did you know? · Stable Fluids and animation">
+Stam's 1999 paper was written specifically for animators, not physicists. The unconditional stability meant that artists could pick a time step based on frame rate (30 FPS = `dt = 1/30`) and not worry about CFL conditions. The method now ships in every major DCC tool — Houdini, Maya, Blender — for cheap smoke and fire previews [1, 2].
+</Admonition>
+
+### Concept 2 — Diffuse: smooth out gradients via Gauss-Seidel
+
+Diffusion is the heat equation: each cell exchanges value with its four neighbours, slowly homogenising the field. The discrete version says
+
+```
+new[i,j] = (old[i,j] + a * sum_of_neighbours(new)) / (1 + 4*a)
+```
+
+where `a = dt * diff * GRID²`. Note that `new` appears on both sides — this is an *implicit* solve, and you cannot just compute it in one pass. **Gauss-Seidel relaxation** does the trick by iterating the update in place: each pass uses the most-recently-updated neighbours, and after a dozen passes the values converge.
+
+<CodeBlock lang="python" file="diffuse_demo.py">
+```python
+a = dt * diff * GRID * GRID
+for _ in range(SOLVER_ITERS):
+    field[1:-1, 1:-1] = (
+        field[1:-1, 1:-1]
+        + a * (field[2:, 1:-1] + field[:-2, 1:-1]
+               + field[1:-1, 2:] + field[1:-1, :-2])
+    ) / (1 + 4 * a)
+```
+</CodeBlock>
+
+12–20 iterations is the standard sweet spot. Fewer iterations and the field stays noisy; more and you pay extra compute for negligible visual gain.
+
+<Admonition type="important">
+Gauss-Seidel is the workhorse iterative solver behind half of computational physics. The same routine — with a different coefficient — solves Poisson's equation in the projection step below. Two routines, same kernel.
+</Admonition>
+
+### Concept 3 — Project: enforce divergence-free flow
+
+Real fluids are *incompressible* — mass cannot accumulate at any point. Numerically, that translates to: the velocity field must have zero divergence everywhere. After the advection and diffusion steps, divergence creeps in (mass starts accumulating in some cells, leaving others). **Projection** removes it by solving Poisson's equation for a "pressure" scalar `p` and subtracting its gradient from the velocity.
+
+<CodeBlock lang="python" file="project_demo.py">
+```python
+# 1. compute divergence of velocity
+div = -0.5 * (vx[i+1] - vx[i-1] + vy[j+1] - vy[j-1]) / GRID
+# 2. solve Poisson(p) = div via Gauss-Seidel
+for _ in range(SOLVER_ITERS):
+    p = (div + p[i+1] + p[i-1] + p[j+1] + p[j-1]) / 4
+# 3. subtract gradient of p from velocity
+vx -= 0.5 * GRID * (p[i+1] - p[i-1])
+vy -= 0.5 * GRID * (p[j+1] - p[j-1])
+```
+</CodeBlock>
+
+After projection, the velocity is divergence-free. Run advection on it and mass is conserved. Skip projection and the simulation looks like air leaking out of a flat tire.
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the canonical two-jet swirl">
+
+Download `fluid.py` and run it. The script writes `fluid.gif`, a mid-show still `fluid_frame.png`, and a final-state `fluid_final.png`. (The first render takes a few seconds — there is real work per frame.)
+
+<Download href="/lessons/5.1.4/fluid.py" label="fluid.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Why does the ink form a *vortex* rather than just collide and stop?
+- What does `VISCOSITY = 1e-4` actually control? Why is it so small?
+- The projection step is called *twice* per frame. Why?
+
+<Dropdown summary="Answers">
+
+**Vortex from jets** — the two velocity sources point at each other but inject momentum *and* a small perpendicular component (`+/- 0.2` in `uy`). When the jets meet, they cannot pass through each other (project enforces incompressibility), so the colliding flow redirects sideways and rolls into a vortex pair. This is the same phenomenon as two airflows meeting at the wingtip of an aircraft.
+
+**Viscosity** — `VISCOSITY` is the coefficient in the diffusion step applied to velocity. Higher viscosity → momentum gradients smooth out faster → flow looks like honey. Lower viscosity → momentum survives longer → flow looks like water. Real fluids span fourteen orders of magnitude in viscosity (air, water, honey, glass); on our grid `1e-4` happens to read as "water-ish".
+
+**Two projections** — once after diffusion (which can introduce divergence by smoothing velocities across the grid), once after self-advection (which can also break the constraint). Both correction steps are needed to keep mass conservation tight enough to stay visually plausible.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Reshape the flow">
+
+Edit the CONFIG block of `fluid.py`.
+
+**Goals**
+
+1. **Honey-thick**: `VISCOSITY = 5e-3`. The flow slows to a crawl, gradients smooth out within a few frames.
+2. **No projection** (a teaching trick): comment out the `vx, vy = project(vx, vy)` calls. Watch mass conservation break down — ink accumulates and evaporates in random spots.
+3. **More iterations**: `SOLVER_ITERS = 25`. The solution gets a little crisper, the simulation gets ~2× slower.
+4. **Single jet, gravity**: replace `sources` with one upward jet at the bottom centre and add a tiny constant downward `vy` each frame — convection plume.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The braid becomes glacial. Both jets still inject momentum, but it diffuses away within a few cells. The ink piles up near the sources rather than streaming across the grid.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Visually: ink appears and disappears in floods. The grid no longer conserves mass; density accumulates wherever the velocity has positive divergence. This is exactly *why* the projection step exists.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The Gauss-Seidel solver converges closer to the true Poisson solution. Sharper edges between ink regions; slightly more "rigid"-looking flow. Diminishing returns past about 20 iterations.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A rising column that wobbles and breaks into mushroom heads — the classic Rayleigh-Taylor convection pattern. Buoyancy as a constant force per cell creates real geophysics on a 96×96 grid.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement diffuse()">
+
+Use `fluid_starter.py`. The advect and project steps are wired up. `diffuse()` is stubbed — implement Gauss-Seidel relaxation.
+
+<Download href="/lessons/5.1.4/fluid_starter.py" label="fluid_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+Inside `diffuse(field, diff, dt)`:
+1. Compute `a = dt * diff * GRID * GRID`.
+2. Loop `SOLVER_ITERS` times. In each iteration, update interior cells in place using the formula `(old[i,j] + a * sum_of_four_neighbours) / (1 + 4*a)`.
+
+<Dropdown summary="Hint — vectorised update">
+
+```python
+a = dt * diff * GRID * GRID
+for _ in range(SOLVER_ITERS):
+    field[1:-1, 1:-1] = (
+        field[1:-1, 1:-1]
+        + a * (field[2:, 1:-1] + field[:-2, 1:-1]
+               + field[1:-1, 2:] + field[1:-1, :-2])
+    ) / (1 + 4 * a)
+return field
+```
+
+The slices skip the boundary cells (which would need their own boundary-condition handling). This is fine for our visual purposes — leaks at the edge are not pedagogically interesting.
+
+</Dropdown>
+
+<Dropdown summary="Why it works">
+
+The continuous diffusion equation is `∂field/∂t = diff * ∇²field`. Discretise the Laplacian as the sum of four neighbours minus 4× the centre, write the implicit-step formula, and Gauss-Seidel falls out. The key property: each iteration uses the most-updated neighbours, so the update propagates through the grid in O(iterations × cells) rather than O(grid²) for a direct solve.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Heat dye**: a second scalar grid that diffuses faster than ink. Render ink as colour and heat as alpha. Now you can see "warm" and "cool" mixing zones.
+- **Inflow at the boundary**: replace point sources with a constant velocity at the left edge of the grid → laminar flow.
+- **Obstacle**: zero out velocity in a circular region every frame. The flow detours around it and you see the wake structure of low-Reynolds-number flow.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/5.1.4/fluid.py" label="fluid.py — full reference implementation" />
+<Download href="/lessons/5.1.4/fluid_starter.py" label="fluid_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Stam's stable-fluids method is three operations per frame: advect, diffuse, project. Advect moves things along the flow (semi-Lagrangian, backward trace). Diffuse smooths spatial gradients (heat equation, Gauss-Seidel solve). Project enforces mass conservation (Poisson equation for pressure, Gauss-Seidel again). Velocity and a passive scalar (ink) live on two grids; the ink visualises the velocity. The method is unconditionally stable — pick any time step and the simulation will not explode — which is why it is the foundation of every real-time fluid effect in the last quarter-century.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Skipping projection. Mass leaks visibly within seconds; ink density grows or vanishes in random cells.
+- Too few Gauss-Seidel iterations. The flow looks fuzzy and edges blur.
+- Forward-Euler advection instead of semi-Lagrangian. The simulation explodes the first time velocity exceeds one cell per frame.
+- Confusing the ink with the fluid. The ink is just decoration — the physics lives in `vx` and `vy`.
+- Choosing `dt` from the CFL condition. Stam's whole point is that `dt` is bounded by your animation frame rate, not by stability.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Stam, J. (1999). Stable fluids. In *Proceedings of SIGGRAPH '99* (pp. 121–128). <a href="https://doi.org/10.1145/311535.311548" target="_blank" rel="noopener">doi:10.1145/311535.311548</a></li>
+    <li><span class="tag">[2]</span> Stam, J. (2003). Real-time fluid dynamics for games. In *Proceedings of the Game Developer Conference 2003*. <a href="https://www.dgp.toronto.edu/people/stam/reality/Research/pdf/GDC03.pdf" target="_blank" rel="noopener">Game Developer Conference 2003</a></li>
+    <li><span class="tag">[3]</span> Foster, N., & Metaxas, D. (1996). Realistic animation of liquids. *Graphical Models and Image Processing*, 58(5), 471–483.</li>
+    <li><span class="tag">[4]</span> Bridson, R. (2015). *Fluid Simulation for Computer Graphics* (2nd ed.). CRC Press.</li>
+    <li><span class="tag">[5]</span> Press, W. H., Teukolsky, S. A., Vetterling, W. T., & Flannery, B. P. (2007). *Numerical Recipes* (3rd ed.), Chapter 20. Cambridge University Press.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

@@ -1,0 +1,255 @@
+---
+module: "M 05"
+cycle: "I"
+title: "Magnetic Field Visualization"
+objective: "Compute the 2D field of a pair of point dipoles, then trace streamlines through the field. Animate one dipole rotating to see field-line reconnection."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.3.1 (gravity = inverse-square forces), basic vector calculus"
+prev:
+  slug: "5.3.4"
+  title: "Cloth / Rope Simulation"
+next:
+  slug: "5.4.1"
+  title: "Eden Growth Model"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Magnetic field diagrams are a 19th-century invention — Michael Faraday's "lines of force" reasoning, formalised by Maxwell in the 1860s. The lines are not real; they are integral curves of the field, and the question of *how to draw them* is a question of numerical integration. In this lesson you will compute the 2D field of point magnetic dipoles, sum the contributions, and use `matplotlib.streamplot` to trace the streamlines. Animating one dipole's orientation produces a small but striking effect: at certain configurations the field lines *reconnect*, switching from "two separate loops" to "one combined loop" and back. Reconnection is the same phenomenon that powers solar flares and aurorae [1].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Recognise that magnetic field lines are integral curves of a vector field — not physical objects.</li>
+  <li>Apply the 2D point-dipole field formula and sum contributions from multiple dipoles.</li>
+  <li>Use `matplotlib.streamplot` to trace streamlines through any 2D vector field.</li>
+  <li>Watch field-line reconnection as a topological event when one source is rotated past a critical angle.</li>
+</ol>
+
+## Quick start — two dipoles, two streamlines <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+x = np.linspace(-3, 3, 160); y = np.linspace(-2.5, 2.5, 160)
+X, Y = np.meshgrid(x, y)
+Bx_total, By_total = np.zeros_like(X), np.zeros_like(Y)
+for pos, angle, strength in dipoles:
+    Bx, By = dipole_field(X, Y, pos, angle, strength)
+    Bx_total += Bx; By_total += By
+ax.streamplot(X, Y, Bx_total, By_total, density=1.6)
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/5.3.5/magnetic_field.gif"
+  alt="Animated streamline plot showing two magnetic dipole arrows in a dark field. The right dipole rotates and the streamlines reconnect"
+  caption="Two point dipoles. The right one rotates over 48 frames. Watch the moment the streamlines reconnect — that is exactly what happens during a solar flare."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The streamline density (`density=1.6`) is a render-time hyperparameter, not a physical one. Higher densities show more lines but obscure the pattern; lower densities show fewer lines and miss the structure. 1.5–2.0 is a good range for two-dipole fields.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The 2D point-dipole formula
+
+A magnetic dipole is a magnetic source with no monopole (no isolated "north" or "south"). Its field, written in vector form, is
+
+```
+B(r) = (3 (m · r̂) r̂ - m) / r³
+```
+
+where `m` is the dipole moment vector and `r` is the displacement from the dipole to the field point. In 2D code:
+
+<CodeBlock lang="python" file="dipole_demo.py">
+```python
+def dipole_field(X, Y, position, angle, strength):
+    dx, dy = X - position[0], Y - position[1]
+    r2 = dx*dx + dy*dy + 0.02
+    r  = np.sqrt(r2)
+    mx, my = strength * np.cos(angle), strength * np.sin(angle)
+    m_dot_r = mx*dx + my*dy
+    Bx = (3 * m_dot_r * dx / r2 - mx) / (r2 * r)
+    By = (3 * m_dot_r * dy / r2 - my) / (r2 * r)
+    return Bx, By
+```
+</CodeBlock>
+
+The `+ 0.02` in `r2` is a softening parameter — same idea as in lesson 5.3.2 N-Body. Without it, evaluating the field *at* a dipole's location divides by zero.
+
+<Admonition type="dyk" title="Did you know? · Faraday's lines were a heuristic">
+Faraday could not do calculus. He visualised lines of force as a way to *think about* electromagnetism without equations. Maxwell built his formal theory partly to give Faraday's mental pictures a mathematical foundation. The streamlines in this lesson are the modern continuation of that 1830s heuristic — still useful, still purely diagrammatic [1].
+</Admonition>
+
+### Concept 2 — Streamlines are integral curves
+
+A streamline is the trajectory of a hypothetical "test particle" released into the field that always moves in the direction of the local field vector. Mathematically it is the solution of `dr/dt = B(r)` — an ordinary differential equation. `matplotlib.streamplot` uses a Runge-Kutta integrator internally to trace these curves on a sampled grid.
+
+<CodeBlock lang="python" file="streamplot_demo.py">
+```python
+ax.streamplot(X, Y, Bx, By,
+              density=1.6, linewidth=0.9,
+              color=np.log1p(np.sqrt(Bx**2 + By**2)),
+              cmap='cividis')
+```
+</CodeBlock>
+
+Setting `color=` to the field magnitude colours each line by local strength, which highlights regions of focussed field (high colour values) versus regions of weak field (low values). Using `np.log1p` compresses the dynamic range so the colour map does not saturate at the dipole sources.
+
+<Admonition type="important">
+Streamlines never cross. If they appeared to, your sampled grid is too coarse — `streamplot` is doing its best with the data you gave it. Bump `GRID` from 160 to 250 if the rendering shows tangled crossings.
+</Admonition>
+
+### Concept 3 — Reconnection: a topological event
+
+Two dipoles aligned head-to-tail (left north, right south) form two closed-loop bundles — one each side, connected end-to-end. Rotate the right dipole 180° (now both norths point inward) and the streamlines snap into a different topology: the loops now extend infinitely sideways. The transition is sharp — at some critical rotation angle, the two regimes are unstable and the streamlines reconfigure dramatically.
+
+This is **magnetic reconnection** in its simplest manifestation. In the Sun's corona, the same mechanism stores energy in twisted field configurations and releases it as solar flares and coronal mass ejections [2].
+
+<Admonition type="note">
+The fact that a quantitatively-tiny change of one parameter produces a qualitatively-large change in the streamlines is the defining feature of a **topological transition**. The same kind of transition shows up in phase changes, in fluid-flow regime shifts, and in the Lyapunov exponent crossings of chaotic systems.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order.
+
+<Exercise n={1} kicker="EXECUTE" title="Watch reconnection">
+
+Download `magnetic_field.py` and run it. It writes `magnetic_field.gif` (animated rotation) and a still `magnetic_dipole_pair.png` of the initial configuration.
+
+<Download href="/lessons/5.3.5/magnetic_field.py" label="magnetic_field.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Identify the frame where the streamlines visibly reconfigure. What angle is the right dipole at?
+- Why does the centre of the canvas have very few streamlines at certain angles?
+- What does `np.log1p` do to the colour scale, and why use it?
+
+<Dropdown summary="Answers">
+
+**Reconnection frame** — typically around frame 12 (90°) or frame 24 (180°), depending on starting orientation. At those angles the two dipole moments are perpendicular or anti-parallel, and the streamline topology changes.
+
+**Few streamlines at the centre** — at the perpendicular configuration the field cancels along the perpendicular bisector of the line between the dipoles. The streamline tracer needs a nonzero field to follow, so the line-free zone is a *null line* of the field.
+
+**`log1p` colour scale** — without it, the colour map is dominated by the very high field values near each dipole and the bulk of the canvas looks uniformly dim. `log1p` compresses the dynamic range, letting you see both the sources and the gentler bulk-field structure simultaneously.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Reshape the field">
+
+**Goals**
+
+1. **Single dipole**: remove the second entry from `INITIAL_DIPOLES`. The classic dipole loop pattern from any physics textbook.
+2. **Quadrupole**: four dipoles at corners of a square, alternating orientations. The field pattern is far richer than two dipoles.
+3. **Same orientation**: both dipoles pointing the same direction. Streamlines merge into one big loop rather than two paired loops.
+4. **Different strengths**: `strength = 1.0` vs `strength = 3.0`. The stronger dipole's field dominates near it; the weaker dipole is "absorbed".
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The iconic single-dipole figure — two big loops above and below the dipole's centre, with the lines bending around through the centre. The starting page of every intro-physics chapter on magnetism.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A quadrupole. Field falls off faster with distance (`1/r⁵` instead of `1/r³`) and the pattern has rotational symmetry of order 2 — four lobes, two pointing in each diagonal direction.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+The two dipoles read as a single elongated dipole at long range. The field lines wrap around both as if they were one bar magnet.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+The stronger dipole's field zone is bigger; the weaker dipole's loops shrink and curl into the stronger one's. Asymmetric, more visually interesting than the equal-strength case.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement dipole_field()">
+
+Use `magnetic_starter.py`. The grid setup, summation loop, and matplotlib render are wired up. `dipole_field()` is stubbed.
+
+<Download href="/lessons/5.3.5/magnetic_starter.py" label="magnetic_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+The formulae are given in Concept 1. Return `(Bx, By)` arrays of the same shape as `X` and `Y`.
+
+<Dropdown summary="Hint — broadcasting">
+
+```python
+def dipole_field(X, Y, position, angle, strength):
+    dx = X - position[0]
+    dy = Y - position[1]
+    r2 = dx*dx + dy*dy + 0.02
+    r = np.sqrt(r2)
+    mx = strength * np.cos(angle)
+    my = strength * np.sin(angle)
+    m_dot_r = mx * dx + my * dy
+    Bx = (3 * m_dot_r * dx / r2 - mx) / (r2 * r)
+    By = (3 * m_dot_r * dy / r2 - my) / (r2 * r)
+    return Bx, By
+```
+
+`X` and `Y` are 2D arrays (from `meshgrid`); scalar operations broadcast across the whole grid. The whole function evaluates in a few milliseconds for a 160×160 grid.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Field-line density gradient**: shade the streamlines by `|B|` and add a logarithmic colourbar. Now the plot doubles as a magnitude map.
+- **Iron-filing simulation**: place 5000 small "iron filings" (point particles) randomly; orient each one to point along the local field. The classic 8th-grade-science result.
+- **Time-dependent dipole**: rotate the dipole *quickly*, then compute the curl of the time-varying field — you have just visualised the induced electric field via Maxwell's law.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/5.3.5/magnetic_field.py" label="magnetic_field.py — full reference implementation" />
+<Download href="/lessons/5.3.5/magnetic_starter.py" label="magnetic_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Magnetic field lines are integral curves of a vector field; drawing them is numerical ODE integration, and `matplotlib.streamplot` does the heavy lifting. The 2D point-dipole formula is a one-line vector expression — sum contributions from multiple dipoles, hand the field to `streamplot`, and the visualisation falls out. The physically-interesting phenomenon is *reconnection*: a small change in dipole orientation can produce a large change in streamline topology, which is the mechanism behind solar flares and laboratory plasma instabilities.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- No softening in `r²`. Evaluating the field *at* a dipole crashes the rasteriser.
+- Using `streamplot` with too coarse a grid. Streamlines look tangled and crossing — increase `GRID`.
+- Linear colour scale on the magnitude. The dipoles saturate; bulk structure invisible. Always `log1p` first.
+- Forgetting `density=` parameter. The default of 1.0 is sparse for two-dipole fields; bump to ~1.6.
+- Confusing "field line" with "force on a particle". Streamlines are static; they would not move a charged particle along their length the way they look.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Maxwell, J. C. (1873). *A Treatise on Electricity and Magnetism*. Clarendon Press.</li>
+    <li><span class="tag">[2]</span> Priest, E., & Forbes, T. (2000). *Magnetic Reconnection: MHD Theory and Applications*. Cambridge University Press.</li>
+    <li><span class="tag">[3]</span> Griffiths, D. J. (2017). *Introduction to Electrodynamics* (4th ed.). Cambridge University Press.</li>
+    <li><span class="tag">[4]</span> Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. *Computing in Science & Engineering*, 9(3), 90–95. <a href="https://doi.org/10.1109/MCSE.2007.55" target="_blank" rel="noopener">doi:10.1109/MCSE.2007.55</a></li>
+    <li><span class="tag">[5]</span> Faraday, M. (1846). Thoughts on Ray-vibrations. *Philosophical Magazine*, 28, 345–350.</li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

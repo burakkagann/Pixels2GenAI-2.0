@@ -1,0 +1,265 @@
+---
+module: "M 05"
+cycle: "I"
+title: "Differential Growth"
+objective: "Grow a closed polyline by inserting new vertices over time while repelling and smoothing existing ones — produces brain-coral, intestinal-villi, and morphogenetic patterns."
+framework: "hands-on"
+duration: "18–22 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.4.1 (Eden growth), NumPy broadcasting"
+prev:
+  slug: "5.4.1"
+  title: "Eden Growth Model"
+next:
+  slug: "5.4.3"
+  title: "Space Colonization"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Brain corals, intestinal villi, and the convolutions of the cerebral cortex are all variants of the same morphogenetic mechanism: a 2D surface grows faster than the space it sits on, so it buckles into folds and folds-of-folds. The simplest computational model of that mechanism is **differential growth** — a closed polyline whose length increases over time while a short-range repulsion and a smoothing force keep its vertices well-spaced and the curve locally smooth. The output is unmistakable: a starting circle becomes a hand-drawn-looking convoluted shape within a few hundred frames. The same algorithm, with different parameters, models stigmergic ant trails, leaf-vein networks, and the brain's gyrification process [1].
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Store a curve as a closed loop of 2D vertices and maintain it under growth.</li>
+  <li>Apply a short-range repulsion between every pair of vertices using vectorised NumPy pairwise operations.</li>
+  <li>Apply a per-vertex smoothing force that pulls each point toward the midpoint of its two curve-neighbours.</li>
+  <li>Insert new vertices to extend the curve and trigger buckling — the growth pressure that drives morphogenesis.</li>
+</ol>
+
+## Quick start — repulsion + smoothing + insertion <a id="quick-start"></a>
+
+<CodeBlock lang="python" file="quick_start.py">
+```python
+for frame in range(NUM_FRAMES):
+    points = relax(points)              # repulsion + smoothing
+    points = split_long_edges(points)   # bisect any over-long edges
+    points = force_growth(points, rng)  # insert N new vertices per frame
+    frames.append(render(points))
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/5.4.2/differential_growth.gif"
+  alt="Animated closed curve growing from a small circle into a convoluted brain-coral pattern, yellow on dark background"
+  caption="Starting from a 42-vertex circle, growing by 6 forced insertions per frame, with repulsion and smoothing. After 200 frames the curve has ~3000 vertices and is densely folded."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+The "growth pressure" — inserting new vertices into random edges every frame — is what *forces* the buckling. Without forced insertion, the relaxation alone keeps the curve close to a circle. Without smoothing, the curve self-intersects. Without repulsion, it collapses. All three are essential.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Pairwise repulsion with linear falloff
+
+Every vertex pushes every other vertex inside its `REPEL_RADIUS`. The push falls off linearly with distance: very close vertices push hard, vertices at the boundary push not at all.
+
+<CodeBlock lang="python" file="repulsion_demo.py">
+```python
+deltas = points[:, None, :] - points[None, :, :]    # (n, n, 2)
+dist = np.linalg.norm(deltas, axis=-1) + 1e-6
+np.fill_diagonal(dist, 1e6)
+in_range = dist < REPEL_RADIUS
+falloff = np.clip((REPEL_RADIUS - dist) / REPEL_RADIUS, 0, 1)
+weight = falloff * in_range
+unit = deltas / dist[..., None]
+repel = (unit * weight[..., None]).sum(axis=1)
+points = points + REPEL_STRENGTH * repel
+```
+</CodeBlock>
+
+Repulsion is what prevents the curve from collapsing onto itself when the curvature gets tight. Without it, two folds touching each other would merge into one — and that would lose the whole brain-coral structure.
+
+<Admonition type="dyk" title="Did you know? · Pinar & Kovacs / Andy Lomas">
+Differential-growth simulations entered creative practice via Andy Lomas in 2014 and was popularised by Pinar Akpinar's *Filament* series. The same algorithm now ships as a node in TouchDesigner, Blender's geometry-nodes, and Houdini's SOP library. The fact that a 40-line script produces aesthetically distinctive output is exactly the property that made it a generative-art staple [2].
+</Admonition>
+
+### Concept 2 — Neighbour smoothing keeps the curve regular
+
+Smoothing pulls each vertex toward the *midpoint* of its two curve-neighbours. The result is local curvature reduction — sharp corners become rounded.
+
+<CodeBlock lang="python" file="smoothing_demo.py">
+```python
+prev = np.roll(points, +1, axis=0)
+nextp = np.roll(points, -1, axis=0)
+midpoint = (prev + nextp) / 2
+points = points + NEIGHBOUR_STRENGTH * (midpoint - points)
+```
+</CodeBlock>
+
+`np.roll` cyclically shifts the array — perfect for closed curves. With `shift=+1`, `prev` is the previous vertex; with `shift=-1`, `nextp` is the next vertex. The smoothing strength is a critical knob: too high and the curve flattens too quickly to develop folds, too low and it kinks unrealistically.
+
+<Admonition type="important">
+The repulsion and smoothing forces oppose each other in a useful way: repulsion pushes folds apart, smoothing prevents them from becoming too sharp. The balance between the two — combined with the growth rate — determines whether you get brain coral (high repulsion), villi (medium), or smooth bulges (high smoothing).
+</Admonition>
+
+### Concept 3 — Insertion is the growth driver
+
+Without forced insertion, the curve never grows. Differential growth is named for the *differential* between the curve's growth rate and the available area — that differential is what drives buckling.
+
+<CodeBlock lang="python" file="insertion_demo.py">
+```python
+def force_growth(points, rng):
+    for _ in range(GROWTH_INSERTIONS):
+        idx = rng.integers(0, len(points))
+        a, b = points[idx], points[(idx + 1) % len(points)]
+        new_pt = 0.5 * (a + b)
+        edge = b - a
+        normal = np.array([-edge[1], edge[0]])
+        new_pt += normal / np.linalg.norm(normal) * rng.uniform(-0.4, 0.4)
+        points = np.insert(points, (idx + 1) % len(points), new_pt, axis=0)
+    return points
+```
+</CodeBlock>
+
+The tiny perpendicular kick on insertion gives the new vertex a random direction to break out into — without it, the algorithm is too symmetric and the curve takes much longer to start folding. The same "perturb on creation" trick shows up in plant-growth simulations and in mesh-refinement schemes.
+
+<Admonition type="note">
+You can also let edges split themselves when they exceed a length threshold (the `split_long_edges` function in our reference). Combined with a constant insertion rate, this produces denser but more uniform packing. Choose whichever growth model fits the morphology you want.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order.
+
+<Exercise n={1} kicker="EXECUTE" title="Grow a coral">
+
+Download `differential_growth.py` and run it. It writes `differential_growth.gif` and stills.
+
+<Download href="/lessons/5.4.2/differential_growth.py" label="differential_growth.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Does the curve self-intersect at any point? If yes, what failed?
+- Why do the folds form *outward* (radially) rather than inward toward the centre?
+- Why is the cost per frame approximately quadratic in the number of vertices?
+
+<Dropdown summary="Answers">
+
+**Self-intersection** — should *not* happen with the default parameters; if it does, repulsion is too weak or the growth rate is too fast. Differential growth without repulsion produces a tangle within tens of frames.
+
+**Outward folding** — the curve has no internal pressure trying to push it inward. As new vertices are inserted, the curve length exceeds the perimeter of its current enclosing area, so it can only relieve that by buckling outward. (For inward folds, add a force pulling vertices toward the curve's centre.)
+
+**Quadratic cost** — the repulsion step computes pairwise distances between all `n` vertices, which is `O(n²)`. At 3000 vertices the simulation is doing 9 million pair-checks per frame; rendering still completes at sub-second per frame thanks to NumPy vectorisation, but past ~10,000 vertices you would want spatial hashing.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Shape the morphology">
+
+**Goals**
+
+1. **Sharp brain coral**: `REPEL_RADIUS = 22.0, NEIGHBOUR_STRENGTH = 0.04`. Long-range repulsion + minimal smoothing = sharper folds.
+2. **Smooth bulges**: `NEIGHBOUR_STRENGTH = 0.4`. The curve cannot kink; folds become broad bulges.
+3. **Slow growth**: `GROWTH_INSERTIONS = 1`. The curve develops folds gradually rather than densely.
+4. **Random walk start**: replace the initial circle with a small random walk loop. Watch a much less symmetric morphology emerge.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+The folds become sharp, almost rectangular. Cell-membrane-like. With long-range repulsion the curve aggressively separates itself; with minimal smoothing it has no recourse to round the corners.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+Smooth bulges, no fine structure. The curve cannot maintain sharp local curvature, so growth manifests as broad lobes rather than crinkles.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+Slower morphogenesis. By frame 200 the curve has ~500 vertices instead of 3000, and the folds are sparser. Useful for slower, more readable animations.
+
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+A random walk loop starts asymmetric. The same algorithm produces a much less regular morphology — closer to actual marine organisms, where the initial shape determines a lot of the final structure.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement relax()">
+
+Use `differential_starter.py`. The growth and rendering are wired up. `relax()` is stubbed.
+
+<Download href="/lessons/5.4.2/differential_starter.py" label="differential_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+1. Repulsion — pairwise NumPy broadcasting as in Concept 1.
+2. Smoothing — `np.roll` and a midpoint-pull, as in Concept 2.
+
+<Dropdown summary="Complete solution">
+
+```python
+def relax(points):
+    deltas = points[:, None, :] - points[None, :, :]
+    dist = np.linalg.norm(deltas, axis=-1) + 1e-6
+    np.fill_diagonal(dist, 1e6)
+    in_range = dist < REPEL_RADIUS
+    falloff = np.clip((REPEL_RADIUS - dist) / REPEL_RADIUS, 0, 1)
+    weight = falloff * in_range
+    unit = deltas / dist[..., None]
+    repel = (unit * weight[..., None]).sum(axis=1)
+    points = points + REPEL_STRENGTH * repel
+    prev = np.roll(points, +1, axis=0)
+    nextp = np.roll(points, -1, axis=0)
+    midpoint = (prev + nextp) / 2
+    points = points + NEIGHBOUR_STRENGTH * (midpoint - points)
+    return points
+```
+
+</Dropdown>
+
+#### Make it your own
+
+- **Open curve**: do not close the loop. The "free ends" wander outward like sea-grass tips.
+- **Multiple curves**: simulate two or three loops that interact (extend the repulsion to inter-curve pairs).
+- **Boundary**: confine the curve inside a circle of fixed radius. Now the morphology has to pack into a finite area; the result is closer to a cerebral cortex.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/5.4.2/differential_growth.py" label="differential_growth.py — full reference implementation" />
+<Download href="/lessons/5.4.2/differential_starter.py" label="differential_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Differential growth is three forces in a loop: pairwise repulsion, neighbour smoothing, and forced insertion. Repulsion keeps the curve from collapsing on itself; smoothing keeps it locally regular; insertion is the growth driver. The output morphology — brain coral, villi, gyri — is a function of the relative strengths of those three forces and the initial shape. The algorithm fits in 40 lines, runs in real time on small problems, and produces output indistinguishable from biological morphogenesis at a glance. The same scheme generalises to 3D (using a triangle mesh instead of a polyline) and is the basis of nearly every "organic" 3D modelling tool in 2026.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- No insertion. The curve never grows; you have made a perimeter-relaxation algorithm, not a growth model.
+- Repulsion radius too small relative to spacing. Vertices crowd, self-intersection follows.
+- Repulsion radius too large. The whole curve sees every other point; growth is suppressed.
+- Smoothing strength near 1. The curve cannot maintain folds; you get a slightly-wiggly circle.
+- Naive `O(n²)` pairwise for `n > 5000`. Use spatial hashing (grid bins) for big curves.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Tallinen, T., Chung, J. Y., Rousseau, F., Girard, N., Lefèvre, J., & Mahadevan, L. (2016). On the growth and form of cortical convolutions. *Nature Physics*, 12(6), 588–593. <a href="https://doi.org/10.1038/nphys3632" target="_blank" rel="noopener">doi:10.1038/nphys3632</a></li>
+    <li><span class="tag">[2]</span> Lomas, A. (2014). Cellular forms: an artistic exploration of morphogenesis. In *AISB Convention 2014: Symposium on Computational Creativity*. <a href="https://andylomas.com/" target="_blank" rel="noopener">andylomas.com</a></li>
+    <li><span class="tag">[3]</span> Pearson, M. (2011). *Generative Art: A Practical Guide Using Processing*. Manning Publications.</li>
+    <li><span class="tag">[4]</span> Eberly, D. H. (2006). *3D Game Engine Design* (2nd ed.). Morgan Kaufmann. (For pairwise force optimisation.)</li>
+    <li><span class="tag">[5]</span> Mahadevan, L., & Rica, S. (2005). Self-organized origami. *Science*, 307(5716), 1740. <a href="https://doi.org/10.1126/science.1105169" target="_blank" rel="noopener">doi:10.1126/science.1105169</a></li>
+    <li><span class="tag">[6]</span> Harris, C. R., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>

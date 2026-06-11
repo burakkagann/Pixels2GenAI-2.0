@@ -1,0 +1,293 @@
+---
+module: "M 05"
+cycle: "I"
+title: "Double Pendulum Chaos"
+objective: "Simulate two coupled pendulums with Runge-Kutta integration, then watch deterministic physics produce motion that never repeats and never can be predicted long-term."
+framework: "hands-on"
+duration: "22–28 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "5.1.1 (Euler integration), basic trigonometry"
+prev:
+  slug: "5.3.2"
+  title: "N-Body Planet Simulation"
+next:
+  slug: "5.3.4"
+  title: "Cloth / Rope Simulation"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+A single pendulum is the textbook example of predictable physics — it swings back and forth on a sinusoid forever. Hang a second pendulum from its end and the system becomes one of the simplest known examples of **deterministic chaos**: the equations of motion are fully written down, the simulation is exact, and yet two near-identical starting positions produce wildly different trajectories within seconds. Edward Lorenz discovered this property in atmospheric models in 1963 and named the popular shorthand the "butterfly effect" [1]. In this lesson you will derive the equations from coupling, integrate them with the Runge-Kutta 4th-order (RK4) method, animate the swinging arm, and visually demonstrate sensitivity to initial conditions by running two simulations whose starting angles differ by 0.06 degrees.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Read the double-pendulum equations of motion and identify the coupling terms that make them chaotic.</li>
+  <li>Implement RK4 numerical integration and understand why Euler is not enough here.</li>
+  <li>Define chaos as *extreme sensitivity to initial conditions* — not randomness.</li>
+  <li>Visualise chaos by comparing trajectories from very nearly identical starting states.</li>
+</ol>
+
+## Quick start — see it in action <a id="quick-start"></a>
+
+Run the script. It writes three files: a GIF of the swinging arm, a still frame, and a comparison plot of two near-identical pendulums diverging.
+
+<CodeBlock lang="python" file="quick_start.py">
+```bash
+python double_pendulum.py
+```
+</CodeBlock>
+
+<Figure
+  src="/lessons/5.3.3/double_pendulum.gif"
+  alt="Animated double pendulum tracing a chaotic looping path against a dark background"
+  caption="The double pendulum traces an unpredictable path through space. The second bob never repeats its trajectory even though the physics are completely deterministic."
+  num={1}
+  role="output"
+/>
+
+<Admonition type="tip">
+Watch the second pendulum bob carefully. Despite following the same equations every frame, its behaviour appears random and never exactly repeats. That is what *chaos* means — not noise, just unpredictability from inside a deterministic system.
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Coupled physics, simple in shape
+
+A double pendulum is two rigid rods connected end-to-end. The first rod hangs from a fixed pivot; the second hangs from the end of the first. Each rod has a length (`L1`, `L2`), a mass concentrated at its tip (`m1`, `m2`), and an angle from vertical (`theta1`, `theta2`). The system has four state variables — those two angles and their angular velocities `omega1`, `omega2`.
+
+The motion of each rod affects the other. When the first swings, it carries the second with it. When the second swings, its momentum yanks back on the first. That mutual influence — the **coupling** — is the engine of the chaos.
+
+The equations of motion come from Lagrangian mechanics [2]. They look heavy, but the essential point is just: *the acceleration of each rod depends on both angles and both angular velocities.*
+
+<CodeBlock lang="python" file="accelerations_demo.py">
+```python
+def compute_accelerations(theta1, omega1, theta2, omega2):
+    delta = theta1 - theta2
+    denom = 2 * m1 + m2 - m2 * np.cos(2 * delta)
+
+    alpha1 = (
+        -g * (2 * m1 + m2) * np.sin(theta1)
+        - m2 * g * np.sin(theta1 - 2 * theta2)
+        - 2 * np.sin(delta) * m2 * (
+            omega2**2 * L2 + omega1**2 * L1 * np.cos(delta)
+        )
+    ) / (L1 * denom)
+
+    alpha2 = (
+        2 * np.sin(delta) * (
+            omega1**2 * L1 * (m1 + m2)
+            + g * (m1 + m2) * np.cos(theta1)
+            + omega2**2 * L2 * m2 * np.cos(delta)
+        )
+    ) / (L2 * denom)
+
+    return alpha1, alpha2
+```
+</CodeBlock>
+
+<Admonition type="important">
+The wall of trigonometry is intimidating but says one thing: each acceleration depends on **both** angles. Decouple the rods (set the cross-terms to zero) and you would have two independent pendulums swinging on perfect sinusoids — predictable forever.
+</Admonition>
+
+### Concept 2 — Chaos is determinism plus sensitivity
+
+Chaos does **not** mean randomness. Every step of the double pendulum's motion is exactly determined by its previous step. Given identical initial conditions and infinite precision, the trajectory is repeatable. The unpredictability comes from a different property: **extreme sensitivity to initial conditions**.
+
+Start two pendulums with angles differing by 0.001 radians (about 0.06 degrees, narrower than the width of a pencil line at arm's length). For the first three seconds they trace the same path. By five seconds you can see them parting. By fifteen seconds they are unrelated.
+
+<Figure
+  src="/lessons/5.3.3/chaos_comparison.png"
+  alt="Two pendulum trajectories drawn over each other in different colours, showing nearly identical starting paths that diverge dramatically"
+  caption="Two pendulums started with initial angles differing by 0.001 radians. After 15 seconds, the paths share no visible structure."
+  num={2}
+  role="output"
+/>
+
+The rate at which nearby trajectories pull apart is called the **Lyapunov exponent** [3]. A positive exponent means exponential divergence — small errors double, then double again, then again. The double pendulum has measurable positive Lyapunov exponents, which is the formal statement that "it is chaotic" [4].
+
+<Admonition type="dyk" title="Did you know? · Lorenz and the butterfly">
+Edward Lorenz noticed in 1961 that his weather simulation gave wildly different forecasts when he restarted it from a printout — because the printout rounded the state to three decimal places instead of six. The phrase "butterfly effect" came from his 1972 talk titled "Does the flap of a butterfly's wings in Brazil set off a tornado in Texas?" [1].
+</Admonition>
+
+### Concept 3 — Why RK4 instead of Euler
+
+The simplest integrator — Euler's method — updates the state with `new = old + derivative * dt`. In Module 5.1.1 (sand) that was plenty accurate, because each particle was independent and short-lived. For the double pendulum it is a disaster: Euler accumulates ~`dt²` of error per step, those errors look like extra perturbations to the initial condition, and chaotic systems amplify perturbations exponentially. Within a few seconds Euler diverges from the "true" trajectory of the same starting state.
+
+The **Runge-Kutta 4th-order method (RK4)** samples the derivative four times per step at carefully-chosen interior points and combines them with a weighted average. The error per step is now ~`dt⁵` — many orders of magnitude smaller [5].
+
+<CodeBlock lang="python" file="rk4_demo.py">
+```python
+def rk4_step(theta1, omega1, theta2, omega2, dt):
+    def f(th1, w1, th2, w2):
+        a1, a2 = compute_accelerations(th1, w1, th2, w2)
+        return w1, a1, w2, a2
+
+    k1 = f(theta1, omega1, theta2, omega2)
+    k2 = f(theta1 + k1[0]*dt/2, omega1 + k1[1]*dt/2,
+           theta2 + k1[2]*dt/2, omega2 + k1[3]*dt/2)
+    k3 = f(theta1 + k2[0]*dt/2, omega1 + k2[1]*dt/2,
+           theta2 + k2[2]*dt/2, omega2 + k2[3]*dt/2)
+    k4 = f(theta1 + k3[0]*dt, omega1 + k3[1]*dt,
+           theta2 + k3[2]*dt, omega2 + k3[3]*dt)
+
+    weighted = lambda i: (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]) * dt / 6
+    return (theta1 + weighted(0), omega1 + weighted(1),
+            theta2 + weighted(2), omega2 + weighted(3))
+```
+</CodeBlock>
+
+<Admonition type="note">
+Even RK4 is not perfect — over a very long simulation, accumulated floating-point error eventually behaves like its own tiny perturbation, and the chaotic system amplifies it. The lesson is not "use better integrators" — it is that long-term prediction of chaotic systems is *impossible in principle*, not just in practice [3].
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+Three exercises in **Execute → Modify → Create** order: run the canonical chaos demo, retune physics parameters, then implement the integrator from scratch.
+
+<Exercise n={1} kicker="EXECUTE" title="Run the canonical demo">
+
+Download `double_pendulum.py` and run it. It produces `double_pendulum.gif`, `double_pendulum_frame.png`, and `chaos_comparison.png`.
+
+<Download href="/lessons/5.3.3/double_pendulum.py" label="double_pendulum.py — complete reference implementation" />
+
+**Reflection questions**
+
+- Watch the GIF several times. Does the motion ever exactly repeat?
+- In `chaos_comparison.png`, at what wall-clock second do the two trajectories visibly diverge?
+- Which terms in `compute_accelerations` are the coupling — the ones that make alpha1 depend on theta2 and vice versa?
+- Why does this make weather forecasting hard?
+
+<Dropdown summary="Answers">
+
+**Exact repetition?** — Almost certainly not. The system is *non-periodic*: the state never returns exactly to a previous configuration. It may come close, but every "near return" amplifies tiny differences and the subsequent trajectory diverges.
+
+**Visible divergence** — Typically around 3–5 seconds the trajectories begin to part. By 7–8 seconds the difference is unmistakable; by 15 seconds the two pendulums look like independent simulations.
+
+**Coupling terms** — Every appearance of `delta = theta1 - theta2` is a coupling term: `np.cos(2 * delta)` in the denominator, `np.sin(delta)` in both numerators, plus the `np.sin(theta1 - 2 * theta2)` term in alpha1. If you delete those, alpha1 stops depending on theta2 and the system de-couples.
+
+**Weather forecasting** — Atmospheric dynamics are governed by nonlinear PDEs with the same sensitivity property. Every observation has measurement error; the model amplifies that error exponentially. The current practical horizon for skillful forecasting is around 10–14 days, and it is bounded by chaos, not by computational power.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Retune the physics">
+
+Edit the constants at the top of `double_pendulum.py` and re-render. Each goal isolates one physical parameter.
+
+**Goals**
+
+1. **Different initial angles**: `theta1_init = np.pi / 4`, `theta2_init = np.pi`.
+2. **Asymmetric lengths**: `L1 = 1.5`, `L2 = 0.5`.
+3. **Asymmetric masses**: `m1 = 2.0`, `m2 = 0.5`.
+
+<Dropdown summary="Goal 1 — what to expect">
+
+Starting `theta2` at π means the lower rod points straight down — an unstable equilibrium. Any small perturbation tips it into a swing. With `theta1` at 45° and `theta2` at 180° you get an "S-shaped" initial release that builds into dramatic flapping motion within the first half-second.
+
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+
+A shorter second rod oscillates much faster than a longer one (period scales with `sqrt(L)`), so the second bob whirs while the first one swings slowly. The trajectory pattern becomes more compact — the second bob simply cannot reach as far from its pivot — but you see more loops per second.
+
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+
+A heavier first mass means its motion is less affected by the second. The first rod swings more smoothly, almost like a single pendulum, while the second bob behaves erratically (its lower inertia leaves it at the mercy of whatever the first rod is doing).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement RK4 from scratch">
+
+Use `double_pendulum_starter.py`, which provides the simulation loop, animation rendering, and figure helpers. Two functions are stubbed out with TODOs — implement them and the script will work.
+
+<Download href="/lessons/5.3.3/double_pendulum_starter.py" label="double_pendulum_starter.py — Exercise 3 scaffold" />
+
+**Implement**
+
+1. `compute_accelerations(theta1, omega1, theta2, omega2)` — return `(alpha1, alpha2)` using the formulae from Concept 1.
+2. `rk4_step(theta1, omega1, theta2, omega2, dt)` — return the four updated state variables.
+
+<Dropdown summary="Hint 1 — Accelerations structure">
+
+The formula has three sections each:
+
+1. Compute `delta = theta1 - theta2`.
+2. Compute the shared denominator `2*m1 + m2 - m2*cos(2*delta)`.
+3. Build the two numerators directly from the formulae and divide.
+
+If a quick sanity check fails: when both pendulums start at small angles (`theta1=theta2=0.1, omega1=omega2=0`), the accelerations should be near `-g/L * theta` — the small-angle approximation of a single pendulum.
+
+</Dropdown>
+
+<Dropdown summary="Hint 2 — RK4 pattern">
+
+The pattern is identical for every state variable: each k evaluates `f` at a different time-shifted state. Bundle the state into a tuple `(theta1, omega1, theta2, omega2)` and write a helper `f(state)` that returns the derivative tuple, then `k2 = f(state + k1*dt/2)`, and so on.
+
+</Dropdown>
+
+<Dropdown summary="Challenge — add damping">
+
+Real pendulums lose energy to air resistance and friction at the pivot. Add a damping term proportional to angular velocity:
+
+```python
+damping = 0.05
+alpha1 -= damping * omega1
+alpha2 -= damping * omega2
+```
+
+The chaotic behaviour persists, but the system loses energy and eventually relaxes to the lower equilibrium. With `damping=0.1` the pendulum typically settles within 30–60 seconds of simulated time.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Triple pendulum** — add a third rod with its own length, mass, and angle. The equations get longer (more cross-terms) but the structure of RK4 is unchanged.
+- **Phase-space plot** — instead of drawing the physical arm, plot `(theta1, omega1)` over time. The pattern that emerges is a *strange attractor* — geometric evidence that even chaotic systems have hidden structure.
+- **Many pendulums, slightly different starts** — render 50 pendulums starting from angles spaced 0.0001 radians apart. The first few seconds look like one pendulum; then the bundle frays into a cloud.
+
+</Exercise>
+
+## Downloads <a id="downloads"></a>
+
+<Download href="/lessons/5.3.3/double_pendulum.py" label="double_pendulum.py — full reference implementation" />
+<Download href="/lessons/5.3.3/double_pendulum_starter.py" label="double_pendulum_starter.py — Exercise 3 scaffold" />
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+The double pendulum is the cheapest demonstration that *deterministic does not mean predictable*. Its equations are derivable, its simulation is exact in arithmetic terms, and yet two near-identical starts diverge exponentially. The coupling between the two rods is what produces the chaos; RK4 is what lets a finite simulation produce believable results for tens of seconds before accumulated floating-point error becomes another perturbation. The lesson generalises far beyond pendulums: weather, orbital mechanics, neural-network training dynamics, and population biology all share the same property, and the same impossibility of long-horizon prediction.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Using Euler instead of RK4. The simulation will look fine for one second and absurd by five.
+- Expecting bit-exact reproducibility across machines. Different float-rounding orders are themselves tiny perturbations.
+- Confusing chaos with randomness. The system has no stochastic input — the unpredictability is structural.
+- Plotting only one trajectory. Chaos is invisible from a single run; you need a pair to *see* it.
+- Forgetting units. Lengths in metres, time in seconds, `g = 9.81`. Mixing pixels with metres will not crash but it will lie about the physics.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Lorenz, E. N. (1963). Deterministic nonperiodic flow. *Journal of the Atmospheric Sciences*, 20(2), 130–141. <a href="https://doi.org/10.1175/1520-0469(1963)020%3C0130:DNF%3E2.0.CO;2" target="_blank" rel="noopener">doi:10.1175/1520-0469(1963)020&lt;0130:DNF&gt;2.0.CO;2</a></li>
+    <li><span class="tag">[2]</span> Goldstein, H., Poole, C. P., & Safko, J. L. (2002). *Classical Mechanics* (3rd ed.). Addison-Wesley.</li>
+    <li><span class="tag">[3]</span> Strogatz, S. H. (2014). *Nonlinear Dynamics and Chaos* (2nd ed.). Westview Press.</li>
+    <li><span class="tag">[4]</span> Shinbrot, T., Grebogi, C., Wisdom, J., & Yorke, J. A. (1992). Chaos in a double pendulum. *American Journal of Physics*, 60(6), 491–499. <a href="https://doi.org/10.1119/1.16860" target="_blank" rel="noopener">doi:10.1119/1.16860</a></li>
+    <li><span class="tag">[5]</span> Press, W. H., Teukolsky, S. A., Vetterling, W. T., & Flannery, B. P. (2007). *Numerical Recipes: The Art of Scientific Computing* (3rd ed.), Chapter 17. Cambridge University Press.</li>
+    <li><span class="tag">[6]</span> Levien, R. B., & Tan, S. M. (1993). Double pendulum: An experiment in chaos. *American Journal of Physics*, 61(11), 1038–1044. <a href="https://doi.org/10.1119/1.17335" target="_blank" rel="noopener">doi:10.1119/1.17335</a></li>
+    <li><span class="tag">[7]</span> Hairer, E., Nørsett, S. P., & Wanner, G. (1993). *Solving Ordinary Differential Equations I: Nonstiff Problems* (2nd ed.). Springer-Verlag.</li>
+  </ol>
+</section>
