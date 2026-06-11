@@ -338,6 +338,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--line-warm-2);
   font-size: 10px;
@@ -349,6 +350,11 @@
 
 .code .chrome .lang {
   color: var(--cycle-soft, var(--accent-soft));
+  /* Long file labels truncate instead of crowding the Copy button. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .code .chrome .copy {
@@ -360,12 +366,21 @@
   letter-spacing: 0.08em;
   padding: 3px 8px;
   cursor: pointer;
+  flex-shrink: 0;
   transition: color .15s, border-color .15s;
 }
 
 .code .chrome .copy:hover {
   color: var(--cycle, var(--accent));
   border-color: var(--cycle, var(--accent));
+}
+
+/* Touch: grow the Copy hit area; negative margin keeps the bar height. */
+@media (pointer: coarse) {
+  .code .chrome .copy {
+    padding: 12px 14px;
+    margin: -10px -4px;
+  }
 }
 
 .code pre {
@@ -588,6 +603,11 @@
   display: none;
 }
 
+/* Touch: lift the ~31px summary row to the 44px minimum. */
+@media (pointer: coarse) {
+  .dropdown > summary { min-height: 44px; }
+}
+
 .dropdown > summary::after {
   content: "+";
   font-family: var(--mono);
@@ -618,6 +638,19 @@
   padding: 26px 28px 28px;
   margin: 44px -28px 24px;
   position: relative;
+}
+
+/* ≤720px --pad-x drops below the 28px gutter pull, which would clip the
+   block at the viewport edge. Make the bleed deliberate instead: the warm
+   plate runs edge to edge, like a full-width plate in a printed book. */
+@media (max-width: 720px) {
+  .ex {
+    margin-left: calc(-1 * var(--pad-x));
+    margin-right: calc(-1 * var(--pad-x));
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+  .ex::before { left: var(--pad-x); }
 }
 
 .ex::before {
@@ -686,6 +719,8 @@
   font-size: 11px;
   color: var(--fg-2);
   letter-spacing: 0.04em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   transition: border-color .15s, color .15s;
 }
 

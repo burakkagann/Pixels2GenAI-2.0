@@ -58,6 +58,16 @@
   .col-right { display: none; }
 }
 
+/* Desktop lessons stack two sticky strips (FrameTop + stage tracker), so
+   anchor targets need more clearance than the base --sticky-off. */
+.col-main [id] {
+  scroll-margin-top: 120px;
+}
+
+@media (max-width: 920px) {
+  .col-main [id] { scroll-margin-top: var(--sticky-off); }
+}
+
 /* ============================================================
    STAGE TRACKER — sticky horizontal strip above .page
    Dynamic 8-of-16 sliding window. Each tick is statically tinted
@@ -190,6 +200,12 @@
 .tick.soon { cursor: default; }
 .tick.soon:hover b { color: var(--fg-3); }
 
+/* ≤920px the tracker scrolls away with the page — together with the
+   two-row FrameTop it would otherwise pin ~150px of a phone viewport. */
+@media (max-width: 920px) {
+  .stage { position: static; }
+}
+
 @media (max-width: 740px) {
   /* Stack the marker above the ticks; convert the vertical divider
      to a horizontal underline so the marker still reads as a header. */
@@ -201,5 +217,16 @@
     padding-bottom: 8px;
   }
   .ticks { font-size: 8.5px; }
+}
+
+/* Phone widths: module codes only — eight 9px names in ~40px cells were
+   noise, the codes keep the timeline readable. */
+@media (max-width: 540px) {
+  .tick .tname { display: none; }
+  .ticks { font-size: 9px; }
+}
+
+@media (pointer: coarse) {
+  .tick { min-height: 44px; }
 }
 

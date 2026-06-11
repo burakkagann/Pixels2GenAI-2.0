@@ -484,6 +484,23 @@
 
 .exhibition-specimen-actions .btn-ghost:hover { border-color: var(--c3); }
 
+/* Mono aside next to the announce CTA — no pink, reads as furniture. */
+.exhibition-specimen-actions .actions-note {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-left: auto;
+}
+
+@media (max-width: 560px) {
+  .exhibition-specimen-actions .actions-note {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
 /* ============================================================
    ROUTE PAGE — per-show /exhibitions/<id> (e.g. /exhibitions/2026-03)
    Mirrors /workshops route's typographic register but with its own
@@ -636,6 +653,14 @@
   }
 }
 
+/* Phone widths: cap stacked posters (see workshops.css note). */
+@media (max-width: 640px) {
+  .exhibition-specimen-poster,
+  .exhibition-poster {
+    max-width: 280px;
+  }
+}
+
 .exhibition-poster {
   position: relative;
   display: block;
@@ -767,15 +792,11 @@
   }
 }
 
+/* 3-up holds down to phone widths — the tiles are lightbox thumbnails
+   (~105px at 360px viewport), so contact-sheet density beats size. */
 @media (max-width: 720px) {
   .exhibition-plates {
     grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .exhibition-plates {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 

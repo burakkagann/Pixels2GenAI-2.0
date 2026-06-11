@@ -107,7 +107,8 @@ const ogImageUrl = new URL(ogImage, Astro.site).href;
       const el = document.getElementById(id);
       if (!el) return;
       e.preventDefault();
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
       history.replaceState(null, '', `#${id}`);
     });
 

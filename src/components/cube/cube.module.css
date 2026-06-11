@@ -12,12 +12,18 @@
   max-width: 520px;
   margin: 0 auto;
   position: relative;
+  /* A finger over the cube is scrolling, not steering — keep vertical
+     pan native (the pointer parallax is fine-pointer-only in the TSX). */
+  touch-action: pan-y;
 }
 
 .cube-stage::before {
   content: "";
   position: absolute;
-  inset: -8%;
+  /* Fixed inset: with the dark .cube-plate behind (landing.css) this is
+     an inner mat line; the old -8% drifted with stage size and read as
+     a misaligned box at phone widths. */
+  inset: -12px;
   border: 1px solid var(--line);
   pointer-events: none;
 }
@@ -160,6 +166,19 @@
   .f-left   { transform: rotateY(-90deg) translateZ(115px); }
   .f-top    { transform: rotateX(90deg) translateZ(115px); }
   .f-bottom { transform: rotateX(-90deg) translateZ(115px); }
+}
+
+/* ≤430px the content box drops under 360px and the fixed 115px offset
+   splits the faces apart at the corners. Pin the stage to 300px — exact
+   down to a 340px viewport — so halfSide stays 300 × 0.64 / 2 = 96px. */
+@media (max-width: 430px) {
+  .cube-stage { max-width: 300px; }
+  .f-front  { transform: translateZ(96px); }
+  .f-back   { transform: rotateY(180deg) translateZ(96px); }
+  .f-right  { transform: rotateY(90deg) translateZ(96px); }
+  .f-left   { transform: rotateY(-90deg) translateZ(96px); }
+  .f-top    { transform: rotateX(90deg) translateZ(96px); }
+  .f-bottom { transform: rotateX(-90deg) translateZ(96px); }
 }
 
 /* ---------- Controls panel ---------- */
@@ -314,7 +333,10 @@
 
 .journey-ticks {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  /* minmax(0, …) — bare 1fr tracks refuse to shrink below the label's
+     min-content, inflating the whole cover to ~544px on a 375px phone
+     (same trap documented on .sliders below). */
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   margin-top: 4px;
 }
 
@@ -403,8 +425,10 @@
 .sl input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  height: 3px;
-  background: var(--bg-3);
+  /* The input is the hit area (26px); the visible 3px track is drawn by
+     the track pseudo-elements below, so the design stays hairline-thin. */
+  height: 26px;
+  background: transparent;
   outline: none;
   border-radius: 2px;
   flex: 1;
@@ -413,11 +437,24 @@
   margin-left: 6px;
 }
 
+.sl input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--bg-3);
+  border-radius: 2px;
+}
+
+.sl input[type="range"]::-moz-range-track {
+  height: 3px;
+  background: var(--bg-3);
+  border-radius: 2px;
+}
+
 .sl input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 13px;
   height: 13px;
+  margin-top: -5px; /* centers the 13px thumb on the 3px track */
   background: var(--fg-2);
   border-radius: 50%;
   cursor: pointer;
@@ -471,4 +508,47 @@
 .ctrl-foot button:hover {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+/* ---------- Keyboard focus ----------
+   The sliders strip the native outline (outline: none above) — restore a
+   visible ring for keyboard users on every interactive control. */
+.journey-slider:focus-visible,
+.sl input[type="range"]:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.journey-ticks .tick:focus-visible,
+.ctrl-foot button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Touch targets ---------- */
+@media (pointer: coarse) {
+  .journey-track { height: 44px; }
+  .journey-slider { height: 44px; }
+  .journey-ticks .tick { min-height: 44px; }
+  .ctrl-foot button {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+}
+
+/* ---------- Phone diet ----------
+   The four parameter knobs are a desktop delight; at phone widths they
+   are rows of 10px mono labels costing half the panel. Keep the journey
+   slider + ticks (the curriculum metaphor) and Pause/Reset. */
+@media (max-width: 640px) {
+  .cube-controls {
+    margin-top: 22px;
+    padding: 12px 12px 10px;
+  }
+  .journey { margin-bottom: 4px; }
+  .sliders { display: none; }
+  .ctrl-foot { justify-content: flex-end; }
+  .ctrl-foot .note { display: none; }
+  /* Codes only — eight stage names don't fit ~40px tick cells. */
+  .journey-ticks .tick .tname { display: none; }
 }

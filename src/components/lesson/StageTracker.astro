@@ -72,7 +72,7 @@ const cycleClass: Record<'I' | 'II' | 'III', string> = { 'I': 'c1', 'II': 'c2', 
             aria-current={i === curIdx ? 'step' : undefined}
             aria-label={`Module ${m.idx} · ${label}`}
           >
-            <b>M {m.idx}</b>{label}
+            <b>M {m.idx}</b><span class="tname">{label}</span>
           </a>
         );
       })}

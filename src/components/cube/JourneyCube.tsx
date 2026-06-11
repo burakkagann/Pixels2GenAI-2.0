@@ -115,6 +115,12 @@ export default function JourneyCube() {
   const cubeElRef = useRef<HTMLDivElement>(null);
   const stageElRef = useRef<HTMLDivElement>(null);
 
+  // Repaints the faces once when the RAF loop isn't doing it — under
+  // reduced motion the loop never starts, and Pause early-returns before
+  // painting, so slider changes would otherwise go unseen. Assigned
+  // inside the setup effect where paintAll lives.
+  const paintIdleRef = useRef<() => void>(() => {});
+
   // Setup the off-screen buffers + RAF loop once.
   useEffect(() => {
     const faces: FaceCanvas[] = [];
@@ -341,6 +347,10 @@ export default function JourneyCube() {
       paintAll();
     }
 
+    paintIdleRef.current = () => {
+      if (reduceMotion.matches || stateRef.current.paused) paintAll();
+    };
+
     // #2 — only animate while the cube is on-screen.
     const io = new IntersectionObserver(
       (entries) => {
@@ -368,6 +378,7 @@ export default function JourneyCube() {
       io.disconnect();
       reduceMotion.removeEventListener('change', onMotionChange);
       window.removeEventListener('resize', onResize);
+      paintIdleRef.current = () => {};
     };
   }, []);
 
@@ -387,6 +398,7 @@ export default function JourneyCube() {
   ) => {
     setUi((prev) => ({ ...prev, [key]: value }));
     stateRef.current[key] = value;
+    paintIdleRef.current();
   };
 
   const handleTickClick = (i: number) => {
@@ -417,12 +429,16 @@ export default function JourneyCube() {
     stateRef.current.speed = DEFAULTS.speed;
     stateRef.current.contrast = DEFAULTS.contrast;
     stateRef.current.paused = false;
+    paintIdleRef.current();
   };
 
   // ---- Cursor parallax: tilt perspective-origin on pointer move.
+  // Hover-affordance only — on touch-primary devices a scrolling finger
+  // would jitter the perspective, so the listeners are never attached.
   useEffect(() => {
     const stage = stageElRef.current;
     if (!stage) return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const onMove = (e: PointerEvent) => {
       const r = stage.getBoundingClientRect();
       const tx = ((e.clientX - r.left) / r.width - 0.5) * 20;
@@ -513,7 +529,7 @@ export default function JourneyCube() {
                   onClick={() => handleTickClick(i)}
                   aria-label={`Jump to ${s.name}`}
                 >
-                  <b>{s.code}</b>{s.name}
+                  <b>{s.code}</b><span className={styles.tname}>{s.name}</span>
                 </button>
               );
             })}

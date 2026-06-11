@@ -55,6 +55,26 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/* In-page anchor targets land below the sticky chrome instead of under it.
+   --sticky-off tracks the FrameTop height per breakpoint (tokens.css). */
+[id] {
+  scroll-margin-top: var(--sticky-off);
+}
+
+/* Reduced motion — one global kill switch for every transition/animation
+   declared across the stylesheets. Component-level reduce blocks remain
+   where a designed static state is needed (cube spin, octo wave, 404). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 img {
   max-width: 100%;
   display: block;

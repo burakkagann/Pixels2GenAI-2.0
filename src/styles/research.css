@@ -527,6 +527,34 @@
   }
 }
 
+/* ---------- Phone widths ----------
+   research.css historically only adapted at 900/640; these rules carry
+   the stat grids, colophon, and chart type down to 360px. */
+@media (max-width: 640px) {
+  /* Stat boxes stack — three ~95px columns were unreadable at 360px. */
+  .research-figure .figure-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .supervisors {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .supervisors dt { padding-top: 10px; }
+  .supervisors dd { margin-bottom: 4px; }
+
+  .stat-callout .value { font-size: 28px; }
+
+  /* SlopeChart: the 880-unit canvas renders at ~320px here, scaling its
+     10px type to ~3.6px. Scale the in-SVG type up to stay legible; the
+     effect annotation duplicates .figure-stats below and is dropped. */
+  .slope-chart svg .axis-ticks text { font-size: 22px; }
+  .slope-chart svg .axis-labels text { font-size: 22px; }
+  .slope-chart svg .mean-labels text { font-size: 26px; }
+  .slope-chart svg .effect { display: none; }
+}
+
 /* ---------- Section-level adjustments ----------
    The lesson side-rail markers (prose.css :163-242) auto-apply to
    sections wrapped by remarkSectionize. Two small overrides for the

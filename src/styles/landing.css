@@ -11,7 +11,10 @@
   max-width: var(--maxw);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  /* minmax(0, …fr) — bare fr tracks grow to content min-content; a single
+     wide child (the cube ticks were one) silently pushes the whole hero
+     past the viewport, clipped by the body's overflow-x: hidden. */
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 64px;
   align-items: center;
   min-height: 78vh;
@@ -19,7 +22,7 @@
 
 @media (max-width: 960px) {
   .cover {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
     min-height: auto;
   }
@@ -106,10 +109,26 @@
   }
 }
 
+/* The 52px clamp floor crowds a 360px screen; step the display size down
+   one notch while keeping the serif/line-height identity. */
+@media (max-width: 480px) {
+  .cover-title { font-size: 44px; }
+}
+
 .cover-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+/* Phone: the pair of CTAs stretches margin to margin. */
+@media (max-width: 540px) {
+  .cover-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .cover-actions .btn { justify-content: center; }
 }
 
 .btn {
@@ -147,6 +166,46 @@
   border-color: var(--fg);
 }
 
+/* Touch: lift CTAs to the 44px minimum (desktop keeps the tighter 39px). */
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+}
+
+/* ---------- Cube plate (cover, right column) ----------
+   Exhibit panel behind the JourneyCube island, captioned like a
+   manuscript figure. Theme-following: a viewport-filling invariant-dark
+   slab read as a theme bug on phones, and the painted cube is saturated
+   enough to hold its own on cream. */
+.cube-plate {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: 24px 24px 22px;
+  max-width: 580px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.cube-caption {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 0 0 22px;
+}
+
+.cube-caption .fig-num {
+  color: var(--accent-soft);
+}
+
+@media (max-width: 640px) {
+  .cube-plate { padding: 16px 14px 14px; }
+  .cube-caption { margin-bottom: 16px; }
+}
+
 /* ---------- Section frame ---------- */
 .section {
   max-width: var(--maxw);
@@ -167,6 +226,21 @@
   .section-head {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  /* Stacked eyebrow gets a print-style section rule filling the line —
+     the right half of the row was dead space. */
+  .section-num {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-top: 0;
+  }
+  .section-num::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
   }
 }
 
@@ -635,26 +709,18 @@
 }
 
 @media (max-width: 720px) {
+  /* Keep the two-column head: counts stay stacked on the right edge
+     (smaller), opposite the Path label — left-stacking them wasted the
+     whole right half of the row. */
   .station-head {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .station-right {
-    text-align: left;
-    display: flex;
-    gap: 24px;
-  }
-
-  .station-right span {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: start;
   }
 
   .station-right b {
     display: inline;
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .panel-head {
@@ -672,12 +738,63 @@
 }
 
 @media (max-width: 480px) {
-  .station-cards {
-    grid-template-columns: 1fr;
-  }
-
   .station-panel {
     padding: 20px 16px;
+  }
+}
+
+/* ---------- Curriculum index (phone) ----------
+   ≤540px the sixteen module cards restyle as a ruled table of contents —
+   one line per module, like a book's contents page — halving the section
+   height. Same markup, same accordion script; only the presentation
+   changes. */
+@media (max-width: 540px) {
+  .station-cards {
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1px solid var(--line);
+    background: var(--bg-2);
+  }
+
+  .mod-card {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+    min-height: 0;
+    padding: 13px 14px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+  }
+
+  .mod-card:last-child { border-bottom: 0; }
+
+  .mod-card:hover {
+    background: var(--bg-3);
+  }
+
+  .mod-card.active {
+    background: var(--bg-3);
+    box-shadow: inset 2px 0 0 0 var(--cycle, var(--accent));
+  }
+
+  .card-top { flex: none; }
+  .card-top .card-fw { display: none; }
+
+  .mod-card h4 {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+  }
+  .mod-card h4 br { display: none; }
+  .mod-card h4 em { display: none; }
+
+  .card-meta {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    white-space: nowrap;
   }
 }
 
@@ -777,6 +894,43 @@
   font-style: italic;
 }
 
+/* ---------- Phone rhythm ----------
+   Desktop air, kept at phone scale, made every section start a page
+   late. One pass tightening the vertical scale at ≤640px. */
+@media (max-width: 640px) {
+  .cover {
+    padding-top: 28px;
+    padding-bottom: 48px;
+    gap: 36px;
+  }
+  .cover-title { margin-bottom: 20px; }
+  .cover-lead {
+    font-size: 18px;
+    margin-bottom: 28px;
+  }
+  .cover-meta { margin-bottom: 28px; }
+
+  .section {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+  .section-head { margin-bottom: 28px; }
+
+  .station-head {
+    padding: 16px 0;
+    margin-bottom: 16px;
+  }
+
+  .rq { padding: 16px 14px; }
+  .rq h4 { font-size: 17px; }
+
+  .cycles {
+    margin-top: 18px;
+    gap: 10px;
+  }
+  .cycles .cyc { padding: 12px 14px; }
+}
+
 /* ---------- § 4 Research · CTA into /research ---------- */
 .research-cta {
   display: flex;
@@ -794,6 +948,20 @@
   font-size: 14px;
   color: var(--fg-2);
   letter-spacing: -0.005em;
+}
+
+/* Phone: full-width CTA with the stat line right-aligned beneath it. */
+@media (max-width: 640px) {
+  .research-cta { gap: 14px; }
+  .research-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .research-cta-meta {
+    width: 100%;
+    text-align: right;
+    font-size: 13px;
+  }
 }
 
 /* ---------- Footer ---------- */
@@ -880,8 +1048,23 @@
 }
 
 @media (max-width: 720px) {
+  /* The About cell (blurb + author dl) is ~3× taller than any link list —
+     pairing it beside one made the footer lopsided. About and Thesis span
+     the row; Manual/Code share one; Thesis links flow in two columns. */
   .foot-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 26px 20px;
+  }
+  .foot-grid > div:first-child { grid-column: 1 / -1; }
+  .foot-grid > div:last-child { grid-column: 1 / -1; }
+  .foot-grid > div:last-child ul {
+    display: block;
+    columns: 2;
+    column-gap: 20px;
+  }
+  .foot-grid > div:last-child ul li {
+    break-inside: avoid;
+    margin-bottom: 7px;
   }
 }
 
@@ -1091,8 +1274,44 @@
   border-bottom-color: var(--fg-3);
 }
 
+/* ≤920px — two-row chrome. Wordmark + utilities stay on the first row;
+   the section nav drops to a full-width second row under a hairline,
+   keeping the mono register instead of disappearing. Same markup. */
 @media (max-width: 920px) {
-  .nav-mid { display: none; }
+  .frame-top {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    gap: 0 16px; /* row gap 0 — .nav-mid carries its own 12px top margin */
+    padding: 12px var(--pad-x) 0;
+  }
+  .nav-r { justify-self: end; }
+  .nav-mid {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    /* Links span margin to margin — a left-clustered row left the right
+       half of the rail dead. Link padding (12px) + container inset
+       (--pad-x − 12px) keeps first/last text on the page edges. */
+    justify-content: space-between;
+    gap: 0;
+    margin: 12px calc(-1 * var(--pad-x)) 0;
+    padding: 0 calc(var(--pad-x) - 12px);
+    border-top: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .nav-mid a {
+    /* 44px-tall touch targets: 13 + ~18 line + 13. */
+    padding: 13px 12px;
+    border-bottom: 0;
+    white-space: nowrap;
+  }
+}
+
+/* ≤640px — the chrome scrolls away like a printed page header; a two-row
+   sticky bar would eat ~100px of a phone viewport. The edition pill is
+   the lowest-value item at 360px and is dropped to guarantee row fit. */
+@media (max-width: 640px) {
+  .frame-top { position: static; }
+  .nav-r .ed { display: none; }
 }
 
 .nav-r {
@@ -1190,6 +1409,15 @@
   outline-offset: 2px;
 }
 
+/* Touch: grow the hit area to 44px without moving the 24px visual
+   footprint (padding expands, negative margin cancels the layout cost). */
+@media (pointer: coarse) {
+  .theme-toggle {
+    padding: 14px;
+    margin: -10px;
+  }
+}
+
 .theme-toggle .ic {
   width: 16px;
   height: 16px;
@@ -1209,6 +1437,7 @@
 .curriculum-tools {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   margin: 0 0 32px;
   flex-wrap: wrap;
@@ -1252,6 +1481,12 @@
 .curriculum-search input::placeholder { color: var(--fg-3); }
 .curriculum-search input::-webkit-search-cancel-button { display: none; }
 
+/* Touch devices: 16px is the iOS-Safari threshold below which focusing a
+   field auto-zooms the page. Desktop keeps the 14px register. */
+@media (pointer: coarse) {
+  .curriculum-search input { font-size: 16px; }
+}
+
 .search-clear {
   border: none;
   background: none;
@@ -1264,6 +1499,15 @@
   padding: 2px 4px;
 }
 .search-clear:hover { color: var(--fg); }
+
+/* Touch: ~44px hit area via padding, negative margin keeps the search
+   box height unchanged (the button has no border/background to betray it). */
+@media (pointer: coarse) {
+  .search-clear {
+    padding: 17px 12px;
+    margin: -15px -8px;
+  }
+}
 
 .search-summary {
   font-family: var(--mono);
@@ -1346,6 +1590,12 @@
   padding: 12px;
 }
 
+/* Phone widths: drop the module column so id + title + toggle breathe. */
+@media (max-width: 480px) {
+  .curriculum-results .result { grid-template-columns: 44px 1fr auto; }
+  .curriculum-results .result .r-mod { display: none; }
+}
+
 /* --- Completion toggle (shared: leaves + results) ----------- */
 .leaf-ttl { flex: 1; }
 
@@ -1364,7 +1614,15 @@
   color: transparent;
   cursor: pointer;
   opacity: 0;
+  position: relative;
   transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+/* Invisible 44px hit overlay around the 18px visual circle. */
+.leaf-done::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
 }
 
 .leaf-done svg { width: 11px; height: 11px; }
@@ -1372,6 +1630,11 @@
 .leaf:hover .leaf-done,
 .result:hover .leaf-done,
 .leaf-done:focus-visible { opacity: 1; }
+
+/* No hover on touch — the toggle must be visible to exist at all. */
+@media (hover: none) {
+  .leaf-done { opacity: 1; }
+}
 
 .leaf-done:hover { border-color: var(--cycle, var(--accent)); }
 

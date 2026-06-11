@@ -108,6 +108,22 @@
   --pad-x: clamp(20px, 4vw, 56px);
   --read-w: 72ch;
   --t-scale: 1;
+
+  /* Clearance for in-page anchor targets under the sticky FrameTop
+     (consumed by the [id] scroll-margin rule in base.css; lesson pages
+     add the stage tracker on top via lesson-layout.css). */
+  --sticky-off: 72px;
+}
+
+/* ≤920px the FrameTop becomes two rows (wordmark + nav rail) — taller. */
+@media (max-width: 920px) {
+  :root { --sticky-off: 112px; }
+}
+
+/* ≤640px the FrameTop is static (scrolls away) — only a small breathing
+   gap is needed above anchor targets. */
+@media (max-width: 640px) {
+  :root { --sticky-off: 16px; }
 }
 
 /* ============================================================
