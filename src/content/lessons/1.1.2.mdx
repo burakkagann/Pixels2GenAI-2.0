@@ -1,0 +1,387 @@
+---
+module: "M 01"
+cycle: "I"
+title: "Color Theory & Color Spaces"
+objective: "Move beyond raw RGB values to perceptually meaningful colour models. Convert between RGB, HSV, and grayscale to unlock intuitive control over hue, saturation, and brightness in generative compositions."
+framework: "hands-on"
+duration: "15–20 min"
+level: "beginner"
+load: "3 core concepts"
+prereqs: "1.1.1 (RGB arrays)"
+prev:
+  slug: "1.1.1"
+  title: "Images as Arrays & RGB"
+next:
+  slug: "1.2.1"
+  title: "Random Pattern Generation"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+RGB treats colour as three independent intensity dials. That makes perfect sense for a display panel, but it maps poorly to the way humans think about colour. Asking for "a slightly warmer orange" in RGB means adjusting all three channels simultaneously, while in the HSV model it is a single rotation of the hue dial [1].
+
+This lesson introduces two alternative colour spaces — HSV and luminance-based grayscale — and shows how converting between them gives generative artists more intuitive control over their palettes.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Understand why RGB is not perceptually uniform and why alternative colour spaces exist.</li>
+  <li>Convert between RGB and HSV using Python's built-in <code>colorsys</code> module.</li>
+  <li>Build colour palettes by sweeping hue, saturation, or value independently.</li>
+  <li>Compute perceptual luminance from RGB and generate weighted grayscale images.</li>
+</ol>
+
+## Quick start — an HSV colour wheel <a id="quick-start"></a>
+
+Run this code to paint a full hue sweep without touching a single RGB value directly:
+
+<CodeBlock lang="python" file="hsv_sweep.py">
+```python
+import numpy as np
+from PIL import Image
+import colorsys
+
+width, height = 360, 100
+image = np.zeros((height, width, 3), dtype=np.uint8)
+
+for x in range(width):
+    hue = x / width  # 0.0 → 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
+    image[:, x] = [int(r * 255), int(g * 255), int(b * 255)]
+
+Image.fromarray(image).save('hsv_sweep.png')
+```
+</CodeBlock>
+
+<Admonition type="tip">
+Each column maps to one degree of hue (0-360). Saturation and value are both locked at maximum, so every colour is vivid and bright. Changing either parameter produces pastels or dark shades without altering the perceived "colour family."
+</Admonition>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — The HSV colour model
+
+HSV stands for **Hue, Saturation, Value** [2]. It separates colour into three perceptually meaningful axes:
+
+- **Hue** (0-360): the colour itself — red, orange, yellow, green, etc.
+- **Saturation** (0-1): how vivid the colour is — 1.0 is fully saturated, 0.0 is gray.
+- **Value** (0-1): how bright the colour is — 1.0 is full brightness, 0.0 is black.
+
+<CodeBlock lang="python" file="hsv_demo.py">
+```python
+import colorsys
+
+# Pure red in HSV: hue=0, full saturation, full brightness
+r, g, b = colorsys.hsv_to_rgb(0.0, 1.0, 1.0)
+print(f"Pure red: RGB = ({int(r*255)}, {int(g*255)}, {int(b*255)})")
+
+# Same red, desaturated to pastel pink
+r, g, b = colorsys.hsv_to_rgb(0.0, 0.3, 1.0)
+print(f"Pastel pink: RGB = ({int(r*255)}, {int(g*255)}, {int(b*255)})")
+
+# Same red, darkened
+r, g, b = colorsys.hsv_to_rgb(0.0, 1.0, 0.4)
+print(f"Dark red: RGB = ({int(r*255)}, {int(g*255)}, {int(b*255)})")
+```
+</CodeBlock>
+
+The advantage for generative art is clear: to create colour harmonies, keep saturation and value constant while spacing hues evenly around the wheel. A complementary pair sits 180 degrees apart; a triadic scheme sits 120 degrees apart [3].
+
+<CodeBlock lang="python">
+```python
+import colorsys
+import numpy as np
+
+# Generate a triadic colour scheme (three evenly-spaced hues)
+base_hue = 0.08  # orange
+for i in range(3):
+    hue = (base_hue + i / 3.0) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
+    print(f"Hue {hue:.2f}: RGB = ({int(r*255)}, {int(g*255)}, {int(b*255)})")
+```
+</CodeBlock>
+
+<Admonition type="note">
+Python's `colorsys` module uses hue in the range 0.0-1.0, not 0-360. To convert from degrees: `hue_normalized = degrees / 360.0`. This is a common source of bugs when porting code from other frameworks.
+</Admonition>
+
+### Concept 2 — Perceptual luminance and grayscale
+
+In Lesson 1.1.1, grayscale meant equal RGB values: `(128, 128, 128)`. But the human eye does not weight the three primaries equally. Green appears much brighter than blue at the same intensity, because the eye's luminous-efficiency function peaks near 555 nm (green-yellow) [4].
+
+The ITU BT.709 standard defines **relative luminance** as a weighted sum:
+
+**Y = 0.2126 R + 0.7152 G + 0.0722 B**
+
+<CodeBlock lang="python" file="luminance.py">
+```python
+import numpy as np
+from PIL import Image
+
+# Create three 100x100 blocks: pure red, green, blue
+blocks = np.zeros((100, 300, 3), dtype=np.uint8)
+blocks[:, :100, 0] = 255    # red
+blocks[:, 100:200, 1] = 255  # green
+blocks[:, 200:, 2] = 255    # blue
+
+# Naive grayscale: simple average
+naive = np.mean(blocks, axis=2).astype(np.uint8)
+
+# Perceptual grayscale: luminance-weighted
+weights = np.array([0.2126, 0.7152, 0.0722])
+perceptual = np.dot(blocks.astype(float), weights).astype(np.uint8)
+
+Image.fromarray(naive).save('gray_naive.png')
+Image.fromarray(perceptual).save('gray_perceptual.png')
+```
+</CodeBlock>
+
+The naive average gives all three blocks the same gray (85), but the perceptual version correctly shows green as brightest (182), red as medium (54), and blue as darkest (18).
+
+<Admonition type="important">
+Always use luminance weighting when converting colour images to grayscale for visual analysis. A simple average discards perceptual information and can mislead downstream algorithms like edge detection or thresholding [5].
+</Admonition>
+
+### Concept 3 — Building palettes with HSV
+
+Generative artists often need to produce families of colours that share a visual quality — warm tones, muted earth colours, neon accents. HSV makes this straightforward:
+
+<CodeBlock lang="python" file="palette_builder.py">
+```python
+import numpy as np
+from PIL import Image
+import colorsys
+
+# Build a 5-colour analogous palette (neighbouring hues)
+base_hue = 0.55  # teal-blue region
+n_colors = 5
+swatch_size = 80
+
+palette = np.zeros((swatch_size, swatch_size * n_colors, 3), dtype=np.uint8)
+
+for i in range(n_colors):
+    hue = (base_hue + i * 0.04) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.7, 0.9)
+    col_start = i * swatch_size
+    col_end = col_start + swatch_size
+    palette[:, col_start:col_end] = [int(r * 255), int(g * 255), int(b * 255)]
+
+Image.fromarray(palette).save('analogous_palette.png')
+```
+</CodeBlock>
+
+By fixing saturation at 0.7 and value at 0.9, every swatch feels cohesive. Shifting saturation down to 0.3 would produce a pastel version of the same palette; dropping value to 0.4 yields a dark, moody variant — all without the trial-and-error of manipulating three independent RGB channels.
+
+<Admonition type="dyk" title="Technical note - perceptual uniformity">
+HSV improves on RGB for intuitive colour selection, but it is still not perceptually uniform. Equal steps in HSV hue do not appear as equal colour differences to the human eye. The CIELAB (L*a*b*) colour space addresses this by modelling human colour perception more accurately [6]. CIELAB is essential in industrial colour matching, but for generative art HSV is usually the better trade-off between intuitiveness and simplicity.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Visualise HSV channels">
+
+Run the following code to create a 200x200 image that varies hue along the x-axis and saturation along the y-axis. Observe how the two dimensions interact.
+
+<CodeBlock lang="python" file="exercise1_hsv_grid.py">
+```python
+import numpy as np
+from PIL import Image
+import colorsys
+
+size = 200
+image = np.zeros((size, size, 3), dtype=np.uint8)
+
+for y in range(size):
+    for x in range(size):
+        hue = x / size
+        saturation = 1.0 - (y / size)
+        r, g, b = colorsys.hsv_to_rgb(hue, saturation, 1.0)
+        image[y, x] = [int(r * 255), int(g * 255), int(b * 255)]
+
+Image.fromarray(image).save('hsv_grid.png')
+```
+</CodeBlock>
+
+**Reflection questions**
+
+- What colour appears at the top-left corner? What about the top-right?
+- What happens to all hues as you move toward the bottom of the image?
+- Why does the bottom row appear white regardless of horizontal position?
+
+<Dropdown summary="Solution & explanation">
+
+**Answers:**
+
+- **Top-left**: pure red (hue = 0, saturation = 1.0). **Top-right**: also red (hue wraps around to ~1.0 which is the same as 0).
+- As you move down, saturation decreases. Colours become increasingly washed out — pastels, then nearly white.
+- At the bottom row, saturation is approximately 0.0. With no saturation, every hue maps to the same achromatic colour. Since value is 1.0, that colour is white.
+
+The grid demonstrates why HSV is called a "cylindrical" colour model: hue wraps around (left edge = right edge), while saturation and value form independent radial and vertical axes [2].
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Design mood palettes">
+
+Modify the palette-builder code from Concept 3 to create three different palettes. Change only the HSV parameters.
+
+<Dropdown summary="Goals">
+
+1. **Sunset palette**: warm hues (reds, oranges, yellows) with high saturation.
+2. **Pastel palette**: any hue range, but low saturation (0.2-0.4) and high value.
+3. **Monochrome palette**: a single hue, varying only saturation from 0.2 to 1.0.
+
+</Dropdown>
+
+<Dropdown summary="Hint">
+For goal 1, set `base_hue` near 0.0 (red) and use a step of ~0.05 to sweep through orange into yellow.
+For goal 3, keep hue constant and vary saturation: `saturation = 0.2 + i * 0.2`.
+</Dropdown>
+
+<Dropdown summary="Solutions">
+
+**1. Sunset palette**
+
+<CodeBlock lang="python">
+```python
+base_hue = 0.0   # start at red
+for i in range(n_colors):
+    hue = (base_hue + i * 0.05) % 1.0  # red → orange → yellow
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.9, 0.95)
+```
+</CodeBlock>
+
+**2. Pastel palette**
+
+<CodeBlock lang="python">
+```python
+base_hue = 0.5
+for i in range(n_colors):
+    hue = (base_hue + i * 0.06) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.3, 0.95)  # low saturation
+```
+</CodeBlock>
+
+**3. Monochrome palette**
+
+<CodeBlock lang="python">
+```python
+fixed_hue = 0.6  # blue
+for i in range(n_colors):
+    saturation = 0.2 + i * 0.2  # 0.2, 0.4, 0.6, 0.8, 1.0
+    r, g, b = colorsys.hsv_to_rgb(fixed_hue, saturation, 0.9)
+```
+</CodeBlock>
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Luminance-sorted mosaic">
+
+Create a 10x10 mosaic of random colours sorted by perceptual luminance — darkest at the top-left, brightest at the bottom-right.
+
+**Goal**: Generate 100 random RGB colours, sort them by BT.709 luminance, arrange them in row-major order on a 10x10 grid of 30x30 pixel tiles.
+
+<CodeBlock lang="python" file="exercise3_starter.py">
+```python
+import numpy as np
+from PIL import Image
+
+np.random.seed(42)
+
+# TODO 1: Generate 100 random RGB colours as a (100, 3) array
+# Hint: np.random.randint(0, 256, size=(100, 3))
+
+# TODO 2: Compute luminance for each colour
+# Formula: Y = 0.2126*R + 0.7152*G + 0.0722*B
+
+# TODO 3: Sort colours by luminance (ascending)
+# Hint: np.argsort() returns indices that would sort an array
+
+# TODO 4: Arrange sorted colours into a 10x10 grid of 30x30 tiles
+# Hint: use np.kron or nested loops
+
+Image.fromarray(mosaic).save('luminance_mosaic.png')
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — computing luminance">
+The luminance weights are `[0.2126, 0.7152, 0.0722]`. Use `np.dot(colors, weights)` to compute luminance for all 100 colours at once.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — sorting by luminance">
+`order = np.argsort(luminances)` gives you indices from darkest to brightest. Then `sorted_colors = colors[order]` reorders the colour array.
+</Dropdown>
+
+<Dropdown summary="Hint 3 — building the grid">
+Reshape the sorted colours to `(10, 10, 3)` and use `np.kron(grid, np.ones((30, 30, 1), dtype=np.uint8))` to scale each colour into a 30x30 tile.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+np.random.seed(42)
+
+# Generate 100 random RGB colours
+colors = np.random.randint(0, 256, size=(100, 3))
+
+# Compute BT.709 luminance
+weights = np.array([0.2126, 0.7152, 0.0722])
+luminances = np.dot(colors.astype(float), weights)
+
+# Sort by luminance (darkest first)
+order = np.argsort(luminances)
+sorted_colors = colors[order].astype(np.uint8)
+
+# Reshape into 10x10 grid and scale to 30x30 tiles
+grid = sorted_colors.reshape(10, 10, 3)
+mosaic = np.kron(grid, np.ones((30, 30, 1), dtype=np.uint8))
+
+Image.fromarray(mosaic).save('luminance_mosaic.png')
+```
+</CodeBlock>
+
+**How it works**
+
+The mosaic transitions smoothly from dark tones (top-left) to bright tones (bottom-right) because sorting by luminance groups perceptually similar brightness levels together. Random RGB colours that happen to share a luminance sit side by side, revealing how different hue combinations can produce the same perceived brightness.
+
+</Dropdown>
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+HSV separates colour into hue, saturation, and value — three axes that map directly to the way artists describe colour ("make it warmer," "more muted," "darker"). This makes HSV the natural choice for algorithmic palette generation. Perceptual luminance, defined by the BT.709 standard as a weighted sum of RGB channels (green contributes most, blue least), produces grayscale conversions that match human brightness perception. Converting between colour spaces is a one-line operation in Python's `colorsys` module, and the ability to reason about colour in multiple representations is a foundational skill for every generative-art technique that follows.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- `colorsys` uses 0.0-1.0 for hue, not 0-360. Divide by 360 when converting from degrees.
+- HSV is not perceptually uniform. Equal hue steps do not appear as equal colour differences.
+- Naive grayscale averaging (`np.mean`) discards perceptual weighting. Always use luminance weights for visual applications.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Smith, A. R. (1978). Color gamut transform pairs. <em>ACM SIGGRAPH Computer Graphics</em>, 12(3), 12–19. <a href="https://doi.org/10.1145/965139.807361" target="_blank" rel="noopener">doi:10.1145/965139.807361</a></li>
+    <li><span class="tag">[2]</span> Foley, J. D., van Dam, A., Feiner, S. K., and Hughes, J. F. (1990). <em>Computer Graphics: Principles and Practice</em> (2nd ed.). Addison-Wesley. ISBN 0-201-12110-7.</li>
+    <li><span class="tag">[3]</span> Itten, J. (1970). <em>The Elements of Color</em>. Van Nostrand Reinhold. ISBN 0-442-24038-4.</li>
+    <li><span class="tag">[4]</span> Poynton, C. (2012). <em>Digital Video and HD: Algorithms and Interfaces</em> (2nd ed.). Morgan Kaufmann. ISBN 978-0-12-391926-7.</li>
+    <li><span class="tag">[5]</span> Gonzalez, R. C. and Woods, R. E. (2007). <em>Digital Image Processing</em> (3rd ed.). Pearson. ISBN 978-0-13-168728-8.</li>
+    <li><span class="tag">[6]</span> CIE (1976). <em>Colorimetry</em> (CIE Publication No. 15). International Commission on Illumination.</li>
+    <li><span class="tag">[7]</span> Harris, C. R., et al. (2020). Array programming with NumPy. <em>Nature</em>, 585, 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">doi:10.1038/s41586-020-2649-2</a></li>
+  </ol>
+</section>
