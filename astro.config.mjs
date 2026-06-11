@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 
 // Wrap content from each h2 to the next h2 in a <section class="lesson-section">.
 // Drives the manuscript-margin-gloss side-rail (Option F) in prose.css —
@@ -47,7 +48,14 @@ export default defineConfig({
       themes: { light: 'github-light', dark: 'github-dark' },
     },
   },
-  integrations: [react(), mdx({ remarkPlugins: [remarkSectionize] })],
+  integrations: [
+    react(),
+    mdx({ remarkPlugins: [remarkSectionize] }),
+    sitemap({
+      // The /og/*.png endpoints are social-card images, not crawlable pages.
+      filter: (page) => !page.includes('/og/'),
+    }),
+  ],
   vite: {
     resolve: {
       alias: {

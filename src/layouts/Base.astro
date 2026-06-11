@@ -10,17 +10,26 @@ interface Props {
   title: string;
   description?: string;
   onLanding?: boolean;
+  /** Path (site-relative) to the OG/Twitter card image. Defaults to /og/home.png. */
   ogImage?: string;
+  /** Optional JSON-LD object emitted as a <script type="application/ld+json">. */
+  jsonLd?: Record<string, unknown>;
 }
 
 const {
   title,
   description = 'An open curriculum that takes a learner from a single array element to building, training, and reasoning about modern generative models.',
   onLanding = false,
-  ogImage,
+  ogImage = '/og/home.png',
+  jsonLd,
 } = Astro.props;
 
 const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
+
+// Absolute URLs for canonical + social tags. Astro.site comes from the
+// `site` field in astro.config.mjs (https://pixels2genai.art).
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImageUrl = new URL(ogImage, Astro.site).href;
 ---
 
 <!doctype html>
@@ -46,13 +55,27 @@ const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
   </script>
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
   <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={description} />
   <meta property="og:type" content="website" />
-  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content="Pixels2GenAI" />
+  <meta property="og:image" content={ogImageUrl} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageUrl} />
+
+  {jsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  )}
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

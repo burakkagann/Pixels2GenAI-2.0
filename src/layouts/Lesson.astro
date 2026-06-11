@@ -40,9 +40,27 @@ interface Props {
 
 const { slug, frontmatter, headings } = Astro.props;
 const f = frontmatter;
+
+const lessonJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LearningResource',
+  name: f.title,
+  description: f.objective,
+  educationalLevel: f.level,
+  learningResourceType: 'lesson',
+  timeRequired: f.duration,
+  isPartOf: { '@type': 'Course', name: 'Pixels2GenAI' },
+  inLanguage: 'en',
+  url: new URL(`/lessons/${slug}`, Astro.site).href,
+};
 ---
 
-<Base title={`${slug} ${f.title}`} description={f.objective}>
+<Base
+  title={`${slug} ${f.title}`}
+  description={f.objective}
+  ogImage={`/og/lessons/${slug}.png`}
+  jsonLd={lessonJsonLd}
+>
   <StageTracker currentModule={f.module} cycle={f.cycle} />
 
   <main class="page" data-cycle={f.cycle}>
@@ -59,7 +77,7 @@ const f = frontmatter;
         prereqs={f.prereqs}
       />
       <slot />
-      <PrevNext prev={f.prev} next={f.next} backLink={f.backLink} />
+      <PrevNext slug={slug} prev={f.prev} next={f.next} backLink={f.backLink} />
     </article>
 
     <aside class="col-right">
