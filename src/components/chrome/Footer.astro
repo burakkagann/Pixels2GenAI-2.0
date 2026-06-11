@@ -1,9 +1,44 @@
 ---
 // Site footer. Used on the landing page (and any future variants
-// that opt in). Styles live in src/styles/landing.css under `.foot*`.
+// that opt in). Styles live in src/styles/landing.css under `.foot*`
+// (colophon star CTA under `.colo*`).
+import { getStarCount, formatStars, GITHUB_REPO } from '@/lib/github';
+import { SPARKLE_PIXELS } from '@/lib/pixelGlyphs';
+
+// Build-time star count — memoised module-wide, so this shares FrameTop's
+// single fetch rather than adding one.
+const stars = await getStarCount();
 ---
 
 <footer class="foot" id="colophon">
+  <div class="colo">
+    <svg class="colo-glyph" viewBox="0 0 7 7" width="18" height="18" shape-rendering="crispEdges" aria-hidden="true">
+      {SPARKLE_PIXELS.map((p) => (
+        <rect x={p.x} y={p.y} width="1" height="1" />
+      ))}
+    </svg>
+    <p class="colo-line">
+      If this curriculum has been useful to you, consider leaving a star in the repo.<br />
+      It helps other learners find it.
+    </p>
+    <a
+      class="colo-link"
+      href={`https://github.com/${GITHUB_REPO}`}
+      target="_blank"
+      rel="noopener"
+      aria-label={stars !== null
+        ? `Star Pixels2GenAI on GitHub — currently ${stars} ${stars === 1 ? 'star' : 'stars'}`
+        : 'Star Pixels2GenAI on GitHub'}
+    >
+      <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" fill="currentColor">
+        <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
+      </svg>
+      Star on GitHub
+      {/* Build-time fallback; refreshed client-side by the FrameTop script.
+          Rendered even when null so the script has a target. */}
+      <span class="colo-count">{stars !== null ? `· ${formatStars(stars)}` : ''}</span>
+    </a>
+  </div>
   <div class="foot-grid">
     <div>
       <h4>Pixels2GenAI</h4>

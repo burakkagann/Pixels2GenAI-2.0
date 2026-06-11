@@ -1,5 +1,6 @@
 ---
 import { getStarCount, formatStars, GITHUB_REPO } from '@/lib/github';
+import { STAR_PIXELS } from '@/lib/pixelGlyphs';
 
 interface Props {
   /** When true, section anchors (#curriculum, #workshops, …) are in-page links.
@@ -124,13 +125,25 @@ const navItems = [
   </nav>
   <div class="nav-r">
     <span class="ed">Ed. ii · 2026</span>
-    <a class="gh-link" href={`https://github.com/${GITHUB_REPO}`} target="_blank" rel="noopener">
+    <a
+      class="gh-link"
+      href={`https://github.com/${GITHUB_REPO}`}
+      target="_blank"
+      rel="noopener"
+      aria-label={stars !== null
+        ? `Pixels2GenAI on GitHub — ${stars} ${stars === 1 ? 'star' : 'stars'}`
+        : 'Pixels2GenAI on GitHub'}
+    >
       GitHub
-      {stars !== null && (
-        <span class="gh-stars" title={`${stars} ${stars === 1 ? 'star' : 'stars'} on GitHub`} aria-label={`${stars} ${stars === 1 ? 'star' : 'stars'} on GitHub`}>
-          <svg class="gh-star" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>{formatStars(stars)}
-        </span>
-      )}
+      <svg class="gh-pxstar" viewBox="0 0 11 11" width="18" height="18" shape-rendering="crispEdges" aria-hidden="true">
+        {STAR_PIXELS.map((p, i) => (
+          <rect x={p.x} y={p.y} width="1" height="1" style={`--i:${i}`} />
+        ))}
+      </svg>
+      {/* Build-time count is the no-JS fallback; the script below refreshes
+          it client-side. Rendered even when null so the script has a target
+          (CSS hides it while :empty). */}
+      <span class="gh-count">{stars !== null ? formatStars(stars) : ''}</span>
       <span class="gh-arr" aria-hidden="true">↗</span>
     </a>
     <button
@@ -159,14 +172,68 @@ const navItems = [
 </div>
 
 <script>
+  import { formatStars, GITHUB_REPO } from '@/lib/github';
+
+  // Live star count. The number baked in at build time goes stale between
+  // deploys, so refresh it client-side: one unauthenticated API call per
+  // browser session (cached in sessionStorage for an hour), patching the
+  // header chip and the footer colophon count. No-JS visitors keep the
+  // build-time number.
+  const STARS_KEY = 'p2g-stars';
+  const STARS_TTL = 60 * 60 * 1000;
+
+  const applyStars = (n: number) => {
+    const fmt = formatStars(n);
+    const label = `${n} ${n === 1 ? 'star' : 'stars'}`;
+    document.querySelectorAll('.gh-count').forEach((el) => { el.textContent = fmt; });
+    document.querySelectorAll('.colo-count').forEach((el) => { el.textContent = `· ${fmt}`; });
+    document.querySelector('.gh-link')
+      ?.setAttribute('aria-label', `Pixels2GenAI on GitHub — ${label}`);
+    document.querySelector('.colo-link')
+      ?.setAttribute('aria-label', `Star Pixels2GenAI on GitHub — currently ${label}`);
+  };
+
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(STARS_KEY) ?? 'null');
+    if (cached && typeof cached.n === 'number' && Date.now() - cached.t < STARS_TTL) {
+      applyStars(cached.n);
+    } else {
+      fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && typeof data.stargazers_count === 'number') {
+            try {
+              sessionStorage.setItem(
+                STARS_KEY,
+                JSON.stringify({ n: data.stargazers_count, t: Date.now() }),
+              );
+            } catch {}
+            applyStars(data.stargazers_count);
+          }
+        })
+        .catch(() => {}); // offline / rate-limited: keep the build-time number
+    }
+  } catch {}
+
   const SESSION_KEY = 'p2g-octo-greeted';
   const octo = document.querySelector('.octo') as HTMLElement | null;
-  if (octo) {
-    // First arrival per session: play the wave once
-    if (!sessionStorage.getItem(SESSION_KEY)) {
-      octo.classList.add('octo--play');
-      sessionStorage.setItem(SESSION_KEY, '1');
+  const ghChip = document.querySelector('.gh-link');
+
+  // First arrival per session: the octocat waves and the GitHub star chip
+  // assembles once, then settles back to its resting state. (Hover replays
+  // the chip via CSS alone; .gh-play just mirrors that state briefly.)
+  if (!sessionStorage.getItem(SESSION_KEY)) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    octo?.classList.add('octo--play');
+    if (ghChip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      ghChip.classList.add('gh-play');
+      setTimeout(() => ghChip.classList.remove('gh-play'), 1400);
     }
+  }
+
+  if (octo) {
     // Hover always replays — remove then re-add to restart the animation
     octo.addEventListener('mouseenter', () => {
       octo.classList.remove('octo--play');

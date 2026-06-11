@@ -804,6 +804,74 @@
   margin: 0 auto;
 }
 
+/* Colophon margin note — one serif line + star CTA above the footer grid.
+   The corner sparkle fills with highlight ink while the link is engaged
+   (:has() is progressive enhancement; without it the link still works). */
+.colo {
+  position: relative;
+  text-align: center;
+  padding: 4px 0 42px;
+  margin-bottom: 46px;
+  border-bottom: 1px solid var(--line);
+}
+
+.colo-glyph {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.colo-glyph rect {
+  fill: var(--fg-3);
+  opacity: 0.4;
+  transition: fill .25s, opacity .25s;
+}
+.colo:has(.colo-link:hover) .colo-glyph rect,
+.colo:has(.colo-link:focus-visible) .colo-glyph rect {
+  fill: var(--highlight);
+  opacity: 1;
+}
+
+/* Specificity note: `.foot p` / `.foot a` set the footer's mono register,
+   so these overrides are written as `.foot .colo-*`. */
+.foot .colo-line {
+  max-width: 84ch; /* wide enough that the <br> is the only break on desktop */
+  margin: 0 auto 20px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--fg-2);
+}
+
+.foot .colo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid var(--line-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color .2s, border-color .2s;
+}
+.foot .colo-link:hover {
+  color: var(--highlight);
+  border-color: var(--highlight);
+}
+
+.colo-count {
+  font-variant-numeric: tabular-nums;
+}
+.colo-count:empty { display: none; }
+
+@media (max-width: 540px) {
+  .colo-glyph { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colo-glyph rect { transition: none; }
+}
+
 .foot-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -1053,34 +1121,47 @@
   border-bottom-color: var(--fg-3);
 }
 
-/* GitHub link with build-time star count. The link keeps its underline-on-hover
-   behaviour; the star count sits in a square pill matching the `.ed` register. */
+/* GitHub link with build-time star count. The pixel star assembles into
+   highlight ink pixel-by-pixel (top to bottom, --i stagger) on hover/focus,
+   and once per session on first arrival — the FrameTop script adds .gh-play
+   alongside the octocat wave, then removes it so the star settles back. */
 .nav-r a.gh-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   border-bottom: 0;
 }
 .nav-r a.gh-link:hover .gh-arr {
   color: var(--fg);
 }
-.gh-stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border: 1px solid var(--line-2);
+.gh-pxstar {
+  flex: none;
+}
+.gh-pxstar rect {
+  fill: var(--fg-3);
+  opacity: 0.45;
+  transition: opacity .12s, fill .12s;
+}
+.nav-r a.gh-link:hover .gh-pxstar rect,
+.nav-r a.gh-link:focus-visible .gh-pxstar rect,
+.nav-r a.gh-link.gh-play .gh-pxstar rect {
+  fill: var(--highlight);
+  opacity: 1;
+  transition-delay: calc(var(--i) * 9ms);
+}
+.gh-count {
   color: var(--fg-2);
   font-variant-numeric: tabular-nums;
 }
-.gh-stars .gh-star {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  fill: #e3b341; /* GitHub star gold */
-}
+/* Empty until the client-side refresh lands (e.g. API unreachable at build) —
+   hide so the flex gap doesn't double up. */
+.gh-count:empty { display: none; }
 .gh-arr {
   transition: color .15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-pxstar rect { transition: none; }
 }
 
 /* ---------- Theme toggle (sun/moon, binary) ----------
