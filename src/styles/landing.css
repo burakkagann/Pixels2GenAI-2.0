@@ -1053,6 +1053,36 @@
   border-bottom-color: var(--fg-3);
 }
 
+/* GitHub link with build-time star count. The link keeps its underline-on-hover
+   behaviour; the star count sits in a square pill matching the `.ed` register. */
+.nav-r a.gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 0;
+}
+.nav-r a.gh-link:hover .gh-arr {
+  color: var(--fg);
+}
+.gh-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+.gh-stars .gh-star {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: #e3b341; /* GitHub star gold */
+}
+.gh-arr {
+  transition: color .15s;
+}
+
 /* ---------- Theme toggle (sun/moon, binary) ----------
    Sits between .ed and the GitHub link. Inherits the row's mono register;
    icon tracks currentColor so it follows page theme. Which icon is visible
@@ -1089,3 +1119,201 @@
 .theme-toggle .ic-moon { display: none; }
 [data-theme="light"] .theme-toggle .ic-sun  { display: none; }
 [data-theme="light"] .theme-toggle .ic-moon { display: block; }
+
+/* ============================================================
+   CURRICULUM · search, progress tracking, completion ticks
+   ============================================================ */
+
+/* --- Search bar --------------------------------------------- */
+.curriculum-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 32px;
+  flex-wrap: wrap;
+}
+
+.curriculum-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 320px;
+  max-width: 520px;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.curriculum-search:focus-within {
+  border-color: var(--accent, var(--c2));
+}
+
+.curriculum-search .search-ic {
+  width: 18px;
+  height: 18px;
+  color: var(--fg-3);
+  flex-shrink: 0;
+}
+
+.curriculum-search input {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  min-width: 0;
+}
+
+.curriculum-search input::placeholder { color: var(--fg-3); }
+.curriculum-search input::-webkit-search-cancel-button { display: none; }
+
+.search-clear {
+  border: none;
+  background: none;
+  color: var(--fg-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.search-clear:hover { color: var(--fg); }
+
+.search-summary {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- Search results list ------------------------------------ */
+/* The [hidden] attribute must win over the display rules below, otherwise the
+   full server-rendered index shows on load instead of only while searching. */
+.curriculum-results[hidden],
+.curriculum-results .result[hidden],
+.results-empty[hidden] {
+  display: none !important;
+}
+
+.curriculum-results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+
+.curriculum-results .result {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+
+.curriculum-results .result:hover {
+  background: var(--bg-2);
+  border-color: var(--line);
+}
+
+.curriculum-results .result .r-id {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg-3);
+  letter-spacing: 0.04em;
+}
+
+.curriculum-results .result .r-mod {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.curriculum-results .result.soon {
+  color: var(--fg-3);
+  font-style: italic;
+  cursor: default;
+}
+
+.curriculum-results .result .r-soon {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-4);
+  font-style: normal;
+}
+
+.results-empty {
+  color: var(--fg-3);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  padding: 12px;
+}
+
+/* --- Completion toggle (shared: leaves + results) ----------- */
+.leaf-ttl { flex: 1; }
+
+.leaf-done {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: none;
+  color: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.leaf-done svg { width: 11px; height: 11px; }
+
+.leaf:hover .leaf-done,
+.result:hover .leaf-done,
+.leaf-done:focus-visible { opacity: 1; }
+
+.leaf-done:hover { border-color: var(--cycle, var(--accent)); }
+
+/* Completed state — tick stays visible, leaf number dims */
+.leaf.done .leaf-done,
+.result.done .leaf-done {
+  opacity: 1;
+  color: var(--bg);
+  background: var(--cycle, var(--c1));
+  border-color: var(--cycle, var(--c1));
+}
+
+.leaf.done .leaf-ttl,
+.result.done .r-title {
+  color: var(--fg-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--fg-4);
+}
+
+/* --- Per-station "done" count ------------------------------- */
+.station-done {
+  color: var(--cycle, var(--c1)) !important;
+  font-weight: 500;
+}
+
+.stations[hidden] { display: none; }

@@ -6,15 +6,50 @@ import WorkshopSpecimen from '@/components/workshops/WorkshopSpecimen.astro';
 import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
 import { MODULES } from '@/data/modules';
 import { SUBTOPICS, countLeaves } from '@/data/subtopics';
-import { PATHS } from '@/data/paths';
 import { RQS, CYCLES } from '@/data/research';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/workshops';
 import { PAST_EXHIBITIONS } from '@/data/exhibitions';
 import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
+
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: 'Pixels2GenAI',
+  description:
+    'A free, open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, across fifteen progressive modules.',
+  provider: {
+    '@type': 'Organization',
+    name: 'Pixels2GenAI',
+    url: 'https://pixels2genai.art',
+  },
+  inLanguage: 'en',
+  isAccessibleForFree: true,
+  educationalLevel: 'beginner to advanced',
+  url: 'https://pixels2genai.art',
+};
+
+// Flat index of every leaf across all modules, for the curriculum search.
+// Rendered server-side (all lesson links present in HTML) and filtered client-side.
+const ALL_LEAVES = MODULES.flatMap(m =>
+  (SUBTOPICS[m.idx] ?? []).flatMap(s =>
+    s.leaves.map(l => ({
+      mIdx: m.idx,
+      mLabel: `${m.title} ${m.em}`,
+      subTitle: s.title,
+      id: l.id,
+      title: l.title,
+      slug: l.lessonSlug ?? null,
+    }))
+  )
+);
 ---
 
-<Base title="Pixels2GenAI · From pixels to generative AI" onLanding={true}>
+<Base
+  title="Pixels2GenAI · From pixels to generative AI"
+  onLanding={true}
+  jsonLd={siteJsonLd}
+>
   <!-- ========== COVER ========== -->
   <header class="cover">
     <div>
@@ -24,16 +59,16 @@ import '@/styles/exhibitions.css';
         one continuous thread.
       </h1>
       <p class="cover-lead">
-        An open curriculum that takes a learner from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
+        A free, open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
       </p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
         <div><b>Method</b><span>DBR · 3 cycles</span></div>
         <div><b>Theory / Practice</b><span>40 / 60</span></div>
-        <div><b>License</b><span>MIT · CC-BY</span></div>
+        <div><b>License</b><span>Free · MIT + CC-BY</span></div>
       </div>
       <div class="cover-actions">
-        <a class="btn btn-pri" href="#paths">Find your path</a>
+        <a class="btn btn-pri" href="/lessons/1.1.1">Start learning</a>
         <a class="btn btn-sec" href="#curriculum">See the curriculum</a>
       </div>
     </div>
@@ -44,83 +79,61 @@ import '@/styles/exhibitions.css';
     </div>
   </header>
 
-  <!-- ========== PATHS ========== -->
-  <section class="section" id="paths">
-    <div class="section-head">
-      <div class="section-num">§ 1 · <span>Paths</span></div>
-      <div>
-        <h2 class="section-title">Three ways through <em>the same material.</em></h2>
-        <p class="section-desc">The curriculum is linear by design but structured to support multiple entry points. Choose the path that matches your starting point.</p>
-      </div>
-    </div>
-
-    <div class="paths">
-      {PATHS.map(path => {
-        const surface =
-          path.cycle === 'c1'
-            ? 'var(--bg-warm-1)'
-            : path.cycle === 'c3'
-              ? 'color-mix(in srgb, var(--bg-2) 88%, var(--c3) 12%)'
-              : 'var(--bg-2)';
-        const cardStyle = `--card-accent: var(--${path.cycle}); --card-bg: ${surface};`;
-        return (
-          <a
-            class="path"
-            href={`#station-${path.cycle}`}
-            data-persona={path.persona}
-            data-cycle={path.cycle}
-            style={cardStyle}
-          >
-            <span class="axis"></span>
-            {path.persona === 'painter' && (
-              <svg class="ornament" viewBox="0 0 60 10" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M2,5 Q12,1 22,5 T42,5 T58,5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.9" />
-              </svg>
-            )}
-            {path.persona === 'engineer' && (
-              <svg class="ornament" viewBox="0 0 40 10" aria-hidden="true">
-                <g fill="currentColor">
-                  <rect x="0"  y="3" width="3" height="3" />
-                  <rect x="8"  y="3" width="3" height="3" />
-                  <rect x="16" y="3" width="3" height="3" />
-                  <rect x="24" y="3" width="3" height="3" />
-                  <rect x="32" y="3" width="3" height="3" />
-                </g>
-              </svg>
-            )}
-            {path.persona === 'architect' && (
-              <svg class="ornament" viewBox="0 0 18 18" aria-hidden="true">
-                <path d="M1,6 L1,1 L6,1 M12,1 L17,1 L17,6 M17,12 L17,17 L12,17 M6,17 L1,17 L1,12"
-                      stroke="currentColor" stroke-width="1" fill="none" />
-              </svg>
-            )}
-            <div class="tag">{path.tag}</div>
-            <h3>{path.title} <em>· {path.em}</em></h3>
-            <p>{path.description}</p>
-            <ol>
-              {path.steps.map(step => (
-                <li><span class="ix">{step.ix}</span><span class="lb">{step.label}</span></li>
-              ))}
-            </ol>
-            <div class="meta-row">
-              {path.meta.map(m => <span>{m}</span>)}
-            </div>
-          </a>
-        );
-      })}
-    </div>
-  </section>
-
   <!-- ========== SPECIMEN — three cycle stations ========== -->
   <section class="section" id="curriculum">
     <div class="section-head">
-      <div class="section-num">§ 2 · <span>Curriculum</span></div>
+      <div class="section-num">§ 1 · <span>Curriculum</span></div>
       <div>
         <h2 class="section-title">From pixels, <em>to inference.</em></h2>
-        <p class="section-desc">The curriculum is composed in three cycles. Each cycle holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. Open a module to see its anatomy.</p>
+        <p class="section-desc">The curriculum is composed in three cycles. Each cycle holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. It's linear by design, but experienced programmers can start at a later cycle. Open a module to see its anatomy.</p>
       </div>
     </div>
 
+    <div class="curriculum-tools">
+      <div class="curriculum-search">
+        <svg class="search-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="16.5" y1="16.5" x2="21" y2="21" />
+        </svg>
+        <input
+          type="search"
+          id="curriculum-search"
+          placeholder="Search every lesson by name or number…"
+          autocomplete="off"
+          aria-label="Search the curriculum"
+          aria-controls="curriculum-results"
+        />
+        <button type="button" class="search-clear" data-search-clear hidden aria-label="Clear search">Clear</button>
+      </div>
+      <span class="search-summary" data-search-summary hidden aria-live="polite"></span>
+    </div>
+
+    <div class="curriculum-results" id="curriculum-results" data-results hidden role="list">
+      {ALL_LEAVES.map(leaf => {
+        const haystack = `${leaf.id} ${leaf.title} m${leaf.mIdx} ${leaf.mLabel} ${leaf.subTitle}`.toLowerCase();
+        const inner = (
+          <>
+            <span class="r-id">{leaf.id}</span>
+            <span class="r-title">{leaf.title}</span>
+            <span class="r-mod">M {leaf.mIdx} · {leaf.subTitle}</span>
+          </>
+        );
+        return leaf.slug
+          ? <a class="result" role="listitem" data-search={haystack} data-leaf-slug={leaf.slug} href={`/lessons/${leaf.slug}`} hidden>
+              {inner}
+              <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${leaf.id} complete`} title="Mark complete">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </a>
+          : <span class="result soon" role="listitem" data-search={haystack} hidden>
+              {inner}
+              <span class="r-soon">soon</span>
+            </span>;
+      })}
+      <p class="results-empty" data-results-empty hidden>No lessons match that search.</p>
+    </div>
+
+    <div class="stations" data-stations>
     {CYCLES.map(cy => {
       const cyc = cy.cycle === 'c1' ? 'I' : cy.cycle === 'c2' ? 'II' : 'III';
       const mods = MODULES.filter(m => m.cycle === cyc);
@@ -136,13 +149,14 @@ import '@/styles/exhibitions.css';
         <div class="station" id={`station-${cy.cycle}`} style={`--cycle: var(--${cy.cycle});`}>
           <div class="station-head">
             <div class="station-left">
-              <span class="station-label">Path {cyc}</span>
+              <span class="station-label">Cycle {cyc}</span>
               <h3 class="station-title">{cy.name}<em>.</em></h3>
               <p class="station-pitch">{cy.pitch}</p>
             </div>
             <div class="station-right">
               <span><b>{mods.length}</b> modules</span>
               <span><b>{totals.leaves}</b> lessons</span>
+              <span class="station-done" data-station-done hidden></span>
             </div>
           </div>
 
@@ -185,11 +199,14 @@ import '@/styles/exhibitions.css';
                         <h6><span class="snum">{s.id}</span>{s.title}</h6>
                         {s.leaves.map(l => (
                           l.lessonSlug
-                            ? <a class="leaf" href={`/lessons/${l.lessonSlug}`}>
-                                <span class="lnum">{l.id}</span><span>{l.title}</span>
+                            ? <a class="leaf" href={`/lessons/${l.lessonSlug}`} data-leaf-slug={l.lessonSlug}>
+                                <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
+                                <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${l.id} complete`} title="Mark complete">
+                                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
                               </a>
                             : <span class="leaf soon">
-                                <span class="lnum">{l.id}</span><span>{l.title}</span>
+                                <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
                               </span>
                         ))}
                       </div>
@@ -202,66 +219,180 @@ import '@/styles/exhibitions.css';
         </div>
       );
     })}
+    </div>
   </section>
 
   <script is:inline>
-    // § 2 Curriculum — station accordion. One panel open per station; clicking
-    // an already-active card closes it.
+    // § 1 Curriculum — station accordion. One panel open per station; clicking
+    // an already-active card closes it. Module cards are roving-tabindex: arrow
+    // keys move focus within a station, Enter/Space toggle (native <button>),
+    // Escape closes the open panel.
     document.querySelectorAll('.station').forEach((station) => {
-      const cards = station.querySelectorAll('.mod-card');
+      const cards = Array.from(station.querySelectorAll('.mod-card'));
       const panels = station.querySelectorAll('.station-panel');
-      cards.forEach((card) => {
-        card.addEventListener('click', () => {
-          const idx = card.getAttribute('data-m');
-          const wasActive = card.classList.contains('active');
-          cards.forEach((c) => {
-            c.classList.remove('active');
-            c.setAttribute('aria-expanded', 'false');
-          });
-          panels.forEach((p) => {
-            p.classList.remove('open');
-            p.setAttribute('hidden', '');
-          });
-          if (!wasActive) {
-            card.classList.add('active');
-            card.setAttribute('aria-expanded', 'true');
-            const panel = station.querySelector('.station-panel[data-m="' + idx + '"]');
-            if (panel) {
-              panel.classList.add('open');
-              panel.removeAttribute('hidden');
-            }
+
+      const toggle = (card) => {
+        const idx = card.getAttribute('data-m');
+        const wasActive = card.classList.contains('active');
+        cards.forEach((c) => {
+          c.classList.remove('active');
+          c.setAttribute('aria-expanded', 'false');
+        });
+        panels.forEach((p) => {
+          p.classList.remove('open');
+          p.setAttribute('hidden', '');
+        });
+        if (!wasActive) {
+          card.classList.add('active');
+          card.setAttribute('aria-expanded', 'true');
+          const panel = station.querySelector('.station-panel[data-m="' + idx + '"]');
+          if (panel) {
+            panel.classList.add('open');
+            panel.removeAttribute('hidden');
           }
+        }
+      };
+
+      cards.forEach((card, i) => {
+        card.addEventListener('click', () => toggle(card));
+        card.addEventListener('keydown', (e) => {
+          let next = -1;
+          switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown': next = (i + 1) % cards.length; break;
+            case 'ArrowLeft':
+            case 'ArrowUp':   next = (i - 1 + cards.length) % cards.length; break;
+            case 'Home':      next = 0; break;
+            case 'End':       next = cards.length - 1; break;
+            case 'Escape':
+              if (card.classList.contains('active')) { toggle(card); }
+              return;
+            default: return;
+          }
+          e.preventDefault();
+          cards[next].focus();
         });
       });
     });
   </script>
 
   <script is:inline>
-    // § 1 Paths → § 2 Curriculum — clicking a path card scrolls to the
-    // matching cycle station (handled by the global anchor-scroll handler
-    // in Base.astro) AND auto-opens the first module's accordion panel
-    // so the user arrives at a concrete next step rather than a list.
-    //
-    // Respects user intent: if a module in the destination station is
-    // already open, we leave it untouched and just scroll.
-    document.addEventListener('click', (e) => {
-      const card = e.target.closest('.path[data-cycle]');
-      if (!card) return;
-      const cycle = card.getAttribute('data-cycle');
-      const station = document.getElementById('station-' + cycle);
-      if (!station) return;
-      if (station.querySelector('.mod-card.active')) return;
-      const firstMod = station.querySelector('.mod-card');
-      if (firstMod) firstMod.click();
-    });
+    // Lesson progress — completion state lives in localStorage['p2g-progress']
+    // as a JSON array of lesson slugs. Reflected on every leaf/result with a
+    // [data-leaf-slug], on per-station "done" counts, and on the global pill.
+    (() => {
+      const KEY = 'p2g-progress';
+      const read = () => {
+        try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); }
+        catch { return new Set(); }
+      };
+      const write = (set) => {
+        try { localStorage.setItem(KEY, JSON.stringify([...set])); } catch {}
+      };
+
+      const apply = () => {
+        const done = read();
+        document.querySelectorAll('[data-leaf-slug]').forEach((el) => {
+          const isDone = done.has(el.getAttribute('data-leaf-slug'));
+          el.classList.toggle('done', isDone);
+          const btn = el.querySelector('[data-leaf-toggle]');
+          if (btn) {
+            btn.setAttribute('aria-pressed', String(isDone));
+            btn.title = isDone ? 'Mark incomplete' : 'Mark complete';
+          }
+        });
+        // Per-station counts (count unique slugs; a slug appears once per view).
+        document.querySelectorAll('.station').forEach((st) => {
+          const slugs = new Set(
+            Array.from(st.querySelectorAll('.station-panel [data-leaf-slug]'))
+              .map((el) => el.getAttribute('data-leaf-slug'))
+          );
+          const total = slugs.size;
+          let d = 0;
+          slugs.forEach((s) => { if (done.has(s)) d++; });
+          const el = st.querySelector('[data-station-done]');
+          if (el) {
+            el.hidden = d === 0;
+            el.textContent = d > 0 ? `${d} of ${total} done` : '';
+          }
+        });
+      };
+
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-leaf-toggle]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const host = btn.closest('[data-leaf-slug]');
+        if (!host) return;
+        const slug = host.getAttribute('data-leaf-slug');
+        const done = read();
+        done.has(slug) ? done.delete(slug) : done.add(slug);
+        write(done);
+        apply();
+      });
+
+      // Refresh when returning to the page (e.g. after marking complete on a
+      // lesson and navigating back) and on cross-tab storage changes.
+      window.addEventListener('pageshow', apply);
+      window.addEventListener('storage', (e) => { if (e.key === KEY) apply(); });
+      apply();
+    })();
+  </script>
+
+  <script is:inline>
+    // Curriculum search — filters the server-rendered flat result list and
+    // swaps it in for the accordion while a query is present.
+    (() => {
+      const input = document.getElementById('curriculum-search');
+      const results = document.querySelector('[data-results]');
+      const stations = document.querySelector('[data-stations]');
+      const summary = document.querySelector('[data-search-summary]');
+      const empty = document.querySelector('[data-results-empty]');
+      const clearBtn = document.querySelector('[data-search-clear]');
+      if (!input || !results || !stations) return;
+
+      const rows = Array.from(results.querySelectorAll('.result'));
+
+      const run = (raw) => {
+        const q = raw.trim().toLowerCase();
+        if (!q) {
+          results.hidden = true;
+          stations.hidden = false;
+          summary.hidden = true;
+          clearBtn.hidden = true;
+          return;
+        }
+        const terms = q.split(/\s+/);
+        let matches = 0;
+        rows.forEach((row) => {
+          const hay = row.getAttribute('data-search') || '';
+          const hit = terms.every((t) => hay.includes(t));
+          row.hidden = !hit;
+          if (hit) matches++;
+        });
+        results.hidden = false;
+        stations.hidden = true;
+        clearBtn.hidden = false;
+        empty.hidden = matches !== 0;
+        summary.hidden = false;
+        summary.textContent = `${matches} ${matches === 1 ? 'lesson' : 'lessons'}`;
+      };
+
+      input.addEventListener('input', () => run(input.value));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { input.value = ''; run(''); }
+      });
+      clearBtn.addEventListener('click', () => { input.value = ''; run(''); input.focus(); });
+    })();
   </script>
 
   <!-- ========== WORKSHOPS — recurring program archive ========== -->
   <section class="section" id="workshops">
     <div class="section-head">
-      <div class="section-num">§ 3 · <span>Workshops</span></div>
+      <div class="section-num">§ 2 · <span>Workshops</span></div>
       <div>
-        <h2 class="section-title">The empirical engine, <em>in person.</em></h2>
+        <h2 class="section-title">The curriculum, <em>in a single day.</em></h2>
         <p class="section-desc">A recurring one-day workshop that condenses the curriculum into a single sitting. The archive begins with the first cohort below; the next workshop is in planning.</p>
       </div>
     </div>
@@ -280,7 +411,7 @@ import '@/styles/exhibitions.css';
   <!-- ========== EXHIBITION — one-off group show archive ========== -->
   <section class="section" id="exhibition">
     <div class="section-head">
-      <div class="section-num">§ 4 · <span>Exhibition</span></div>
+      <div class="section-num">§ 3 · <span>Exhibition</span></div>
       <div>
         <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
         <p class="section-desc">A one-day exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis. Six artists working across printed and code-driven pieces. The archive begins below; the next exhibition is not yet scheduled.</p>
@@ -300,7 +431,7 @@ import '@/styles/exhibitions.css';
   <!-- ========== RESEARCH ========== -->
   <section class="section" id="research">
     <div class="section-head">
-      <div class="section-num">§ 5 · <span>Research</span></div>
+      <div class="section-num">§ 4 · <span>Research</span></div>
       <div>
         <h2 class="section-title">Five questions, <em>three cycles.</em></h2>
         <p class="section-desc">The curriculum is the empirical artifact of a design-based research thesis. Each cycle iterates on the same five questions; this is the third.</p>

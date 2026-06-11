@@ -5,17 +5,26 @@ interface NeighborLink {
 }
 
 interface Props {
+  slug: string;
   prev: NeighborLink | null;
   next: NeighborLink | null;
   backLink?: { href: string; label: string };
 }
 
 const {
+  slug,
   prev,
   next,
   backLink = { href: '/#curriculum', label: 'Back to Curriculum' },
 } = Astro.props;
 ---
+
+<div class="lesson-complete">
+  <button type="button" class="mark-done" data-mark-done data-slug={slug} aria-pressed="false">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="mark-label">Mark as complete</span>
+  </button>
+</div>
 
 <nav class="prev-next" aria-label="Adjacent lessons">
   {prev ? (
@@ -42,3 +51,35 @@ const {
     </a>
   ) : <span class="pn next" aria-hidden="true" style="visibility: hidden"></span>}
 </nav>
+
+<script>
+  // Mark-complete toggle — writes the lesson slug into the shared progress set
+  // (localStorage['p2g-progress']) read by the curriculum on the landing page.
+  function setupMarkDone() {
+    const btn = document.querySelector<HTMLButtonElement>('[data-mark-done]');
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = 'true';
+    const KEY = 'p2g-progress';
+    const slug = btn.dataset.slug!;
+    const read = (): Set<string> => {
+      try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); }
+      catch { return new Set(); }
+    };
+    const sync = () => {
+      const done = read().has(slug);
+      btn.classList.toggle('is-done', done);
+      btn.setAttribute('aria-pressed', String(done));
+      const label = btn.querySelector('.mark-label');
+      if (label) label.textContent = done ? 'Completed' : 'Mark as complete';
+    };
+    btn.addEventListener('click', () => {
+      const done = read();
+      done.has(slug) ? done.delete(slug) : done.add(slug);
+      try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch {}
+      sync();
+    });
+    sync();
+  }
+  setupMarkDone();
+  document.addEventListener('astro:page-load', setupMarkDone);
+</script>
