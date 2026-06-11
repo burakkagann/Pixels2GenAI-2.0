@@ -1,0 +1,15 @@
+{
+  "name": "Pixels2GenAI",
+  "short_name": "Pixels2GenAI",
+  "description": "An open curriculum from a single array element to building, training, and reasoning about modern generative models.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#110D16",
+  "theme_color": "#110D16",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}

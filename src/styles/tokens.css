@@ -99,9 +99,9 @@
   --figure-frame-fg:   #F0E7D8;
 
   /* ---------- Typography ---------- */
-  --serif: "Literata", "Iowan Old Style", Georgia, serif;
-  --sans:  "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --serif: "Literata Variable", "Literata", "Iowan Old Style", Georgia, serif;
+  --sans:  "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --mono:  "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ---------- Layout ---------- */
   --maxw: 1320px;

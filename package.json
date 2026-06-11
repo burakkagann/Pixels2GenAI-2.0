@@ -11,13 +11,17 @@
     "astro": "astro",
     "check": "node scripts/check-lessons.mjs",
     "status": "node scripts/lesson-status.mjs",
-    "copy-assets": "node scripts/copy-v1-assets.mjs"
+    "copy-assets": "node scripts/copy-v1-assets.mjs",
+    "gen-icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/mdx": "^4.0.3",
     "@astrojs/react": "^4.1.2",
     "@astrojs/sitemap": "^3.7.3",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource-variable/literata": "^5.2.8",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "astro": "^5.1.1",
     "astro-og-canvas": "^0.11.1",
     "react": "^19.0.0",
@@ -27,6 +31,8 @@
   "devDependencies": {
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.35.0",
     "typescript": "^5.7.2"
   }
 }

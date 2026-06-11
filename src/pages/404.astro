@@ -270,7 +270,7 @@ import Footer from '@/components/chrome/Footer.astro';
       mctx.textAlign = 'center';
       mctx.textBaseline = 'middle';
       const fontSize = Math.min(120, Math.floor(H * 0.6));
-      mctx.font = `500 ${fontSize}px "JetBrains Mono", ui-monospace, monospace`;
+      mctx.font = `500 ${fontSize}px "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace`;
       mctx.fillText('§404', W / 2, H / 2 + Math.floor(H * 0.04));
       const imgData = mctx.getImageData(0, 0, W, H).data;
 
