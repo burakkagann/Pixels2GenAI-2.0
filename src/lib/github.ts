@@ -12,7 +12,7 @@
 
 /** Repo whose stars are shown next to the header "GitHub" link. Keep this in
  *  sync with the GitHub href in FrameTop.astro / Footer.astro. */
-export const GITHUB_REPO = 'burakkagann/Pixels2GenAI';
+export const GITHUB_REPO = 'burakkagann/Pixels2GenAI-2.0';
 
 let cached: Promise<number | null> | undefined;
 
