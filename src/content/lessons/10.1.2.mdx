@@ -1,0 +1,203 @@
+---
+module: "M 10"
+cycle: "II"
+title: "Python Integration — op() and Parameter Access"
+objective: "Wire Python into a TD network. Learn where Python lives (Script DAT/CHOP/TOP), how `op('name')` references any operator, and how `.par.X` reads or writes parameters — turning your network into a programmable instrument."
+framework: "conceptual"
+duration: "30–36 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "10.1.1 (node networks), Python basics"
+prev:
+  slug: "10.1.1"
+  title: "Node Networks"
+next:
+  slug: "10.1.3"
+  title: "Performance Monitoring"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *how do you mix the visual and textual programming worlds?* <a id="big-question"></a>
+
+Visual programming is exhilarating for the first hour and constricting by the third. Some logic is genuinely sequential — *"if the audio level is high for more than two seconds, switch to scene 3 and reset the fader"* — and trying to express that as a node chain takes more nodes than it saves. The pragmatic answer in every modern node-based environment is the same: *embed a real text-based programming language inside the visual one*. TouchDesigner embeds Python. The same Python you have written for Modules 0-9 runs inside TouchDesigner's own interpreter, with one new function — `op('name')` — that returns a live reference to any operator in your network. From there your script can read parameters, change them, watch values, write data to operators, and react to events. The visual and textual paradigms become a unified instrument, where each is used for what it does best.
+
+<Figure
+  src="/lessons/10.1.2/execution_model.png"
+  alt="Diagram showing how Python code inside a Script DAT executes within TouchDesigner's frame-rate loop, reading and writing parameters on surrounding operators every frame"
+  caption="TouchDesigner embeds Python in every Script operator. Code runs inside the cooking loop, sees the entire network, and can read or write any parameter — all at 60 fps."
+  num={1}
+  role="diagram"
+/>
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Identify where Python code lives in TouchDesigner — Script DAT, Script CHOP, Script TOP — and which to pick for which job.</li>
+  <li>Use `op('name')` to reference any operator by name, and `me` to reference the current operator.</li>
+  <li>Read parameters with `.par.X.eval()`; write parameters with `.par.X = value`; set per-frame expressions with `.par.X.expr = '...'`.</li>
+  <li>Apply absolute and relative paths to reference operators in different containers.</li>
+</ol>
+
+## Part 1 — Where Python lives <a id="part-1"></a>
+
+Three operators host Python in TouchDesigner:
+
+- **Script DAT** — the workhorse. Edits as a text file with full Python access. Runs once when triggered, or on parameter change, or on every frame if you wire a clock to it. Use this for control logic, automation, parameter modification, and external data integration. **Default choice.**
+- **Script CHOP** — outputs numeric channels. Your code returns floats; TD displays them as a CHOP signal. Use for custom animation curves, signal generators, audio-domain math.
+- **Script TOP** — outputs pixel data. Your code returns a NumPy array; TD shows it as an image. Use to bring your Modules 1-6 NumPy code directly into a TD network.
+
+<Figure
+  src="/lessons/10.1.2/script_operator_types.png"
+  alt="Three-panel diagram showing the differences between Script DAT (text output), Script CHOP (numeric channels), and Script TOP (pixel array)"
+  caption="The three script operator types. Script DAT is the most versatile and the right default; the other two specialise in numeric or pixel output."
+  num={2}
+  role="diagram"
+/>
+
+The Python interpreter is full Python 3.11 — `import numpy as np`, `import json`, `import requests` all work. Your code can use any package shipped with TD, plus any package you install into TD's bundled Python environment.
+
+<Admonition type="dyk" title="Did you know? · TD's Python history">
+TouchDesigner used Tcl as its scripting language until 2014, when version 088 switched to Python 3. The Tcl-to-Python transition was a defining moment for the platform — it brought TD into the same scripting ecosystem as Blender, Houdini, and Maya, and let creative coders bring NumPy, OpenCV, and PyTorch directly into live performance pipelines [1].
+</Admonition>
+
+## Part 2 — `op()` and `me`: navigation in the network <a id="part-2"></a>
+
+The single most important addition to Python in TouchDesigner is the **`op()` function**. It takes a name (or path) and returns a live reference to the named operator:
+
+<CodeBlock lang="python" file="op_basics.py">
+```python
+blur = op('blur1')                # operator in the same container
+noise = op('/project1/noise1')    # absolute path from root
+parent_container = op('..')       # go up one level
+```
+</CodeBlock>
+
+The returned reference is *live* — reading `blur.width` returns the current width *right now*, not a snapshot from when you ran the script. Setting `blur.par.size = 10` changes the parameter and triggers downstream cooking instantly.
+
+Inside any script operator, the variable **`me`** refers to the script itself:
+
+<CodeBlock lang="python" file="me_basics.py">
+```python
+print(me.name)        # 'script1'
+print(me.type)        # 'textDAT'
+print(me.path)        # '/project1/script1'
+print(me.parent())    # the container that holds this script
+print(me.time.seconds)  # current TD clock time in seconds
+```
+</CodeBlock>
+
+`me` is invaluable for code that wants to act relative to its own position. A control script in container A and the same script in container B can both reference siblings as `me.parent()` without caring about absolute paths.
+
+<Figure
+  src="/lessons/10.1.2/op_reference_paths.png"
+  alt="Network hierarchy diagram showing nested containers — project1 holds container1, which holds noise1 and blur1; container2 holds level1. Arrows show absolute paths (/project1/container1/noise1) and relative paths (../container2/level1) for cross-container references."
+  caption="Operator hierarchy is a tree. Absolute paths start with `/`; relative paths use `..` (parent) and operator names (children). Always prefer relative paths inside reusable components."
+  num={3}
+  role="diagram"
+/>
+
+<Admonition type="important">
+Use **relative paths inside reusable Components** — they let you duplicate the component without rewriting every reference. Use **absolute paths only for project-global references**. Mixing the two policies in one component is the most common source of "works on my machine, breaks in production."
+</Admonition>
+
+## Part 3 — Reading, writing, and animating parameters <a id="part-3"></a>
+
+Every operator's parameters are accessible through `.par.X` where `X` is the parameter's lowercase internal name. Hover over a parameter in TD to see its internal name; the visible label and the internal name can differ.
+
+**Read** with `.eval()`:
+
+<CodeBlock lang="python" file="read_params.py">
+```python
+blur = op('blur1')
+size = blur.par.size.eval()       # current numeric value
+filter_type = blur.par.filtertype.eval()  # current string menu choice
+```
+</CodeBlock>
+
+**Write** by assignment:
+
+<CodeBlock lang="python" file="write_params.py">
+```python
+blur.par.size = 10
+blur.par.filtertype = 'gauss'
+
+# multi-component parameters (RGB, XYZ) use suffixes:
+noise = op('noise1')
+noise.par.tx = 0.5    # x-translation
+noise.par.colorr = 1.0  # red channel of color
+noise.par.colorg = 0.5
+noise.par.colorb = 0.0
+```
+</CodeBlock>
+
+**Animate** with `.expr` — sets an *expression* that re-evaluates every frame:
+
+<CodeBlock lang="python" file="expression_params.py">
+```python
+blur.par.size.expr = "absTime.seconds * 5"           # blur grows over time
+noise.par.tx.expr = "sin(absTime.seconds * 2) * 0.3"  # x oscillates
+```
+</CodeBlock>
+
+The expression string is in TD's expression language (almost Python — supports math, no statements, no imports). Once set, you do not run the script again; the expression cooks every frame on its own.
+
+<Admonition type="note">
+A common workflow: write a Script DAT that *configures* parameter expressions during a startup sweep. The startup script runs once at project load, sets `.expr` strings on dozens of parameters, then exits. From then on the entire network animates from those expressions — no further Python execution needed.
+</Admonition>
+
+## Synthesis project — Python-driven parameter modulation <a id="synthesis"></a>
+
+Build a small TD project where one Script DAT reads time, computes a handful of sine-wave values, and writes them to parameters across five different TOPs — Noise period, Noise amplitude, Blur size, Level brightness, HSV hue offset. The result: rhythmic, coordinated animation driven by a single Python script you can edit live.
+
+**Reflection questions**
+
+- Why is using `.par.X.expr = "..."` usually preferable to writing a Script DAT that re-sets `.par.X` every frame?
+- What happens if you `op('blur1').par.size = 10` from a script that itself was triggered by the blur cooking?
+- Why use relative paths (`me.parent()`) instead of absolute paths inside a reusable component?
+
+<Dropdown summary="Answers">
+
+**Expressions vs scripts** — expressions cook in C++ inside the TD core, which is faster than executing a Python script every frame. Scripts have setup and teardown cost per call; expressions are inlined. Use scripts for *event-driven* logic; use expressions for *continuously-varying* values.
+
+**Infinite cook loop** — TD generally detects this and either breaks the loop or warns. But the underlying issue — a script modifying its own dependencies — is real and you should design to avoid it. Either move the writing logic to a separate Script DAT triggered by an external event, or use `cook(force=False)` to control when the script re-runs.
+
+**Relative paths in components** — a component is meant to be copy-pasted into other projects. Absolute paths break the moment you instantiate the component in a different container. Relative paths (`me.parent().op('child')`) stay valid wherever the component is dropped.
+
+</Dropdown>
+
+#### Make it your own
+
+- **External control surface**: read MIDI from an OSC input, map controller values to TD parameters via a Script DAT. The DJ controller becomes a live patch interface.
+- **Web-driven**: a Web DAT periodically fetches a JSON file; a Script DAT parses it and updates parameters. The network is now controllable from a web page.
+- **Network-of-networks**: a control container holds Python scripts that manage state; multiple visual containers expose their parameters via custom parameters; the control container reads and writes to all of them.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+Python in TouchDesigner is identical to standalone Python except for one addition: `op('name')` (or `op('path')`) returns a live reference to any operator. `me` references the current script. Parameters read via `.par.X.eval()` and write via `.par.X = value`; set continuous behaviour with `.par.X.expr = '...'`. Use Script DAT for control logic, Script CHOP for numeric output, Script TOP for pixel output. Prefer relative paths inside reusable components; prefer expressions over per-frame scripts when the logic is purely a function of time. The Python and node-network paradigms are not in tension — they are complementary tools that share the same live, continuously-cooking world.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Writing per-frame Python when an expression would do. Expressions are much cheaper.
+- Hard-coding absolute paths inside components. Breaks the moment the component is instantiated elsewhere.
+- Mistaking the parameter's visible label for its internal name. Hover to confirm; internal names are lowercase and have no spaces.
+- Re-cooking an operator inside its own script (write-after-read on the same operator). Creates an infinite cook loop in older TD versions.
+- Forgetting `.eval()` when reading. `blur.par.size` is the parameter *object*; `.eval()` returns its current value.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Derivative Inc. (2024). *TouchDesigner Python Documentation*. <a href="https://derivative.ca/UserGuide/Python" target="_blank" rel="noopener">derivative.ca/UserGuide/Python</a></li>
+    <li><span class="tag">[2]</span> Lutz, M. (2013). *Learning Python* (5th ed.). O'Reilly Media.</li>
+    <li><span class="tag">[3]</span> Hils, D. D. (1992). Visual languages and computing survey: Data flow visual programming languages. *Journal of Visual Languages and Computing*, 3(1), 69–101.</li>
+    <li><span class="tag">[4]</span> Burnett, M. M. (2001). Visual programming. *Encyclopedia of Computer Science and Engineering*. Wiley.</li>
+    <li><span class="tag">[5]</span> McCarthy, M., & Wright, M. (2014). *Programming Interactivity* (2nd ed.). O'Reilly Media.</li>
+    <li><span class="tag">[6]</span> Reas, C., & McWilliams, C. (2010). *Form+Code in Design, Art, and Architecture*. Princeton Architectural Press.</li>
+  </ol>
+</section>

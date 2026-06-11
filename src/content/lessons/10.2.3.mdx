@@ -1,0 +1,154 @@
+---
+module: "M 10"
+cycle: "II"
+title: "Planet Simulation — N-Body Gravity in TouchDesigner"
+objective: "Port the N-body gravitational simulation from 5.3.2 to TouchDesigner. The pairwise-force computation moves into a Script CHOP; the orbital trails are produced by a Trail CHOP plus a Render TOP feedback loop."
+framework: "conceptual"
+duration: "30–36 min"
+level: "intermediate"
+load: "3 conceptual pieces"
+prereqs: "5.3.2 (N-body), 10.1.1, 10.2.2"
+prev:
+  slug: "10.2.2"
+  title: "Boids in TouchDesigner"
+next:
+  slug: "10.2.4"
+  title: "Fractals Realtime"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big Question — *how do you render orbital trails that persist without buffering pixels manually?* <a id="big-question"></a>
+
+The N-body simulation from lesson 5.3.2 had two parts: pairwise gravitational physics (vectorised NumPy with leapfrog integration) and orbital-trail rendering (canvas-fading to leave fading paths behind moving bodies). Ported to TouchDesigner, the physics part is straightforward — drop it into a Script CHOP exactly like the boids in 10.2.2. The interesting new part is the trails: TouchDesigner gives you two native ways to produce persistent-trail rendering without any custom code, and both are dramatically better than the Python version. The first is the **Trail CHOP**, which records the history of any channel into a fixed-length window. The second is a **Feedback TOP** loop, where the previous frame fades and the current bodies are drawn on top. Either approach is one or two operators, and both produce trails that look better than what we coded by hand in 5.3.2.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Port the leapfrog physics from 5.3.2 into a Script CHOP with persistent state.</li>
+  <li>Use a Trail CHOP to record per-body position history as a per-frame growing line.</li>
+  <li>Use a Feedback TOP loop with a Level TOP-driven fade to produce free motion-blur trails.</li>
+  <li>Recognise that GPU-side trail accumulation is essentially free; the same trick lights up motion in many later effects.</li>
+</ol>
+
+## Part 1 — Pairwise gravity in a Script CHOP <a id="part-1"></a>
+
+The leapfrog physics from 5.3.2 — `accelerations()` plus the kick-drift-kick step — moves verbatim into a Script CHOP's `onCook`:
+
+<CodeBlock lang="python" file="nbody_script_chop.py">
+```python
+def onCook(scriptOp):
+    global positions, velocities, masses, accel
+    velocities += 0.5 * accel * DT
+    positions += velocities * DT
+    accel = accelerations(positions, masses)
+    velocities += 0.5 * accel * DT
+
+    scriptOp.clear()
+    scriptOp.appendChan('tx').vals = positions[:, 0].tolist()
+    scriptOp.appendChan('ty').vals = positions[:, 1].tolist()
+    return
+```
+</CodeBlock>
+
+The `accelerations` function is the same vectorised NumPy version from 5.3.2 — `O(n²)` pairwise inverse-square forces with softening. For 5–20 planets this runs comfortably under 1 ms per frame.
+
+State (`positions`, `velocities`, `masses`, `accel`) is persisted as module-level NumPy arrays. The first time the script cooks, it initialises them from a configuration loaded from a Table DAT (so you can tweak initial conditions without editing Python).
+
+<Admonition type="dyk" title="Did you know? · TD as orrery">
+TouchDesigner has been used to drive several planetarium installations precisely because the cook cycle is real-time and stable. The Hayden Planetarium's "Worlds Beyond Earth" pre-renders trajectories on a supercomputer but plays them back in TD with live audio reactivity layered on top. The two-tier "precomputed orbits + live shading" architecture is now standard for science-art installations [1].
+</Admonition>
+
+## Part 2 — Trails via Trail CHOP <a id="part-2"></a>
+
+The simplest trail in TD is a **Trail CHOP**: wire any CHOP into its input and it stores the last N samples of every channel. Plot the result and you see the channel's history. For N-body, wire the physics Script CHOP into a Trail CHOP, set the window length to (say) 300 samples, and read the `tx[i]` and `ty[i]` channels as x,y coordinates over time.
+
+Render the trail with a **CHOP to SOP** that creates a polyline from the channel arrays, then push the polyline through a **Geometry COMP** for rendering. The trail length is the Trail CHOP's window length; older points fall off the front of the window automatically.
+
+```
+Script CHOP (physics) → Trail CHOP (window=300) → CHOP to SOP → Geometry COMP → Render TOP
+```
+
+For a single body's trail this works perfectly. For multiple bodies, repeat the CHOP-to-SOP chain per body, or use a single chain reading the multi-channel CHOP and producing a multi-polyline SOP.
+
+<Admonition type="important">
+The Trail CHOP is **exact-history**: every recorded sample stays at its recorded position. There is no fade; the oldest point is just as bright as the newest. To get a fading trail, post-process — assign per-vertex alpha based on age, or use the Feedback TOP method below.
+</Admonition>
+
+## Part 3 — Trails via Feedback TOP loop <a id="part-3"></a>
+
+The other approach gives you the same look as the Python `TRAIL_FADE` trick from 5.3.2, but native and GPU-resident.
+
+Architecture:
+
+1. Render the current bodies as small bright sprites into a TOP. (`Sprite TOP` driven by the physics CHOP, or a Render TOP of a Geometry COMP with instancing.)
+2. Feed that TOP into a `Feedback TOP` whose `Target TOP` is the next-stage `Add TOP`.
+3. Multiply the Feedback output by `0.92` (or whatever fade rate you want) using a `Level TOP`.
+4. Add the dimmed feedback to the current frame's sprite render. That sum is what feeds the Feedback TOP.
+
+```
+Sprite render (current bodies)
+       ╲
+        ╲→ Add TOP (= add1) → Out TOP
+        ╱
+Feedback TOP (target=add1) → Level TOP (multiplier=0.92)
+```
+
+Each frame, the previous frame's pixels are dimmed by 8% and added to the new sprite render. The trails build up automatically and fade exponentially — exactly the canvas-fade trick from 5.3.2, but at GPU speed and with arbitrary precision.
+
+This is the same architecture as Exercise 3 in lesson 10.1.1 (the cellular feedback). Feedback loops are TD's universal recipe for any effect that needs persistent state across frames — motion blur, paint trails, decay shimmer, reaction-diffusion.
+
+## Synthesis project — orbital choreography <a id="synthesis"></a>
+
+Port the N-body simulation from 5.3.2 to TD. Wire one trail using a Trail CHOP (sharp lines, no fade) and one using a Feedback TOP (fading bloom). Compare the looks side by side, then choose the one that matches your aesthetic.
+
+**Reflection questions**
+
+- Why does the Trail CHOP approach give a clean line and the Feedback TOP approach give a glowing blur?
+- For 100 bodies, which trail method scales better with body count, and why?
+- The physics in 5.3.2 used leapfrog integration. What goes wrong if you naively port to Euler instead?
+
+<Dropdown summary="Answers">
+
+**Sharp line vs glow** — Trail CHOP renders an *exact polyline* through historic positions, so the line is one pixel wide. Feedback TOP accumulates a *raster image*, and each rendered sprite spreads to several pixels — the accumulation looks like a blurred bloom. Both are correct; they answer different aesthetic questions.
+
+**Scaling with body count** — Feedback TOP is `O(1)` in body count (the feedback loop processes one image regardless of how many bodies are drawn into it). Trail CHOP is `O(N × T)` where N is body count and T is the trail window length; rendering 100 bodies × 300-sample trails means 30,000 line segments. Feedback wins at high body counts.
+
+**Euler problem** — Euler integration leaks energy on orbital systems; bodies spiral inward or outward over a few seconds of simulated time. Leapfrog (velocity Verlet) preserves an approximate energy invariant and orbits stay stable for thousands of cycles. The same reason as 5.3.2 — symplectic integrators are mandatory for orbits.
+
+</Dropdown>
+
+#### Make it your own
+
+- **Audio-driven mass**: bass frequency modulates the central sun's mass. The orbits respond to the beat.
+- **Two suns**: binary star at the centre. Planets see a perturbed potential and their orbits precess visibly.
+- **Save trajectories**: write the Script CHOP output to a CSV every frame. After a few minutes of simulation you have a recorded orbital dataset you can play back without recomputing.
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+
+The N-body physics from lesson 5.3.2 ports directly into a Script CHOP — leapfrog integration plus vectorised `O(n²)` pairwise gravity. The orbital trails are where TouchDesigner shines: Trail CHOP gives you exact-history polylines, and a Feedback TOP loop gives you GPU-accelerated fading trails for free. Feedback loops are TD's universal pattern for cross-frame state. The same trick re-appears in Exercise 3 of lesson 10.1.1 (reaction-diffusion), in lesson 10.2.4 (fractals with motion), and in any effect with persistent visual decay.
+
+</Admonition>
+
+**Common pitfalls to avoid**
+
+- Naive Euler integration. Orbits spiral and the simulation is unstable. Use leapfrog.
+- Trail CHOP window length set too high. Memory grows linearly; 10,000-sample trails over 100 bodies eats RAM fast.
+- Feedback TOP without a Level TOP fade. The image saturates to white within a few seconds.
+- Forgetting `softening` in the gravity formula. The first close pass causes a division-by-zero or shoots a body to infinity.
+- Mixing Trail CHOP with Feedback TOP in the same network for no good reason. Pick one trail strategy.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Hayden Planetarium. (2020). *Worlds Beyond Earth*: technical post-mortem. American Museum of Natural History.</li>
+    <li><span class="tag">[2]</span> Aarseth, S. J. (2003). *Gravitational N-Body Simulations*. Cambridge University Press.</li>
+    <li><span class="tag">[3]</span> Verlet, L. (1967). Computer experiments on classical fluids. I. *Physical Review*, 159(1), 98–103. <a href="https://doi.org/10.1103/PhysRev.159.98" target="_blank" rel="noopener">doi:10.1103/PhysRev.159.98</a></li>
+    <li><span class="tag">[4]</span> Derivative Inc. (2024). *TouchDesigner Trail CHOP Documentation*. <a href="https://derivative.ca/UserGuide/Trail_CHOP" target="_blank" rel="noopener">derivative.ca/UserGuide/Trail_CHOP</a></li>
+    <li><span class="tag">[5]</span> Sussman, G. J., & Wisdom, J. (1992). Chaotic evolution of the solar system. *Science*, 257(5066), 56–62. <a href="https://doi.org/10.1126/science.257.5066.56" target="_blank" rel="noopener">doi:10.1126/science.257.5066.56</a></li>
+  </ol>
+</section>
