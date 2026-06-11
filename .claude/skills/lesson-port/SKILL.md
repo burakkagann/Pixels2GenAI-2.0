@@ -1,6 +1,6 @@
 ---
 name: lesson-port
-description: Port a v1 lesson (RST + Python + images) into a v2 MDX lesson with copied assets and wired-up catalog entries. Use when migrating an existing curriculum exercise from numpy-to-genAI into Pixels2GenAI-v2, when the user says "port lesson X.Y.Z", "migrate X.Y.Z to MDX", "bring lesson X.Y.Z into v2", or references a leaf id that doesn't yet have a `lessonSlug` in src/data/subtopics.ts.
+description: Port a v1 lesson (RST + Python + images) into a v2 MDX lesson with copied assets and wired-up catalog entries. Use when migrating an existing curriculum exercise from numpy-to-genAI into Pixels2GenAI-v2, when the user says "port lesson X.Y.Z", "migrate X.Y.Z to MDX", "bring lesson X.Y.Z into v2", or references a leaf id that doesn't yet have a `lessonSlug` in src/data/curriculum/subtopics.ts.
 ---
 
 # Lesson Port Skill — RST → MDX migration
@@ -9,14 +9,16 @@ description: Port a v1 lesson (RST + Python + images) into a v2 MDX lesson with 
 
 This skill handles the canonical workflow for bringing a v1 lesson into v2: it reads the v1 source (RST + Python + outputs), hand-ports the prose into MDX with v2 components, wires up assets through `scripts/copy-v1-assets.mjs`, and updates the curriculum catalog. The lesson is shipped only after passing the `exercise-testing` validation gates.
 
-The bulk of v2's roadmap is porting the remaining 144 v1 lessons. This skill is the operational core of that work.
+**Path convention** — `<lesson-path>` below means the v1-mirrored relative path `Module_NN_<topic>/X.Y_<subtopic>/X.Y.Z_<exercise>` (identical folder names in v1's `content/`, v2's `src/content/lessons/`, and v2's `public/lesson-media/`). The MDX is a *file* at `src/content/lessons/<lesson-path>.mdx`; its assets live in the *folder* `public/lesson-media/<lesson-path>/`. The lesson URL is always `/lessons/<id>` (the numeric leaf id) regardless of path — the slug comes from the numeric filename prefix via `generateId` in `src/content/config.ts`.
+
+This skill is the operational core of porting the remaining v1 lessons (`npm run status` for the current count).
 
 ## When to Use This Skill
 - Migrating an existing v1 lesson into v2 for the first time
 - Re-porting a lesson after the v1 source has been revised
-- Filling in a leaf in `src/data/subtopics.ts` that currently lacks a `lessonSlug`
+- Filling in a leaf in `src/data/curriculum/subtopics.ts` that currently lacks a `lessonSlug`
 
-The reference ports already in v2 — `1.1.1.mdx`, `4.1.1.mdx`, `12.1.2.mdx` — are the canonical examples. Always read at least one before starting a new port.
+The reference ports already in v2 (e.g. `1.1.1_color_basics.mdx`, `4.1.1_fractal_square.mdx`, `12.1.2_dcgan_art.mdx` under their module/subtopic folders) are canonical examples. Always read at least one before starting a new port.
 
 ---
 
@@ -26,7 +28,7 @@ The reference ports already in v2 — `1.1.1.mdx`, `4.1.1.mdx`, `12.1.2.mdx` —
 
 The user gives a leaf id like `4.1.2`. Confirm:
 
-1. The leaf exists in `src/data/subtopics.ts` (it should, since the full catalog is already populated)
+1. The leaf exists in `src/data/curriculum/subtopics.ts` (it should, since the full catalog is already populated)
 2. It does NOT yet have a `lessonSlug` (otherwise it has already been ported)
 3. The v1 source folder exists. Path pattern:
    ```
@@ -67,10 +69,10 @@ Before writing any MDX, read in this order:
 1. `CLAUDE.md` — project-wide quality standards
 2. `src/content/config.ts` — the **lesson frontmatter Zod schema** (authoritative)
 3. The closest already-ported sibling lesson under `src/content/lessons/` — for tone and component patterns
-4. `thesis_automation/references/scaffolding-rules.md` — Execute/Modify/Create gate criteria
-5. `thesis_automation/references/duration-guidelines.md` — duration target for this module range
-6. `thesis_automation/references/citation-guidelines.md` — APA + MDX reference list format
-7. `thesis_automation/references/visual-guidelines.md` — `<Figure>` usage
+4. `docs/references/scaffolding-rules.md` — Execute/Modify/Create gate criteria
+5. `docs/references/duration-guidelines.md` — duration target for this module range
+6. `docs/references/citation-guidelines.md` — APA + MDX reference list format
+7. `docs/references/visual-guidelines.md` — `<Figure>` usage
 8. The v1 `README.rst` and exercise `.py` files for the lesson being ported
 
 ### Step 4: Decide What to Carry Over from v1 Source
@@ -81,7 +83,7 @@ The v1 `README.rst` is **not** mechanically transformed into MDX. It is the cano
 |----------------|------------------|
 | Title + metadata block (`:Duration:`, `:Level:`) | → frontmatter fields |
 | RST directive `.. code-block:: python` | → `<CodeBlock lang="python" file="…">` wrapping a fenced code block |
-| RST `.. figure::` | → `<Figure src="/lessons/<slug>/…" alt=… caption=… num={N} role="…" />` |
+| RST `.. figure::` | → `<Figure src="/lesson-media/<lesson-path>/…" alt=… caption=… num={N} role="…" />` |
 | RST `.. admonition:: tip / note / important` | → `<Admonition type="tip\|note\|important">` |
 | RST `.. admonition:: Did You Know?` | → `<Admonition type="dyk" title="Technical note · …">` — and prefer a specific title over generic "Did You Know" (this avoids the X-03 AI pattern) |
 | RST `.. dropdown::` | → `<Dropdown summary="…">` |
@@ -97,30 +99,19 @@ Always set `h2` anchor ids: `## Quick start <a id="quick-start"></a>`.
 
 ### Step 5: Run the Asset Migrator
 
-Edit `scripts/copy-v1-assets.mjs` and append the new lesson to the `LESSONS` array:
+The migrator is driven by `docs/reports/migration-inventory.json` (regenerate with `node scripts/migration/inventory-v1.mjs` if the leaf is missing) and writes into `public/lesson-media/<lesson-path>/` — the v1-relative path, verbatim. Run it for just the lesson being ported:
 
-```js
-{
-  slug: 'X.Y.Z',
-  src: 'content/Module_NN_<topic>/X.Y_<subtopic>/X.Y.Z_<exercise>',
-  excludes: [],   // add subdirs/files to skip (e.g. '__pycache__', large datasets)
-},
-```
-
-The migrator's `src` is relative to the **v1 root** (it resolves `../` from the v2 root, which is the user's filesystem assumption — verify this matches the v1 location on the current machine; on this machine v1 lives one folder up at `C:\Users\User\Desktop\git-repos\numpy-to-genAI`).
-
-Then run:
 ```powershell
-npm run copy-assets
+npm run copy-assets -- --only=X.Y.Z
 ```
 
-Confirm the script reports `<N> copied, 0 skipped` for the new slug (where N matches the count of valid asset files in v1). Inspect `public/lessons/<slug>/` to verify everything landed.
+Confirm the script reports the expected copy count for the slug, then inspect `public/lesson-media/<lesson-path>/` to verify everything landed.
 
-The migrator copies: `.png .gif .jpg .jpeg .svg .py .pth .txt`. It **deliberately skips `README.rst`** because the MDX hand-port is the canonical source. It also skips subdirectories — assets from `visuals/` need to be excluded explicitly or moved manually.
+The migrator copies: `.png .gif .jpg .jpeg .svg .py .txt` (`.pth` only for lessons opted in via `PER_LESSON`). It **deliberately skips `README.rst`** because the MDX hand-port is the canonical source. It also skips subdirectories — if the lesson keeps assets under `visuals/` (or similar), add an `includeSubdirs` entry to the `PER_LESSON` map in `scripts/copy-v1-assets.mjs`.
 
 ### Step 6: Write the MDX File
 
-Create `src/content/lessons/<slug>.mdx`. Skeleton for an F1 (hands-on) lesson:
+Create `src/content/lessons/<lesson-path>.mdx`. Skeleton for an F1 (hands-on) lesson:
 
 ```mdx
 ---
@@ -166,7 +157,7 @@ backLink:
 </CodeBlock>
 
 <Figure
-  src="/lessons/<slug>/quick_start_output.png"
+  src="/lesson-media/<lesson-path>/quick_start_output.png"
   alt="…"
   caption="…"
   num={1}
@@ -207,7 +198,7 @@ backLink:
 
 ## Downloads <a id="downloads"></a>
 
-<Download href="/lessons/<slug>/main_script.py" label="main_script.py" />
+<Download href="/lesson-media/<lesson-path>/main_script.py" label="main_script.py" />
 
 ## Summary <a id="summary"></a>
 
@@ -241,12 +232,12 @@ For F2 (conceptual) lessons, replace `## Quick start` + `## Core concepts` with:
 
 Two edits to ship the lesson:
 
-1. **`src/data/subtopics.ts`** — find the leaf entry and add `lessonSlug: '<slug>'`:
+1. **`src/data/curriculum/subtopics.ts`** — find the leaf entry and add `lessonSlug: '<slug>'`:
    ```ts
    { id: '4.1.2', title: 'Dragon Curve', lessonSlug: '4.1.2' },
    ```
 
-2. **`src/data/modules.ts`** — if this is the *first* ported lesson under a module, set `firstLesson`:
+2. **`src/data/curriculum/modules.ts`** — if this is the *first* ported lesson under a module, set `firstLesson`:
    ```ts
    { idx: '04', title: 'Fractals', em: '& Recursion', fw: 'F1+F2', cycle: 'I', firstLesson: '4.1.2' },
    ```
@@ -260,7 +251,7 @@ Run the **`exercise-testing`** skill end-to-end. Do not move on until all five l
 
 ### Step 9: Write a Port Log (Optional)
 
-For thesis-trail / supervisor-review purposes, drop a port log at `thesis_automation/reports/<slug>/port_log.md`:
+For thesis-trail / supervisor-review purposes, drop a port log at `docs/reports/<slug>/port_log.md`:
 
 ```markdown
 # Port Log: X.Y.Z
@@ -275,9 +266,8 @@ For thesis-trail / supervisor-review purposes, drop a port log at `thesis_automa
 - Output images: <list>
 
 ## Asset migration
-- LESSONS entry added to scripts/copy-v1-assets.mjs
-- npm run copy-assets: <N> copied, <M> skipped
-- public/lessons/<slug>/ verified
+- npm run copy-assets -- --only=<slug>: <N> copied, <M> skipped
+- public/lesson-media/<lesson-path>/ verified
 
 ## Hand-port changes
 - [Note any prose changes beyond mechanical RST→MDX translation,
@@ -299,15 +289,15 @@ For thesis-trail / supervisor-review purposes, drop a port log at `thesis_automa
 
 ## Quality Gates (Must Pass Before Shipping)
 
-### Duration Targets (from [duration-guidelines.md](../../../thesis_automation/references/duration-guidelines.md))
+### Duration Targets (from [duration-guidelines.md](../../../docs/references/duration-guidelines.md))
 - **Modules 0-6**: 15-20 minutes maximum
 - **Modules 7-15**: 30-45 minutes maximum
 
-### Citation Minimums (from [citation-guidelines.md](../../../thesis_automation/references/citation-guidelines.md))
+### Citation Minimums (from [citation-guidelines.md](../../../docs/references/citation-guidelines.md))
 - Modules 0-6: 5-7 citations
 - Modules 7-15: 7-10 citations
 
-### Scaffolding Rules (from [scaffolding-rules.md](../../../thesis_automation/references/scaffolding-rules.md))
+### Scaffolding Rules (from [scaffolding-rules.md](../../../docs/references/scaffolding-rules.md))
 - Exercise 1 (Execute): runnable, 3-5 min, reflection questions with Dropdown answers
 - Exercise 2 (Modify): 2-5 labeled parameters, numbered Goals, "What to expect" dropdowns
 - Exercise 3 (Create): 60-85% complete starter, 3-6 TODOs with what + why explanations, progressive hint Dropdowns, final solution Dropdown
@@ -328,12 +318,12 @@ For thesis-trail / supervisor-review purposes, drop a port log at `thesis_automa
 
 ## Post-Port Checklist
 
-- [ ] `src/content/lessons/<slug>.mdx` exists and passes Zod schema
+- [ ] `src/content/lessons/<lesson-path>.mdx` exists and passes Zod schema
 - [ ] Custom components used correctly (`<CodeBlock>`, `<Figure>`, `<Admonition>`, `<Exercise>`, `<Dropdown>`, `<Download>`)
-- [ ] `public/lessons/<slug>/` populated by `npm run copy-assets`
-- [ ] All `src="/lessons/<slug>/…"` references resolve
-- [ ] `src/data/subtopics.ts` has `lessonSlug: '<slug>'` on the right leaf
-- [ ] `src/data/modules.ts` `firstLesson` updated if applicable
+- [ ] `public/lesson-media/<lesson-path>/` populated by `npm run copy-assets`
+- [ ] All `src="/lesson-media/<lesson-path>/…"` references resolve
+- [ ] `src/data/curriculum/subtopics.ts` has `lessonSlug: '<slug>'` on the right leaf
+- [ ] `src/data/curriculum/modules.ts` `firstLesson` updated if applicable
 - [ ] `prev` / `next` frontmatter consistent with sibling lessons
 - [ ] `npm run build` succeeds
 - [ ] Dev render passes visual + interaction checks

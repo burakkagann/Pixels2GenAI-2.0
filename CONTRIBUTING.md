@@ -32,13 +32,13 @@ npm run dev        # http://localhost:4321
 A lesson is **shipped** — i.e. appears as a clickable card on the site — when
 **both** of these are in place:
 
-1. **The MDX file** at `src/content/lessons/<slug>.mdx`, valid against the Zod
+1. **The MDX file** at `src/content/lessons/<lesson-path>.mdx`, valid against the Zod
    schema in [`src/content/config.ts`](src/content/config.ts), with assets under
-   `public/lessons/<slug>/`.
+   `public/lesson-media/<lesson-path>/`.
 2. **`lessonSlug: '<slug>'`** added to the matching leaf in
-   [`src/data/subtopics.ts`](src/data/subtopics.ts). If it's the module's first
+   [`src/data/curriculum/subtopics.ts`](src/data/curriculum/subtopics.ts). If it's the module's first
    ported lesson, also set `firstLesson` in
-   [`src/data/modules.ts`](src/data/modules.ts).
+   [`src/data/curriculum/modules.ts`](src/data/curriculum/modules.ts).
 
 Until step 2, the leaf renders dim as "Coming soon" and is unreachable.
 
@@ -50,7 +50,7 @@ Source prose and Python come from the **v1 archive** (`numpy-to-genAI`), which i
 1. **Copy assets** — add your lesson to the `LESSONS` array in
    [`scripts/copy-v1-assets.mjs`](scripts/copy-v1-assets.mjs), then
    `npm run copy-assets`.
-2. **Hand-port the MDX** — write `src/content/lessons/<slug>.mdx` using the
+2. **Hand-port the MDX** — write `src/content/lessons/<lesson-path>.mdx` using the
    component kit in [`src/components/lesson/mdx/`](src/components/lesson/mdx/):
    `Admonition`, `CodeBlock`, `Download`, `Dropdown`, `Exercise`, `Figure`.
    Use these instead of raw HTML.
@@ -64,7 +64,7 @@ If you use Claude Code, the repo ships skills that automate this pipeline:
 ## Quality bar
 
 These are non-negotiable; details live in
-[`thesis_automation/references/`](thesis_automation/references/):
+[`docs/references/`](docs/references/):
 
 - **Scaffolding** — every exercise set follows *Execute → Modify → Create*
   (`scaffolding-rules.md`).

@@ -6,7 +6,7 @@ description: Detect and revise AI-generated language patterns in documentation t
 # AI Revision Skill
 
 ## Skill Overview
-This skill analyzes documentation for AI-generated language patterns and provides targeted transformations to produce authentic, human-quality academic writing. It implements the full AI Content Revision Framework documented in `thesis_automation/references/ai-revision-framework.md`.
+This skill analyzes documentation for AI-generated language patterns and provides targeted transformations to produce authentic, human-quality academic writing. It implements the full AI Content Revision Framework documented in `docs/references/ai-revision-framework.md`.
 
 ## When to Use This Skill
 - After generating or hand-porting a lesson MDX file
@@ -22,7 +22,7 @@ The patterns and transformations are format-agnostic — they apply identically 
 ## Analysis Workflow
 
 ### Step 1: Read the Target Document
-Read the target file (`src/content/lessons/<slug>.mdx` for v2, or `content/Module_NN_*/.../README.rst` for v1). Note total word count and section structure.
+Read the target file (`src/content/lessons/<lesson-path>.mdx` for v2, or `content/Module_NN_*/.../README.rst` for v1). Note total word count and section structure.
 
 ### Step 2: Sentence-Level Pattern Detection
 

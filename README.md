@@ -29,8 +29,8 @@ Read the research framing on the live site: <https://pixels2genai.art/research>.
 ## Status
 
 The site and design system are live; lesson content is being ported module by
-module. **3 of 193 lessons are shipped today** (`1.1.1`, `4.1.1`, `12.1.2`) —
-the remaining ~190 are the main contribution opportunity.
+module. **149 of 193 lessons are shipped** (as of June 2026) — the remainder
+are the main contribution opportunity.
 
 For the current count at any time, run:
 
@@ -60,7 +60,7 @@ That's all you need to browse and edit the site. When porting a lesson, you also
 pull its media from the v1 archive:
 
 ```bash
-npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into public/lessons/
+npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into public/lesson-media/
 ```
 
 ## Scripts
@@ -73,7 +73,7 @@ npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into publi
 | `npm run preview` | Serve the production build locally |
 | `npm run check` | Validate lesson wiring — `lessonSlug` ↔ MDX, assets, duplicate slugs (gates `build`) |
 | `npm run status` | Per-module shipped/total progress table |
-| `npm run copy-assets` | Copy a lesson's assets from the v1 repo into `public/lessons/` |
+| `npm run copy-assets` | Copy a lesson's assets from the v1 repo into `public/lesson-media/` |
 | `npm run gen-icons` | Regenerate favicons / touch icons |
 
 ## Project layout
@@ -82,22 +82,27 @@ npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into publi
 .
 ├── astro.config.mjs          Astro config (site URL, sitemap, MDX, remark plugin)
 ├── netlify.toml              Netlify build settings
+├── docs/                     contributor docs — curriculum map, quality
+│                             references, generated reports
 ├── public/
-│   ├── lessons/<slug>/       per-lesson media (PNG / GIF / .py / .pth)
+│   ├── lesson-media/         per-lesson media (PNG / GIF / .py / .pth),
+│   │                         mirrors src/content/lessons/ folder for folder
 │   ├── exhibitions/          exhibition poster + print images
 │   └── workshops/            workshop posters + gallery
 ├── scripts/
 │   ├── check-lessons.mjs     lesson integrity check (npm run check)
 │   ├── lesson-status.mjs     progress report (npm run status)
-│   ├── copy-v1-assets.mjs    v1 → public/lessons asset migrator
-│   └── lib/catalog.mjs       shared catalog reader for the tooling
+│   ├── copy-v1-assets.mjs    v1 → public/lesson-media asset migrator
+│   ├── lib/catalog.mjs       shared catalog reader for the tooling
+│   └── migration/            archived one-shot migration scripts
 ├── src/
 │   ├── pages/                routes — index, lessons/[slug], research, workshops,
 │   │                         exhibitions/2026-03, imprint, 404, og/[...route]
 │   ├── layouts/              Base, Lesson, Research
 │   ├── content/
-│   │   ├── config.ts         Zod schema for lesson frontmatter
-│   │   └── lessons/<slug>.mdx lesson content
+│   │   ├── config.ts         glob loader (slug = numeric id) + Zod schema
+│   │   └── lessons/          lesson MDX, mirrors v1's content/ hierarchy:
+│   │                         Module_xx_…/x.y_…/x.y.z_<name>.mdx
 │   ├── components/
 │   │   ├── chrome/           top frame, footer, grain overlay
 │   │   ├── cube/             React-island JourneyCube
@@ -105,7 +110,9 @@ npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into publi
 │   │   ├── exhibitions/      exhibition specimen + layout
 │   │   ├── workshops/        workshop specimen + signup form
 │   │   └── research/         research-page sections
-│   ├── data/                 curriculum + event catalogs (source of truth)
+│   ├── data/
+│   │   ├── curriculum/       modules.ts + subtopics.ts (source of truth)
+│   │   └── site/             research.ts, exhibitions.ts, workshops.ts
 │   ├── lib/                  cube color pipeline + GitHub star badge
 │   └── styles/               global CSS (tokens, base, typography, prose)
 └── CLAUDE.md                 contributor + automation guide
@@ -127,10 +134,12 @@ npm run copy-assets  # copies that lesson's PNG / GIF / .py / weights into publi
 Contributions are welcome — most of all, **porting lessons**. The fastest way to
 help is to take an unshipped leaf and bring it to life as an MDX lesson.
 
-A lesson ships in **two steps**: (1) drop the MDX at
-`src/content/lessons/<slug>.mdx` with its assets under `public/lessons/<slug>/`,
-then (2) add `lessonSlug: '<slug>'` to the matching leaf in
-`src/data/subtopics.ts`. Until step 2, the lesson renders as "Coming soon."
+A lesson ships in **two steps**: (1) drop the MDX under
+`src/content/lessons/<Module dir>/<subtopic dir>/<id>_<name>.mdx` (the tree
+mirrors v1's `content/` hierarchy) with its assets in the matching
+`public/lesson-media/…/<id>_<name>/` folder, then (2) add `lessonSlug: '<id>'`
+to the matching leaf in `src/data/curriculum/subtopics.ts`. Until step 2, the
+lesson renders as "Coming soon." The URL is always `/lessons/<id>`.
 
 Full workflow, quality standards, and PR checklist: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 

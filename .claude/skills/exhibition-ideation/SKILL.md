@@ -32,7 +32,7 @@ Before generating ideas, always check current state:
 3. **Read concept combination patterns** for inspiration frameworks:
    - `references/concept-patterns.md` (bundled with this skill)
 
-4. **Check what's already shipped to the public site** — the v2 exhibitions data is in `src/data/exhibitions.ts`. The `printedWorks` and `animatedWorks` arrays there are the canonical list of works that have been publicly attributed; avoid pitching duplicates.
+4. **Check what's already shipped to the public site** — the v2 exhibitions data is in `src/data/site/exhibitions.ts`. The `printedWorks` and `animatedWorks` arrays there are the canonical list of works that have been publicly attributed; avoid pitching duplicates.
 
 ## The Four-Phase Workflow
 
@@ -169,7 +169,7 @@ Continue the refine loop until the user is satisfied. When they say it's done, s
 - Print recommendations (paper type, mounting style)
 - Where it fits in the exhibition narrative
 - A label card draft: Title, one-line description, code line count, module references
-- If the piece is added to the public catalogue, update `src/data/exhibitions.ts` (`printedWorks` or `animatedWorks`) accordingly.
+- If the piece is added to the public catalogue, update `src/data/site/exhibitions.ts` (`printedWorks` or `animatedWorks`) accordingly.
 
 ## Important Guidelines
 
@@ -182,7 +182,7 @@ Continue the refine loop until the user is satisfied. When they say it's done, s
 
 ## Quick Reference: Existing Installations (March 2026 Berlin show)
 
-To avoid suggesting duplicates, be aware of completed work. The canonical list is in `src/data/exhibitions.ts`:
+To avoid suggesting duplicates, be aware of completed work. The canonical list is in `src/data/site/exhibitions.ts`:
 
 **Prints**:
 - **Array Zero · void / bloom**: NumPy cumulative array operations on paper (Module 1)

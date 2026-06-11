@@ -6,7 +6,9 @@ description: Comprehensive validation for Pixels2GenAI v2 lessons. Use when vali
 # Lesson Testing & Validation Skill (v2)
 
 ## Skill Overview
-This skill provides comprehensive validation protocols for v2 lessons. A "lesson" in v2 is the combination of an MDX file under `src/content/lessons/`, the assets it references under `public/lessons/<slug>/`, and the leaf entry in `src/data/subtopics.ts`. Validation makes sure every layer is consistent before the lesson goes live.
+This skill provides comprehensive validation protocols for v2 lessons. A "lesson" in v2 is the combination of an MDX file under `src/content/lessons/`, the assets it references under `public/lesson-media/<lesson-path>/`, and the leaf entry in `src/data/curriculum/subtopics.ts`. Validation makes sure every layer is consistent before the lesson goes live.
+
+**Path convention** — `<lesson-path>` means the v1-mirrored relative path `Module_NN_<topic>/X.Y_<subtopic>/X.Y.Z_<exercise>`: the MDX is the file `src/content/lessons/<lesson-path>.mdx`, its assets sit in the folder `public/lesson-media/<lesson-path>/`, and the page URL is `/lessons/<id>` (numeric leaf id). `npm run check` validates all of this wiring automatically — run it first.
 
 ## When to Use This Skill
 - After porting a v1 lesson (RST → MDX) — use alongside the `lesson-port` skill
@@ -61,56 +63,56 @@ python exercise3_create.py
 
 **Array dimension mismatch** — usually a NumPy version skew between v1's venv and a fresh Python.
 
-If a v1 script fails, **do not silently fix it in v1** (v1 is treated as read-only). Instead: document the failure, port the *current* working output PNG/GIF, and either skip the broken example in the MDX or write a v2-equivalent script under `public/lessons/<slug>/`.
+If a v1 script fails, **do not silently fix it in v1** (v1 is treated as read-only). Instead: document the failure, port the *current* working output PNG/GIF, and either skip the broken example in the MDX or write a v2-equivalent script under `public/lesson-media/<lesson-path>/`.
 
 ---
 
 ## Level 2: Asset Migration & Validation
 
-**Goal**: Verify that every image, GIF, and downloadable `.py` referenced from the MDX exists under `public/lessons/<slug>/`.
+**Goal**: Verify that every image, GIF, and downloadable `.py` referenced from the MDX exists under `public/lesson-media/<lesson-path>/`.
 
 ### Step 2.1 — Run the migrator
 
-For each lesson being ported, add its v1 source path to the `LESSONS` array in `scripts/copy-v1-assets.mjs`, then:
+The migrator is inventory-driven (`docs/reports/migration-inventory.json`); run it for the lesson under test:
 
 ```powershell
-npm run copy-assets
+npm run copy-assets -- --only=<id>
 ```
 
-The script copies PNG/GIF/JPG/SVG/PY/PTH/TXT into `public/lessons/<slug>/` and is **idempotent** — re-running overwrites destination files. It deliberately **skips `README.rst`** because the MDX hand-port is canonical.
+The script copies PNG/GIF/JPG/SVG/PY/PTH/TXT into `public/lesson-media/<lesson-path>/` and is **idempotent** — re-running overwrites destination files. It deliberately **skips `README.rst`** because the MDX hand-port is canonical.
 
 ### Step 2.2 — Cross-reference MDX assets
 
-For every `src="/lessons/<slug>/…"` in the MDX, verify the file exists:
+For every `src="/lesson-media/<lesson-path>/…"` in the MDX, verify the file exists:
 
 ```powershell
 # Inside the lesson dir, list everything that was copied
-Get-ChildItem -Recurse "public/lessons/<slug>/"
+Get-ChildItem -Recurse "public/lesson-media/<lesson-path>/"
 ```
 
-Then grep the MDX for every `/lessons/<slug>/` reference and confirm each filename appears in the directory listing.
+Then grep the MDX for every `/lesson-media/` reference and confirm each filename appears in the directory listing (`npm run check` does exactly this across all lessons).
 
 ### Step 2.3 — Image sanity checks
 
-For each PNG / GIF / JPG in `public/lessons/<slug>/`:
+For each PNG / GIF / JPG in `public/lesson-media/<lesson-path>/`:
 
 - Opens cleanly (no zero-byte / truncated files)
-- File size <= 500 KB for PNGs, <= 2 MB for GIFs (see `thesis_automation/references/visual-guidelines.md`)
+- File size <= 500 KB for PNGs, <= 2 MB for GIFs (see `docs/references/visual-guidelines.md`)
 - Dimensions between 10×10 and 4096×4096
 
 Quick PowerShell check:
 ```powershell
-Get-ChildItem "public/lessons/<slug>/*.png" | ForEach-Object {
+Get-ChildItem "public/lesson-media/<lesson-path>/*.png" | ForEach-Object {
   $kb = [math]::Round($_.Length / 1KB, 1)
   "$($_.Name): $kb KB"
 }
 ```
 
 ### Checklist
-- [ ] All `<Figure src=…>` paths resolve under `public/lessons/<slug>/`
-- [ ] All `<Download href=…>` paths resolve under `public/lessons/<slug>/`
+- [ ] All `<Figure src=…>` paths resolve under `public/lesson-media/<lesson-path>/`
+- [ ] All `<Download href=…>` paths resolve under `public/lesson-media/<lesson-path>/`
 - [ ] Image file sizes within budget
-- [ ] No leftover `__pycache__`, `.pyc`, `.ipynb_checkpoints` in `public/lessons/<slug>/`
+- [ ] No leftover `__pycache__`, `.pyc`, `.ipynb_checkpoints` in `public/lesson-media/<lesson-path>/`
 - [ ] Model-weight files (`.pth`) intentionally excluded if large (e.g. fabric dataset in 12.1.2)
 
 ---
@@ -162,7 +164,7 @@ The Astro config (`astro.config.mjs`) auto-wraps content between `## h2` heading
 - Lesson has clear `## h2` headings (typically: Overview, Quick start, Core concepts, Exercises, Downloads, Summary, References)
 - Content before the first `h2` (e.g. an opening `<Figure>`) is intentional — it stays unwrapped at article level
 
-### Content Completeness Checklist (matches [scaffolding-rules.md](../../../thesis_automation/references/scaffolding-rules.md))
+### Content Completeness Checklist (matches [scaffolding-rules.md](../../../docs/references/scaffolding-rules.md))
 
 **Hands-on (F1) lessons must have**:
 - [ ] Overview (anchor `#overview`)
@@ -196,7 +198,7 @@ npm run build
 
 Look for:
 - Zero MDX compilation errors
-- Zero broken `<Figure src=…>` paths (Astro will warn if a `/lessons/<slug>/…` file is missing from `public/`)
+- Zero broken `<Figure src=…>` paths (`npm run check` fails the build if a `/lesson-media/…` file is missing from `public/`)
 - TypeScript strict passes (`@astrojs/check` runs as part of build)
 - Output written to `dist/lessons/<slug>/index.html`
 
@@ -236,7 +238,7 @@ In Chrome DevTools, run Lighthouse on the rendered page. Watch for missing alt t
 - [ ] **Scaffolding**: Exercises progress Execute → Modify → Create
 - [ ] **Visual examples**: Every Core Concept has at least one figure
 - [ ] **Accessibility**: Descriptive alt text on every `<Figure>`
-- [ ] **Duration**: Within target range for the module (see [duration-guidelines.md](../../../thesis_automation/references/duration-guidelines.md))
+- [ ] **Duration**: Within target range for the module (see [duration-guidelines.md](../../../docs/references/duration-guidelines.md))
 - [ ] **Cognitive load**: ≤ 3-4 new concepts across the lesson
 
 ### Code Quality Checklist (for downloadable `.py` files)
@@ -257,7 +259,7 @@ Before final approval, run the **ai-revision** skill against the MDX file. Aim f
 
 ## Success Criteria
 
-A lesson is ready to ship (i.e. ready to receive its `lessonSlug` in `src/data/subtopics.ts`) when:
+A lesson is ready to ship (i.e. ready to receive its `lessonSlug` in `src/data/curriculum/subtopics.ts`) when:
 
 1. ✅ Source Python scripts execute cleanly (Level 1 — for ported lessons)
 2. ✅ Assets are copied and every MDX reference resolves (Level 2)
@@ -266,7 +268,7 @@ A lesson is ready to ship (i.e. ready to receive its `lessonSlug` in `src/data/s
 5. ✅ Dev-server render passes visual + interaction checks (Level 4)
 6. ✅ Content meets pedagogical and AI-pattern quality bars (Level 5)
 
-Only then should you update `src/data/subtopics.ts` to add `lessonSlug` for the leaf, and `src/data/modules.ts` to update `firstLesson` if this is the module's first ported lesson.
+Only then should you update `src/data/curriculum/subtopics.ts` to add `lessonSlug` for the leaf, and `src/data/curriculum/modules.ts` to update `firstLesson` if this is the module's first ported lesson.
 
 ---
 
