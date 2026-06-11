@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/burakkagann/Pixels2GenAI-2.0/blob/main/CONTRIBUTING.md
+    about: How to port a lesson, the quality bar, and the PR checklist.
+  - name: Live site
+    url: https://pixels2genai.art
+    about: Browse the curriculum and see what's already shipped.
