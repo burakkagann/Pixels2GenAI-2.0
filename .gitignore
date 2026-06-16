@@ -26,3 +26,8 @@ Thumbs.db
 
 # misc
 *.log
+
+# local-only: launch plan, fabricated-lessons audit, and archived lessons
+# (scripts/ stays tracked — npm run build depends on scripts/check-lessons.mjs)
+docs/
+archive/
