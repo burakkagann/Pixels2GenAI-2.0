@@ -154,6 +154,22 @@ The remark plugin in `astro.config.mjs` auto-wraps content between `## h2` headi
 
 ---
 
+## SEO & Structured Data
+
+The site emits JSON-LD structured data and an RSS feed for search + AI-answer-engine (AEO/GEO) visibility. Most updates automatically; **two items need manual upkeep — don't forget them.**
+
+**Automatic — no action when shipping lessons:**
+- **RSS feed** — [`src/pages/feed.xml.ts`](src/pages/feed.xml.ts) lists every lesson via `getCollection('lessons')`; new lessons appear on the next build. Discovery `<link>` is in `Base.astro`.
+- **Breadcrumb JSON-LD** — `BreadcrumbList` built in [`src/layouts/Lesson.astro`](src/layouts/Lesson.astro) from the slug + `MODULES`/`SUBTOPICS`. Populates automatically once `lessonSlug` is wired into `subtopics.ts` (already step 2 of the ship workflow). Degrades gracefully if a module/subtopic isn't catalogued.
+- **LearningResource** (per lesson) + **Course** (homepage) JSON-LD — frontmatter/data driven.
+- `Base.astro`'s `jsonLd` prop accepts a single object **or an array** (multiple blocks per page).
+
+**Manual upkeep — easy to forget:**
+- **Research page `Article` schema** — `dateModified` lives in [`src/pages/research.mdx`](src/pages/research.mdx) frontmatter, **not** the build clock. **Bump it whenever you substantively edit the research page** (this is correct AEO behavior — only bump on real edits). Also keep `author` / `datePublished` accurate.
+- **Lesson FAQ schema** — opt-in per lesson via an optional `faq: [{ q, a }]` frontmatter array (schema in [`src/content/config.ts`](src/content/config.ts)), emitted as `FAQPage` JSON-LD by `Lesson.astro`. **New lessons get NO FAQ markup unless you add the field.** Only add Q&A that is **also visible on the page** (mirror the reflection-question dropdowns) — Google requires FAQ markup to reflect on-page content. Piloted on `4.1.3`, `6.1.1`, `9.1.1`.
+
+---
+
 ## Quality Standards (Non-Negotiable)
 
 ### Code Quality

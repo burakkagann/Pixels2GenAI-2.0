@@ -17,6 +17,22 @@ next:
 backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
+faq:
+  - q: "Why does fractal Brownian motion divide by norm at the end?"
+    a: >-
+      Without it, the sum of octaves overshoots the unit range. norm accumulates
+      the same geometric series as the amplitude, so dividing rescales the
+      result back into [0, 1] regardless of how many octaves you stacked.
+  - q: "What happens if you drop octaves to 1 in Perlin or value noise?"
+    a: >-
+      The picture becomes a soft, blobby field with features at exactly the base
+      scale and no fine detail — it reads as a depth gradient rather than a
+      texture.
+  - q: "What does raising persistence to 0.9 do to noise?"
+    a: >-
+      Higher octaves contribute almost as much as the base, so the texture turns
+      coarse and rough and the larger-scale features get drowned in
+      high-frequency content. Useful when you want noise, less so for clouds.
 ---
 
 ## Overview <a id="overview"></a>

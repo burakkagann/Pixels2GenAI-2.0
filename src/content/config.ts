@@ -46,6 +46,15 @@ const lessons = defineCollection({
       .default(null),
     /** Back-link to the module/topic page. Falls back to landing /#curriculum. */
     backLink: z.object({ href: z.string(), label: z.string() }).optional(),
+    /**
+     * Optional FAQ pairs, emitted as FAQPage JSON-LD for rich results / AI
+     * citation. Only add entries whose Q&A is ALSO visible on the page (e.g.
+     * mirrors the reflection questions and their answer dropdowns) — Google
+     * requires FAQ markup to reflect on-page content.
+     */
+    faq: z
+      .array(z.object({ q: z.string(), a: z.string() }))
+      .optional(),
   }),
 });
 

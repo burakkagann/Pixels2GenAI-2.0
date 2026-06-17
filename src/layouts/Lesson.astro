@@ -5,6 +5,8 @@ import OnThisPage from '@/components/lesson/OnThisPage.astro';
 import ContinueInModule from '@/components/lesson/ContinueInModule.astro';
 import PrevNext from '@/components/lesson/PrevNext.astro';
 import StageTracker from '@/components/lesson/StageTracker.astro';
+import { MODULES } from '@/data/curriculum/modules';
+import { SUBTOPICS } from '@/data/curriculum/subtopics';
 import '@/styles/prose.css';
 import '@/styles/lesson-layout.css';
 
@@ -34,6 +36,7 @@ interface Props {
     prev: NeighborLink | null;
     next: NeighborLink | null;
     backLink?: { href: string; label: string };
+    faq?: { q: string; a: string }[];
   };
   headings: Heading[];
 }
@@ -53,13 +56,62 @@ const lessonJsonLd = {
   inLanguage: 'en',
   url: new URL(`/lessons/${slug}`, Astro.site).href,
 };
+
+// Breadcrumb trail (Curriculum → Module → Subtopic → Lesson), derived from the
+// slug's numeric segments so it stays correct as modules are ported. The module
+// and subtopic levels have no dedicated page yet, so they point at the
+// curriculum section on the landing page.
+const [moduleNum, subNum] = slug.split('.'); // "2.1.1" → ["2","1"]
+const moduleIdx = moduleNum.padStart(2, '0'); // "02"
+const subtopicId = `${moduleNum}.${subNum}`; // "2.1"
+const moduleEntry = MODULES.find((m) => m.idx === moduleIdx);
+const subtopicEntry = SUBTOPICS[moduleIdx]?.find((s) => s.id === subtopicId);
+const moduleName = moduleEntry
+  ? `${moduleEntry.title} ${moduleEntry.em}`.trim()
+  : `Module ${moduleNum}`;
+const curriculumUrl = new URL('/#curriculum', Astro.site).href;
+
+const breadcrumbItems = [
+  { name: 'Curriculum', item: curriculumUrl },
+  { name: moduleName, item: curriculumUrl },
+  ...(subtopicEntry ? [{ name: subtopicEntry.title, item: curriculumUrl }] : []),
+  { name: f.title, item: new URL(`/lessons/${slug}`, Astro.site).href },
+];
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbItems.map((entry, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: entry.name,
+    item: entry.item,
+  })),
+};
+
+// FAQPage JSON-LD — only when the lesson author has supplied `faq` pairs that
+// mirror visible on-page Q&A. Omitted entirely otherwise.
+const faqJsonLd =
+  f.faq && f.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: f.faq.map((pair) => ({
+          '@type': 'Question',
+          name: pair.q,
+          acceptedAnswer: { '@type': 'Answer', text: pair.a },
+        })),
+      }
+    : null;
+
+const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd] : [])];
 ---
 
 <Base
   title={`${slug} ${f.title}`}
   description={f.objective}
   ogImage={`/og/lessons/${slug}.png`}
-  jsonLd={lessonJsonLd}
+  jsonLd={jsonLdBlocks}
 >
   <StageTracker currentModule={f.module} cycle={f.cycle} />
 

@@ -17,6 +17,24 @@ next:
 backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
+faq:
+  - q: "Why does a perceptron stop updating after some number of epochs?"
+    a: >-
+      Once every training point is classified correctly, the error term is zero
+      for all of them, so the weights stop updating. The perceptron has
+      converged.
+  - q: "What does the learning rate control in a perceptron?"
+    a: >-
+      It controls the update step size. Too small means very slow convergence;
+      too large may overshoot and oscillate around the optimum. For linearly
+      separable data the convergence proof is rate-insensitive; for real data
+      the rate matters.
+  - q: "Which separating line does a perceptron find when many exist?"
+    a: >-
+      The first one it happens to land on as it processes training points.
+      Different initial weights or shuffling order give different lines.
+      Perceptrons care only about correctness, not margin — unlike SVMs, which
+      maximize the margin.
 ---
 
 ## Big question <a id="big-question"></a>

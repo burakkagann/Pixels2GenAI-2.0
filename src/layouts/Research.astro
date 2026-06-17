@@ -25,15 +25,43 @@ interface Props {
     method: string;        // e.g. "DBR · Cycle ii"
     instruments: string;   // e.g. "Pre/post · NASA-TLX · Exit tickets"
     analysis: string;      // e.g. "Mixed-methods"
+    author?: string;       // Article schema author (defaults to project)
+    datePublished?: string; // ISO date, e.g. "2026-03-01"
+    dateModified?: string;  // ISO date, e.g. "2026-06-17"
   };
   headings: Heading[];
 }
 
 const { frontmatter, headings } = Astro.props;
 const f = frontmatter;
+
+// Article (scholarly) structured data — marks this page as authored research,
+// an E-E-A-T / AI-citation signal. Dates come from frontmatter so they reflect
+// real edits rather than the build timestamp.
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: f.title,
+  description: f.description ?? f.lede.slice(0, 160),
+  author: { '@type': 'Person', name: f.author ?? 'Pixels2GenAI Project' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Pixels2GenAI',
+    url: new URL('/', Astro.site).href,
+  },
+  inLanguage: 'en',
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  image: new URL('/og/home.png', Astro.site).href,
+  ...(f.datePublished ? { datePublished: f.datePublished } : {}),
+  ...(f.dateModified ? { dateModified: f.dateModified } : {}),
+};
 ---
 
-<Base title={f.title} description={f.description ?? f.lede.slice(0, 160)}>
+<Base
+  title={f.title}
+  description={f.description ?? f.lede.slice(0, 160)}
+  jsonLd={articleJsonLd}
+>
   <main class="page research-page">
     <article class="col-main lesson research-main">
       <ResearchHead
