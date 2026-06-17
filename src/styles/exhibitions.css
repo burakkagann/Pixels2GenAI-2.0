@@ -404,10 +404,15 @@
 
 .exhibition-plate:hover { border-color: var(--c3); }
 
+/* The works are all on black, so tiles carry a theme-invariant near-black mat
+   and the image is shown in full (contain) — landscape prints and the printed
+   code captions are never cropped, and the mat reads as a frame in both themes. */
+.exhibition-plate-strip-grid .exhibition-plate { background: #0C0913; }
+
 .exhibition-plate img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.4s, filter 0.4s;
   filter: saturate(0.85);
 }
@@ -484,6 +489,30 @@
 
 .exhibition-specimen-actions .btn-ghost:hover { border-color: var(--c3); }
 
+/* Quiet pink-accent CTA — invites the next show without shouting. Transparent
+   like the sibling ghost button, but carries the studio pink in its label and a
+   soft pink border; on hover it warms to a faint pink wash. Colour-only
+   transitions, so the global reduced-motion kill-switch in base.css covers it. */
+.exhibition-specimen-actions .btn-announce {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--studio-ink);
+  border: 1px solid color-mix(in srgb, var(--studio) 42%, var(--line-2));
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.exhibition-specimen-actions .btn-announce:hover {
+  background: var(--studio-tint);
+  border-color: var(--studio-ink);
+  color: var(--studio-ink);
+}
+
 /* Mono aside next to the announce CTA — no pink, reads as furniture. */
 .exhibition-specimen-actions .actions-note {
   font-family: var(--mono);
@@ -505,7 +534,8 @@
    them full-width (matches .cover-actions / .announce-strip CTA). */
 @media (max-width: 480px) {
   .exhibition-specimen-actions { gap: 10px; }
-  .exhibition-specimen-actions .btn-ghost {
+  .exhibition-specimen-actions .btn-ghost,
+  .exhibition-specimen-actions .btn-announce {
     width: 100%;
     justify-content: center;
   }
@@ -810,6 +840,80 @@
   }
 }
 
+/* ---------- Print series clusters (titled groups in the #prints gallery) ----------
+   Reuses the .eyebrow / .deck / section-h3 type recipes. Each cluster heads a
+   plate sub-grid capped at 4 columns, so a four-frame series fills one row and
+   shorter series sit left-aligned at a consistent tile size. */
+.print-series + .print-series { margin-top: 48px; }
+
+.print-series-head { margin-bottom: 22px; }
+
+.print-series-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-bottom: 10px;
+}
+
+.print-series-eyebrow .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--studio);
+  flex-shrink: 0;
+}
+
+.print-series-title {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0;
+  max-width: 24ch;
+}
+
+.print-series-title a {
+  color: inherit;
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 2px;
+  transition: border-bottom-color .15s, color .15s;
+}
+
+.print-series-title a:hover {
+  color: var(--studio-ink);
+  border-bottom-color: var(--studio-ink);
+}
+
+.print-series-lede {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  margin: 8px 0 0;
+  max-width: 60ch;
+}
+
+.print-series-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .print-series-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .print-series-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 .exhibition-plate {
   display: block;
   border: 1px solid var(--line);
@@ -839,12 +943,15 @@
   position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
+  /* Theme-invariant near-black mat — the prints are all on black, so the
+     contained image below sits in a frame rather than a visible letterbox. */
+  background: #0C0913;
 }
 
 .exhibition-plate .plate-frame img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   filter: saturate(0.85);
   transition: filter .3s, transform .4s;
 }
@@ -895,6 +1002,19 @@
   color: var(--fg-3);
   line-height: 1.5;
   max-width: 70ch;
+}
+
+.exhibition-plate-credit a {
+  color: var(--fg-2);
+  font-style: normal;
+  border-bottom: 1px solid var(--line-2);
+  padding-bottom: 1px;
+  transition: color .15s, border-bottom-color .15s;
+}
+
+.exhibition-plate-credit a:hover {
+  color: var(--c3);
+  border-bottom-color: var(--c3);
 }
 
 /* ---------- Animated works grid (3-card · hover-to-play) ---------- */
@@ -988,6 +1108,27 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
+}
+
+/* Live video capture — autoplaying muted loop. Playback is gated by the inline
+   script in 2026-03.astro (on-screen only; never under reduced motion, which
+   keeps the poster frame). */
+.exhibition-anim-card .anim-frame.is-video { background: var(--bg-deep); }
+
+.exhibition-anim-card .anim-frame .anim-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.85);
+  transition: filter .4s, transform .5s;
+}
+
+.exhibition-anim-card:hover .anim-frame.is-video .anim-video {
+  filter: saturate(1);
+  transform: scale(1.03);
 }
 
 .exhibition-anim-card .anim-badge {
@@ -1261,12 +1402,67 @@
   }
 }
 
-.exhibition-modal-body img {
+.exhibition-modal-imgwrap {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+}
+
+.exhibition-modal-imgwrap img {
   display: block;
   width: 100%;
   max-height: 88vh;
   object-fit: contain;
   background: var(--bg-deep);
+}
+
+/* Prev/next lightbox arrows — same furniture as the close button, pinned to
+   the image edges and centred over the image in both layouts (they live inside
+   the image wrapper). Content swap only, so no motion to gate. */
+.exhibition-modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+  font-family: var(--mono);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+  z-index: 2;
+}
+
+.exhibition-modal-nav.prev { left: 8px; }
+.exhibition-modal-nav.next { right: 8px; }
+
+.exhibition-modal-nav:hover {
+  background: var(--studio);
+  color: var(--bg);
+  border-color: var(--studio);
+}
+
+/* Light theme: cream-on-pink fails AA — flip the glyph to --fg on hover. */
+[data-theme="light"] .exhibition-modal-nav:hover { color: var(--fg); }
+
+/* Position indicator pinned to the foot of the meta panel. */
+.exhibition-modal-count {
+  margin-top: auto;
+  padding-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
 }
 
 .exhibition-modal-meta {

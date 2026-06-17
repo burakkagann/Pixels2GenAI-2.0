@@ -151,7 +151,7 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
     <div class="exhibition-plate-strip">
       <div class="exhibition-plate-strip-head">
         <span><b>Plates</b> · {plates.length} of {totalWorks} works</span>
-        <span>Curated · prints by {ex.artists[0]?.name ?? 'Burak Kağan Yılmazer'}</span>
+        <span>Two artists · prints + live</span>
       </div>
       <div class="exhibition-plate-strip-grid">
         {plates.map((p) => {
@@ -183,7 +183,7 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
 
   <div class="exhibition-specimen-actions">
     <a class="btn-ghost" href={route}>See the full exhibition →</a>
-    <a class="btn-ghost" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
+    <a class="btn-announce" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
     <span class="actions-note">Next show unscheduled · one mail when it is</span>
   </div>
 </details>

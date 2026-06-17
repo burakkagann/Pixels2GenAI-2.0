@@ -11,6 +11,12 @@ const romanToArabic: Record<string, number> = {
   i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6,
 };
 const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padStart(2, '0');
+
+// Print-gallery clusters. Falls back to one untitled group holding every work,
+// so a show without `printSeries` still renders a single flat grid.
+const printGroups = ex.printSeries ?? [
+  { id: 'all', title: '', workIds: ex.printedWorks.map((w) => w.id) },
+];
 ---
 
 <Base
@@ -104,48 +110,74 @@ const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padSta
     <section class="exhibition-section" id="prints">
       <h2>Plates · <em>printed works.</em></h2>
       <p class="deck">
-        Pieces that resolved into a single frame and went onto paper. {ex.printedWorks.length} works shown
-        below — click a plate to enlarge.
+        {ex.printSeries ? `${ex.printSeries.length} series across two artists` : 'Pieces that resolved into a single frame'} —
+        {ex.printedWorks.length} prints in all. Click any plate to enlarge.
       </p>
 
-      <div class="exhibition-plates">
-        {ex.printedWorks.map((w, i) => (
-          <button
-            type="button"
-            class="exhibition-plate"
-            data-id={w.id}
-            aria-label={`Open plate ${i + 1}: ${w.title}${w.subtitle ? ' · ' + w.subtitle : ''}`}
-          >
-            <div class="plate-frame">
-              <img src={w.src} alt={`${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} · printed work by ${w.artist}.`} loading="lazy" />
+      {printGroups.map((series, si) => (
+        <div class="print-series">
+          {series.title && (
+            <div class="print-series-head">
+              <span class="print-series-eyebrow"><span class="dot"></span>{String(si + 1).padStart(2, '0')}</span>
+              <h3 class="print-series-title">
+                {series.artistUrl
+                  ? <a href={series.artistUrl} target="_blank" rel="noopener">{series.title}</a>
+                  : series.title}
+              </h3>
+              {series.statement && <p class="print-series-lede">{series.statement}</p>}
             </div>
-            <div class="plate-cap">
-              <b>
-                {w.title}
-                {w.subtitle && <em> · {w.subtitle}</em>}
-              </b>
-              <span>{w.technique}</span>
-            </div>
-          </button>
-        ))}
-      </div>
+          )}
+
+          <div class="print-series-grid">
+            {series.workIds.map((id) => {
+              const w = ex.printedWorks.find((p) => p.id === id);
+              if (!w) return null;
+              return (
+                <button
+                  type="button"
+                  class="exhibition-plate"
+                  data-id={w.id}
+                  aria-label={`Open plate: ${w.title}${w.subtitle ? ' · ' + w.subtitle : ''}`}
+                >
+                  <div class="plate-frame">
+                    <img src={w.src} alt={`${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} · printed work by ${w.artist}.`} loading="lazy" />
+                  </div>
+                  <div class="plate-cap">
+                    <b>
+                      {w.title}
+                      {w.subtitle && <em> · {w.subtitle}</em>}
+                    </b>
+                    {w.technique
+                      ? <span>{w.technique}</span>
+                      : <span class="plate-artist">{w.artist}</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       <p class="exhibition-plate-credit">
-        Prints shown here are by Burak Kağan Yılmazer. Works by Sara Maras, Alexander Hendorf, Hansu Kim,
-        Maris Niewenhuis, and Ewa Rother were on view during the exhibition and will be added once
-        consent for online reproduction is collected from each artist.
+        Works by Sara Maras, Alexander Hendorf, Hansu Kim, and Ewa Rother were also on view during the
+        exhibition and will be added once consent for online reproduction is collected from each artist.
       </p>
 
       <!-- Modal for enlarged plate -->
       <dialog class="exhibition-modal" id="plate-modal" aria-label="Plate detail">
         <button type="button" class="exhibition-modal-close" aria-label="Close">×</button>
         <div class="exhibition-modal-body">
-          <img id="plate-modal-img" alt="" />
+          <div class="exhibition-modal-imgwrap">
+            <img id="plate-modal-img" alt="" />
+            <button type="button" class="exhibition-modal-nav prev" aria-label="Previous plate">‹</button>
+            <button type="button" class="exhibition-modal-nav next" aria-label="Next plate">›</button>
+          </div>
           <div class="exhibition-modal-meta">
             <h4 id="plate-modal-title"></h4>
             <span class="artist" id="plate-modal-artist"></span>
             <span class="technique" id="plate-modal-technique"></span>
             <p id="plate-modal-desc"></p>
+            <span class="exhibition-modal-count" id="plate-modal-count"></span>
           </div>
         </div>
       </dialog>
@@ -157,21 +189,44 @@ const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padSta
         const artist = document.getElementById('plate-modal-artist');
         const tech = document.getElementById('plate-modal-technique');
         const desc = document.getElementById('plate-modal-desc');
+        const count = document.getElementById('plate-modal-count');
+        const prevBtn = dlg && dlg.querySelector('.exhibition-modal-nav.prev');
+        const nextBtn = dlg && dlg.querySelector('.exhibition-modal-nav.next');
+
+        // Current plate index; arrows and the keyboard step through `plates`,
+        // wrapping at both ends so the gallery reads as a continuous loop.
+        let current = 0;
+
+        function render(i) {
+          current = (i + plates.length) % plates.length;
+          const w = plates[current];
+          img.src = w.src;
+          img.alt = `${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} by ${w.artist}`;
+          title.innerHTML = `${w.title}${w.subtitle ? ' · <em>' + w.subtitle + '</em>' : ''}`;
+          artist.textContent = w.artist;
+          tech.textContent = w.technique ?? '';
+          tech.style.display = w.technique ? '' : 'none';
+          desc.textContent = w.description ?? '';
+          desc.style.display = w.description ? '' : 'none';
+          if (count) count.textContent = `${current + 1} / ${plates.length}`;
+        }
 
         if (dlg && img && title && artist && tech && desc) {
           document.querySelectorAll('.exhibition-plate').forEach((btn) => {
             btn.addEventListener('click', () => {
               const id = btn.getAttribute('data-id');
-              const w = plates.find((p) => p.id === id);
-              if (!w) return;
-              img.src = w.src;
-              img.alt = `${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} by ${w.artist}`;
-              title.innerHTML = `${w.title}${w.subtitle ? ' · <em>' + w.subtitle + '</em>' : ''}`;
-              artist.textContent = w.artist;
-              tech.textContent = w.technique;
-              desc.textContent = w.description ?? '';
+              const i = plates.findIndex((p) => p.id === id);
+              if (i < 0) return;
+              render(i);
               dlg.showModal();
             });
+          });
+          prevBtn && prevBtn.addEventListener('click', (e) => { e.stopPropagation(); render(current - 1); });
+          nextBtn && nextBtn.addEventListener('click', (e) => { e.stopPropagation(); render(current + 1); });
+          document.addEventListener('keydown', (e) => {
+            if (!dlg.open) return;
+            if (e.key === 'ArrowLeft') render(current - 1);
+            else if (e.key === 'ArrowRight') render(current + 1);
           });
           dlg.querySelector('.exhibition-modal-close')?.addEventListener('click', () => dlg.close());
           // Backdrop click closes; clicks on the modal body do not.
@@ -186,15 +241,30 @@ const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padSta
     <section class="exhibition-section" id="animated">
       <h2>Animated · <em>installations on view.</em></h2>
       <p class="deck">
-        Code-driven pieces that ran live during the exhibition. Stills below; the source repositories
-        are linked from each card. Hovering the Neural-Mycelium card cross-fades to a second state;
-        the other two captures are pending.
+        Code-driven pieces that ran live during the exhibition. Two play here as looping captures;
+        Dissolution is a live-only webcam piece whose capture is still pending. Each card links to its
+        source repository.
       </p>
 
       <div class="exhibition-anim">
         {ex.animatedWorks.map((w) => (
           <a class="exhibition-anim-card" href={w.githubUrl} target="_blank" rel="noopener">
-            {w.stillSrc ? (
+            {w.videoSrc ? (
+              <div class="anim-frame is-video">
+                <video
+                  class="anim-video"
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  poster={w.stillSrc}
+                  aria-label={`${w.title} · looping capture of the live installation.`}
+                >
+                  <source src={w.videoSrc} type="video/mp4" />
+                </video>
+                <span class="anim-badge">▶ live</span>
+              </div>
+            ) : w.stillSrc ? (
               <div class={`anim-frame${w.hoverSrc ? ' has-hover' : ''}`}>
                 <img class="rest" src={w.stillSrc} alt={`${w.title} · still frame.`} loading="lazy" />
                 {w.hoverSrc && <img class="play" src={w.hoverSrc} alt="" loading="lazy" />}
@@ -220,6 +290,46 @@ const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padSta
           </a>
         ))}
       </div>
+
+      <script>
+        // Live captures autoplay as muted loops, but only while on-screen — and
+        // never under reduced motion. The global CSS kill-switch (base.css) only
+        // tames transitions/animations; it cannot stop <video> playback, so the
+        // poster-only fallback is enforced here in JS. No autoplay attribute is
+        // set, so with JS disabled the poster simply stays put.
+        const vids = Array.from(
+          document.querySelectorAll<HTMLVideoElement>('.exhibition-anim .anim-video')
+        );
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let io: IntersectionObserver | undefined;
+
+        function apply() {
+          if (io) { io.disconnect(); io = undefined; }
+          if (reduce.matches) {
+            vids.forEach((v) => v.pause());
+            return;
+          }
+          vids.forEach((v) => { v.muted = true; });
+          if (!('IntersectionObserver' in window)) {
+            vids.forEach((v) => v.play().catch(() => {}));
+            return;
+          }
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              const v = e.target as HTMLVideoElement;
+              if (e.isIntersecting) v.play().catch(() => {});
+              else v.pause();
+            });
+          }, { threshold: 0.25 });
+          vids.forEach((v) => observer.observe(v));
+          io = observer;
+        }
+
+        if (vids.length) {
+          apply();
+          reduce.addEventListener('change', apply);
+        }
+      </script>
     </section>
 
     <!-- ========== § Documents ========== -->
