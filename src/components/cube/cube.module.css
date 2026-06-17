@@ -12,6 +12,11 @@
   max-width: 520px;
   margin: 0 auto;
   position: relative;
+  /* Query container so the faces can size their depth off the *rendered*
+     stage width (see .f-* translateZ). container-type: size applies layout/
+     style/size containment but NOT paint — the ::before mat line at inset
+     -12px still draws outside the box. */
+  container-type: size;
   /* A finger over the cube is scrolling, not steering — keep vertical
      pan native (the pointer parallax is fine-pointer-only in the TSX). */
   touch-action: pan-y;
@@ -150,35 +155,27 @@
 .face .corner.bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
 .face .corner.br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
 
-/* Face positions: stage 520px → cube 332px → halfSide = 166px */
-.f-front  { transform: translateZ(166px); }
-.f-back   { transform: rotateY(180deg) translateZ(166px); }
-.f-right  { transform: rotateY(90deg) translateZ(166px); }
-.f-left   { transform: rotateY(-90deg) translateZ(166px); }
-.f-top    { transform: rotateX(90deg) translateZ(166px); }
-.f-bottom { transform: rotateX(-90deg) translateZ(166px); }
+/* Face positions. The cube box is 64% of the stage (.cube inset: 18% trims
+   36% total), so each face's half-depth is exactly 32% of the stage width.
+   32cqw = 32% of the query container (.cube-stage) width, so the faces meet
+   seamlessly at EVERY rendered width — not just the three breakpoints below.
+   (A fixed px depth only lined up at one exact stage size and split the faces
+   apart at every width in between, which is what caused the seams.) */
+.f-front  { transform: translateZ(32cqw); }
+.f-back   { transform: rotateY(180deg) translateZ(32cqw); }
+.f-right  { transform: rotateY(90deg) translateZ(32cqw); }
+.f-left   { transform: rotateY(-90deg) translateZ(32cqw); }
+.f-top    { transform: rotateX(90deg) translateZ(32cqw); }
+.f-bottom { transform: rotateX(-90deg) translateZ(32cqw); }
 
+/* Phone sizing only — step the whole cube down. The faces track the new
+   stage width automatically via 32cqw, so no per-face overrides are needed. */
 @media (max-width: 540px) {
   .cube-stage { max-width: 360px; }
-  .f-front  { transform: translateZ(115px); }
-  .f-back   { transform: rotateY(180deg) translateZ(115px); }
-  .f-right  { transform: rotateY(90deg) translateZ(115px); }
-  .f-left   { transform: rotateY(-90deg) translateZ(115px); }
-  .f-top    { transform: rotateX(90deg) translateZ(115px); }
-  .f-bottom { transform: rotateX(-90deg) translateZ(115px); }
 }
 
-/* ≤430px the content box drops under 360px and the fixed 115px offset
-   splits the faces apart at the corners. Pin the stage to 300px — exact
-   down to a 340px viewport — so halfSide stays 300 × 0.64 / 2 = 96px. */
 @media (max-width: 430px) {
   .cube-stage { max-width: 300px; }
-  .f-front  { transform: translateZ(96px); }
-  .f-back   { transform: rotateY(180deg) translateZ(96px); }
-  .f-right  { transform: rotateY(90deg) translateZ(96px); }
-  .f-left   { transform: rotateY(-90deg) translateZ(96px); }
-  .f-top    { transform: rotateX(90deg) translateZ(96px); }
-  .f-bottom { transform: rotateX(-90deg) translateZ(96px); }
 }
 
 /* ---------- Controls panel ---------- */
