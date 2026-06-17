@@ -113,11 +113,19 @@
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fg);
+  /* The painted cube is an always-saturated, effectively-dark surface in BOTH
+     themes (like the figure frames). Theme-following --fg flipped to near-black
+     in light mode and vanished over the art — use the theme-invariant paper ink
+     plus a soft dark shadow so the labels read over bright patches too. */
+  color: var(--figure-frame-fg);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
+/* The face-side code ("F · front · 0°", "R · right · 90°", …). A violet tint
+   washed out over the saturated art; keep it on the legible invariant light
+   ink (inherits the shadow from the base rule) so it reads on every face. */
 .face .lbl-top {
-  color: var(--accent);
+  color: var(--figure-frame-fg);
 }
 
 .face .lbl-bot {
@@ -131,7 +139,7 @@
   font-family: var(--serif);
   font-style: italic;
   font-size: 17px;
-  color: var(--fg);
+  color: var(--figure-frame-fg);
   text-transform: none;
   letter-spacing: 0;
   max-width: 60%;
@@ -139,7 +147,7 @@
 }
 
 .face .lbl-bot .n {
-  color: var(--fg-3);
+  color: color-mix(in srgb, var(--figure-frame-fg) 55%, transparent);
 }
 
 .face .corner {
