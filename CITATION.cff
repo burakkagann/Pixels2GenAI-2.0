@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+title: "Pixels2GenAI: A Generative AI and Creative Coding Curriculum"
+message: "If you use this curriculum, its materials, or its research findings, please cite it as below."
+type: software
+authors:
+  - family-names: "Yılmazer"
+    given-names: "Burak Kağan"
+    email: "burak.kagan@protonmail.com"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add your ORCID if you have one
+  - family-names: "Rother"
+    given-names: "Kristian"
+    # role: supervisor / content co-author (CFF has no formal role field; remove this
+    # author entry if the thesis is to be cited as single-authored)
+repository-code: "https://github.com/burakkagann/Pixels2GenAI-2.0"
+url: "https://pixels2genai.art"
+abstract: >-
+  A free, open-source curriculum that teaches generative art and AI across
+  fifteen progressive modules plus a capstone, scaffolding learners from a
+  single array element to building, training, and reasoning about modern
+  generative models. It is the empirical artifact of a Master's thesis in
+  creative computing using Design-Based Research.
+keywords:
+  - "generative AI"
+  - "creative coding"
+  - "generative art"
+  - "curriculum"
+  - "education"
+  - "machine learning"
+  - "diffusion models"
+  - "NumPy"
+  - "PyTorch"
+  - "design-based research"
+license: MIT
+# Lesson prose and figures are licensed CC-BY-4.0 (see LICENSE-CONTENT.md);
+# the site/tooling code is MIT (see LICENSE).
+version: "2.0.0"
+date-released: "2026-06-17"   # TODO: set to the date of the release/tag you cut
+preferred-citation:
+  type: thesis
+  title: "TODO: exact thesis title"
+  authors:
+    - family-names: "Yılmazer"
+      given-names: "Burak Kağan"
+  year: 2026
+  thesis-type: "Master's thesis"
+  institution:
+    name: "TODO: institution / university name"
+  url: "https://pixels2genai.art/research"
