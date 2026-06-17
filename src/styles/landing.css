@@ -112,7 +112,7 @@
 /* The 52px clamp floor crowds a 360px screen; step the display size down
    one notch while keeping the serif/line-height identity. */
 @media (max-width: 480px) {
-  .cover-title { font-size: 44px; }
+  .cover-title { font-size: 38px; }
 }
 
 .cover-actions {
@@ -280,6 +280,13 @@
   font-family: var(--serif);
   font-size: 18px;
   line-height: 1.55;
+}
+
+/* Phone: the clamp floors (34px title, 18px desc) still read large on a
+   360px column; step them down one notch. */
+@media (max-width: 480px) {
+  .section-title { font-size: 28px; }
+  .section-desc { font-size: 16px; }
 }
 
 /* ---------- Paths (3-card row) ---------- */
@@ -466,6 +473,11 @@
 .station-title em {
   color: var(--cycle, var(--accent));
   font-style: italic;
+}
+
+/* Phone: step the station headline down from its 28px clamp floor. */
+@media (max-width: 480px) {
+  .station-title { font-size: 24px; }
 }
 
 .station-pitch {
@@ -795,6 +807,17 @@
     padding: 0;
     border: 0;
     white-space: nowrap;
+  }
+
+  /* Accordion panel relocated under its card by the script — make it read as
+     the card's dropdown (flush, tinted, same left accent as the active card)
+     rather than a detached bordered box. */
+  .station-cards > .station-panel {
+    margin-top: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-3);
+    box-shadow: inset 2px 0 0 0 var(--cycle, var(--accent));
   }
 }
 
@@ -1214,6 +1237,25 @@
   font-style: italic;
 }
 
+/* ---------- Mouse-follow octopus canvas (overlays the header bar) ---------- */
+.octo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Lift the header content above the roaming canvas so the octopus swims behind it. */
+.frame-top > .mark,
+.frame-top > .nav-mid,
+.frame-top > .nav-r {
+  position: relative;
+  z-index: 1;
+}
+/* When the canvas takes over, the SVG glyph becomes an invisible layout spacer. */
+.frame-top.octo-roam .octo { visibility: hidden; }
+
 /* ---------- Octopus glyph (mascot leading the wordmark) ---------- */
 .mark .octo {
   display: inline-block;
@@ -1312,6 +1354,20 @@
 @media (max-width: 640px) {
   .frame-top { position: static; }
   .nav-r .ed { display: none; }
+}
+
+/* ≤420px — the four section links (Curriculum · Workshops · Exhibition ·
+   Research) overrun a 360px row at the default 12px link padding and fall
+   behind the overflow scroll. Tighten the link padding + tracking (and the
+   container inset that aligns the edges) so all four sit on one line; the
+   overflow-x: auto from the ≤920px rule stays as the ultimate fallback. The
+   13px vertical padding keeps the 44px touch height. */
+@media (max-width: 420px) {
+  .nav-mid { padding: 0 calc(var(--pad-x) - 8px); }
+  .nav-mid a {
+    padding: 13px 8px;
+    letter-spacing: 0.04em;
+  }
 }
 
 .nav-r {

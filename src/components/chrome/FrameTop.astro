@@ -27,6 +27,7 @@ const navItems = [
 ---
 
 <div class="frame-top">
+  <canvas class="octo-canvas" aria-hidden="true"></canvas>
   <a href="/" class="mark" aria-label="Pixels2GenAI — home">
     <svg class="octo" viewBox="0 0 14 14" shape-rendering="crispEdges" aria-hidden="true">
       <g class="frame-a" fill="#F4669A">
@@ -218,28 +219,208 @@ const navItems = [
   } catch {}
 
   const SESSION_KEY = 'p2g-octo-greeted';
-  const octo = document.querySelector('.octo') as HTMLElement | null;
+  const octo = document.querySelector('.octo') as SVGElement | null;
   const ghChip = document.querySelector('.gh-link');
 
-  // First arrival per session: the octocat waves and the GitHub star chip
-  // assembles once, then settles back to its resting state. (Hover replays
-  // the chip via CSS alone; .gh-play just mirrors that state briefly.)
+  // On a fine pointer with motion allowed, the octopus follows the cursor
+  // across the header (canvas, set up below) instead of the CSS wave. On
+  // touch / reduced-motion it stays the static SVG with the session wave.
+  const canRoam =
+    matchMedia('(pointer: fine)').matches &&
+    matchMedia('(prefers-reduced-motion: no-preference)').matches;
+
+  // First arrival per session: the GitHub star chip assembles once. The
+  // octocat wave only plays when it isn't roaming the header (see canRoam).
   if (!sessionStorage.getItem(SESSION_KEY)) {
     sessionStorage.setItem(SESSION_KEY, '1');
-    octo?.classList.add('octo--play');
+    if (!canRoam) octo?.classList.add('octo--play');
     if (ghChip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       ghChip.classList.add('gh-play');
       setTimeout(() => ghChip.classList.remove('gh-play'), 1400);
     }
   }
 
-  if (octo) {
+  if (octo && !canRoam) {
     // Hover always replays — remove then re-add to restart the animation
     octo.addEventListener('mouseenter', () => {
       octo.classList.remove('octo--play');
-      void octo.offsetWidth; // force reflow so the animation restarts cleanly
+      void (octo as unknown as HTMLElement).offsetWidth; // reflow so it restarts cleanly
       octo.classList.add('octo--play');
     });
+  }
+
+  // ---- Mouse-follow octopus -------------------------------------------------
+  // The octopus glides toward the cursor anywhere in the header, leans into
+  // its travel, drags its tentacles, glances at the pointer, and eases home
+  // (its resting spot left of the wordmark) when the mouse leaves. Pixel data
+  // is read straight from the SVG markup so the glyph stays a single source of
+  // truth; colours come from the theme tokens and update on theme change.
+  const frame = document.querySelector('.frame-top') as HTMLElement | null;
+  const canvas = document.querySelector('.octo-canvas') as HTMLCanvasElement | null;
+  if (canRoam && frame && canvas && octo) {
+    frame.classList.add('octo-roam');
+    const ctx = canvas.getContext('2d')!;
+    const GRID = 14;
+    const CELL = 2; // 14 × 2 = 28px, matches the resting glyph
+    const OCTO = GRID * CELL;
+
+    // Rasterise body pixels + eyes from the SVG rects (single source of truth).
+    const toRects = (sel: string) =>
+      [...octo.querySelectorAll(sel)].map((r) => ({
+        x: +(r.getAttribute('x') ?? 0),
+        y: +(r.getAttribute('y') ?? 0),
+        w: +(r.getAttribute('width') ?? 1),
+        h: +(r.getAttribute('height') ?? 1),
+      }));
+    const pixels: { x: number; y: number }[] = [];
+    for (const r of toRects('.frame-a rect'))
+      for (let dx = 0; dx < r.w; dx++)
+        for (let dy = 0; dy < r.h; dy++) pixels.push({ x: r.x + dx, y: r.y + dy });
+    const eyes = toRects('.eyes rect').map((r) => ({ x: r.x, y: r.y }));
+
+    // Theme colours, refreshed when the toggle fires `themechange`.
+    let bodyColor = '#F4669A';
+    let eyeColor = '#110D16';
+    const readColors = () => {
+      const cs = getComputedStyle(document.documentElement);
+      bodyColor = cs.getPropertyValue('--studio').trim() || bodyColor;
+      eyeColor = cs.getPropertyValue('--bg').trim() || eyeColor;
+    };
+    readColors();
+    document.addEventListener('themechange', readColors);
+
+    let W = 0;
+    let H = 0;
+    const R = OCTO / 2;
+    const home = { x: 0, y: 0 };
+    const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+
+    // The octopus's territory: the logo column — the left edge up to just
+    // before the nav. The body roams here (and may pass behind its own
+    // wordmark) but never reaches the nav or right-hand controls. Re-measured
+    // on resize / theme change / pointer-enter, never inside the loop.
+    const zone = { left: 4, right: 0 };
+    const measure = () => {
+      const fr = frame.getBoundingClientRect();
+      const homeY = home.y + R; // vertical centre of the resting octopus
+      const mr = frame.querySelector('.mark')?.getBoundingClientRect() ?? null;
+      const markRight = mr ? mr.right - fr.left : 0;
+      let right = (mr ? markRight : W * 0.3) + 10;
+      // Extend to the nearest element that shares the octopus's ROW and sits to
+      // its right — the first centred nav link on desktop, or the right-hand
+      // group on the ≤920px two-row layout (where the section nav drops below).
+      // It uses the whole empty gap up to that element, and never crosses it.
+      let boundary = Infinity;
+      for (const el of [frame.querySelector('.nav-mid a'), frame.querySelector('.nav-r')]) {
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        const top = r.top - fr.top, bot = r.bottom - fr.top, left = r.left - fr.left;
+        const sameRow = homeY >= top - 4 && homeY <= bot + 4;
+        if (sameRow && left > markRight) boundary = Math.min(boundary, left - 14);
+      }
+      if (Number.isFinite(boundary)) right = Math.max(right, boundary);
+      zone.right = Math.max(zone.left + OCTO + 8, right);
+    };
+
+    const fit = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const fr = frame.getBoundingClientRect();
+      W = Math.round(fr.width);
+      H = Math.round(fr.height);
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Home = the (hidden) SVG glyph's centre, relative to the header.
+      const sr = octo.getBoundingClientRect();
+      home.x = sr.left - fr.left + sr.width / 2 - OCTO / 2;
+      home.y = sr.top - fr.top + sr.height / 2 - OCTO / 2;
+      measure();
+    };
+    fit();
+    // Resizing the canvas clears it; redraw (kick) so it never vanishes when
+    // the header reflows (e.g. the GitHub star count loading in) while the
+    // octopus is resting with its loop idle-stopped.
+    new ResizeObserver(() => { fit(); kick(); }).observe(frame);
+    document.addEventListener('themechange', measure);
+
+    const WAKE = 56; // body wakes when the cursor comes within this of the zone
+    const EYE = 0.45; // how far the pupils shift toward the cursor (× cell)
+    const SPEED = 7; // max px/frame the body glides — keeps it calm, not snappy
+
+    const pos = { x: home.x, y: home.y };
+    const cursor = { x: home.x + R, y: home.y + R }; // frame-local cursor point
+    let inHeader = false;
+    let raf = 0;
+
+    const draw = () => {
+      // The body follows only when the cursor is in / near its territory;
+      // otherwise it glides home. The eyes track the cursor whenever it's in
+      // the header — "aware of you" without the body wandering off the logo.
+      const bodyAwake = inHeader && cursor.x < zone.right + WAKE;
+      let tx: number, ty: number;
+      if (bodyAwake) {
+        const zx1 = Math.max(zone.left + R, zone.right - R);
+        tx = clamp(cursor.x, zone.left + R, zx1) - R;     // follow, pinned in zone
+        ty = clamp(cursor.y, R + 4, H - R - 4) - R;
+      } else { tx = home.x; ty = home.y; }
+
+      // Eased follow, speed-capped in both directions so it glides at a steady
+      // pace instead of darting at the cursor or snapping back home.
+      let sx = (tx - pos.x) * 0.08;
+      let sy = (ty - pos.y) * 0.08;
+      const s = Math.hypot(sx, sy);
+      if (s > SPEED) { sx = (sx / s) * SPEED; sy = (sy / s) * SPEED; }
+      pos.x += sx;
+      pos.y += sy;
+      pos.x = clamp(pos.x, 4, W - OCTO - 4);
+      pos.y = clamp(pos.y, 4, H - OCTO - 4);
+
+      ctx.clearRect(0, 0, W, H);
+      // Lean + tentacle drag scale with the actual step taken (the follow feel,
+      // and naturally gentle while gliding home).
+      const lean = clamp(sx * 0.25, -0.4, 0.4) * 0.25;
+      ctx.save();
+      ctx.translate(pos.x + OCTO / 2, pos.y + OCTO / 2);
+      ctx.rotate(lean);
+      ctx.fillStyle = bodyColor;
+      for (const p of pixels) {
+        const drag = p.y >= 8 ? -sx * 0.75 * (p.y - 7) : 0;
+        ctx.fillRect((p.x - GRID / 2) * CELL + drag, (p.y - GRID / 2) * CELL, CELL + 0.4, CELL + 0.4);
+      }
+      // Eyes glance toward the cursor whenever it's in the header (even at rest).
+      ctx.fillStyle = eyeColor;
+      let ex = 0, ey = 0;
+      if (inHeader) {
+        const dx = cursor.x - (pos.x + OCTO / 2);
+        const dy = cursor.y - (pos.y + OCTO / 2);
+        const d = Math.hypot(dx, dy) || 1;
+        ex = clamp(dx / d, -1, 1) * CELL * EYE;
+        ey = clamp(dy / d, -1, 1) * CELL * EYE;
+      }
+      for (const e of eyes) ctx.fillRect((e.x - GRID / 2) * CELL + ex, (e.y - GRID / 2) * CELL + ey, CELL, CELL);
+      ctx.restore();
+
+      // Idle politeness: keep running while the pointer is in the header (eyes
+      // track); stop once it has left and the body has settled home.
+      const settled = !inHeader && Math.abs(pos.x - home.x) < 0.4 &&
+        Math.abs(pos.y - home.y) < 0.4 && Math.hypot(sx, sy) < 0.3;
+      if (settled) { raf = 0; return; }
+      raf = requestAnimationFrame(draw);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(draw); };
+
+    frame.addEventListener('pointerenter', measure); // layout may have shifted
+    frame.addEventListener('pointermove', (e) => {
+      const fr = frame.getBoundingClientRect();
+      cursor.x = e.clientX - fr.left;
+      cursor.y = e.clientY - fr.top;
+      inHeader = true;
+      kick();
+    });
+    frame.addEventListener('pointerleave', () => { inHeader = false; kick(); });
+    kick();
   }
 
   // Theme toggle — binary light/dark. The no-flash <script is:inline> in
