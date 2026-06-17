@@ -106,6 +106,16 @@
   }
 }
 
+/* Phone: stretch the CTA margin to margin (matches .cover-actions) so it is
+   an easy full-width tap target rather than a content-width button hugging
+   the left edge of the stacked strip. */
+@media (max-width: 540px) {
+  .announce-strip .btn-pri {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ---------- Popup · native <dialog> ---------- */
 .announce-modal {
   border: 1px solid var(--line-2);
@@ -156,6 +166,14 @@
 
 @media (max-width: 560px) {
   .am-inner { padding: 28px 22px 26px; }
+}
+
+/* ≤400px the 92vw modal (~331px at 360) leaves little room once 22px side
+   padding is taken; loosen the width and tighten the inset so form fields
+   and copy don't wrap aggressively. */
+@media (max-width: 400px) {
+  .announce-modal { width: 95vw; }
+  .am-inner { padding: 24px 18px 22px; }
 }
 
 .am-inner .eyebrow {

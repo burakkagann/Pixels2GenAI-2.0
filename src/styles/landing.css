@@ -1143,6 +1143,17 @@
   align-items: baseline;
 }
 
+/* Phone: the rigid 88px label column squeezes the value column to ~160px at
+   360px; stack label-over-value so each line breathes. */
+@media (max-width: 480px) {
+  .foot .about-meta {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .foot .about-meta dt { margin-top: 8px; }
+  .foot .about-meta dt:first-child { margin-top: 0; }
+}
+
 .foot .about-meta dt {
   font-family: var(--mono);
   font-size: 9.5px;

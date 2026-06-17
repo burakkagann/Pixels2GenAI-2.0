@@ -982,6 +982,12 @@
 
 .mark-done.is-done svg { color: var(--accent); }
 
+/* Touch: the 10px padding + 12px label leaves the pill ~36px tall; lift it to
+   the 44px minimum (desktop keeps the tighter height). */
+@media (pointer: coarse) {
+  .mark-done { min-height: 44px; }
+}
+
 /* ---------- Prev / Next ---------- */
 .prev-next {
   border-top: 1px solid var(--line);

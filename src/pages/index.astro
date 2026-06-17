@@ -47,26 +47,26 @@ const ALL_LEAVES = MODULES.flatMap(m =>
 ---
 
 <Base
-  title="Pixels2GenAI · From pixels to generative AI"
+  title="Pixels2GenAI — A Generative AI & Creative Coding Curriculum"
   onLanding={true}
   jsonLd={siteJsonLd}
 >
   <!-- ========== COVER ========== -->
   <header class="cover">
     <div>
-      <div class="eyebrow"><b>MA Thesis</b> · Design-Based Research · Cycle ii · 2026</div>
+      <div class="eyebrow"><span><b>MA Thesis</b> · Design-Based Research · Cycle ii · 2026</span></div>
       <h1 class="cover-title">
         <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
         one continuous thread.
       </h1>
       <p class="cover-lead">
-        A free, open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
+        An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
       </p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
         <div><b>Method</b><span>DBR · 3 cycles</span></div>
         <div><b>Theory / Practice</b><span>40 / 60</span></div>
-        <div><b>License</b><span>Free · MIT + CC-BY</span></div>
+        <div><b>License</b><span>Open source · MIT + CC-BY</span></div>
       </div>
       <div class="cover-actions">
         <a class="btn btn-pri" href="/lessons/1.1.1">Start learning</a>
@@ -233,9 +233,23 @@ const ALL_LEAVES = MODULES.flatMap(m =>
     // an already-active card closes it. Module cards are roving-tabindex: arrow
     // keys move focus within a station, Enter/Space toggle (native <button>),
     // Escape closes the open panel.
+    //
+    // Panel placement is layout-aware: on phones (≤540px, where the cards are a
+    // single-column table of contents) the open panel is relocated to sit right
+    // under its own card — a dropdown. On wider screens it returns to the
+    // .station-panels block so it spans full-width beneath the card grid.
+    const stationMq = matchMedia('(max-width: 540px)');
     document.querySelectorAll('.station').forEach((station) => {
       const cards = Array.from(station.querySelectorAll('.mod-card'));
       const panels = station.querySelectorAll('.station-panel');
+      const panelHome = station.querySelector('.station-panels');
+
+      // Hidden panels are display:none regardless of DOM position, so only the
+      // open one needs correct placement for the current viewport.
+      const place = (panel, card) => {
+        if (stationMq.matches) card.after(panel);
+        else panelHome.appendChild(panel);
+      };
 
       const toggle = (card) => {
         const idx = card.getAttribute('data-m');
@@ -253,11 +267,21 @@ const ALL_LEAVES = MODULES.flatMap(m =>
           card.setAttribute('aria-expanded', 'true');
           const panel = station.querySelector('.station-panel[data-m="' + idx + '"]');
           if (panel) {
+            place(panel, card);
             panel.classList.add('open');
             panel.removeAttribute('hidden');
           }
         }
       };
+
+      // Re-place the open panel if the layout crosses the phone breakpoint
+      // (e.g. device rotation) so it never strands under the wrong card.
+      stationMq.addEventListener('change', () => {
+        const active = cards.find((c) => c.classList.contains('active'));
+        if (!active) return;
+        const panel = station.querySelector('.station-panel[data-m="' + active.getAttribute('data-m') + '"]');
+        if (panel) place(panel, active);
+      });
 
       cards.forEach((card, i) => {
         card.addEventListener('click', () => toggle(card));

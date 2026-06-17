@@ -134,7 +134,10 @@
 
 .ticks {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  /* minmax(0, …) — bare 1fr tracks refuse to shrink below their label's
+     min-content; defensive against the documented overflow trap even though
+     the phone view shows codes only (see ≤540px below). */
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   font-family: var(--mono);
   font-size: 9px;
   color: var(--fg-3);

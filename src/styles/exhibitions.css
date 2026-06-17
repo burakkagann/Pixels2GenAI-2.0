@@ -501,6 +501,16 @@
   }
 }
 
+/* Phone: rather than two ghost buttons wrapping mid-row at half width, stack
+   them full-width (matches .cover-actions / .announce-strip CTA). */
+@media (max-width: 480px) {
+  .exhibition-specimen-actions { gap: 10px; }
+  .exhibition-specimen-actions .btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ============================================================
    ROUTE PAGE — per-show /exhibitions/<id> (e.g. /exhibitions/2026-03)
    Mirrors /workshops route's typographic register but with its own

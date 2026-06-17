@@ -56,3 +56,28 @@ code, pre, kbd, samp {
   font-weight: 500;
   color: var(--highlight);
 }
+
+/* The eyebrow text is wrapped in a single <span> so the flex container sees
+   ONE text item beside the rule — without it, the <b>…</b> and the trailing
+   text become separate flex items that each shrink and wrap mid-phrase
+   ("MA / THESIS …"). As one shrinkable item it wraps as clean flowing text. */
+.eyebrow > span {
+  min-width: 0;
+}
+
+/* Phone: the cover eyebrow string ("MA Thesis · Design-Based Research ·
+   Cycle ii · 2026") + the 28px rule + 14px gap overruns a 360px line and
+   wraps, orphaning the rule. Tighten the register and rule so it holds one
+   line; let the flex item shrink instead of forcing the break. */
+@media (max-width: 480px) {
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .eyebrow::before {
+    width: 14px;
+    flex-shrink: 0;
+  }
+}
