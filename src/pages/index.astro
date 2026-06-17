@@ -57,10 +57,10 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="eyebrow"><span><b>MA Thesis</b> · Design-Based Research · Cycle ii · 2026</span></div>
       <h1 class="cover-title">
         <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
-        one continuous thread.
+        one continuous journey.
       </h1>
       <p class="cover-lead">
-        An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models — <em>across fifteen progressive modules</em>, each producing a visual artifact.
+        An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, <em>across fifteen progressive modules</em>, each producing a visual artifact.
       </p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
@@ -91,7 +91,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 1 · <span>Curriculum</span></div>
       <div>
         <h2 class="section-title">From pixels, <em>to inference.</em></h2>
-        <p class="section-desc">The curriculum is composed in three paths. Each path holds a small set of modules; each module holds three to seven sub-topics; each sub-topic holds a handful of lessons. It's linear by design, but experienced programmers can start at a later cycle. Open a module to see its anatomy.</p>
+        <p class="section-desc">Three paths, each a few modules deep, building lesson by lesson. Linear by design, but experienced coders can jump to a later path. Open any module to see inside.</p>
       </div>
     </div>
 
@@ -104,7 +104,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         <input
           type="search"
           id="curriculum-search"
-          placeholder="Search every lesson by name or number…"
+          placeholder="Search lessons by name or number"
           autocomplete="off"
           aria-label="Search the curriculum"
           aria-controls="curriculum-results"
@@ -423,7 +423,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 2 · <span>Workshops</span></div>
       <div>
         <h2 class="section-title">The curriculum, <em>in a single day.</em></h2>
-        <p class="section-desc">A recurring one-day workshop that condenses the curriculum into a single sitting. The archive begins with the first cohort below; the next workshop is in planning.</p>
+        <p class="section-desc">A recurring one-day workshop: the whole curriculum in a single sitting. First cohort below; the next is in planning.</p>
       </div>
     </div>
 
@@ -444,7 +444,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 3 · <span>Exhibition</span></div>
       <div>
         <h2 class="section-title">The studio, <em>transformed into a gallery.</em></h2>
-        <p class="section-desc">A group exhibition co-organised with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis: six artists working across printed and code-driven pieces, several built directly from curriculum modules. The archive begins below; the next exhibition is not yet scheduled.</p>
+        <p class="section-desc">A group show with <a href="https://www.academis.eu" target="_blank" rel="noopener">Kristian Rother</a> and Academis: six artists, printed and code-driven pieces, several built from curriculum modules. Archive below; next show unscheduled.</p>
       </div>
     </div>
 
@@ -477,7 +477,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       <div class="section-num">§ 4 · <span>Research</span></div>
       <div>
         <h2 class="section-title">Five questions, <em>three cycles.</em></h2>
-        <p class="section-desc">The curriculum is the empirical artifact of a design-based research thesis. Each cycle iterates on the same five questions; this is the third.</p>
+        <p class="section-desc">The curriculum is the artifact of a design-based research thesis. Three cycles, the same five questions; this is the third.</p>
       </div>
     </div>
 
@@ -486,16 +486,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         <div class="rq">
           <div class="tag">{rq.tag}</div>
           <h4>{rq.title}</h4>
-          <p>{rq.question}</p>
-        </div>
-      ))}
-    </div>
-
-    <div class="cycles">
-      {CYCLES.map(c => (
-        <div class="cyc" style={`--card-accent: var(--${c.cycle});`}>
-          <b>{c.label}</b>
-          <span>{c.modules}</span>
+          <p>{rq.gloss}</p>
         </div>
       ))}
     </div>
@@ -513,7 +504,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
   <div class="announce-band" id="announcements">
     <aside class="announce-strip" aria-label="Event announcements">
       <span class="strip-eyebrow"><span class="dot" aria-hidden="true"></span>§ Announcements</span>
-      <p>One mail when the next workshop or exhibition is confirmed — no newsletter, nothing shared, opt out any time.</p>
+      <p>One mail when the next workshop or exhibition is confirmed. No newsletter, no sharing, opt out anytime.</p>
       <a class="btn btn-pri" href="/announce" data-announce data-topic="both">Leave your email →</a>
     </aside>
   </div>

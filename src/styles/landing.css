@@ -485,7 +485,7 @@
   font-size: 15px;
   font-style: italic;
   color: var(--fg-2);
-  max-width: 56ch;
+  max-width: 72ch;
   margin: 6px 0 0;
   line-height: 1.5;
 }
@@ -878,45 +878,6 @@
   margin: 0;
 }
 
-.cycles {
-  margin-top: 26px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--fg-2);
-  letter-spacing: 0.04em;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 720px) {
-  .cycles {
-    grid-template-columns: 1fr;
-  }
-}
-
-.cycles .cyc {
-  padding: 16px;
-  border: 1px solid var(--line);
-  background: var(--bg-2);
-}
-
-.cycles .cyc b {
-  display: block;
-  color: var(--card-accent, var(--accent));
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.cycles .cyc span {
-  font-family: var(--serif);
-  font-size: 15px;
-  color: var(--fg);
-  font-style: italic;
-}
-
 /* ---------- Phone rhythm ----------
    Desktop air, kept at phone scale, made every section start a page
    late. One pass tightening the vertical scale at ≤640px. */
@@ -946,12 +907,6 @@
 
   .rq { padding: 16px 14px; }
   .rq h4 { font-size: 17px; }
-
-  .cycles {
-    margin-top: 18px;
-    gap: 10px;
-  }
-  .cycles .cyc { padding: 12px 14px; }
 }
 
 /* ---------- § 4 Research · CTA into /research ---------- */
