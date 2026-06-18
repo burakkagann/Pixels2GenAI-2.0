@@ -45,6 +45,13 @@ const ogImageUrl = new URL(ogImage, Astro.site).href;
 
 // Normalize to a list so callers can pass one object or several.
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+
+// Privacy-friendly, cookieless analytics (Umami Cloud). The website ID is a
+// public token — safe to commit. While it's empty the script is not emitted at
+// all. Disclosed on /privacy (no consent banner needed: no cookies, no stored
+// IP, no PII). Endpoint below is cloud.umami.is (Umami's default region); if the
+// site is recreated in Umami's EU region, switch the src to eu.umami.is.
+const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
 ---
 
 <!doctype html>
@@ -98,6 +105,10 @@ const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   {jsonLdBlocks.map((block) => (
     <script type="application/ld+json" set:html={JSON.stringify(block)} />
   ))}
+
+  {UMAMI_WEBSITE_ID && (
+    <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id={UMAMI_WEBSITE_ID}></script>
+  )}
 
 </head>
 <body>

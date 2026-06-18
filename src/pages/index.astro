@@ -384,6 +384,8 @@ const ALL_LEAVES = MODULES.flatMap(m =>
 
       const rows = Array.from(results.querySelectorAll('.result'));
 
+      let currentMatches = 0;
+
       const run = (raw) => {
         const q = raw.trim().toLowerCase();
         if (!q) {
@@ -391,6 +393,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
           stations.hidden = false;
           summary.hidden = true;
           clearBtn.hidden = true;
+          currentMatches = 0;
           return;
         }
         const terms = q.split(/\s+/);
@@ -401,6 +404,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
           row.hidden = !hit;
           if (hit) matches++;
         });
+        currentMatches = matches;
         results.hidden = false;
         stations.hidden = true;
         clearBtn.hidden = false;
@@ -409,7 +413,23 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         summary.textContent = `${matches} ${matches === 1 ? 'lesson' : 'lessons'}`;
       };
 
-      input.addEventListener('input', () => run(input.value));
+      // Privacy-friendly DBR signal: record settled searches (not keystrokes)
+      // and whether they returned anything, so curriculum gaps surface. Anonymous,
+      // no identifier; no-op until the Umami loader is enabled. See /privacy.
+      let searchTimer;
+      const trackSearch = (raw) => {
+        clearTimeout(searchTimer);
+        const q = raw.trim();
+        if (q.length < 2) return;
+        searchTimer = setTimeout(() => {
+          window.umami?.track('curriculum-search', {
+            q: q.toLowerCase().slice(0, 60),
+            results: currentMatches,
+          });
+        }, 700);
+      };
+
+      input.addEventListener('input', () => { run(input.value); trackSearch(input.value); });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { input.value = ''; run(''); }
       });

@@ -102,13 +102,32 @@ import Footer from '@/components/chrome/Footer.astro';
       </section>
 
       <section>
+        <h2>Analytics</h2>
+        <p>
+          To learn which lessons are read and where the curriculum can be
+          improved, the site uses
+          <a href="https://umami.is/" target="_blank" rel="noopener">
+            Umami <span class="arr">↗</span>
+          </a>, a privacy-first, cookieless analytics service
+          (Umami Software, Inc.). It records only aggregate, anonymous usage — page visits,
+          the referring site, country, and device type — and sets
+          <em>no cookies</em>, stores <em>no IP address</em>, and keeps
+          <em>no information that could identify you</em>. Search terms typed
+          into the curriculum search may be recorded, without any identifier,
+          so we can see what learners look for and close gaps in the
+          curriculum. Because it sets no cookies and stores no personal data,
+          this requires no consent banner.
+        </p>
+      </section>
+
+      <section>
         <h2>Everything else</h2>
         <p>
           The rest of the site is static. It sets a single localStorage
           entry for your theme preference, fetches a star count from the
           public GitHub API, and serves all fonts and assets from its own
-          domain. No analytics, no cookies, no embedded third-party
-          content.
+          domain. No advertising, no cross-site tracking, and no embedded
+          third-party content beyond the analytics described above.
         </p>
       </section>
 
