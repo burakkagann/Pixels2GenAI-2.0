@@ -13,22 +13,66 @@ import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
 import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
 
-const siteJsonLd = {
+// Entity graph for the homepage: a named author (Person) and the project
+// (Organization) cross-linked by @id, then referenced as the author/provider of
+// the Course and the publisher of the WebSite. The stable @id anchors let AI
+// answer engines and knowledge graphs attribute the curriculum to the right
+// person and project. sameAs ties the author to authoritative external profiles.
+const SITE = 'https://pixels2genai.art';
+const AUTHOR_ID = `${SITE}/#author`;
+const ORG_ID = `${SITE}/#organization`;
+
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': AUTHOR_ID,
+  name: 'Burak Kağan Yılmazer',
+  url: 'https://burakkagan.dev',
+  sameAs: [
+    'https://orcid.org/0009-0000-9918-824X',
+    'https://github.com/burakkagann',
+    'https://www.linkedin.com/in/burakkagan/',
+    'https://www.researchgate.net/profile/Burak-Kagan-Yilmazer-2',
+  ],
+};
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': ORG_ID,
+  name: 'Pixels2GenAI',
+  url: SITE,
+  logo: `${SITE}/icon-512.png`,
+  founder: { '@id': AUTHOR_ID },
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${SITE}/#website`,
+  name: 'Pixels2GenAI',
+  url: SITE,
+  inLanguage: 'en',
+  publisher: { '@id': ORG_ID },
+};
+
+const courseJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Course',
+  '@id': `${SITE}/#course`,
   name: 'Pixels2GenAI',
   description:
     'A free, open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, across fifteen progressive modules.',
-  provider: {
-    '@type': 'Organization',
-    name: 'Pixels2GenAI',
-    url: 'https://pixels2genai.art',
-  },
+  provider: { '@id': ORG_ID },
+  author: { '@id': AUTHOR_ID },
+  image: `${SITE}/exhibitions/prints/orbit-sediment-trichrome.jpg`,
   inLanguage: 'en',
   isAccessibleForFree: true,
   educationalLevel: 'beginner to advanced',
-  url: 'https://pixels2genai.art',
+  url: SITE,
 };
+
+const siteJsonLd = [organizationJsonLd, personJsonLd, websiteJsonLd, courseJsonLd];
 
 // Flat index of every leaf across all modules, for the curriculum search.
 // Rendered server-side (all lesson links present in HTML) and filtered client-side.

@@ -12,7 +12,8 @@
     "check": "node scripts/check-lessons.mjs",
     "status": "node scripts/lesson-status.mjs",
     "copy-assets": "node scripts/copy-v1-assets.mjs",
-    "gen-icons": "node scripts/gen-icons.mjs"
+    "gen-icons": "node scripts/gen-icons.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",

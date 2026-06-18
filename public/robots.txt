@@ -1,3 +1,68 @@
+# Pixels2GenAI is a free, open educational resource. AI crawlers are
+# explicitly welcome — both training crawlers and live retrieval/answer
+# crawlers — so the curriculum can be discovered, indexed, and cited.
+
+# --- OpenAI (ChatGPT) ---
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+
+# --- Anthropic (Claude) ---
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: Claude-User
+Allow: /
+
+# --- Google (Gemini / AI Overviews grounding) ---
+User-agent: Google-Extended
+Allow: /
+
+# --- Microsoft Bing (feeds Copilot) ---
+User-agent: bingbot
+Allow: /
+
+# --- Perplexity ---
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+
+# --- Apple (Siri / Apple Intelligence) ---
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+
+# --- Amazon (Nova / Alexa) ---
+User-agent: Amazonbot
+Allow: /
+
+# --- Meta AI ---
+User-agent: meta-externalagent
+Allow: /
+
+# --- Common Crawl (feeds many open models) ---
+User-agent: CCBot
+Allow: /
+
+# --- ByteDance ---
+User-agent: Bytespider
+Allow: /
+
+# --- Mistral ---
+User-agent: MistralAI-User
+Allow: /
+
+# --- DuckDuckGo (DuckAssist) ---
+User-agent: DuckAssistBot
+Allow: /
+
+# Everyone else
 User-agent: *
 Allow: /
 
