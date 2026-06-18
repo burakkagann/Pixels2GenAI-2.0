@@ -6,7 +6,7 @@ authors:
   - family-names: "Yılmazer"
     given-names: "Burak Kağan"
     email: "burak.kagan@protonmail.com"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add your ORCID if you have one
+    orcid: "https://orcid.org/0009-0000-9918-824X"
   - family-names: "Rother"
     given-names: "Kristian"
     # role: supervisor / content co-author (CFF has no formal role field; remove this
@@ -37,10 +37,11 @@ version: "2.0.0"
 date-released: "2026-06-17"   # TODO: set to the date of the release/tag you cut
 preferred-citation:
   type: thesis
-  title: "TODO: exact thesis title"
+  title: "Bridging Computational Foundations to Generative AI: A Design-Based Framework for Progressive Creative Coding Education"
   authors:
     - family-names: "Yılmazer"
       given-names: "Burak Kağan"
+      orcid: "https://orcid.org/0009-0000-9918-824X"
   year: 2026
   thesis-type: "Master's thesis"
   institution:
