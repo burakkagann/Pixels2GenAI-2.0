@@ -1,0 +1,311 @@
+---
+module: "M 12"
+cycle: "III"
+title: "VQ-VAE & VQ-GAN"
+objective: "Replace the VAE's continuous Gaussian bottleneck with a discrete codebook (VQ-VAE), then layer a GAN-style discriminator on top to sharpen reconstructions (VQ-GAN) — the architectural pattern that turns images into token sequences for transformer-based generation."
+framework: "conceptual"
+duration: "30–40 min"
+level: "advanced"
+load: "3 core concepts"
+prereqs: "Lessons 12.2.1 (VAEs), 12.1.1 (GANs); PyTorch"
+prev:
+  slug: "12.4.1"
+  title: "Neural Style Transfer"
+next:
+  slug: "12.6.1"
+  title: "Taming Transformers"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+The VAE family ([Lesson 12.2.1](/lessons/12.2.1)) compresses images into *continuous* latent vectors — points in a 16- or 64-dimensional real-valued space. That works well for the operations you'd want to do directly on the latent (interpolation, sampling), but it also locks you out of an entire family of downstream models: anything that wants to *predict the next element* in a sequence, like a transformer language model. Language models work on discrete tokens because their training objective is "predict the next token from a vocabulary." Continuous latents have no vocabulary.
+
+VQ-VAE, introduced by Van den Oord, Vinyals and Kavukcuoglu in 2017 [1], plugged this gap. It's a VAE where the bottleneck is *discrete*: the encoder outputs continuous vectors, but each one is snapped to its nearest neighbour in a *learned codebook* of, say, 1,024 reference vectors before going into the decoder. The codebook indices are integers. An image becomes a grid of integers; a grid of integers is a sequence; a sequence can be modelled by a transformer.
+
+VQ-GAN, introduced by Esser, Rombach and Ommer in 2020 [2], improved the reconstruction quality by adding a GAN-style adversarial loss on top — same encoder/decoder/codebook structure, plus a PatchGAN discriminator (like the one in [Lesson 12.1.4](/lessons/12.1.4)) that pushes the decoder to produce sharper outputs. The combination — sharp VQ-GAN tokeniser + a transformer trained on the resulting token sequences — is the architecture behind Taming Transformers ([Lesson 12.6.1](/lessons/12.6.1)) and the structural template for DALL-E 1, Parti, Muse, and many others.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Explain why a continuous VAE bottleneck blocks transformer-based generation and how vector quantisation fixes it.</li>
+  <li>Implement the straight-through estimator for backpropagation through a non-differentiable nearest-neighbour lookup.</li>
+  <li>Describe the three losses in VQ-VAE training (reconstruction, codebook, commitment) and what each pulls toward what.</li>
+  <li>Predict how adding a GAN discriminator (VQ-GAN) changes the quality vs codebook-usage trade-off.</li>
+</ol>
+
+## Quick start — train a tiny VQ-VAE on MNIST <a id="quick-start"></a>
+
+60-second training run, 64-entry codebook, MNIST. After 3 epochs you'll see most digits cleanly reconstructed through a discrete bottleneck.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/vqvae_demo.py" label="vqvae_demo.py — minimal VQ-VAE on MNIST" />
+
+<CodeBlock lang="bash">
+```bash
+pip install torch torchvision
+python vqvae_demo.py
+```
+</CodeBlock>
+
+Expected output: three lines of training loss, then a final report of how many codebook entries the model is actually using (typically 30–50 of the 64 available — the rest are "dead").
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Why discrete? Because transformers expect tokens
+
+A standard VAE encodes an image to a continuous latent vector `z ∈ R^d`. To generate new images you sample `z ~ N(0, I)` and decode. This is fine for unconditional generation but it gives you nothing to model autoregressively — you can't "predict the next dimension of `z`" the way a language model predicts the next word, because the dimensions of a continuous latent aren't ordered or discrete.
+
+VQ-VAE introduces a discrete bottleneck. The encoder outputs a `(C, H, W)` feature map of continuous vectors; each spatial location is *snapped* to its nearest neighbour in a learned codebook of `K` reference vectors. The output is no longer a continuous tensor but a grid of integers — codebook indices — of shape `(H, W)`. An MNIST image at `7 × 7` resolution becomes a 49-long sequence of integers between 0 and `K - 1`.
+
+Once images are sequences of integers, you can train a transformer to model them. The transformer learns `P(token_n | token_1, ..., token_{n-1})`; sampling proceeds left-to-right (or in any defined raster order); the resulting token sequence gets decoded back to an image by the VQ-VAE's decoder.
+
+| Architecture | Bottleneck | Generative model |
+|---|---|---|
+| VAE (12.2.1) | continuous, `R^d` | sample from `N(0, I)`, decode |
+| VQ-VAE | discrete, `K` codebook entries × `H × W` grid | autoregressive over codebook indices |
+| VQ-GAN | discrete + GAN-sharpened decoder | autoregressive (transformer) over indices |
+
+<Admonition type="dyk" title="History — discrete bottleneck inspired a generation of architectures">
+Van den Oord et al.'s 2017 paper [1] was published at NeurIPS as a relatively quiet contribution — vector quantisation has a 50-year history in signal compression; the novelty was making it differentiable enough to train end-to-end with a neural encoder/decoder. Three years later, OpenAI's DALL-E 1 used the same architectural pattern (VQ-VAE-style tokeniser + transformer over the token sequence) to do text-to-image generation, and the design template became canonical. Today Stable Diffusion's VAE is itself a VQ-GAN variant, and Google's Muse, Parti and MaskGIT all build on the same discrete-tokeniser idea.
+</Admonition>
+
+### Concept 2 — Vector quantisation and the straight-through estimator
+
+The quantisation step is mechanically simple: for each encoder output vector `z_e`, find the nearest codebook entry `e_k` and replace `z_e` with `e_k`. The catch: nearest-neighbour lookup is not differentiable. You cannot backpropagate through `argmin`.
+
+The fix is the **straight-through estimator** [3]. In the forward pass, send the quantised vector through the decoder normally. In the backward pass, *copy the gradient that flowed into the quantised vector straight back to the encoder*, as if quantisation were the identity function.
+
+<CodeBlock lang="python" file="straight-through quantisation">
+```python
+class VectorQuantizer(nn.Module):
+    def forward(self, z_e):
+        # Forward: nearest neighbour in codebook
+        distances = (z_e.pow(2).sum(1, keepdim=True)
+                     - 2 * z_e @ self.codebook.weight.t()
+                     + self.codebook.weight.pow(2).sum(1))
+        indices = distances.argmin(dim=1)
+        z_q = self.codebook(indices)
+
+        # Backward: straight-through. Forward returns z_q; backward sees identity.
+        z_q = z_e + (z_q - z_e).detach()
+        return z_q, indices
+```
+</CodeBlock>
+
+The key line is `z_q = z_e + (z_q - z_e).detach()`. Numerically the output equals `z_q` (the quantised vector). Symbolically the gradient flows through `z_e` — `(z_q - z_e).detach()` is a constant from autograd's perspective. The encoder gets gradient as if the decoder were directly operating on its output.
+
+This isn't strictly correct (the true gradient is zero almost everywhere), but it's a useful biased estimator and it works in practice. The codebook itself is updated separately via a dedicated codebook loss (Concept 3).
+
+### Concept 3 — Three losses balance encoder, codebook, and decoder
+
+VQ-VAE training combines three losses:
+
+```
+L = L_recon + L_codebook + β · L_commitment
+```
+
+**Reconstruction loss** (`L_recon`) is straight MSE between the input and the decoder's output. This pulls the encoder, codebook, and decoder *together* to minimise reconstruction error. Backpropagation flows through the decoder, through the straight-through quantisation, and into the encoder.
+
+**Codebook loss** (`L_codebook = ‖sg[z_e] - e_k‖²` where `sg[·]` is stop-gradient) pulls the *codebook entries* toward the encoder outputs. The encoder's output is detached (`sg`) so this loss only updates the codebook. Effectively: "for each chosen codebook entry, move it closer to the encoder vectors that mapped to it."
+
+**Commitment loss** (`L_commitment = ‖z_e - sg[e_k]‖²`) pulls the *encoder outputs* toward whichever codebook entries they were assigned to. The codebook is detached so this loss only updates the encoder. Effectively: "encoder, commit to the codebook entries that already exist instead of drifting to new regions of latent space."
+
+The `β` coefficient (default 0.25 per the paper) controls how strongly the encoder is pressured to stick close to codebook entries. Too low and the encoder drifts; too high and the codebook can't refine its positions.
+
+<CodeBlock lang="python" file="three losses">
+```python
+def vq_loss(z_e, z_q, commitment_cost=0.25):
+    codebook_loss = F.mse_loss(z_q, z_e.detach())
+    commitment_loss = F.mse_loss(z_q.detach(), z_e)
+    return codebook_loss + commitment_cost * commitment_loss
+```
+</CodeBlock>
+
+One common failure mode: **codebook collapse**. Most codebook entries get used early in training; a few unlucky ones don't get any encoder vectors assigned to them; with no gradient signal, they stay where they are forever while the encoder learns to avoid them. After a few epochs you have a 1,024-entry codebook with only 200 entries in active use. Modern implementations mitigate this with codebook reset tricks (replace dead entries with active ones) or with exponential-moving-average updates instead of gradient descent on the codebook.
+
+### Concept 4 — VQ-GAN: adding a discriminator for sharpness
+
+VQ-VAE produces reconstructions but they're slightly blurry — the standard MSE-loss-produces-soft-outputs problem from [Lesson 12.2.1](/lessons/12.2.1). Esser et al.'s VQ-GAN [2] fixed this by stacking a **PatchGAN discriminator** (same patch-based discriminator as [Pix2Pix in 12.1.4](/lessons/12.1.4)) on the reconstruction and adding an adversarial loss:
+
+```
+L_VQGAN = L_recon + L_codebook + β · L_commitment
+        + λ · L_perceptual         (LPIPS feature loss)
+        + γ · L_GAN                (PatchGAN adversarial)
+```
+
+The perceptual loss replaces MSE on raw pixels with MSE on intermediate features of a pre-trained VGG (the same idea as [NST in 12.4.1](/lessons/12.4.1)), which is more aligned with how humans judge image similarity. The GAN loss is computed on the patch-level discriminator's classifications of real vs reconstructed patches. Together they produce reconstructions that are not just numerically close to the input but *perceptually* close, with crisp textures.
+
+The architectural shape is identical to VQ-VAE — same encoder, same codebook, same straight-through quantisation, same decoder. The only differences are the loss function and the addition of the discriminator network. The cost is training complexity: GAN training is unstable in ways VAE training isn't; warm-up schedules and careful loss weighting matter.
+
+<Admonition type="important">
+VQ-GAN isn't itself a generative model — it's an autoencoder with a discrete bottleneck and a sharper reconstruction. To *generate* novel images, you need a second-stage model that learns the distribution over the discrete token sequences VQ-GAN produces. The Taming Transformers paper [2] paired VQ-GAN with a GPT-style transformer; OpenAI's DALL-E 1 used a different transformer; Google's Muse uses a masked-language-model-style transformer with parallel decoding. The tokeniser and the generator are separate components, often trained separately.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Train the demo VQ-VAE on MNIST and inspect codebook usage">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/vqvae_demo.py" label="vqvae_demo.py — 3-epoch MNIST run" />
+
+<CodeBlock lang="bash">
+```bash
+python vqvae_demo.py
+```
+</CodeBlock>
+
+The script trains for 3 epochs (~60 seconds on a CPU, ~10 seconds on a GPU), then reports how many of the 64 codebook entries were actually used in the final batch.
+
+**Reflection**
+
+1. The demo reports something like "After training: 32 of 64 codebook entries used." Why aren't all 64 used? What would the model need to do for all of them to be useful?
+2. The bottleneck is `7 × 7 = 49` integers per MNIST image. The original input is `28 × 28 = 784` pixels. That's a `784 / 49 = 16×` compression in token count, but each token can take one of 64 values (6 bits). What's the effective bit-rate compression?
+3. If you set `CODEBOOK_SIZE = 4` (way too small), what would you expect to happen to the reconstruction quality?
+4. The straight-through estimator gives the encoder a biased gradient — the true gradient through `argmin` is zero. Why does training still work?
+
+<Dropdown summary="Discussion">
+
+1. The codebook starts with random entries; early in training only some get assigned encoder outputs and receive gradient updates. The unused entries get *no signal* and stay near their random initialisation, where the encoder doesn't map anything. For all entries to be useful, every entry would need to be assigned at least one encoder output during training — the codebook-collapse problem is exactly when this fails.
+
+2. Each MNIST image at 8 bits/pixel is `784 × 8 = 6,272 bits`. The VQ-VAE representation is `49 tokens × 6 bits = 294 bits`. So a `~21×` bit-rate compression, much higher than the `16×` token-count compression because the original pixel domain has 256 values per location vs the VQ-VAE's 64 tokens.
+
+3. With only 4 codebook entries, the encoder can only express 4 distinct "types" of local feature; reconstruction would average each pixel toward one of just 4 prototypes. The output would look like blocky 4-colour posterised digits, recognisable but very coarse.
+
+4. The straight-through estimator pretends the quantisation is the identity for backward purposes. It's a biased gradient but it points in a useful direction on average — toward encoder outputs that produce small reconstruction error after quantisation. The codebook loss separately handles the codebook updates, so the system as a whole optimises something meaningful even though no single piece is using the "true" gradient.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Codebook size, commitment cost, codebook collapse">
+
+Open `vqvae_demo.py` and try each change.
+
+**Goal 1 — Codebook size.** Try `CODEBOOK_SIZE ∈ {16, 64, 512, 4096}`. Lower means coarser reconstructions; higher gives the model more capacity but often increases codebook collapse (more dead entries).
+
+**Goal 2 — Commitment cost `β`.** Try `COMMITMENT_COST ∈ {0.05, 0.25, 1.0, 4.0}`. Too low and the encoder drifts away from codebook entries; too high and the encoder can't explore.
+
+**Goal 3 — Codebook collapse rescue.** Add a "dead entry reset" — at the end of each epoch, find codebook entries that weren't used in this epoch's batches and re-initialise them to random encoder outputs from the current batch. This dramatically improves codebook usage at the cost of one extra hyperparameter (reset frequency).
+
+<Dropdown summary="What to expect — codebook size">
+At `16` you'll see reconstructions that look like aggressive posterisation. At `64` (default) the model has reasonable expressiveness for MNIST. At `512` you'll see a few percentage points of MSE improvement and most entries dead. At `4096` you'll see catastrophic codebook collapse — most of the codebook never gets used; the reconstructions are no better than at `512`.
+</Dropdown>
+
+<Dropdown summary="What to expect — commitment cost">
+At `0.05` the encoder is barely tethered to the codebook; codebook entries chase the moving target. At `0.25` (default) you get the stable regime documented in the paper. At `1.0` the encoder is so tethered to existing entries that it can't explore new regions; reconstruction quality degrades. At `4.0` training often diverges.
+</Dropdown>
+
+<Dropdown summary="What to expect — codebook reset">
+With a per-epoch reset on dead entries, codebook usage often goes from 30-50% to 90-100% with no degradation in reconstruction. This is one of the simplest, highest-impact training tricks for VQ-VAE/VQ-GAN — newer architectures like Residual VQ make this even more robust.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement the straight-through quantizer from scratch">
+
+Write the core `VectorQuantizer` module yourself. Skeleton:
+
+<CodeBlock lang="python" file="quantizer_starter.py">
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class VectorQuantizer(nn.Module):
+    def __init__(self, codebook_size: int, embedding_dim: int, commitment_cost: float):
+        super().__init__()
+        # TODO: create codebook as nn.Embedding(codebook_size, embedding_dim)
+        # TODO: initialise its weights uniformly in [-1/K, 1/K]
+        # TODO: store commitment_cost as self attribute
+        pass
+
+    def forward(self, z_e):
+        b, c, h, w = z_e.shape
+        z_e_flat = z_e.permute(0, 2, 3, 1).reshape(-1, c)
+
+        # TODO: compute pairwise squared distances between z_e_flat and codebook
+        # (use the (a-b)^2 = a^2 - 2ab + b^2 expansion)
+
+        # TODO: indices = argmin over codebook dim
+        # TODO: z_q_flat = self.codebook(indices)
+
+        # TODO: codebook_loss = MSE(z_q_flat, z_e_flat.detach())
+        # TODO: commitment_loss = MSE(z_q_flat.detach(), z_e_flat)
+        # TODO: loss = codebook_loss + self.commitment_cost * commitment_loss
+
+        # TODO: apply straight-through estimator
+        # z_q_flat = z_e_flat + (z_q_flat - z_e_flat).detach()
+
+        # TODO: reshape z_q_flat back to (b, c, h, w) shape
+
+        # TODO: return z_q, loss, indices.reshape(b, h, w)
+        pass
+```
+</CodeBlock>
+
+<Dropdown summary="Complete solution">
+
+```python
+class VectorQuantizer(nn.Module):
+    def __init__(self, codebook_size, embedding_dim, commitment_cost):
+        super().__init__()
+        self.codebook = nn.Embedding(codebook_size, embedding_dim)
+        nn.init.uniform_(self.codebook.weight, -1.0/codebook_size, 1.0/codebook_size)
+        self.commitment_cost = commitment_cost
+
+    def forward(self, z_e):
+        b, c, h, w = z_e.shape
+        z_e_flat = z_e.permute(0, 2, 3, 1).reshape(-1, c)
+
+        d = (z_e_flat.pow(2).sum(1, keepdim=True)
+             - 2 * z_e_flat @ self.codebook.weight.t()
+             + self.codebook.weight.pow(2).sum(1))
+        indices = d.argmin(dim=1)
+        z_q_flat = self.codebook(indices)
+
+        codebook_loss = F.mse_loss(z_q_flat, z_e_flat.detach())
+        commitment_loss = F.mse_loss(z_q_flat.detach(), z_e_flat)
+        loss = codebook_loss + self.commitment_cost * commitment_loss
+
+        z_q_flat = z_e_flat + (z_q_flat - z_e_flat).detach()
+        z_q = z_q_flat.reshape(b, h, w, c).permute(0, 3, 1, 2)
+        return z_q, loss, indices.reshape(b, h, w)
+```
+
+</Dropdown>
+
+**Make it your own**
+
+Swap MNIST for CIFAR-10 by changing the dataset constructor and the in_channels from 1 to 3. The reconstructions will be visibly more blurry — RGB natural images have far higher information content than handwritten digits, and 64 codebook entries × 7×7 grid is too small a code. Bump `CODEBOOK_SIZE = 512` and `EMBEDDING_DIM = 64` and add another encoder/decoder block to reach a 16×16 grid for usable quality.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+VQ-VAE replaces the continuous VAE bottleneck with a *discrete* codebook of learned reference vectors; each encoder output is snapped to its nearest codebook entry before going into the decoder, turning every image into a grid of integer codebook indices. The straight-through estimator handles backpropagation through the non-differentiable nearest-neighbour lookup by pretending quantisation is the identity in the backward pass. Three losses (reconstruction, codebook, commitment) keep the encoder, codebook, and decoder updating in compatible directions. VQ-GAN adds a perceptual loss and a PatchGAN discriminator to sharpen reconstructions. The discrete-bottleneck output sequence is what makes transformer-based image generation possible — Taming Transformers ([Lesson 12.6.1](/lessons/12.6.1)), DALL-E 1, Parti, and Muse all share this two-stage template: train a VQ-GAN tokeniser, then train a transformer on the token sequences it produces.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting the straight-through trick (`z_e + (z_q - z_e).detach()`) — the encoder receives no gradient and never trains.
+- Mixing up stop-gradient placement in the codebook vs commitment losses — swapping them breaks the encoder/codebook decoupling and training stalls.
+- Codebook collapse (most entries dead). Reset dead entries periodically or use EMA codebook updates instead of SGD.
+- Treating VQ-VAE as a generative model on its own. It's a *tokeniser*; you need a second-stage model (transformer, diffusion-over-tokens, etc.) to actually generate novel sequences.
+- Using a too-small commitment cost (`< 0.1`). The encoder drifts away from the codebook and reconstruction quality degrades over training rather than improving.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Van den Oord, A., Vinyals, O. &amp; Kavukcuoglu, K. (2017). Neural Discrete Representation Learning (VQ-VAE). *NeurIPS*. <a href="https://arxiv.org/abs/1711.00937" target="_blank" rel="noopener">arxiv:1711.00937</a></li>
+    <li><span class="tag">[2]</span> Esser, P., Rombach, R. &amp; Ommer, B. (2021). Taming Transformers for High-Resolution Image Synthesis (VQ-GAN + Transformer). *CVPR*. <a href="https://arxiv.org/abs/2012.09841" target="_blank" rel="noopener">arxiv:2012.09841</a></li>
+    <li><span class="tag">[3]</span> Bengio, Y., Léonard, N. &amp; Courville, A. (2013). Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation. *arXiv preprint*. <a href="https://arxiv.org/abs/1308.3432" target="_blank" rel="noopener">arxiv:1308.3432</a></li>
+    <li><span class="tag">[4]</span> Razavi, A., Van den Oord, A. &amp; Vinyals, O. (2019). Generating Diverse High-Fidelity Images with VQ-VAE-2. *NeurIPS*. <a href="https://arxiv.org/abs/1906.00446" target="_blank" rel="noopener">arxiv:1906.00446</a></li>
+    <li><span class="tag">[5]</span> Ramesh, A., Pavlov, M., Goh, G., Gray, S., Voss, C., Radford, A., Chen, M. &amp; Sutskever, I. (2021). Zero-Shot Text-to-Image Generation (DALL-E 1). *ICML*. <a href="https://arxiv.org/abs/2102.12092" target="_blank" rel="noopener">arxiv:2102.12092</a></li>
+    <li><span class="tag">[6]</span> Chang, H., Zhang, H., Jiang, L., Liu, C. &amp; Freeman, W. T. (2022). MaskGIT: Masked Generative Image Transformer. *CVPR*. <a href="https://arxiv.org/abs/2202.04200" target="_blank" rel="noopener">arxiv:2202.04200</a></li>
+    <li><span class="tag">[7]</span> Mentzer, F., Minnen, D., Agustsson, E. &amp; Tschannen, M. (2024). Finite Scalar Quantization: VQ-VAE Made Simple. *ICLR*. <a href="https://arxiv.org/abs/2309.15505" target="_blank" rel="noopener">arxiv:2309.15505</a></li>
+    <li><span class="tag">[8]</span> Kingma, D. P. &amp; Welling, M. (2014). Auto-Encoding Variational Bayes. *ICLR*. <a href="https://arxiv.org/abs/1312.6114" target="_blank" rel="noopener">arxiv:1312.6114</a></li>
+  </ol>
+</section>

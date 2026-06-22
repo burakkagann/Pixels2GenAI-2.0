@@ -1,0 +1,289 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Taming Transformers"
+objective: "Use the VQ-GAN tokeniser from Lesson 12.4.2 to turn images into integer sequences, then train an autoregressive transformer over those sequences — the architectural template behind DALL-E 1, Parti, and Muse."
+framework: "conceptual"
+duration: "30–40 min"
+level: "advanced"
+load: "3 core concepts"
+prereqs: "Lessons 12.4.2 (VQ-VAE/VQ-GAN), 9.x (Transformers); PyTorch"
+prev:
+  slug: "12.4.2"
+  title: "VQ-VAE & VQ-GAN"
+next:
+  slug: "12.6.2"
+  title: "Diffusion Transformer (DiT)"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+[Lesson 12.4.2](/lessons/12.4.2) ended with a question: VQ-GAN turns images into sequences of integer codebook indices, but the VQ-GAN itself isn't a generative model — it's an autoencoder. To actually *generate* novel images, you need a second-stage model that learns the distribution over those integer sequences and can sample from it.
+
+Esser, Rombach and Ommer's "Taming Transformers for High-Resolution Image Synthesis" (2021) [1] — the same paper that introduced VQ-GAN — answered the question with a GPT-style autoregressive transformer trained on the token sequences a VQ-GAN encoder produces. The combination is structurally beautiful: VQ-GAN handles the *what each pixel looks like* problem (mapping continuous RGB to discrete tokens and back); the transformer handles the *which tokens go together* problem (modelling the joint distribution over token sequences). Generation runs left-to-right, one token at a time, exactly like a language model generates text.
+
+This architectural template — discrete tokeniser + autoregressive transformer — became the foundation for OpenAI's DALL-E 1 [2], Google's Parti [3], and the masked-prediction variant Muse [4]. Today most state-of-the-art text-to-image models either use this template directly or are explicitly motivated by it.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Describe the two-stage VQ-GAN + Transformer architecture and which stage handles which problem.</li>
+  <li>Explain causal self-attention and why the lower-triangular attention mask is what makes autoregressive generation possible.</li>
+  <li>Train a tiny autoregressive transformer over token sequences and sample from it left-to-right.</li>
+  <li>Predict how raster ordering vs other token orderings affects what the transformer can learn.</li>
+</ol>
+
+## Quick start — train ImageGPT on synthetic token sequences <a id="quick-start"></a>
+
+A minimal GPT-style transformer that learns to predict the next integer in a 49-long sequence (a 7×7 token grid). For this demo the training data is *synthetic* random integers; in a real setup the training sequences come from running a trained VQ-VAE/VQ-GAN encoder over an image dataset.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/transformer_image_demo.py" label="transformer_image_demo.py — minimal autoregressive transformer" />
+
+<CodeBlock lang="bash">
+```bash
+pip install torch
+python transformer_image_demo.py
+```
+</CodeBlock>
+
+5 epochs, ~30 seconds on CPU. Output: per-epoch loss, then 4 sampled sequences. With the random training data the model can't learn meaningful structure; the real value is seeing the architecture's pieces line up.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Two stages: tokeniser and generator
+
+The Taming Transformers architecture decouples two responsibilities:
+
+| Stage | Component | Trained on | Output |
+|---|---|---|---|
+| 1. Tokeniser | VQ-GAN (Lesson 12.4.2) | image reconstruction | discrete token sequences |
+| 2. Generator | Autoregressive transformer | token sequences from stage 1 | new token sequences → decoded to images |
+
+Stage 1 is what turns the continuous, high-dimensional image domain into a discrete, low-dimensional token domain that a transformer can model. The VQ-GAN encoder takes a `256 × 256 × 3` image and produces, say, a `16 × 16 = 256`-long sequence of codebook indices. The decoder takes a sequence of indices back to an RGB image.
+
+Stage 2 is just a language model over the token vocabulary. The vocabulary size is the VQ-GAN's codebook size (typically 1,024 to 16,384). The sequence length is the spatial grid size (256 for `16 × 16`, 1,024 for `32 × 32`). Train it on the token sequences from your image dataset; sample new sequences autoregressively; decode each sample with the VQ-GAN to get a generated image.
+
+The two stages are trained *separately*. Stage 1 is trained first, with the full VQ-GAN losses (reconstruction + perceptual + GAN — see [12.4.2](/lessons/12.4.2)). Stage 2 is trained second, with the standard next-token-prediction loss, while the VQ-GAN's weights are frozen. The stages can be developed independently and each can be improved without retraining the other.
+
+<Admonition type="dyk" title="History — &quot;Taming&quot; is the right verb">
+The paper title — "Taming Transformers" — references a real engineering challenge. Direct application of transformers to pixel data had been tried (OpenAI's Image GPT [5] used transformers on raw pixel tokens) but didn't scale because the sequence length grew with the number of pixels. A 256×256×3 image is 196,608 tokens; transformer cost scales quadratically with sequence length, so this was untrainable past tiny resolutions. The VQ-GAN tokeniser compresses 196,608 pixel-tokens into 256 codebook-tokens — a 768× reduction — which is what made the transformer "tameable" on consumer hardware.
+</Admonition>
+
+### Concept 2 — Causal self-attention and the autoregressive constraint
+
+The transformer's training objective is next-token prediction: given tokens `t_1, ..., t_{n-1}`, predict `t_n`. For this to work, the model must not be able to "cheat" by looking at future tokens during training. The mechanism that enforces this is the **causal self-attention mask**.
+
+In a standard attention layer, every position in the sequence attends to every other position. For autoregressive training, you mask out attention to future positions by setting those attention weights to negative infinity (so the softmax sends them to zero):
+
+<CodeBlock lang="python" file="causal mask">
+```python
+# Lower-triangular mask blocks future positions
+mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+# In the attention call:
+attention_output, _ = nn.MultiheadAttention(...)(
+    query=x, key=x, value=x, attn_mask=mask, need_weights=False,
+)
+```
+</CodeBlock>
+
+The mask is a `(seq_len, seq_len)` boolean matrix where `mask[i, j] = True` (block) if `j > i` (`j` is in the future from position `i`'s perspective). The attention layer interprets `True` positions as "do not attend to this."
+
+With this mask, position `i` can attend to positions `1` through `i` (everything that came before, including itself), but not to positions `i + 1` through `seq_len`. The model can be trained on the entire sequence in parallel (one forward pass produces predictions for every position simultaneously) but each prediction only depends on past tokens.
+
+Sampling at inference time is sequential. Start with a special "begin" token (or just zero), predict the distribution over the next token, sample from it, append the sampled token, repeat until you have a full sequence:
+
+<CodeBlock lang="python" file="autoregressive sampling">
+```python
+@torch.no_grad()
+def generate(model, num_samples, seq_len, temperature=1.0):
+    tokens = torch.zeros(num_samples, 1, dtype=torch.long)
+    for i in range(seq_len - 1):
+        logits = model(tokens)[:, -1, :] / temperature
+        probs = torch.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)
+        tokens = torch.cat([tokens, next_token], dim=1)
+    return tokens
+```
+</CodeBlock>
+
+The `temperature` parameter controls sample diversity: low values (`< 1.0`) make sampling more deterministic and conservative; high values (`> 1.0`) make it more random and creative. Same parameter that text language models expose.
+
+### Concept 3 — Raster ordering: turning 2D image structure into a 1D sequence
+
+The VQ-GAN produces a 2D grid of tokens (e.g. `16 × 16`). The transformer expects a 1D sequence. The standard choice is **raster order**: read the grid row by row, left to right (the same way you'd read a page in English). Token `0` is the top-left; token `15` is top-right; token `16` is the start of the second row; token `255` is bottom-right.
+
+This is arbitrary in principle — you could use any ordering — but raster has been overwhelmingly the standard. The model has to learn the 2D spatial structure *through* the 1D ordering: it learns that token `i + 16` is "the position directly below token `i`," that local context spans positions `(i - 1, i, i + 1, i + 15, i + 16, i + 17)`, and so on.
+
+Other orderings have been tried. Spiral orderings let the model build outward from the centre. Z-order (Morton encoding) preserves 2D locality better — adjacent positions in the sequence tend to be spatially close in the image. MaskGIT [4] uses a non-autoregressive parallel decoding scheme that doesn't have a fixed ordering at all. In practice, raster + a sufficiently large model works well enough that the field has mostly stopped exploring alternatives.
+
+<Admonition type="important">
+Sampling temperature is one of the most under-tuned parameters in this architecture. The conventional default of `1.0` (sample directly from the trained distribution) is rarely what you want for image generation — outputs are often too noisy. `0.7` to `0.9` typically produces visibly cleaner results. Going below `0.5` makes the model overly deterministic and outputs become repetitive. Tune this against your validation FID scores, not against the loss.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Train the demo transformer on synthetic sequences and sample">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/transformer_image_demo.py" label="transformer_image_demo.py — 5-epoch demo" />
+
+<CodeBlock lang="bash">
+```bash
+python transformer_image_demo.py
+```
+</CodeBlock>
+
+Output: per-epoch cross-entropy loss (will stay near `ln(64) ≈ 4.16` because the training data is random — there's nothing to learn) and four sampled token sequences of length 49.
+
+**Reflection**
+
+1. The training loss stays near `ln(64) ≈ 4.16` and the sampled sequences look indistinguishable from random integers. Why? What would change if you used real VQ-GAN tokens from an image dataset?
+2. The model has ~400k parameters for a vocabulary of 64 and a sequence length of 49. How does this scale when you move to VQ-GAN's typical `K = 1024` codebook and `S = 256` sequence length?
+3. The autoregressive `generate()` method is fundamentally serial — each token requires a forward pass that depends on all previous tokens. What does this mean for sampling speed compared to a single-pass diffusion model?
+4. The causal mask is a static lower-triangular matrix. What would happen if you accidentally swapped `triu` for `tril` in the mask construction?
+
+<Dropdown summary="Discussion">
+
+1. Random integers have no structure to learn — the entropy of the next token given the previous ones is the full `ln(64) ≈ 4.16` nats. With real VQ-GAN tokens from a structured dataset (cats, landscapes, fabric patterns), the per-position entropy drops drastically because the joint distribution has learnable structure. Real ImageGPT/Taming-Transformers training losses settle around `1-2` nats per token.
+
+2. The transformer's parameter count scales roughly as `vocab_size × embed_dim + layers × embed_dim²`. Going from `(64, 128)` to `(1024, 768)` is roughly a 70× increase in embedding parameters alone, plus the much-larger sequence length blows up the attention cost which is quadratic in sequence length. Real Taming Transformers used 300M+ parameter transformers.
+
+3. Slow. Generating a 256-token image requires 256 sequential forward passes, each of which has to attend over the growing prefix. Diffusion models with 50 steps require 50 forward passes total. This is why MaskGIT [4] and parallel-decoding variants like Muse exist — they cut the number of sequential steps from `seq_len` down to ~`16-32`.
+
+4. `tril` produces an upper-triangular mask: position `i` would be allowed to attend to *future* positions but blocked from past positions. The model would memorise the training data perfectly (it can just look at the right answer) and produce garbage at inference time (it can't look at the right answer because it doesn't have the future tokens yet).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Sampling temperature and model size">
+
+Open `transformer_image_demo.py` and try each change.
+
+**Goal 1 — Sampling temperature.** In `generate()`, try `temperature ∈ {0.5, 1.0, 1.5}`. With the synthetic-data setup you won't see qualitative differences in the sampled integers (they were random anyway), but you'll see the relative entropy of the sampled distributions change measurably.
+
+**Goal 2 — Model depth and width.** Try `NUM_LAYERS ∈ {2, 4, 8}` and `EMBED_DIM ∈ {64, 128, 256}`. Larger models train longer per epoch; track wall-clock time per epoch. Note how parameter count and training time scale.
+
+**Goal 3 — Sequence length.** Change `SEQ_LEN ∈ {16, 49, 100, 200}` and observe both wall-clock time per epoch (should scale roughly quadratically because of attention) and per-sample generation time (should scale linearly because of sequential sampling).
+
+<Dropdown summary="What to expect — temperature">
+With temperature `0.5`, the model's already-uniform distribution gets sharpened toward whichever token had the most weight; samples become repetitive. With temperature `1.5`, the distribution gets flattened further toward true uniform; you'd see no visible difference here since the trained model has nothing useful to share. In real text/image generation the sweet spot is usually `0.7-0.9`.
+</Dropdown>
+
+<Dropdown summary="What to expect — model size">
+Doubling `NUM_LAYERS` roughly doubles per-epoch time. Doubling `EMBED_DIM` roughly *quadruples* per-epoch time (most of the cost is in the `4*EMBED_DIM` MLP layers). Bigger models can in principle fit more complex distributions, but with synthetic data you'll see no quality improvement from scale.
+</Dropdown>
+
+<Dropdown summary="What to expect — sequence length">
+Per-epoch training time scales roughly as `O(seq_len²)` because each attention layer's cost is `O(seq_len² × embed_dim)`. Per-sample generation time scales as `O(seq_len)` forward passes, each of which costs `O(seq_len² × embed_dim)` — so total generation is `O(seq_len³)`. This cubic cost is why long-sequence image generation (high-res `64 × 64` token grids = 4,096 tokens) is genuinely expensive without parallel decoding tricks.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement causal self-attention from scratch with the masking trick">
+
+Re-implement `CausalSelfAttention` without using `nn.MultiheadAttention`, using just `nn.Linear` projections and softmax. This is the canonical "build a transformer from scratch" exercise.
+
+<CodeBlock lang="python" file="causal_attention_starter.py">
+```python
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class CausalSelfAttention(nn.Module):
+    def __init__(self, embed_dim=128, num_heads=4, seq_len=49):
+        super().__init__()
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+
+        # TODO: q, k, v projections (each Linear(embed_dim, embed_dim))
+        # TODO: output projection Linear(embed_dim, embed_dim)
+
+        # TODO: causal mask buffer (lower-triangular, True where blocked)
+
+    def forward(self, x):
+        b, s, d = x.shape
+        # TODO: project x to q, k, v
+        # TODO: reshape each to (b, num_heads, s, head_dim)
+        # TODO: compute attention scores: (q @ k.transpose(-2, -1)) / sqrt(head_dim)
+        # TODO: apply causal mask: scores.masked_fill_(mask[:s, :s], float('-inf'))
+        # TODO: softmax over last dim
+        # TODO: out = attn @ v, reshape to (b, s, d)
+        # TODO: apply output projection
+        pass
+```
+</CodeBlock>
+
+<Dropdown summary="Complete solution">
+
+```python
+class CausalSelfAttention(nn.Module):
+    def __init__(self, embed_dim=128, num_heads=4, seq_len=49):
+        super().__init__()
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+
+        self.qkv = nn.Linear(embed_dim, 3 * embed_dim)
+        self.proj = nn.Linear(embed_dim, embed_dim)
+
+        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+        self.register_buffer("causal_mask", mask)
+
+    def forward(self, x):
+        b, s, d = x.shape
+        qkv = self.qkv(x).reshape(b, s, 3, self.num_heads, self.head_dim)
+        q, k, v = qkv.unbind(dim=2)
+        # (b, h, s, dh)
+        q, k, v = [t.transpose(1, 2) for t in (q, k, v)]
+
+        scores = (q @ k.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        scores = scores.masked_fill(self.causal_mask[:s, :s], float("-inf"))
+        attn = F.softmax(scores, dim=-1)
+
+        out = attn @ v                       # (b, h, s, dh)
+        out = out.transpose(1, 2).reshape(b, s, d)
+        return self.proj(out)
+```
+
+</Dropdown>
+
+**Make it your own**
+
+Two extensions worth trying:
+
+1. **Sinusoidal positional encodings** instead of learned position embeddings. Drop-in replacement that doesn't require any extra trainable parameters and scales to longer sequences without retraining the position embeddings.
+2. **Top-k sampling** in the `generate()` method: instead of sampling from the full softmax distribution, restrict to the top-k highest-probability tokens. Reduces tail-noise dramatically at the cost of slight diversity loss; standard practice in text generation.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+The Taming Transformers architecture is a two-stage generative pipeline: a VQ-GAN tokeniser ([Lesson 12.4.2](/lessons/12.4.2)) compresses an image into a sequence of integer codebook indices, then an autoregressive transformer learns the joint distribution over those sequences and samples new ones left-to-right via the same next-token-prediction mechanism that powers language models. Causal self-attention with a lower-triangular mask is what enforces the autoregressive constraint — each position can attend to past positions but not future ones, so the model can be trained in parallel but sample sequentially. The architectural template propagated through DALL-E 1, Parti, Muse, and many descendants; the discrete-tokenizer-plus-transformer pattern remains one of the dominant approaches to high-quality image generation alongside diffusion models, with the trade-off being slower sampling (sequential by sequence length) in exchange for cleaner mode coverage and easier conditioning.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting to mask future positions in causal self-attention. Without the mask, the model "cheats" during training by looking at the answer and produces garbage at inference time.
+- Confusing the tokeniser's vocab size with the transformer's vocab size — they must match exactly. A 1024-entry VQ-GAN paired with a 512-vocab transformer can't sample legal tokens.
+- Sampling with `temperature = 1.0` and complaining about noisy outputs. The sweet spot for image-token transformers is usually `0.7-0.9`.
+- Naively scaling to longer sequences. Attention is `O(N²)` in sequence length; doubling the sequence quadruples the compute. Past 1024-2048 tokens you need sparse-attention or parallel-decoding variants.
+- Training the transformer and the VQ-GAN jointly. They can be trained jointly in principle but stability is poor; the canonical recipe is sequential: train the VQ-GAN first to convergence, then freeze it and train the transformer.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Esser, P., Rombach, R. &amp; Ommer, B. (2021). Taming Transformers for High-Resolution Image Synthesis. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/2012.09841" target="_blank" rel="noopener">arxiv:2012.09841</a></li>
+    <li><span class="tag">[2]</span> Ramesh, A., Pavlov, M., Goh, G., Gray, S., Voss, C., Radford, A., Chen, M. &amp; Sutskever, I. (2021). Zero-Shot Text-to-Image Generation (DALL-E 1). *ICML*. <a href="https://arxiv.org/abs/2102.12092" target="_blank" rel="noopener">arxiv:2102.12092</a></li>
+    <li><span class="tag">[3]</span> Yu, J., Xu, Y., Koh, J. Y. et al. (2022). Scaling Autoregressive Models for Content-Rich Text-to-Image Generation (Parti). *arXiv preprint*. <a href="https://arxiv.org/abs/2206.10789" target="_blank" rel="noopener">arxiv:2206.10789</a></li>
+    <li><span class="tag">[4]</span> Chang, H., Zhang, H., Jiang, L., Liu, C. &amp; Freeman, W. T. (2022). MaskGIT: Masked Generative Image Transformer. *CVPR*. <a href="https://arxiv.org/abs/2202.04200" target="_blank" rel="noopener">arxiv:2202.04200</a></li>
+    <li><span class="tag">[5]</span> Chen, M., Radford, A., Child, R., Wu, J., Jun, H., Luan, D. &amp; Sutskever, I. (2020). Generative Pretraining from Pixels (Image GPT). *ICML*. <a href="https://cdn.openai.com/papers/Generative_Pretraining_from_Pixels_V2.pdf" target="_blank" rel="noopener">Image GPT paper</a></li>
+    <li><span class="tag">[6]</span> Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł. &amp; Polosukhin, I. (2017). Attention Is All You Need. *NeurIPS*. <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arxiv:1706.03762</a></li>
+    <li><span class="tag">[7]</span> Brown, T. B. et al. (2020). Language Models are Few-Shot Learners (GPT-3). *NeurIPS*. <a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">arxiv:2005.14165</a></li>
+    <li><span class="tag">[8]</span> Chang, H., Zhang, H., Barber, J. et al. (2023). Muse: Text-To-Image Generation via Masked Generative Transformers. *ICML*. <a href="https://arxiv.org/abs/2301.00704" target="_blank" rel="noopener">arxiv:2301.00704</a></li>
+  </ol>
+</section>

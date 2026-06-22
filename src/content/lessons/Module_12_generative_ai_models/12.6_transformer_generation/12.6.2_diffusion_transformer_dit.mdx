@@ -1,0 +1,303 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Diffusion Transformer (DiT)"
+objective: "Replace the U-Net in a diffusion model with a transformer that operates on image patches; condition on the diffusion timestep through adaptive layer norm. This is the architecture behind Sora, Stable Diffusion 3, and PixArt-α."
+framework: "conceptual"
+duration: "30–40 min"
+level: "advanced"
+load: "3 core concepts"
+prereqs: "Lessons 12.3.1 (DDPM), 12.6.1 (Taming Transformers); ViT or transformer familiarity"
+prev:
+  slug: "12.6.1"
+  title: "Taming Transformers"
+next: null
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+Every diffusion model in [Lesson 12.3.1](/lessons/12.3.1) and the variants that followed (Stable Diffusion, ControlNet, DreamBooth) shares one architectural component: a U-Net for noise prediction. The choice of U-Net was inherited from medical-image segmentation [1] where its encoder/decoder/skip-connection structure handled pixel-level prediction naturally, and it stuck because it worked well enough that no one had a compelling reason to swap it out.
+
+Peebles and Xie's 2022 paper "Scalable Diffusion Models with Transformers" [2] gave the field that compelling reason. They replaced the U-Net entirely with a Vision Transformer (ViT) [3] and showed it scaled cleanly to larger models — a regime where U-Nets had been hitting diminishing returns. The architecture is called **DiT** (Diffusion Transformer). Within two years, every major commercial text-to-image and text-to-video system had migrated: Stable Diffusion 3 [4], Sora [5], PixArt-α [6], FLUX.1, Lumina-T2X. U-Net-based diffusion remains popular for smaller models and consumer GPUs, but the high-end research has decisively moved to transformers.
+
+The architectural innovation that makes DiT work is **adaptive layer norm** (adaLN-zero): the diffusion timestep doesn't get concatenated to the input or injected via cross-attention — it modulates the LayerNorm scale and bias at every transformer block. This zero-initialised gating is essentially the same trick as ControlNet's zero convolutions from [Lesson 12.3.2](/lessons/12.3.2): start with no conditioning influence and let training discover useful modulation patterns.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Explain why a U-Net's inductive bias became a limit on diffusion scaling and how transformers escape it.</li>
+  <li>Describe the patchify-and-process pipeline: 2D images → patch tokens → transformer → noise predictions.</li>
+  <li>Implement adaptive LayerNorm conditioned on the diffusion timestep and explain the zero-initialisation trick.</li>
+  <li>Predict the trade-off between U-Net diffusion and DiT in terms of compute, scaling behaviour, and downstream extensibility.</li>
+</ol>
+
+## Quick start — instantiate a tiny DiT block and forward-run <a id="quick-start"></a>
+
+The full demo defines `TinyDiT` — a 4-layer DiT with 256-dim embeddings, ~3.2M parameters — and runs one forward pass on a synthetic 32×32 noisy image. No training; this is a structural walkthrough.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/dit_block_demo.py" label="dit_block_demo.py — minimal DiT architecture demo" />
+
+<CodeBlock lang="bash">
+```bash
+pip install torch
+python dit_block_demo.py
+```
+</CodeBlock>
+
+Output: parameter count, input/output shapes confirming the model accepts `(batch, 3, 32, 32)` images plus a `(batch,)` timestep and produces noise predictions of the same shape.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Why move from U-Net to Transformer
+
+U-Nets have strong inductive biases tuned for image structure: convolutional locality (a pixel's neighbours matter most), translation equivariance (a feature looks the same wherever it appears), and hierarchical pooling (low-frequency information at coarse resolution, high-frequency at fine). These priors are *useful* — they make U-Nets data-efficient and effective at moderate scale.
+
+They are also *limiting*. U-Nets carry a fixed amount of representational capacity per resolution level. Doubling the model size means doubling the number of channels at each level, which scales the number of parameters but not necessarily the *representational diversity* — a wider U-Net is mostly a U-Net with more filters of the same character at each scale. The 2017–2020 generation of U-Net diffusion papers showed measurable but slowing returns from scale.
+
+Transformers have weaker spatial inductive bias and have shown empirically much better scaling behaviour — quality keeps improving with parameter count over many orders of magnitude. ViTs are the canonical proof for image classification [3]; DiT is the proof for image generation. Peebles and Xie's central result: holding compute roughly constant, a sequence of DiT variants from `DiT-S` (33M params) to `DiT-XL/2` (675M params) shows monotonic improvement in FID, with no sign of plateauing.
+
+| Aspect | U-Net diffusion | DiT diffusion |
+|---|---|---|
+| Inductive bias | Strong (convolutional locality, hierarchy) | Weak (global attention) |
+| Small-model performance | Excellent | Competitive |
+| Scaling to 1B+ params | Diminishing returns | Continues to improve |
+| Conditioning | Cross-attention adds complexity | adaLN-zero is structurally simpler |
+| Production examples | Stable Diffusion 1.5, 2.x; SDXL | Sora, SD 3, PixArt-α, FLUX.1 |
+
+The trade-off is real: at small scale on small datasets, U-Nets typically still win on convergence speed. At the scales where commercial image and video models operate, transformers have decisively pulled ahead.
+
+<Admonition type="dyk" title="History — DiT was published in 2022 but ignored for 18 months">
+The DiT paper appeared at ICCV 2023 (originally on arXiv in December 2022) and was largely overshadowed at first by the explosion of U-Net diffusion work around Stable Diffusion. The architectural community took notice in 2024 when OpenAI's Sora was revealed to be a DiT, and within months Stable Diffusion 3, PixArt-α, FLUX.1, and Lumina-T2X all converged on transformer backbones. Today the U-Net-vs-transformer debate in diffusion is effectively settled for production-scale models — transformers won.
+</Admonition>
+
+### Concept 2 — Patchify, then transform
+
+A ViT — and by extension a DiT — operates on *patches*, not pixels. The image is divided into a grid of fixed-size patches (typically `2×2`, `4×4`, or `8×8` pixels) and each patch is linearly projected to an embedding vector. A `32×32` image with `4×4` patches becomes 64 token-like embeddings; a `256×256` image with `8×8` patches becomes 1,024.
+
+<CodeBlock lang="python" file="patch embedding">
+```python
+class PatchEmbedding(nn.Module):
+    def __init__(self, in_channels=3, embed_dim=256, patch_size=4):
+        super().__init__()
+        # A 2D conv with kernel=stride=patch_size is patchifying + linear projection in one op
+        self.proj = nn.Conv2d(in_channels, embed_dim,
+                              kernel_size=patch_size, stride=patch_size)
+
+    def forward(self, x):
+        x = self.proj(x)                            # (B, embed_dim, H/P, W/P)
+        return x.flatten(2).transpose(1, 2)         # (B, num_patches, embed_dim)
+```
+</CodeBlock>
+
+The conv-with-stride-equal-to-kernel trick is elegant — it splits the image into non-overlapping patches and projects each one to the embedding space in a single operation. Add learned position embeddings (one vector per patch position), feed the resulting sequence through a stack of transformer blocks, project the output back to patch-shaped noise predictions, and reassemble into an image-shaped tensor for the standard diffusion loss.
+
+The transformer blocks themselves are conventional ViT blocks: multi-head self-attention, MLP, residual connections, LayerNorm. The interesting modification is in how the diffusion timestep gets injected — that's Concept 3.
+
+### Concept 3 — Adaptive LayerNorm: timestep conditioning that scales
+
+DDPM's U-Net handles timestep conditioning by computing a timestep embedding once and injecting it (typically as an addition to the bottleneck activations) at every resolution level. This works but is ad hoc. DiT introduces a cleaner mechanism: **adaptive Layer Norm (adaLN)**, conditioned on the timestep.
+
+Standard LayerNorm normalises each token to zero mean and unit variance, then applies a *fixed* learned scale and shift. Adaptive LayerNorm replaces these fixed learnable parameters with *time-dependent* values, predicted by a small MLP that maps the timestep embedding to scale and shift vectors:
+
+```
+adaLN(x, t) = LayerNorm(x) * (1 + scale(t)) + shift(t)
+```
+
+Each transformer block uses adaLN twice (before the attention and before the MLP) plus learned timestep-dependent *gates* that scale the contributions of each residual branch:
+
+<CodeBlock lang="python" file="DiT block with adaLN">
+```python
+class DiTBlock(nn.Module):
+    def forward(self, x, c):
+        shift1, scale1, gate1, shift2, scale2, gate2 = self.modulation(c)
+
+        # Self-attention path
+        h = self.norm1(x) * (1 + scale1[:, None]) + shift1[:, None]
+        x = x + gate1[:, None] * self.attn(h, h, h)[0]
+
+        # MLP path
+        h = self.norm2(x) * (1 + scale2[:, None]) + shift2[:, None]
+        x = x + gate2[:, None] * self.mlp(h)
+        return x
+```
+</CodeBlock>
+
+Six values per block per sample, predicted by a single small MLP applied to the timestep embedding. The conditioning influence is *multiplicative on every token at every block*, which makes the model's behaviour vary smoothly and aggressively with timestep — early-noise behaviour and late-cleanup behaviour can be very different even though they share the same weights.
+
+The **zero-initialisation** trick: the modulation MLP's output layer is initialised to all zeros. So at training step 0, `scale = 0` (the `1 + scale` becomes identity), `shift = 0` (no offset), and `gate = 0` (the residual branch contributes nothing). The model starts as if there were no transformer blocks at all — just the patch embedding → output projection identity. From there, gradient descent discovers useful modulations and gates without ever destabilising the model.
+
+This is structurally the same idea as ControlNet's zero convolutions ([Lesson 12.3.2](/lessons/12.3.2)): zero-init the new conditioning mechanism so the model's day-one behaviour is preserved by construction, then let training discover the conditioning patterns.
+
+<Admonition type="important">
+The choice of patch size matters enormously. Smaller patches (`2×2`) give the model finer spatial detail but quadratically more tokens to attend over; larger patches (`8×8`) are cheap but blurrier. DiT-XL/2 (the largest model in the original paper) uses patch size 2 on `256×256` images — that's `128×128 = 16,384 tokens` per image, the maximum the architecture can handle on contemporary GPUs. Sora reportedly extends this further by patchifying in 3D (space + time) for video.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Forward-run TinyDiT and verify the patch pipeline">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/dit_block_demo.py" label="dit_block_demo.py — TinyDiT with adaLN" />
+
+<CodeBlock lang="bash">
+```bash
+python dit_block_demo.py
+```
+</CodeBlock>
+
+Output: parameter count (~3.2M) and shape verification. Input is `(4, 3, 32, 32)` noisy images plus `(4,)` timesteps; output is `(4, 3, 32, 32)` noise predictions ready for the standard diffusion MSE loss.
+
+**Reflection**
+
+1. The script does *not* train the model — it just instantiates and forward-runs. What would the next step be to make this an actual diffusion model?
+2. The model has 64 patches per image (8×8 grid at patch size 4). What's the attention cost per block for this model, and how would it scale at patch size 2 (256 patches)?
+3. Where in the architecture does the timestep `t` actually enter? Trace it from input to output.
+4. The output is reshaped back to image dimensions via several `.reshape` and `.permute` calls. What would happen if you got one of those operations wrong?
+
+<Dropdown summary="Discussion">
+
+1. Wrap the model in a standard DDPM training loop ([Lesson 12.3.1](/lessons/12.3.1)): sample clean images from a dataset, sample random timesteps, add the closed-form forward-process noise, feed `(x_t, t)` into TinyDiT, compute MSE between predicted and actual noise, backprop. Sampling at inference time would be the same DDIM iterative procedure.
+
+2. Attention is `O(n²)` in sequence length per block. At 64 patches per image, that's `64² = 4096` attention entries per block per head; at 256 patches it would be `65,536` — a 16× increase per block. This quadratic scaling is the main reason DiT's compute cost grows fast with resolution and why the larger models (DiT-XL/2 on `256×256` images, Sora's 3D patches for video) need specialised hardware to train.
+
+3. The timestep is embedded sinusoidally, passed through a 2-layer MLP, then *fed only into the modulation MLPs* of each DiT block — it never enters the attention or MLP paths directly. The modulation MLPs produce scale/shift/gate values that condition every LayerNorm and gate every residual branch.
+
+4. Almost certainly tensor shape errors at the final reshape. The patch grid has to be unrolled in exactly the order it was rolled up — get the dimension permutation wrong and the spatial structure gets scrambled, producing recognisably-image-shaped but spatially-mangled output.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Patch size, depth, head count">
+
+Edit constants at the top of `dit_block_demo.py` and re-run.
+
+**Goal 1 — Patch size.** Try `PATCH_SIZE ∈ {2, 4, 8}`. Smaller patches give more tokens (`32 / 2 = 16` per side → 256 tokens; `32 / 8 = 4` per side → 16 tokens), trading detail for compute.
+
+**Goal 2 — Depth.** Try `NUM_LAYERS ∈ {2, 4, 8, 12}`. Each layer adds one self-attention + MLP pair; parameter count roughly scales linearly with depth.
+
+**Goal 3 — Heads.** Try `NUM_HEADS ∈ {2, 4, 8, 16}`. `EMBED_DIM / NUM_HEADS` must be a positive integer. More heads = finer-grained attention but each head sees fewer dimensions of context.
+
+<Dropdown summary="What to expect — patch size">
+At `PATCH_SIZE = 2` you have 256 tokens per image; attention cost is 16× higher per block than at `PATCH_SIZE = 4`. At `PATCH_SIZE = 8` you have only 16 tokens; the model is much faster but can't represent fine spatial detail. For a `32×32` toy demo, `4` is the right balance; for production-resolution `256×256` images, `2` is the choice but only on serious hardware.
+</Dropdown>
+
+<Dropdown summary="What to expect — depth">
+Parameter count and FLOPs both scale linearly with depth. At constant compute budget, deep-and-narrow tends to outperform shallow-and-wide for transformers (this is a general transformer result, not specific to DiT). For real training, `NUM_LAYERS = 12` is a reasonable starting point matching DiT-S.
+</Dropdown>
+
+<Dropdown summary="What to expect — heads">
+The number of heads affects the model's capacity to attend to different aspects of the input in parallel. Too few (2) and the model is constrained; too many (16 for embed_dim=256 means 16-dim per head) and each head has too little capacity. Standard practice is 8-16 heads for embed_dims of 256-1024.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement the AdaLNModulation module from scratch">
+
+The `AdaLNModulation` module is the structural innovation of DiT. Implement it yourself:
+
+<CodeBlock lang="python" file="modulation_starter.py">
+```python
+import torch
+import torch.nn as nn
+
+EMBED_DIM = 256
+TIME_EMBED_DIM = 256
+
+class AdaLNModulation(nn.Module):
+    """Predict six values from the conditioning vector:
+    (shift, scale, gate) for the attention branch +
+    (shift, scale, gate) for the MLP branch.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # TODO: SiLU + Linear(TIME_EMBED_DIM, 6 * EMBED_DIM)
+        pass
+
+    def forward(self, c):
+        # TODO: pass c through the MLP
+        # TODO: chunk the (B, 6*EMBED_DIM) output into 6 tensors of (B, EMBED_DIM)
+        # TODO: return the 6 tensors
+        pass
+
+
+# Quick test
+if __name__ == "__main__":
+    mod = AdaLNModulation()
+    c = torch.randn(4, TIME_EMBED_DIM)
+    out = mod(c)
+    assert len(out) == 6, f"Expected 6 outputs, got {len(out)}"
+    for t in out:
+        assert t.shape == (4, EMBED_DIM)
+    print("AdaLNModulation test passed")
+```
+</CodeBlock>
+
+<Dropdown summary="Hint — the chunk operation">
+After projecting `c` from `TIME_EMBED_DIM` to `6 * EMBED_DIM`, use `out.chunk(6, dim=-1)` to split the last dimension into 6 equal-sized tensors. This is the cleanest way to produce shift/scale/gate for both attention and MLP from a single linear projection.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+```python
+class AdaLNModulation(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(TIME_EMBED_DIM, 6 * EMBED_DIM),
+        )
+
+    def forward(self, c):
+        params = self.mlp(c)
+        return params.chunk(6, dim=-1)
+```
+
+To complete DiT-style zero-initialisation, also do this once after construction:
+
+```python
+nn.init.zeros_(mod.mlp[-1].weight)
+nn.init.zeros_(mod.mlp[-1].bias)
+```
+
+This makes the module output all zeros at training start — exactly the structural property that gives DiT its training stability.
+
+</Dropdown>
+
+**Make it your own**
+
+The DiT paper compares four variants for how to inject conditioning: (1) in-context (concatenate conditioning to input), (2) cross-attention, (3) adaLN (described here), (4) adaLN-zero (same with zero-init). They find adaLN-zero consistently wins. Read Section 3 of the paper [2] for the ablation; try implementing variant 1 or 2 in your DiTBlock and see whether your training behaviour matches their reported observations.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+DiT replaces the U-Net in a diffusion model with a Vision Transformer that operates on flattened image patches. The structural innovation that makes this work cleanly is adaptive LayerNorm with zero-initialisation: the diffusion timestep doesn't enter the attention or MLP paths directly, but instead modulates the scale, shift, and gate of every transformer block's normalisation, with the modulation MLP's output initialised to zero so the model starts in a known-stable state. The trade-off relative to U-Net diffusion is well-understood: U-Nets retain an edge at small scale on small datasets, but transformers scale much more cleanly to large model sizes. Every commercial high-end text-to-image and text-to-video system in 2024 — Sora, Stable Diffusion 3, PixArt-α, FLUX.1, Lumina-T2X — is a DiT variant, and the architectural community now treats transformer-based diffusion as the default for production-scale work.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting zero-initialisation on the modulation MLP — training is much less stable; you'll see loss spikes early.
+- Patch size mismatched to the image resolution. `8×8` patches on a `64×64` image gives only 64 tokens — too few for the model to express detail; `2×2` patches on `512×512` gives 65,536 tokens — too many for any commonly-available GPU.
+- Treating adaLN as a drop-in replacement for cross-attention in any transformer. It works specifically because the diffusion timestep is a *single global scalar per sample* — cleanly representable as a vector that modulates per-token computations. Conditioning on a *sequence* (e.g. a text prompt) usually needs cross-attention.
+- Using the same model weights for both score-based and noise-prediction diffusion variants without re-parameterising. DiT was originally designed for noise prediction (DDPM-style); switching to score prediction requires a small head modification.
+- Mixing up DiT (Diffusion Transformer, 2022) with iGPT (Image GPT, 2020). iGPT generates pixels autoregressively token-by-token; DiT generates images by iteratively denoising with a transformer-as-noise-predictor. Different paradigms entirely.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ronneberger, O., Fischer, P. &amp; Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *MICCAI*. <a href="https://arxiv.org/abs/1505.04597" target="_blank" rel="noopener">arxiv:1505.04597</a></li>
+    <li><span class="tag">[2]</span> Peebles, W. &amp; Xie, S. (2023). Scalable Diffusion Models with Transformers (DiT). *IEEE/CVF International Conference on Computer Vision (ICCV)*. <a href="https://arxiv.org/abs/2212.09748" target="_blank" rel="noopener">arxiv:2212.09748</a></li>
+    <li><span class="tag">[3]</span> Dosovitskiy, A., Beyer, L., Kolesnikov, A. et al. (2021). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT). *ICLR*. <a href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener">arxiv:2010.11929</a></li>
+    <li><span class="tag">[4]</span> Esser, P., Kulal, S., Blattmann, A. et al. (2024). Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (Stable Diffusion 3). *arXiv preprint*. <a href="https://arxiv.org/abs/2403.03206" target="_blank" rel="noopener">arxiv:2403.03206</a></li>
+    <li><span class="tag">[5]</span> OpenAI. (2024). Video Generation Models as World Simulators (Sora technical report). <a href="https://openai.com/research/video-generation-models-as-world-simulators" target="_blank" rel="noopener">openai.com/research/video-generation-models-as-world-simulators</a></li>
+    <li><span class="tag">[6]</span> Chen, J., Yu, J., Ge, C. et al. (2024). PixArt-α: Fast Training of Diffusion Transformer for Photorealistic Text-to-Image Synthesis. *ICLR*. <a href="https://arxiv.org/abs/2310.00426" target="_blank" rel="noopener">arxiv:2310.00426</a></li>
+    <li><span class="tag">[7]</span> Ba, J. L., Kiros, J. R. &amp; Hinton, G. E. (2016). Layer Normalization. *arXiv preprint*. <a href="https://arxiv.org/abs/1607.06450" target="_blank" rel="noopener">arxiv:1607.06450</a></li>
+    <li><span class="tag">[8]</span> Ho, J., Jain, A. &amp; Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. *NeurIPS*. <a href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener">arxiv:2006.11239</a></li>
+  </ol>
+</section>

@@ -1,0 +1,309 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Neural Style Transfer"
+objective: "Recreate the content of one image in the artistic style of another by minimising two losses computed from a frozen VGG-19's intermediate feature maps: content from a deep layer, style from Gram matrices across multiple layers."
+framework: "conceptual"
+duration: "30–40 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "PyTorch, basic CNN intuition (Module 8); ImageNet-pretrained VGG-19"
+prev:
+  slug: "12.3.2"
+  title: "ControlNet Guided Generation"
+next:
+  slug: "12.4.2"
+  title: "VQ-VAE & VQ-GAN"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview <a id="overview"></a>
+
+In 2015, Gatys, Ecker and Bethge [1] published a result that helped popularise generative AI long before GANs, VAEs or diffusion models reached the broader public: feed a photograph and a painting through a frozen pre-trained classifier, optimise the photograph's pixels to match the painting's *style* while preserving its own *content*, and out comes the photograph reimagined as a painting. The technique requires no special training, no dataset, no generative model — just an off-the-shelf VGG-19 [2] and gradient descent on pixel values.
+
+The trick rests on a structural observation about convolutional networks. As an image passes through a deep CNN, shallow layers capture local textures and edge statistics, while deep layers capture semantic content (what objects are present and where). The Gatys algorithm uses one deep layer's feature map as the *content representation* and the Gram matrices of several shallow layers as the *style representation*. Compose a loss from both, optimise the input pixels, and the model finds an image that simultaneously matches one image's content and another's style.
+
+This is the foundation of nearly every "art filter" app you've used since 2016 (Prisma, DeepArt, Lensa). The optimisation-based version this lesson walks through is slow (~30 seconds per image on GPU); the production apps use the feed-forward variant Johnson et al. introduced in 2016 [3], trained once per style for real-time inference.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Explain how a CNN's depth separates content from style — what shallow layers encode vs deep layers.</li>
+  <li>Compute a Gram matrix and explain why it captures style independently of spatial layout.</li>
+  <li>Build the optimisation-based NST loss (content + style + optional total-variation) and run it on a photograph + painting pair.</li>
+  <li>Predict the trade-off between optimisation-based NST (per-image, slow, flexible) and fast feed-forward NST (per-style, fast, fixed).</li>
+</ol>
+
+## Quick start — run NST on any photo and painting <a id="quick-start"></a>
+
+The full implementation is in `neural_style_transfer.py`. It uses VGG-19 (auto-downloaded by torchvision the first time), L-BFGS as the optimiser, and a content image as the starting point.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/neural_style_transfer.py" label="neural_style_transfer.py — optimisation-based NST (Gatys et al.)" />
+
+<CodeBlock lang="bash">
+```bash
+pip install torch torchvision pillow
+python neural_style_transfer.py \
+    --content my_photo.jpg \
+    --style starry_night.jpg \
+    --output styled.jpg \
+    --steps 300
+```
+</CodeBlock>
+
+300 L-BFGS steps takes ~30 seconds on a GPU, ~3–5 minutes on CPU. The output is the content image re-rendered in the style of the painting.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Content and style live at different depths
+
+A trained image classifier has to recognise *what* is in an image regardless of *how* it's painted. To do this, its early layers learn local features (edges, colour blobs, simple textures) that don't depend on the object's identity, while its deep layers learn high-level abstractions (face vs car vs cat) that don't depend on local pixel statistics. Gatys' insight was that this depth-separation between "how it looks" and "what it is" is exactly the dichotomy artistic style transfer needs.
+
+The content representation: the activation map at one deep convolutional layer (the original paper uses `conv4_2` of VGG-19). Two images that depict the same scene have similar feature maps at this depth, even if their pixel-level details differ. So *content loss* is just MSE between the target image's deep features and the content image's deep features.
+
+The style representation: the Gram matrices (Concept 2) of feature maps at several shallow and middle layers (`conv1_1` through `conv5_1`). These capture local texture statistics across spatial scales. *Style loss* is MSE between the target's Gram matrices and the style image's Gram matrices, summed across layers.
+
+The total loss to minimise:
+
+```
+L = α · L_content + β · L_style + γ · L_tv
+                       (optional regulariser)
+```
+
+`α` and `β` are mixing weights (typically `α = 1`, `β = 10⁶` because Gram-matrix values are much smaller than feature-map values). `γ` (typically `1e-4`) controls the optional total-variation regulariser that smooths high-frequency noise.
+
+<Admonition type="dyk" title="History — published as a single 9-page paper that changed an industry">
+The original Gatys, Ecker, Bethge paper [1] was 9 pages including references. It introduced the content/style decomposition, the Gram-matrix-as-style formulation, and the optimisation procedure all in one document. Two years later, the Prisma app had been downloaded over 70 million times. The paper has been cited over 11,000 times as of 2024. A reminder that compact, well-aimed research can have outsized impact when it addresses a real artistic need.
+</Admonition>
+
+### Concept 2 — Gram matrices: style as feature co-activation
+
+The Gram matrix is what makes the style representation work. Given a feature map `F` of shape `(C, H × W)` — `C` channels flattened over spatial positions — the Gram matrix is `G = F · Fᵀ` of shape `(C, C)`. Each entry `G[i, j]` is the inner product of channel `i`'s activations with channel `j`'s activations across all spatial positions.
+
+What this captures: which channels tend to fire *together*. In a CNN trained on natural images, individual channels respond to specific visual features (a particular edge orientation, a particular colour, a particular texture). The Gram matrix captures the *correlations* between these features — which orientations co-occur with which colours, which textures appear alongside which others.
+
+Crucially, the Gram matrix is *spatially invariant*. By summing over all `H × W` positions, it discards information about *where* a feature appears and keeps only *how much of each pairwise co-activation* the image contains. This is why two images with the same style but different content have similar Gram matrices: their local texture statistics are similar even though their objects are different.
+
+<CodeBlock lang="python" file="gram matrix">
+```python
+def gram_matrix(features: torch.Tensor) -> torch.Tensor:
+    """Channel-wise Gram matrix; captures feature co-activation statistics."""
+    batch, channels, h, w = features.size()
+    flat = features.view(batch * channels, h * w)
+    return (flat @ flat.t()) / (batch * channels * h * w)
+```
+</CodeBlock>
+
+The normalisation by `(batch · channels · h · w)` makes the Gram matrix scale-invariant across different image sizes — important because the style image and the target image may not have the same spatial dimensions.
+
+### Concept 3 — Optimisation in pixel space (not weight space)
+
+Here's the part that distinguishes NST from every other "deep learning generates images" technique you've seen. There is *no trained generator network*. The VGG-19 is frozen — its weights never change. What gets optimised is the *image pixels themselves*.
+
+```python
+target = content_image.clone().requires_grad_(True)
+optimizer = torch.optim.LBFGS([target], max_iter=1)
+
+for step in range(num_steps):
+    optimizer.step(lambda: compute_loss(target, ...))
+```
+
+Every gradient step updates the pixel values of `target` directly to reduce the combined content+style loss. L-BFGS is the optimiser of choice because the problem is small (one image worth of pixels, not a network's worth of weights), low-dimensional enough that second-order methods are tractable, and converges much faster than first-order methods like Adam for this specific formulation.
+
+Initialisation matters. Starting from the content image (the choice in the reference implementation above) converges fastest and produces outputs that strongly preserve content. Starting from random noise produces more abstract, "painterly" outputs that emphasise style over recognisability. Starting from the style image itself rarely produces useful results — the optimiser gets stuck in a basin near the style image.
+
+<Admonition type="important">
+The optimisation is slow because it's per-image and per-style-pair. Every new (content, style) pair requires another 300-step L-BFGS run. Johnson, Alahi and Fei-Fei's 2016 fast-NST paper [3] solved this by training a *feed-forward* network for each style: train once for hours, then style-transfer any image in a single forward pass. The trade-off is one model per style (the production app pattern); the optimisation approach in this lesson handles arbitrary (content, style) pairs but is inherently per-image-slow.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Run NST on a photograph and a famous painting">
+
+Pick a content image (any photograph — a landscape, a portrait, a city scene). Pick a style image (a painting works best — Van Gogh's *Starry Night*, Hokusai's *Great Wave*, Picasso's *Guernica*, or a Monet for impressionism). Both can be JPG or PNG.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/neural_style_transfer.py" label="neural_style_transfer.py — full pipeline" />
+
+<CodeBlock lang="bash">
+```bash
+python neural_style_transfer.py \
+    --content path/to/landscape.jpg \
+    --style   path/to/starry_night.jpg \
+    --output  landscape_starry.jpg \
+    --steps 300
+```
+</CodeBlock>
+
+The script auto-downloads VGG-19 the first time (~550 MB; cached on subsequent runs). Optimisation prints loss values every 25 steps. Output saved to the path you specified.
+
+**Reflection**
+
+1. The script optimises *the image pixels*, not network weights. How is this structurally different from every other generative technique in this module?
+2. Why is L-BFGS used here instead of Adam? Look at what L-BFGS actually does in your textbook (or PyTorch docs) and connect it to the problem structure.
+3. Try running with `--steps 50` and `--steps 1000`. Where on that range do the outputs stop improving meaningfully?
+4. The `--style-weight 1e6` default is huge. Why so large compared to the content weight of 1.0?
+
+<Dropdown summary="Discussion">
+
+1. NST has no generator — the optimisation variable *is* the image. Every other technique in this module trains a generator network whose weights map noise (or noise + condition) to images; NST treats the image as the parameters and the loss as a fixed function evaluated by a *frozen* network. This is the single biggest conceptual difference and the reason NST predates the GAN/VAE/diffusion wave despite being a "deep learning" technique.
+
+2. The problem is small (one image worth of pixel parameters), unconstrained, and well-behaved enough that L-BFGS's quasi-Newton updates (which approximate the Hessian) converge much faster per step than first-order methods like Adam. L-BFGS is impractical for training neural networks because the parameter count is too large to estimate Hessian information; for NST it's perfect.
+
+3. At 50 steps the output has clear style influence but content is still fuzzy. At 300 steps (default) you're near the typical convergence point. Past 500–1000 steps the loss continues to decrease microscopically but you stop seeing visual improvement — the optimiser is fitting details that the human eye can't distinguish.
+
+4. Gram-matrix values are products of many activations summed over spatial positions, so they're numerically much larger than the feature-map activations themselves. The MSE between Gram matrices is therefore on a different scale than the MSE between feature maps. The `1e6` weight roughly equalises the gradient magnitudes from the two losses.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Tune the content/style balance and starting point">
+
+Open `neural_style_transfer.py` and try each change in isolation, comparing outputs.
+
+**Goal 1 — Style weight sweep.** Run with `--style-weight 1e4`, `1e6`, `1e8`. Lower values preserve more of the content image; higher values let the style dominate to the point of unrecognisability.
+
+**Goal 2 — Different content layers.** The hardcoded `CONTENT_LAYERS = {"conv_4"}` uses VGG-19's 4th conv layer. Edit the script to try `conv_2` (shallower) and `conv_5` (deeper). Predict before you run: which will preserve more pixel-level fidelity, and which will preserve more semantic content?
+
+**Goal 3 — Initialisation.** In the `style_transfer()` function, change `target = content.clone()` to `target = torch.randn_like(content).clamp(0, 1)`. Now optimisation starts from random noise instead of from the content image. The output will be more "painterly" — the optimiser has more freedom to discover style-driven structure but loses content fidelity.
+
+<Dropdown summary="What to expect — style weight">
+At `1e4` the output looks like the original photograph with a faint stylistic overlay. At `1e6` (default) you get the canonical NST look — content preserved but rendered in the style. At `1e8` the content image becomes barely recognisable; the output is essentially a fresh sample in the style's texture space.
+</Dropdown>
+
+<Dropdown summary="What to expect — content layer depth">
+`conv_2`: very tight content fidelity (the output retains specific pixel-level patterns from the photograph), but less stylistic transformation. `conv_5`: looser content fidelity (the output preserves the *semantic* layout — which object is where — but lets local details be rewritten by the style), but more dramatic stylistic effect. The original Gatys paper's choice of `conv_4` is the standard compromise.
+</Dropdown>
+
+<Dropdown summary="What to expect — random initialisation">
+Slower convergence — you may need 500+ steps. The result is more abstract and dreamlike; you'll often recognise shapes and structures from the content image but they'll be rendered with significant freedom by the optimiser. This is the regime closer to "art-generated-by-AI" than "filter-applied-to-photo."
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement gram_matrix and style_loss from scratch">
+
+Two functions to write yourself. The skeleton:
+
+<CodeBlock lang="python" file="nst_starter.py">
+```python
+import torch
+import torch.nn.functional as F
+
+def gram_matrix(features: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the Gram matrix of a feature map.
+
+    TODO:
+    1. Get batch, channels, h, w from features.shape
+    2. Reshape features to (batch*channels, h*w)
+    3. Compute Gram: F @ F.T
+    4. Normalise by (batch*channels*h*w)
+    """
+    pass
+
+def style_loss(target_features: dict, style_grams: dict, layers: set) -> torch.Tensor:
+    """
+    Sum MSE between target's Gram matrices and reference style Gram matrices
+    across all style layers.
+
+    TODO:
+    1. For each layer in `layers`:
+       a. Compute target's Gram matrix from target_features[layer]
+       b. Compute MSE between that and style_grams[layer]
+    2. Return the sum
+    """
+    pass
+
+# Quick test
+if __name__ == "__main__":
+    features = torch.randn(1, 64, 32, 32)
+    g = gram_matrix(features)
+    assert g.shape == (64, 64), f"Expected (64, 64), got {g.shape}"
+    print("gram_matrix test passed")
+
+    fake_target = {"conv_1": torch.randn(1, 64, 16, 16),
+                   "conv_2": torch.randn(1, 128, 8, 8)}
+    fake_style  = {"conv_1": torch.randn(64, 64),
+                   "conv_2": torch.randn(128, 128)}
+    loss = style_loss(fake_target, fake_style, {"conv_1", "conv_2"})
+    print(f"style_loss test value: {loss.item():.4f}")
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — Gram matrix">
+The formula is `G = (F @ F.T) / N` where `F` is the flattened feature map of shape `(C, H*W)` and `N = batch * channels * h * w`. The reshape is `features.view(batch * channels, h * w)`. The matrix product uses `@` or `torch.mm`.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — style loss">
+For each layer, compute `gram_matrix(target_features[layer])` and `F.mse_loss(that_gram, style_grams[layer])`. Sum across layers.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+```python
+import torch
+import torch.nn.functional as F
+
+def gram_matrix(features: torch.Tensor) -> torch.Tensor:
+    batch, channels, h, w = features.size()
+    flat = features.view(batch * channels, h * w)
+    return (flat @ flat.t()) / (batch * channels * h * w)
+
+def style_loss(target_features: dict, style_grams: dict, layers: set) -> torch.Tensor:
+    return sum(
+        F.mse_loss(gram_matrix(target_features[k]), style_grams[k])
+        for k in layers
+    )
+```
+
+</Dropdown>
+
+**Make it your own**
+
+Add a third loss: **total-variation loss**, which penalises high-frequency noise in the output and produces smoother results. Implementation:
+
+```python
+def total_variation_loss(img: torch.Tensor) -> torch.Tensor:
+    dh = (img[:, :, 1:, :] - img[:, :, :-1, :]).pow(2).mean()
+    dw = (img[:, :, :, 1:] - img[:, :, :, :-1]).pow(2).mean()
+    return dh + dw
+
+# In the main loop:
+total = content_w * c + style_w * s + 1e-4 * total_variation_loss(target)
+```
+
+Try a few `tv_weight` values (`1e-5`, `1e-4`, `1e-3`) and observe how the output smoothness changes.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+Neural Style Transfer uses a *frozen* pre-trained CNN (VGG-19) as a fixed feature extractor, and optimises the *input image's pixels* directly to minimise a combined loss: content loss (MSE on a deep layer's feature map) plus style loss (MSE on Gram matrices summed across multiple shallow-to-middle layers). The Gram matrix captures spatially-invariant feature co-activation statistics, which is what makes it a robust style representation independent of where features appear in the image. The technique has no generator network — the image *is* the parameter — and L-BFGS is the standard optimiser because the problem is small enough for quasi-Newton methods to be efficient. The optimisation-based version is per-image and slow; Johnson et al.'s fast feed-forward NST [3] trains one network per style for real-time inference, the production-app pattern.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting `requires_grad_(True)` on the target image — gradient descent has nothing to optimise.
+- Forgetting `requires_grad_(False)` on the VGG-19 weights — you'll waste memory tracking gradients you'll never use.
+- Style weight too small (e.g. `1.0` instead of `1e6`) — output looks identical to the content image.
+- Using a different CNN than VGG-19 without recalibrating the layers — ResNet or DenseNet have different layer numbering and feature statistics, and the standard `conv_4`/`conv_1..5_1` choices won't transfer.
+- Starting optimisation from random noise expecting fast convergence — works eventually but takes ~3× longer than starting from the content image.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Gatys, L. A., Ecker, A. S. &amp; Bethge, M. (2016). Image Style Transfer Using Convolutional Neural Networks. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/1508.06576" target="_blank" rel="noopener">arxiv:1508.06576</a></li>
+    <li><span class="tag">[2]</span> Simonyan, K. &amp; Zisserman, A. (2015). Very Deep Convolutional Networks for Large-Scale Image Recognition (VGG). *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/1409.1556" target="_blank" rel="noopener">arxiv:1409.1556</a></li>
+    <li><span class="tag">[3]</span> Johnson, J., Alahi, A. &amp; Fei-Fei, L. (2016). Perceptual Losses for Real-Time Style Transfer and Super-Resolution. *European Conference on Computer Vision (ECCV)*. <a href="https://arxiv.org/abs/1603.08155" target="_blank" rel="noopener">arxiv:1603.08155</a></li>
+    <li><span class="tag">[4]</span> Ulyanov, D., Vedaldi, A. &amp; Lempitsky, V. (2017). Instance Normalization: The Missing Ingredient for Fast Stylization. *arXiv preprint*. <a href="https://arxiv.org/abs/1607.08022" target="_blank" rel="noopener">arxiv:1607.08022</a></li>
+    <li><span class="tag">[5]</span> Huang, X. &amp; Belongie, S. (2017). Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization (AdaIN). *IEEE International Conference on Computer Vision (ICCV)*. <a href="https://arxiv.org/abs/1703.06868" target="_blank" rel="noopener">arxiv:1703.06868</a></li>
+    <li><span class="tag">[6]</span> PyTorch tutorials. (2024). Neural Transfer Using PyTorch. <a href="https://pytorch.org/tutorials/advanced/neural_style_tutorial.html" target="_blank" rel="noopener">pytorch.org/tutorials/advanced/neural_style_tutorial</a></li>
+    <li><span class="tag">[7]</span> Mordvintsev, A., Olah, C. &amp; Tyka, M. (2015). Inceptionism: Going Deeper into Neural Networks (DeepDream). Google AI Blog. The first widely-publicised CNN-based image-generation technique; predated NST by 4 months and inspired follow-up work.</li>
+    <li><span class="tag">[8]</span> Goodfellow, I., Bengio, Y. &amp; Courville, A. (2016). *Deep Learning*, Chapter 9: Convolutional Networks. MIT Press. <a href="https://www.deeplearningbook.org/" target="_blank" rel="noopener">deeplearningbook.org</a></li>
+  </ol>
+</section>
