@@ -1,0 +1,390 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Interpolation Animations"
+objective: "Use a pre-trained convolutional VAE on 64×64 RGB abstract patterns to build smooth morphing animations — first linear paths, then spherical paths, then multi-keypoint loops."
+framework: "conceptual"
+duration: "30–35 min"
+level: "intermediate-advanced"
+load: "3 core concepts"
+prereqs: "Lesson 12.2.1 (Latent Space Exploration), PyTorch basics"
+prev:
+  slug: "12.2.1"
+  title: "Latent Space Exploration"
+next:
+  slug: "12.2.3"
+  title: "Conditional VAEs"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/interpolation_animation.gif"
+  alt="Looping animated GIF showing one abstract colourful pattern smoothly morphing into another over thirty frames"
+  caption="Thirty frames along a straight line in the VAE's 64-dimensional latent space. Every intermediate image is a freshly decoded pattern, not a blend of pixels."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+[Lesson 12.2.1](/lessons/12.2.1) trained a tiny VAE on four 16×16 line patterns and made a single 8-step interpolation between two of them. The interpolation worked, but the toy data limited what you could actually see — the morphs looked like line drawings sliding into each other.
+
+This lesson scales the same idea up where it gets interesting. A convolutional VAE with a 64-dimensional latent space, trained on 2,000 procedurally-generated abstract patterns at 64×64 RGB, produces real morphing animations: colour fields shifting, textures dissolving, geometric structures reforming. The architecture is bigger but the recipe is the same — encode, walk the latent path, decode each step into a frame, save as GIF.
+
+The training takes a few hours on a CPU and the pre-trained weights are 27 MB, so you'll download them from a GitHub Release rather than retrain locally. The interesting work is on the interpolation side, where there's actually a methodological choice to make.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Explain why VAE latent spaces produce smoother morphing animations than GAN latent spaces.</li>
+  <li>Implement linear interpolation and spherical linear interpolation (slerp), and predict when each one matters.</li>
+  <li>Chain interpolations across multiple keypoints to produce seamless looping animations.</li>
+  <li>Estimate the trade-off between frame count, GIF file size, and perceived smoothness.</li>
+</ol>
+
+## Quick start — load the weights, morph two seeds <a id="quick-start"></a>
+
+Download `vae_weights.pth` from the GitHub Release and drop it next to `vae_model.py`. Then thirty frames of linear interpolation between two random latent vectors is fifteen lines of code.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-vae-weights/vae_weights.pth" label="vae_weights.pth — pre-trained 27 MB VAE checkpoint (GitHub Release)" />
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+import imageio.v2 as imageio
+from vae_model import VAE, LATENT_DIM
+
+vae = VAE(latent_dim=LATENT_DIM)
+vae.load_state_dict(torch.load('vae_weights.pth', map_location='cpu'))
+vae.eval()
+
+torch.manual_seed(42)
+z_start = torch.randn(LATENT_DIM)
+z_end   = torch.randn(LATENT_DIM)
+
+frames = []
+for i in range(30):
+    t = i / 29
+    z = ((1 - t) * z_start + t * z_end).unsqueeze(0)
+    with torch.no_grad():
+        img = vae.decoder(z)
+    img = ((img[0] + 1) / 2).clamp(0, 1).permute(1, 2, 0).numpy()
+    frames.append((img * 255).astype('uint8'))
+
+imageio.mimsave('my_animation.gif', frames, fps=15)
+```
+</CodeBlock>
+
+That's Figure 1, give or take the random seed. The rest of this lesson is about the choices hiding inside that one-line interpolation expression and the loop wrapped around it.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — A bigger VAE, the same KL guarantee
+
+The architecture here is a step up from 12.2.1's fully-connected toy. Four strided convolutions in the encoder take a 64×64×3 image down to 4×4×512, then two linear heads project to `μ` and `log σ²` in 64 dimensions. The decoder mirrors the encoder with four transposed convolutions back up to RGB output. Kingma and Welling's original paper [1] sketched the architectural recipe; the convolutional details follow the same conventions DCGAN [2] uses for image generation.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/vae_architecture.png"
+  alt="Block diagram of the convolutional VAE encoder, latent-space bottleneck, and decoder"
+  caption="Convolutional VAE for 64×64 RGB. Encoder strides down to 4×4×512 then projects to (μ, log σ²) in R^64. Decoder mirrors with transposed convolutions."
+  num={2}
+  role="diagram"
+/>
+
+What carries over from the toy is the property that does the work. The KL divergence term in the loss penalises the encoder for placing posterior distributions `q(z|x)` far from the prior `N(0, I)`. The structural consequence — empty regions of latent space remain decodable, nearby points decode to similar outputs — is exactly what makes morphing animations possible. Bowman et al. [3] documented this property for text VAEs in 2016 and the same argument applies pixel for pixel here: walk a continuous path through latent space, get a continuous sequence of outputs. Higgins et al.'s β-VAE work [7] showed that the *strength* of the KL constraint, set by a `β` coefficient on that loss term, directly governs how smooth and disentangled the latent space becomes — a higher β buys you a tidier space for interpolation at the cost of reconstruction sharpness, exactly the trade-off you'd tune for animation work. Goodfellow, Bengio and Courville [8] survey the broader family these models belong to.
+
+A GAN trained on the same data would produce sharper individual frames (the [DCGAN lesson](/lessons/12.1.2) shows the difference) but the interpolation path would not have the same guarantee. GAN latent spaces have "dead zones" where the discriminator never pushed the generator to produce anything coherent. Pass through one mid-morph and you get a glitchy frame. VAEs trade some sharpness for that smoothness guarantee, and for animation that trade-off is usually the right one.
+
+<Admonition type="dyk" title="History — slerp comes from 1985 keyframe animation">
+The spherical interpolation function you'll use in Concept 2 was published by Ken Shoemake at SIGGRAPH 1985 [4], originally as a way to interpolate between quaternion rotations for 3D animation. Three-quarters of a century after Spearman invented the idea of latent variables [5], the visual-effects community had independently invented the math we now use to walk through them.
+</Admonition>
+
+### Concept 2 — Two paths between two points
+
+Given two latent vectors `z_a` and `z_b`, the simplest path is a straight line — linear interpolation, parameterised by `t ∈ [0, 1]`.
+
+<CodeBlock lang="python" file="linear interpolation">
+```python
+def linear_interpolate(z1, z2, t):
+    return (1 - t) * z1 + t * z2
+```
+</CodeBlock>
+
+This is what Figure 1 uses, and for most VAE work it is enough. There is, however, a subtle wrinkle: in high-dimensional Gaussian spaces, the *magnitude* of `z` matters. A standard-normal vector in 64 dimensions has expected length `√64 ≈ 8`. The midpoint of a straight line between two such vectors has noticeably *smaller* magnitude — pulled toward zero by averaging. Decoded outputs at the midpoint can come out slightly less vivid than at the endpoints. White's 2016 survey of sampling techniques in generative networks [6] documents this with specific examples.
+
+Spherical linear interpolation — slerp — fixes the magnitude drift by walking along a great-circle arc instead of a chord.
+
+<CodeBlock lang="python" file="spherical interpolation">
+```python
+def slerp(z1, z2, t):
+    z1_norm = z1 / (torch.norm(z1) + 1e-8)
+    z2_norm = z2 / (torch.norm(z2) + 1e-8)
+
+    dot = torch.clamp(torch.sum(z1_norm * z2_norm), -1.0, 1.0)
+    omega = torch.acos(dot)
+
+    if omega < 1e-6:                    # vectors nearly parallel - fall back to linear
+        return (1 - t) * z1 + t * z2
+
+    sin_omega = torch.sin(omega)
+    c1 = torch.sin((1 - t) * omega) / sin_omega
+    c2 = torch.sin(t * omega) / sin_omega
+    return c1 * z1 + c2 * z2
+```
+</CodeBlock>
+
+The `1e-8` and the `omega < 1e-6` guard handle the cases where the formula would otherwise divide by zero — nearly-zero vectors and nearly-parallel vectors. Without them, occasional latent pairs produce NaN frames mid-animation.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/interpolation_comparison.png"
+  alt="Two rows of decoded frames: linear interpolation on top and spherical interpolation on bottom, with subtle differences in colour intensity around the middle frames"
+  caption="Linear (top) vs. slerp (bottom) over the same eight steps. For VAEs with standard Gaussian priors, the difference is real but subtle — slerp keeps the middle frames at full intensity."
+  num={3}
+  role="comparison"
+/>
+
+The decision rule is short. Use linear by default, and reach for slerp when (a) the latent vectors have been explicitly normalised, (b) the magnitude of `z` correlates with output intensity in your model, or (c) the endpoints are far apart in latent space. For everything else, the linear midpoint dimming is small enough to not be worth the extra code.
+
+### Concept 3 — From a single morph to a seamless loop
+
+A single interpolation between two endpoints is one segment. A more interesting animation chains several segments together — visit four random keypoints, then return to the first to close the loop.
+
+<CodeBlock lang="python" file="multi-keypoint loop">
+```python
+keypoints = [torch.randn(LATENT_DIM) for _ in range(4)]
+keypoints.append(keypoints[0])               # close the loop
+
+frames = []
+for i in range(len(keypoints) - 1):
+    seg = generate_frames(decoder, keypoints[i], keypoints[i+1], num_frames=15)
+    # Drop the last frame of every segment except the final one — otherwise
+    # the same image appears twice at each keypoint and the loop stutters.
+    if i < len(keypoints) - 2:
+        seg = seg[:-1]
+    frames.extend(seg)
+
+imageio.mimsave('loop.gif', frames, fps=15, loop=0)
+```
+</CodeBlock>
+
+Two non-obvious details. The duplicate-frame trim (`seg = seg[:-1]`) prevents a visible stutter at every keypoint; without it, the same decoded image appears as the last frame of segment `i` and the first frame of segment `i+1`. The `loop=0` argument to `imageio.mimsave` tells GIF decoders to loop forever rather than playing once and stopping.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/interpolation_strip.png"
+  alt="Eight horizontal frames showing a smooth left-to-right transition between two distinct abstract patterns"
+  caption="Static visualisation of the same morph: eight evenly-spaced frames from t=0 to t=1. Useful when you want to embed the transition in a printable figure rather than a GIF."
+  num={4}
+  role="comparison"
+/>
+
+Frame count is the other knob worth understanding. Roughly: 5–10 frames per segment looks visibly choppy, 15–20 is the sweet spot for ~250 KB GIFs, 30+ is butter-smooth but file sizes balloon. Most public morphing demos on platforms like Twitter and Bluesky stay in the 15–20 range for this reason — the diminishing visual return doesn't justify the bandwidth.
+
+<Admonition type="important">
+The VAE decoder outputs values in `[-1, 1]` because the training data was normalised that way. Forgetting the `(img + 1) / 2` step in the conversion pipeline produces frames that imageio writes as either solid black (if you also clamp) or noisy garbage (if you don't). This is the single most common GIF-pipeline bug.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Generate the 30-frame morph and four sample frames">
+
+Two scripts. `vae_generate.py` draws four random latent vectors and decodes them — useful sanity check that the loaded weights produce coherent output. `vae_interpolate.py` is the full animation pipeline.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-vae-weights/vae_weights.pth" label="vae_weights.pth — pre-trained 27 MB checkpoint (download once, reuse for E1-E3)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/vae_model.py" label="vae_model.py — convolutional VAE architecture" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/vae_generate.py" label="vae_generate.py — generate four random samples" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/vae_interpolate.py" label="vae_interpolate.py — full interpolation pipeline" />
+
+<CodeBlock lang="bash">
+```bash
+python vae_generate.py       # writes sample_1.png .. sample_4.png + generated_samples.png
+python vae_interpolate.py    # writes interpolation_animation.gif + interpolation_strip.png
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.2_interpolation_animations/generated_samples.png"
+  alt="Grid of four 64x64 RGB abstract patterns generated by sampling four random latent vectors"
+  caption="Four samples from `vae_generate.py`. Each comes from a different N(0, I) latent vector decoded through the VAE."
+  num={5}
+  role="output"
+/>
+
+**Reflection**
+
+1. How does this VAE morph differ from the [DCGAN latent walk](/lessons/12.1.2)? What property of the loss function explains the difference?
+2. Looking at the animation in Figure 1, are there any discontinuities or "jumps"? Where would you expect them if there were any?
+3. What features of the pattern stay coherent across the morph (palette, overall composition) and what features change discontinuously (sharp lines, hard edges)?
+4. Why does the midpoint of the strip in Figure 4 sometimes look slightly washed out compared to the endpoints?
+
+<Dropdown summary="Discussion">
+
+1. The VAE morph is smoother because the KL term in the loss explicitly regularises the encoded distribution `q(z|x)` to overlap with the prior `N(0, I)` everywhere — there are no "dead" regions for the path to pass through. DCGAN's loss has no such constraint, so the discriminator's "real-looking" region in latent space can be irregular, with garbage zones the generator was never pushed to fix.
+
+2. There should be none. If you spot one, the most likely cause is an off-by-one in the frame loop (`i / num_frames` instead of `i / (num_frames - 1)`) or a missing `.detach()` in a path you accidentally re-enabled gradients on. Truly discontinuous outputs from a trained VAE on a non-pathological path are very rare.
+
+3. Palette and rough composition stay coherent because they correspond to slowly-varying components of the latent representation. Sharp edges and high-frequency details are the parts the VAE has the hardest time reconstructing in the first place (the blurriness from Lesson 12.2.1), so they tend to soften across the morph rather than transition crisply.
+
+4. This is the linear-interpolation midpoint magnitude problem Concept 2 mentioned. The chord between two unit-ish vectors passes closer to the origin than either endpoint; the decoder maps low-magnitude latents to outputs that are closer to the dataset *mean*, which tends to look more muted. Slerp avoids it.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three knobs: frame count, slerp, multi-keypoint loop">
+
+Open `vae_interpolate.py` and try each change in isolation.
+
+**Goal 1 — Frame count.** Compare a deliberately choppy version with a smooth one:
+
+```python
+# Choppy
+frames_5 = generate_frames(decoder, z1, z2, num_frames=5)
+imageio.mimsave('choppy.gif', frames_5, fps=5)
+
+# Smooth
+frames_60 = generate_frames(decoder, z1, z2, num_frames=60)
+imageio.mimsave('smooth.gif', frames_60, fps=30)
+```
+
+**Goal 2 — Slerp side-by-side.** Generate both at the same `t` values and pair them frame-for-frame so the difference becomes visible:
+
+```python
+for i in range(30):
+    t = i / 29
+    z_lin = (1 - t) * z1 + t * z2
+    z_slp = slerp(z1, z2, t)
+    # decode both, save as side-by-side image
+```
+
+**Goal 3 — Four-keypoint loop.** Build the seamless loop from Concept 3 with four random keypoints. Verify it loops cleanly by playing the resulting GIF and watching the transition between the last and first frames.
+
+<Dropdown summary="What to expect — frame count">
+The 5-frame `choppy.gif` will obviously stutter — at 5 fps each frame is on screen for 200 ms. The 60-frame `smooth.gif` looks essentially indistinguishable from a 30-frame version unless the endpoints are very far apart, but it's twice the file size. The sweet spot for most uses is 15–20 frames at 15 fps.
+</Dropdown>
+
+<Dropdown summary="What to expect — slerp comparison">
+For VAEs trained with the standard `N(0, I)` prior, the visual difference is often subtle: slerp's middle frames look slightly more saturated, with a tiny bit more textural detail. It becomes more pronounced when the endpoints are unusually far apart in latent space — try `torch.randn(LATENT_DIM) * 3` for both endpoints to amplify the effect.
+</Dropdown>
+
+<Dropdown summary="What to expect — looping animation">
+A correctly-built loop has no visible jump at the transition point. If you see one, the duplicate-frame trim (`seg = seg[:-1]`) is missing or applied to the wrong segment. The other failure mode is forgetting `loop=0` on `imageio.mimsave`, which makes the GIF play once and stop — this looks correct in a preview but breaks when embedded.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement both interpolation functions from scratch">
+
+The starter file gives you the test scaffold; you write `linear_interpolate` and `slerp`.
+
+<CodeBlock lang="python" file="interpolation_starter.py">
+```python
+import torch
+
+def linear_interpolate(z1, z2, t):
+    # TODO: return (1 - t) * z1 + t * z2
+    pass
+
+def slerp(z1, z2, t):
+    # TODO:
+    #   1. Normalise z1, z2
+    #   2. omega = acos(clamp(z1_norm . z2_norm, -1, 1))
+    #   3. If omega is tiny, fall back to linear
+    #   4. Apply slerp formula: sin((1-t)*omega)/sin(omega) * z1 + sin(t*omega)/sin(omega) * z2
+    pass
+
+if __name__ == '__main__':
+    z1 = torch.randn(64)
+    z2 = torch.randn(64)
+    assert torch.allclose(linear_interpolate(z1, z2, 0.0), z1)
+    assert torch.allclose(linear_interpolate(z1, z2, 1.0), z2)
+    assert slerp(z1, z2, 0.5).shape == z1.shape
+    print("All tests passed!")
+```
+</CodeBlock>
+
+<Dropdown summary="Hint 1 — linear is a one-liner">
+The weighted-average formula has the property that `t=0` gives `z1` and `t=1` gives `z2`:
+```python
+return (1 - t) * z1 + t * z2
+```
+The two assertions in `__main__` exist exactly to verify those boundary conditions.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — slerp without the edge cases">
+The math reduces to three lines:
+```python
+omega = torch.acos(torch.clamp(torch.sum(z1_norm * z2_norm), -1.0, 1.0))
+c1 = torch.sin((1 - t) * omega) / torch.sin(omega)
+c2 = torch.sin(t * omega) / torch.sin(omega)
+return c1 * z1 + c2 * z2
+```
+Wrap it in normalisation up front and the `omega < 1e-6` fallback at the back, and you have the full function.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+```python
+import torch
+
+def linear_interpolate(z1, z2, t):
+    return (1 - t) * z1 + t * z2
+
+def slerp(z1, z2, t):
+    z1_norm = z1 / (torch.norm(z1) + 1e-8)
+    z2_norm = z2 / (torch.norm(z2) + 1e-8)
+
+    dot = torch.clamp(torch.sum(z1_norm * z2_norm), -1.0, 1.0)
+    omega = torch.acos(dot)
+
+    if omega < 1e-6:
+        return linear_interpolate(z1, z2, t)
+
+    sin_omega = torch.sin(omega)
+    c1 = torch.sin((1 - t) * omega) / sin_omega
+    c2 = torch.sin(t * omega) / sin_omega
+    return c1 * z1 + c2 * z2
+```
+
+</Dropdown>
+
+**Make it your own**
+
+Add an easing function — `ease_in_out(t)` that bends the linear `t` schedule into a slow-start / fast-middle / slow-end S-curve before passing it to the interpolator. Same endpoints, same number of frames, but a noticeably more cinematic feel:
+
+```python
+def ease_in_out(t):
+    return 4*t*t*t if t < 0.5 else 1 - pow(-2*t + 2, 3) / 2
+```
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+VAE latent spaces produce smooth morphing animations because their KL-regularised structure guarantees that every point along a continuous path decodes to a plausible output. Linear interpolation between two latent vectors is the default and is enough for most cases, but spherical interpolation (slerp) corrects the midpoint magnitude dip that linear paths introduce in high-dimensional spaces — useful when latent magnitude correlates with output intensity. Chaining segments through multiple keypoints, trimming duplicate frames, and setting `loop=0` on the GIF write turns single-segment morphs into seamless loops.
+</Admonition>
+
+**Common pitfalls**
+
+- Output range mismatch — the VAE decoder emits values in `[-1, 1]`; forgetting the `(img + 1) / 2` rescale gives you black or noise frames depending on whether you also clamp.
+- Missing batch dimension — the decoder expects `(batch, latent_dim)`, not `(latent_dim,)`. `z.unsqueeze(0)` is what fixes the cryptic shape mismatch error.
+- Duplicate frames at keypoints — trim the last frame of every segment except the final one, or your loop visibly stutters at every transition.
+- Slerp without the small-omega fallback — when the two endpoints are nearly parallel, `sin(omega)` approaches zero and you get NaN frames mid-animation.
+- GIF file bloat — 30+ frames at high resolution can hit several megabytes fast; balance perceived smoothness against bandwidth.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Kingma, D. P. &amp; Welling, M. (2014). Auto-Encoding Variational Bayes. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/1312.6114" target="_blank" rel="noopener">arxiv:1312.6114</a></li>
+    <li><span class="tag">[2]</span> Radford, A., Metz, L. &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. *ICLR*. <a href="https://arxiv.org/abs/1511.06434" target="_blank" rel="noopener">arxiv:1511.06434</a></li>
+    <li><span class="tag">[3]</span> Bowman, S. R., Vilnis, L., Vinyals, O., Dai, A. M., Jozefowicz, R. &amp; Bengio, S. (2016). Generating Sentences from a Continuous Space. *Proceedings of CoNLL*. <a href="https://arxiv.org/abs/1511.06349" target="_blank" rel="noopener">arxiv:1511.06349</a></li>
+    <li><span class="tag">[4]</span> Shoemake, K. (1985). Animating Rotation with Quaternion Curves. *ACM SIGGRAPH Computer Graphics*, 19(3), 245–254. <a href="https://doi.org/10.1145/325165.325242" target="_blank" rel="noopener">doi.org/10.1145/325165.325242</a></li>
+    <li><span class="tag">[5]</span> Spearman, C. (1904). "General Intelligence," Objectively Determined and Measured. *American Journal of Psychology*, 15(2), 201–292. <a href="https://doi.org/10.2307/1412107" target="_blank" rel="noopener">doi.org/10.2307/1412107</a></li>
+    <li><span class="tag">[6]</span> White, T. (2016). Sampling Generative Networks. *arXiv preprint*. <a href="https://arxiv.org/abs/1609.04468" target="_blank" rel="noopener">arxiv:1609.04468</a></li>
+    <li><span class="tag">[7]</span> Higgins, I., Matthey, L., Pal, A., Burgess, C., Glorot, X., Botvinick, M. &amp; Lerchner, A. (2017). β-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework. *International Conference on Learning Representations (ICLR)*. <a href="https://openreview.net/forum?id=Sy2fzU9gl" target="_blank" rel="noopener">openreview.net/forum?id=Sy2fzU9gl</a></li>
+    <li><span class="tag">[8]</span> Goodfellow, I., Bengio, Y. &amp; Courville, A. (2016). *Deep Learning*, Chapter 20: Deep Generative Models. MIT Press. <a href="https://www.deeplearningbook.org/" target="_blank" rel="noopener">deeplearningbook.org</a></li>
+  </ol>
+</section>

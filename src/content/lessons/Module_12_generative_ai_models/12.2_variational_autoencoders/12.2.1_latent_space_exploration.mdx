@@ -1,0 +1,362 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Latent Space Exploration"
+objective: "Train a Variational Autoencoder on simple geometric patterns and see why one specific term in its loss function — the KL divergence — turns its latent space into a navigable map you can interpolate through."
+framework: "conceptual"
+duration: "30–35 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "Python, PyTorch fundamentals, basic probability"
+prev:
+  slug: "12.1.2"
+  title: "DCGAN Art"
+next:
+  slug: "12.2.2"
+  title: "Interpolation Animations"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/interpolation_sequence.png"
+  alt="Eight panels showing a diagonal line pattern smoothly morphing into a cross pattern across eight interpolation steps"
+  caption="Eight steps along a straight line in a trained VAE's 8-dimensional latent space, from a diagonal pattern to a cross. Every intermediate frame is the decoder's best guess at a pattern that doesn't exist in the training set."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+Pick two images. Encode each one into a vector. Draw a straight line between the vectors. Decode every point along the way. If your model is a regular autoencoder, what you get is a sequence of garbage frames between two recognisable endpoints — the path passes through regions of latent space the decoder was never trained on. If your model is a *variational* autoencoder, you get the figure above: a smooth, plausible transformation where every step looks like something the decoder could have learned to produce.
+
+The difference is a single extra term in the loss function. Kingma and Welling [1] introduced it in 2013, the community spent the next decade building generative models around it, and even now the same idea sits underneath every diffusion model and latent-space generator. This lesson reduces it to its simplest possible form: a small VAE trained on four 16×16 line patterns. Train it for 200 epochs, then walk its latent space.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish a VAE from a plain autoencoder, and name the loss term that does the work.</li>
+  <li>Read the reparameterisation trick and explain why it is structurally necessary for gradient-based training.</li>
+  <li>Run a trained VAE and produce the four canonical visualisations: reconstructions, latent-space scatter, interpolation, and training progression.</li>
+  <li>Predict what happens to the latent space when you change the KL weight (β-VAE) or the latent dimension.</li>
+</ol>
+
+## Quick start — encode, decode, look at the gap <a id="quick-start"></a>
+
+Before training, look at what a fresh VAE does. With random weights, the encoder produces meaningless distribution parameters and the decoder produces meaningless reconstructions — but the shapes line up, and that is the contract you'll be training against.
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+import torch.nn as nn
+
+class VAE(nn.Module):
+    def __init__(self, input_dim=256, hidden_dim=128, latent_dim=8):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim), nn.ReLU(),
+        )
+        self.fc_mu     = nn.Linear(hidden_dim, latent_dim)
+        self.fc_logvar = nn.Linear(hidden_dim, latent_dim)
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, input_dim), nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        h = self.encoder(x)
+        mu, logvar = self.fc_mu(h), self.fc_logvar(h)
+        std = torch.exp(0.5 * logvar)
+        z = mu + std * torch.randn_like(std)   # reparameterisation
+        return self.decoder(z), mu, logvar
+
+vae = VAE()
+x = torch.randn(4, 256)
+recon, mu, logvar = vae(x)
+print(f"Input  {tuple(x.shape)} -> Latent mu {tuple(mu.shape)} -> Recon {tuple(recon.shape)}")
+```
+</CodeBlock>
+
+The output reports `Input (4, 256) -> Latent mu (4, 8) -> Recon (4, 256)`. The full training script in Exercise 1 turns that random pipeline into the trained model behind the opening figure.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/reconstruction_comparison.png"
+  alt="Two rows of eight 16x16 images each: the top row shows original geometric patterns and the bottom row shows the VAE's slightly blurred reconstructions"
+  caption="After training, the VAE reconstructs each pattern from its 8-dimensional latent encoding. The reconstructions are slightly soft — a VAE optimises for the *distribution* of plausible outputs, not pixel-perfect copies."
+  num={2}
+  role="comparison"
+/>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — A latent space, and what makes a VAE's "structured"
+
+A **latent space** is the low-dimensional output of an encoder — the place where an input gets compressed before reconstruction. Plain autoencoders have them too. The interesting question is not "does the model use a latent space" (every encoder-decoder pair does) but "is the latent space *navigable* — can you sample from it and get useful outputs?"
+
+For a vanilla autoencoder, the answer is usually no. The encoder learns a mapping that minimises reconstruction error, and it is free to use any region of the latent space it wants. Empty pockets between encoded points are not constrained at all, so decoding a random latent vector typically produces nonsense. Earlier linear techniques in the factor-analysis lineage share this limitation — PCA, ICA, and their relatives all give you compression without a useful generative prior.
+
+A VAE adds one constraint: the encoded distribution `q(z|x)` for every input should be close to a fixed prior `p(z) = N(0, I)`. Goodfellow, Bengio and Courville's textbook chapter [3] frames this as turning the decoder into a proper generative model rather than a glorified lookup table. The KL divergence term in the loss function measures and penalises the distance to that prior at every training step. Two things follow:
+
+- Encoded points cluster around the origin instead of scattering arbitrarily.
+- Nearby points in latent space decode to similar outputs, because the encoder has been pressured to map similar inputs into overlapping distributions.
+
+That second property — smoothness — is exactly what lets you do the interpolation in Figure 1. The VAE's latent space is not just compressed, it is *organised*.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/latent_space_visualization.png"
+  alt="Scatter plot of encoded patterns in 2D latent space showing four distinct colour-coded clusters for diagonal, horizontal, vertical, and cross patterns"
+  caption="The first two latent dimensions, plotted for the 1,000 training patterns. The four pattern types form four clusters with smooth boundaries between them — exactly the structure that makes interpolation work."
+  num={3}
+  role="diagram"
+/>
+
+<Admonition type="dyk" title="History — latent variables predate deep learning by a century">
+The term "latent variable" comes from statistics. Spearman's 1904 factor analysis [7] used latent variables to explain observed correlations between school test scores, positing a single hidden "general intelligence" factor `g` behind the data. Modern VAEs inherit the same logical structure — observed data, unobserved generative factors — and apply neural networks where Spearman had matrix algebra. Blei, Kucukelbir and McAuliffe's 2017 review [6] traces the lineage in detail.
+</Admonition>
+
+### Concept 2 — Encoder, decoder, and the reparameterisation trick
+
+The VAE has three moving parts: an encoder that maps `x → (μ, log σ²)`, a sampler that draws `z ~ N(μ, σ²)`, and a decoder that maps `z → x̂`.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/vae_architecture.png"
+  alt="Block diagram of the VAE: encoder maps input to mu and log_var, a sampling step combines them with epsilon to produce z, then the decoder maps z back to a reconstruction"
+  caption="VAE architecture. The encoder outputs distribution parameters rather than a point; the sampling step uses the reparameterisation trick to make backpropagation possible."
+  num={4}
+  role="diagram"
+/>
+
+The sampling step is where the trick happens. A naive implementation might write `z = torch.randn(latent_dim) * std + mu` and call it done — but this breaks gradient flow. The sampling operation is not differentiable with respect to `μ` or `σ` in the way PyTorch's autograd needs.
+
+The fix Kingma and Welling [1] (and independently Rezende, Mohamed and Wierstra [5]) proposed is the **reparameterisation trick**: factor the randomness out into a separate input.
+
+<CodeBlock lang="python" file="reparameterization">
+```python
+def reparameterize(mu, log_var):
+    std = torch.exp(0.5 * log_var)
+    epsilon = torch.randn_like(std)   # noise sampled *outside* the gradient path
+    return mu + std * epsilon         # deterministic w.r.t. (mu, std); ε is just an input
+```
+</CodeBlock>
+
+Now `z` is a deterministic function of `μ`, `σ`, and a noise tensor `ε`. The noise still randomises the sample, but the gradient through `z` to `μ` and `σ` is clean. PyTorch's autograd [8] handles the rest.
+
+Training minimises a two-part loss:
+
+<CodeBlock lang="python" file="loss">
+```python
+# Reconstruction term — does the decoder reproduce the input?
+recon_loss = F.binary_cross_entropy(recon, x, reduction='sum')
+
+# KL term — is q(z|x) close to N(0, I)?
+kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+
+total = recon_loss + beta * kl_loss     # β = 1 is the standard VAE
+```
+</CodeBlock>
+
+The reconstruction term wants the decoder to be faithful. The KL term wants the latent space to be tidy. The β coefficient [4] lets you tilt the trade-off; β > 1 produces a more disentangled but blurrier model (the β-VAE), β < 1 produces a sharper but less navigable model. The default `β = 1` is the original Kingma-Welling formulation.
+
+### Concept 3 — Three ways to explore the trained latent space
+
+Once trained, the VAE supports three operations the original autoencoder doesn't.
+
+**Sampling.** Draw `z ~ N(0, I)`, run it through the decoder, get a brand new pattern. Doersch's 2016 tutorial [2] is the canonical walkthrough of *why* this works: the KL penalty during training has shaped `q(z|x)` to overlap with `N(0, I)`, so samples from the prior land in regions the decoder knows how to handle.
+
+**Interpolation.** Encode two real patterns to `z_a` and `z_b`, then decode `z = (1-α) z_a + α z_b` for `α` swept from 0 to 1. This is what Figure 1 shows. The intermediate frames are not blends of the *images* — they are decodings of the intermediate *latent vectors*, which the decoder turns into images that smoothly transform structural features (a diagonal stroke softening, a horizontal stroke appearing, the cross forming).
+
+**Latent arithmetic.** With more complex data, certain *directions* in latent space tend to correspond to specific attributes — a "smile" direction for faces, a "stroke-width" direction for handwriting. You can extract them by averaging encodings, then add and subtract them to combine features. Bank, Koenigstein and Giryes [9] survey the recurring patterns and what makes them stable across architectures.
+
+<Admonition type="important">
+VAE reconstructions look slightly blurry compared to GAN outputs from [Lesson 12.1.2](/lessons/12.1.2). This is not a bug — it follows from the loss function. Binary cross-entropy on the output pixels makes the decoder learn the *mean* of all plausible reconstructions for each latent point, and the mean of plausible images is, by construction, blurrier than any single sharp image. If you need both sharp samples and a navigable latent space, VAE-GAN hybrids and modern diffusion models combine the two.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Train the VAE and inspect every visualisation">
+
+Run the full training script. It generates 1,000 patterns (250 of each type: diagonal, horizontal, vertical, cross), trains the VAE for 200 epochs, and produces five PNG outputs.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/latent_space_exploration.py" label="latent_space_exploration.py — full training + visualisation pipeline" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/vae_model.py" label="vae_model.py — VAE architecture (imported by the training script)" />
+
+<CodeBlock lang="bash">
+```bash
+python latent_space_exploration.py
+```
+</CodeBlock>
+
+The script prints loss values every 50 epochs and saves five PNGs to the working directory: `vae_architecture.png`, `latent_space_visualization.png`, `reconstruction_comparison.png`, `interpolation_sequence.png`, and `training_progression.png`. The architecture and the first three are already embedded above; the training progression looks like this:
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/training_progression.png"
+  alt="A 5-row grid showing how four reconstruction samples evolve from blurry noise at epoch 1 to clearly recognisable patterns at epoch 200"
+  caption="Reconstruction quality at epochs 1, 50, 100, 150, 200 for the same four held-out samples. Epoch 1 is near-random; structure emerges around epoch 50; clarity continues improving but with diminishing returns."
+  num={5}
+  role="training-log"
+/>
+
+**Reflection**
+
+1. Why do the reconstructions at epoch 1 look like undifferentiated noise rather than at least the right colour balance?
+2. In the latent-space scatter (Figure 3), the four clusters have soft boundaries. What would you expect them to look like in a plain autoencoder of the same capacity?
+3. The "cross" pattern in the reconstructions (Figure 2) is the noticeably blurriest one. Why might that be, given how it's constructed from horizontal + vertical?
+4. If you increased `LATENT_DIM` from 8 to 32, what would you expect to happen — and what is the catch?
+
+<Dropdown summary="Discussion">
+
+1. At epoch 1 the encoder has barely been trained, so `μ` and `log σ²` are still close to their random init — meaning every input maps to nearly the same point in latent space. The decoder, also random, produces one near-constant output regardless of input. There is no "right colour balance" yet because there is no signal flowing.
+
+2. Sharper but more chaotic. A plain autoencoder has no pressure to keep the encoded distribution tidy, so the four pattern types would map to four well-separated regions with empty space between them. Reconstruction error on the training set would be lower, but the empty regions would decode to garbage — try this by setting `beta = 0` in the loss.
+
+3. The cross is a *superposition* of the horizontal and vertical patterns. In latent space it sits closer to the boundary between those two clusters, and the VAE's averaging behaviour makes superpositions inherently soft — there are more "plausible" cross-like images for the decoder to average over than there are for a single thick stroke.
+
+4. Sharper reconstructions and slightly more capacity for variation. The catch: many of the extra dimensions are likely to become "dead" — the network learns to ignore them by collapsing `μ` to 0 and `σ` to 1 for those coordinates. This is called *posterior collapse* in its mild form, and you can detect it by measuring the per-dimension variance of `μ` across the training set after training.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Move three knobs and see what gives">
+
+Edit `vae_model.py` and `latent_space_exploration.py` one knob at a time. Re-run after each change; keep the previous PNGs around to compare against.
+
+**Goal 1 — Latent dimension.** Change `LATENT_DIM` at the top of `vae_model.py`:
+
+```python
+LATENT_DIM = 2     # tiny: visualisable directly, limited capacity
+LATENT_DIM = 8     # default
+LATENT_DIM = 32    # large: expect dead dimensions
+LATENT_DIM = 64    # excessive for 4 pattern types
+```
+
+**Goal 2 — KL weight (β-VAE).** Higgins et al. [4] showed that scaling the KL term reshapes the latent space. In `vae_model.py`, change the default `beta` in `vae_loss`:
+
+```python
+def vae_loss(recon_x, x, mu, log_var, beta=4.0):  # try 0.1, 1.0, 4.0, 10.0
+    ...
+    return recon_loss + beta * kl_loss, recon_loss, kl_loss
+```
+
+**Goal 3 — Encoder depth.** Inside `Encoder.__init__`, add or remove `Linear → ReLU` blocks. Compare a 2-layer encoder against the default 3-layer (counting `fc_mu`) and a 5-layer variant.
+
+<Dropdown summary="What to expect — latent dimension">
+`LATENT_DIM = 2` makes the latent-space plot literal (no projection needed) but reconstruction quality visibly degrades. `LATENT_DIM = 32+` produces slightly sharper reconstructions but most dimensions become dead. The default of 8 is deliberately sized to be larger than the intrinsic 4-cluster structure but small enough that every dimension does some work.
+</Dropdown>
+
+<Dropdown summary="What to expect — β">
+`β = 0.1` makes the model behave like a vanilla autoencoder: sharper reconstructions, but the latent clusters drift apart and interpolation gets blocky around the boundaries. `β = 4.0` (the original β-VAE setting [4]) tightens the latent space — clusters compress, interpolation gets smoother, individual dimensions become more *disentangled* (each one tends to control one feature). `β = 10.0` overshoots: reconstructions degrade noticeably because the KL pressure is now stronger than the reconstruction signal.
+</Dropdown>
+
+<Dropdown summary="What to expect — depth">
+Shallower encoders train faster but can underfit; the four clusters in the latent-space scatter become noticeably more overlapping. Deeper encoders add capacity that the data here cannot really use — training takes longer but the visualisations look essentially the same. The takeaway is that capacity above what the data demands does nothing visible (and quietly costs you epochs).
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Implement encode, decode, and interpolate from scratch">
+
+The starter file gives you a stripped-down `SimpleVAE` class with the layers wired up but the three key methods left as TODOs. Fill them in.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/latent_starter.py" label="latent_starter.py — three TODOs" />
+
+```python
+# In SimpleVAE:
+def encode(self, x):       # TODO: x -> ReLU(fc1) -> ReLU(fc2) -> mu
+    pass
+def decode(self, z):       # TODO: z -> ReLU(fc1) -> ReLU(fc2) -> Sigmoid(out)
+    pass
+
+# Module-level:
+def interpolate(vae, pattern_a, pattern_b, num_steps=8):
+    # TODO: encode both, walk z = (1-α)z_a + α z_b, decode each
+    pass
+```
+
+<Dropdown summary="Hint 1 — encode / decode">
+Both methods are straight passes through the existing `Sequential`-style layers, just without using `nn.Sequential`:
+
+```python
+def encode(self, x):
+    h = torch.relu(self.encoder_fc1(x))
+    h = torch.relu(self.encoder_fc2(h))
+    return self.fc_mu(h)
+
+def decode(self, z):
+    h = torch.relu(self.decoder_fc1(z))
+    h = torch.relu(self.decoder_fc2(h))
+    return torch.sigmoid(self.decoder_out(h))
+```
+</Dropdown>
+
+<Dropdown summary="Hint 2 — interpolation loop">
+`np.linspace(0, 1, num_steps)` gives you the α values. For each α, compute the latent vector, decode it, and reshape the result to `(IMAGE_SIZE, IMAGE_SIZE)` for display.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+```python
+def encode(self, x):
+    h = torch.relu(self.encoder_fc1(x))
+    h = torch.relu(self.encoder_fc2(h))
+    return self.fc_mu(h)
+
+def decode(self, z):
+    h = torch.relu(self.decoder_fc1(z))
+    h = torch.relu(self.decoder_fc2(h))
+    return torch.sigmoid(self.decoder_out(h))
+
+def interpolate(vae, pattern_a, pattern_b, num_steps=8):
+    vae.eval()
+    frames = []
+    with torch.no_grad():
+        z_a = vae.encode(pattern_a)
+        z_b = vae.encode(pattern_b)
+        for alpha in np.linspace(0, 1, num_steps):
+            z = (1 - alpha) * z_a + alpha * z_b
+            frames.append(vae.decode(z).numpy().reshape(IMAGE_SIZE, IMAGE_SIZE))
+    return frames
+```
+
+Running `python latent_starter.py` with these in place produces `my_interpolation.png`. With random (untrained) weights the output is noise — to see real interpolations you'd save and load the trained `vae_model.py` weights from Exercise 1 instead.
+
+</Dropdown>
+
+**Make it your own**
+
+Replace the `create_test_patterns()` outputs with patterns of your own — a circle and a square, a thick stroke and a thin one — and run them through your interpolation. Where does the morph get awkward? Those points are telling you something about how the latent space is organised.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+A VAE is an encoder/decoder pair with one extra rule: the encoder must produce distributions that stay close to a fixed `N(0, I)` prior, measured by KL divergence and enforced by including that divergence in the loss. The reparameterisation trick — sampling `z = μ + σ ε` with `ε ~ N(0, I)` drawn outside the gradient path — is what makes the architecture trainable end-to-end. The combined effect is a latent space where similar inputs land near each other, empty regions are still decodable, and the operations that interest a generative-AI practitioner (sampling, interpolation, latent arithmetic) all work because the space has been shaped, not just compressed.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting `torch.no_grad()` during evaluation — memory and time leak fast when you're running many decode-only operations.
+- `β` tuned to 0 chases sharper reconstructions but turns the model into a vanilla autoencoder that scatters its latent codes, breaking every operation in Concept 3.
+- Dead latent dimensions are not a bug. They are the network telling you `LATENT_DIM` is bigger than the intrinsic dimensionality of your data — useful diagnostic, not a failure mode.
+- VAE samples will not look as sharp as GAN samples, by design. Pick the model whose trade-off matches your goal.
+- Reconstruction-loss numbers aren't comparable across runs with different `β` values, because you've changed what the model is being asked to optimise in the first place.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Kingma, D. P. &amp; Welling, M. (2014). Auto-Encoding Variational Bayes. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/1312.6114" target="_blank" rel="noopener">arxiv:1312.6114</a></li>
+    <li><span class="tag">[2]</span> Doersch, C. (2016). Tutorial on Variational Autoencoders. *arXiv preprint*. <a href="https://arxiv.org/abs/1606.05908" target="_blank" rel="noopener">arxiv:1606.05908</a></li>
+    <li><span class="tag">[3]</span> Goodfellow, I., Bengio, Y. &amp; Courville, A. (2016). *Deep Learning*, Chapter 20: Deep Generative Models. MIT Press. <a href="https://www.deeplearningbook.org/" target="_blank" rel="noopener">deeplearningbook.org</a></li>
+    <li><span class="tag">[4]</span> Higgins, I., Matthey, L., Pal, A., Burgess, C., Glorot, X., Botvinick, M., Mohamed, S. &amp; Lerchner, A. (2017). β-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework. *International Conference on Learning Representations (ICLR)*. <a href="https://openreview.net/forum?id=Sy2fzU9gl" target="_blank" rel="noopener">openreview.net/forum?id=Sy2fzU9gl</a></li>
+    <li><span class="tag">[5]</span> Rezende, D. J., Mohamed, S. &amp; Wierstra, D. (2014). Stochastic Backpropagation and Approximate Inference in Deep Generative Models. *International Conference on Machine Learning (ICML)*. <a href="https://arxiv.org/abs/1401.4082" target="_blank" rel="noopener">arxiv:1401.4082</a></li>
+    <li><span class="tag">[6]</span> Blei, D. M., Kucukelbir, A. &amp; McAuliffe, J. D. (2017). Variational Inference: A Review for Statisticians. *Journal of the American Statistical Association*, 112(518), 859–877. <a href="https://doi.org/10.1080/01621459.2017.1285773" target="_blank" rel="noopener">doi.org/10.1080/01621459.2017.1285773</a></li>
+    <li><span class="tag">[7]</span> Spearman, C. (1904). "General Intelligence," Objectively Determined and Measured. *American Journal of Psychology*, 15(2), 201–292. <a href="https://doi.org/10.2307/1412107" target="_blank" rel="noopener">doi.org/10.2307/1412107</a></li>
+    <li><span class="tag">[8]</span> PyTorch Contributors. (2024). Autograd: Automatic differentiation. <a href="https://pytorch.org/docs/stable/autograd.html" target="_blank" rel="noopener">pytorch.org/docs/stable/autograd</a></li>
+    <li><span class="tag">[9]</span> Bank, D., Koenigstein, N. &amp; Giryes, R. (2020). Autoencoders. *arXiv preprint*. <a href="https://arxiv.org/abs/2003.05991" target="_blank" rel="noopener">arxiv:2003.05991</a></li>
+  </ol>
+</section>
