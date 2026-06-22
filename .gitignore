@@ -31,3 +31,4 @@ Thumbs.db
 # (scripts/ stays tracked — npm run build depends on scripts/check-lessons.mjs)
 docs/
 archive/
+experiments

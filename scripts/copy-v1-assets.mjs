@@ -88,6 +88,12 @@ const PER_LESSON = {
   // 3.4.1 convolution output PNGs and animated demo GIFs live under visuals/.
   '3.4.1': { includeSubdirs: ['visuals'] },
   '12.1.2': { includePth: true },
+  // 12.5.1 DreamBooth keeps generated outputs and training-progress samples
+  // in nested subdirs; we only want the small ones referenced by the MDX,
+  // not the huge `class_images/` and `models/` folders.
+  '12.5.1': { includeSubdirs: ['outputs', 'conceptual_diagrams', 'training_progress_lora', 'training_progress_ti', 'training_images'] },
+  // 12.3.1 DDPM keeps theory diagrams and architecture GIFs under visuals/.
+  '12.3.1': { includeSubdirs: ['visuals'] },
 };
 
 // Default option set.
