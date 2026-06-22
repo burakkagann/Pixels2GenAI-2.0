@@ -1,0 +1,285 @@
+---
+module: "M 12"
+cycle: "III"
+title: "GAN Architecture"
+objective: "Implement the original GAN as a two-player game between a Generator and a Discriminator; watch it learn to match a target distribution; then bridge from numbers to simple visual patterns."
+framework: "conceptual"
+duration: "35–40 min"
+level: "intermediate"
+load: "3 core concepts"
+prereqs: "Python, PyTorch fundamentals, basic statistics"
+prev:
+  slug: "11.4.3"
+  title: "Remote Control Interfaces"
+next:
+  slug: "12.1.2"
+  title: "DCGAN Art"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_architecture_diagram.png"
+  alt="GAN architecture diagram with a Generator transforming random noise into fake data alongside a Discriminator classifying real versus fake"
+  caption="The two networks of a GAN. The Generator turns noise into samples; the Discriminator scores how real they look."
+  num={1}
+  role="diagram"
+/>
+
+## Overview <a id="overview"></a>
+
+Two networks, the same training data, opposite goals. One tries to forge convincing samples; the other tries to catch the forgeries. Train them together for long enough and a strange thing happens — both get good, and at the equilibrium point the forger is producing samples the detective can no longer reliably tell apart from real data.
+
+That is the entire idea behind a Generative Adversarial Network. Ian Goodfellow and his co-authors sketched it out in 2014 [1], and a decade later — through DCGAN, StyleGAN [6], BigGAN [7], and the diffusion-era hybrids — it remains one of the most-studied frameworks in generative modelling. Before tackling those, the bare-minimum version is the cleanest place to start: a Generator that learns to produce numbers drawn from `N(4.0, 1.25)`, and a Discriminator that scores them. No convolutions, no images, just the adversarial loop.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Describe the Generator/Discriminator split and the role of each network.</li>
+  <li>Read the minimax loss and recognise it as a two-player zero-sum game.</li>
+  <li>Run a minimal PyTorch GAN and watch it learn a Gaussian distribution.</li>
+  <li>Diagnose the common failure modes — mode collapse, vanishing gradients, runaway oscillation — from training curves.</li>
+</ol>
+
+## Quick start — meet an untrained Generator <a id="quick-start"></a>
+
+Before training anything, look at what a fresh Generator produces. The point is to see how far the starting state is from the target.
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+import torch.nn as nn
+
+# Target distribution the Generator will eventually learn
+DATA_MEAN = 4.0
+DATA_STDDEV = 1.25
+
+class Generator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Linear(1, 5)
+        self.layer2 = nn.Linear(5, 5)
+        self.layer3 = nn.Linear(5, 1)
+
+    def forward(self, x):
+        x = torch.tanh(self.layer1(x))
+        x = torch.tanh(self.layer2(x))
+        return self.layer3(x)
+
+generator = Generator()
+noise = torch.rand(100, 1)
+output = generator(noise)
+print(f"Generated {len(output)} numbers")
+print(f"Mean: {output.mean():.2f}, Std: {output.std():.2f}")
+```
+</CodeBlock>
+
+A typical run prints something like `Mean: 0.01, Std: 0.02` — random weights, random output, nowhere near `N(4.0, 1.25)`. The full training script in Exercise 1 closes this gap by pairing the Generator with a Discriminator that supplies the feedback signal.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Two networks, opposite jobs
+
+A GAN is two neural networks trained in lock-step. The **Generator** `G` is a function from random noise `z` to a synthetic sample `G(z)`. The **Discriminator** `D` takes a sample (real or generated) and outputs a probability between 0 and 1 that the sample came from the real dataset.
+
+| Network | Input | Output | Wants… |
+|---|---|---|---|
+| Generator `G` | random noise `z` | a synthetic sample | `D(G(z))` close to 1 (fool the detective) |
+| Discriminator `D` | a sample `x` | probability `x` is real | `D(real) ≈ 1`, `D(G(z)) ≈ 0` |
+
+Notice that the two networks never share parameters, never share gradients, and never see each other's internals. Their only contact is the scalar score `D(G(z))` that flows back to `G` as a training signal. That tight, narrow channel is what makes GANs both surprisingly effective and notoriously fiddly to train.
+
+<Admonition type="dyk" title="History — the GAN was sketched in a bar">
+Goodfellow's own retelling: the idea came together over drinks at Les 3 Brasseurs in Montreal in 2014. He went home, coded it up that night, and it worked on the first try. Most ideas in deep learning need months of debugging before they produce a publishable figure; the original GAN went from cocktail napkin to working prototype in a few hours [1].
+</Admonition>
+
+### Concept 2 — The adversarial game
+
+Goodfellow's original paper frames training as a minimax objective on a single value function `V(D, G)`:
+
+```
+min_G max_D  V(D, G) = E_{x~p_data}[ log D(x) ] + E_{z~p_z}[ log(1 - D(G(z))) ]
+```
+
+Read it left-to-right: the Discriminator wants to maximise this expression (push `D(x)` toward 1 on real data, push `D(G(z))` toward 0 on fakes); the Generator wants to minimise it (push `D(G(z))` toward 1 so the second term shrinks). It is a zero-sum game in the game-theoretic sense — any gain for one side is a loss for the other [2].
+
+In practice we don't solve the minimax in closed form. We alternate gradient steps:
+
+<CodeBlock lang="python" file="training loop (sketch)">
+```python
+for epoch in range(num_epochs):
+    real_data = sample_real_batch()
+    fake_data = generator(sample_noise())
+
+    # Step 1 — Discriminator: classify real as 1, fake as 0
+    d_loss = bce(discriminator(real_data), ones) \
+           + bce(discriminator(fake_data.detach()), zeros)
+    d_loss.backward(); d_optimizer.step()
+
+    # Step 2 — Generator: get the Discriminator to call its fakes real
+    fake_data = generator(sample_noise())
+    g_loss = bce(discriminator(fake_data), ones)
+    g_loss.backward(); g_optimizer.step()
+```
+</CodeBlock>
+
+The `.detach()` on `fake_data` in the Discriminator step is not optional — without it, gradients leak back into the Generator during a phase that is supposed to update only `D`. Many first GAN implementations break here and produce nonsense.
+
+If everything goes right, training converges to a Nash equilibrium where `G` reproduces the true data distribution and `D` outputs `0.5` regardless of input — it has stopped being able to tell real from fake [1].
+
+### Concept 3 — Why GAN training is hard
+
+The adversarial setup is elegant on paper and unstable in practice. Three failure modes show up often enough that they have names.
+
+**Mode collapse.** The Generator discovers one output that consistently fools the current Discriminator and starts producing only that, ignoring the rest of the data distribution. You'll see the generated samples all look identical even as the loss stays low [3].
+
+**Vanishing gradients.** If the Discriminator gets too good too fast, `D(G(z))` saturates near 0, the `log(1 - D(G(z)))` term flattens, and the gradient the Generator receives goes to zero. The Generator stops improving even though there's plenty of room to grow [3].
+
+**Oscillation without convergence.** Both losses bounce around indefinitely. The networks are chasing each other in a cycle rather than settling into equilibrium. Some oscillation is normal, but persistent large swings usually mean the learning rates need rebalancing.
+
+The DCGAN paper [4] codified a set of practical rules — Adam with `β₁ = 0.5` [8], BatchNorm in most layers, LeakyReLU in the Discriminator, ReLU + Tanh in the Generator — that make training much more reliable. A parallel research line tackled the same instability from the loss-function side: Wasserstein GAN [5] swapped the original BCE objective for an earth-mover distance, removing the vanishing-gradient pathology almost entirely. You'll see the DCGAN rules applied in [Lesson 12.1.2](/lessons/12.1.2).
+
+<Admonition type="important">
+If your GAN diverges, the first thing to check is almost never the architecture. It is the learning-rate balance between `G` and `D`, or a missing `.detach()`, or input data outside the `[-1, 1]` range the Tanh output assumes. Those three account for the vast majority of "my GAN doesn't work" cases.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Train a GAN on a Gaussian">
+
+Run the full training script. It pairs the 3-layer Generator from the Quick Start with a small Discriminator that compares the statistical moments (mean, standard deviation, skew, kurtosis) of a batch of generated numbers against the moments of a real batch from `N(4.0, 1.25)`.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_architecture.py" label="gan_architecture.py" />
+
+<CodeBlock lang="bash">
+```bash
+python gan_architecture.py
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_training_results.png"
+  alt="Two plots side by side: a histogram of generated values overlaid with the target Gaussian on the left, and Discriminator and Generator loss curves over training epochs on the right"
+  caption="After 5000 epochs the Generator's histogram matches the target Gaussian; loss curves oscillate around equilibrium rather than dropping to zero."
+  num={2}
+  role="output"
+/>
+
+**What to watch for as it runs**
+
+- The Generator's reported mean climbs from ~0 toward 4.0 over the first ~1500 epochs.
+- The standard deviation lags behind the mean — getting `std ≈ 1.25` typically takes another 1000–2000 epochs.
+- Both losses oscillate. They don't smoothly decrease the way a supervised classifier's loss would.
+
+**Reflection**
+
+1. Roughly how many epochs in does the Generator first produce numbers with the right mean?
+2. What are the final mean and standard deviation, and how close are they to the target `(4.0, 1.25)`?
+3. Do the loss curves "converge" in the usual sense? Why or why not?
+
+<Dropdown summary="Discussion">
+
+1. The mean usually crosses 3.0 around epoch 1000–1500 and lands within a few tenths of 4.0 by epoch 3000. Yours will vary — the random seed determines a lot about the early trajectory.
+2. After 5000 epochs the script typically reports something like `mean=3.95, std=1.22`. Not exactly the target, but close enough that the histograms visibly overlap.
+3. Not in the usual sense. Both losses oscillate around values bounded away from zero. This is healthy: at equilibrium the Discriminator should be guessing at chance (~50% accuracy → log-loss around `ln(2) ≈ 0.69`), and if `G`'s loss kept dropping it would mean `G` is winning the game rather than reaching equilibrium with `D`.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Push the training balance until it breaks">
+
+Open `gan_architecture.py` and change one parameter at a time. The goal is to develop intuition for *which* knobs matter and *how much*.
+
+**Goal 1 — Move the target distribution.** Change `DATA_MEAN` and `DATA_STDDEV` near the top of the file. Try a centred Gaussian (`DATA_MEAN = 0.0`) and a much wider one (`DATA_STDDEV = 3.0`). Does the GAN still converge? Does it take longer?
+
+**Goal 2 — Adjust the learning rate.** The default is `LEARNING_RATE = 1e-3`. Try `1e-2` (faster but riskier) and `1e-4` (slower but smoother). Watch the loss curves.
+
+**Goal 3 — Unbalance the training steps.** The default trains `D` for 20 inner steps and `G` for 20 inner steps per outer epoch. Try `D_STEPS = 30, G_STEPS = 10` (Discriminator-dominated) and `D_STEPS = 10, G_STEPS = 30` (Generator-dominated). One of these breaks training spectacularly.
+
+<Dropdown summary="What to expect — target distribution">
+The GAN is distribution-agnostic in principle, so any well-behaved Gaussian should work. Wider distributions take more epochs because the Generator must learn to produce values across a larger range. A heavily-shifted mean (e.g. `DATA_MEAN = 20.0`) sometimes fails to converge because the Tanh outputs in the Generator's hidden layers saturate before they can be scaled up to reach the target — a hint at why DCGAN avoids Tanh in hidden layers.
+</Dropdown>
+
+<Dropdown summary="What to expect — learning rate">
+`1e-2`: training is jumpy, the losses spike, the final histogram is often noticeably off. `1e-4`: training is smooth but you may need to double `NUM_EPOCHS` to reach the same quality. The default `1e-3` is a deliberately middle-of-the-road choice.
+</Dropdown>
+
+<Dropdown summary="What to expect — step ratio">
+Discriminator-dominated (`30/10`): the Discriminator quickly becomes near-perfect, the Generator's gradient vanishes, and the histogram never moves off `N(0, 0)`. Generator-dominated (`10/30`): the Generator overruns a weak Discriminator and starts producing degenerate outputs that happen to fool it but look nothing like the target. This is the closest you'll get to seeing mode collapse and vanishing-gradient failure in this minimal setup.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="EXTEND" title="Bridge from numbers to pixels">
+
+The same adversarial loop you just trained on scalars works on images — the only thing that changes is the shape of the Generator's output and the Discriminator's input. To make that concrete, the bridge script trains a slightly larger fully-connected GAN to produce simple `8 × 8` line patterns.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_patterns.py" label="gan_patterns.py" />
+
+<CodeBlock lang="bash">
+```bash
+python gan_patterns.py
+```
+</CodeBlock>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_patterns_output.png"
+  alt="Top row shows eight real 8x8 horizontal and vertical line patterns; the two rows below show sixteen GAN-generated patterns of varying quality"
+  caption="Top: eight real patterns from the training set. Bottom two rows: sixteen patterns from the trained Generator. Some are recognisably line-like; others are still finding the structure."
+  num={3}
+  role="comparison"
+/>
+
+**What changes compared to Exercise 1**
+
+- The Generator outputs 64 values (an `8 × 8` flattened image) instead of a single number.
+- The Discriminator sees the full flattened image instead of four statistical moments.
+- The Generator uses BatchNorm and LeakyReLU — borrowed early from the DCGAN recipe — because fully-connected `64 → 64` GANs without those tricks are particularly hard to train.
+
+<Dropdown summary="Why the generated patterns are imperfect">
+Fully-connected layers treat each output pixel as independent. The network can't easily express "a horizontal line" as a unit; it has to coincidentally produce 8 bright pixels in a row out of 64 unrelated outputs. Convolutional networks solve this by encoding spatial locality directly into the architecture — which is exactly the leap [Lesson 12.1.2](/lessons/12.1.2) makes with DCGAN.
+</Dropdown>
+
+</Exercise>
+
+## Implementation note <a id="implementation-note"></a>
+
+<Admonition type="note">
+
+The number-distribution GAN in `gan_architecture.py` is adapted from Dev Nag's well-known "GANs in 50 lines of code" [9], rewritten with longer variable names and additional comments for teaching. The pattern-GAN bridge script is original to this lesson.
+
+- Original source: <a href="https://github.com/devnag/pytorch-generative-adversarial-networks" target="_blank" rel="noopener">github.com/devnag/pytorch-generative-adversarial-networks</a>
+- License: MIT
+
+</Admonition>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+A GAN is two networks with opposite goals — a Generator turning noise into samples and a Discriminator scoring those samples against real data — coupled through a single scalar signal and trained alternately. The minimax loss expresses this as a zero-sum game, but in practice the networks are updated step-by-step rather than solved in closed form. The fragility of that interaction (mode collapse, vanishing gradients, oscillation) is a feature of the framework, not a bug in any specific implementation, and most of the rules-of-thumb you'll meet in DCGAN and StyleGAN exist to manage it.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting `.detach()` when training the Discriminator on fake data — gradients leak into `G` and training silently misbehaves.
+- Letting one network run away. If the Discriminator hits ~100% accuracy in the first few epochs, you've already lost; rebalance learning rates or step counts.
+- Reading the loss curves like a classifier's. Smoothly-decreasing losses in a GAN usually mean one player is dominating, not that the system is converging.
+- Trying to debug instability by adding capacity to the Generator. Most early-training failures come from input normalisation, learning-rate balance, or the missing `.detach()` — not from the network being too small.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A. &amp; Bengio, Y. (2014). Generative Adversarial Nets. *Advances in Neural Information Processing Systems*, 27. <a href="https://arxiv.org/abs/1406.2661" target="_blank" rel="noopener">arxiv:1406.2661</a></li>
+    <li><span class="tag">[2]</span> Goodfellow, I. (2016). NIPS 2016 Tutorial: Generative Adversarial Networks. *arXiv preprint*. <a href="https://arxiv.org/abs/1701.00160" target="_blank" rel="noopener">arxiv:1701.00160</a></li>
+    <li><span class="tag">[3]</span> Salimans, T., Goodfellow, I., Zaremba, W., Cheung, V., Radford, A. &amp; Chen, X. (2016). Improved Techniques for Training GANs. *Advances in Neural Information Processing Systems*, 29. <a href="https://arxiv.org/abs/1606.03498" target="_blank" rel="noopener">arxiv:1606.03498</a></li>
+    <li><span class="tag">[4]</span> Radford, A., Metz, L. &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/1511.06434" target="_blank" rel="noopener">arxiv:1511.06434</a></li>
+    <li><span class="tag">[5]</span> Arjovsky, M., Chintala, S. &amp; Bottou, L. (2017). Wasserstein GAN. *International Conference on Machine Learning (ICML)*. <a href="https://arxiv.org/abs/1701.07875" target="_blank" rel="noopener">arxiv:1701.07875</a></li>
+    <li><span class="tag">[6]</span> Karras, T., Laine, S. &amp; Aila, T. (2019). A Style-Based Generator Architecture for Generative Adversarial Networks. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/1812.04948" target="_blank" rel="noopener">arxiv:1812.04948</a></li>
+    <li><span class="tag">[7]</span> Brock, A., Donahue, J. &amp; Simonyan, K. (2019). Large Scale GAN Training for High Fidelity Natural Image Synthesis. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/1809.11096" target="_blank" rel="noopener">arxiv:1809.11096</a></li>
+    <li><span class="tag">[8]</span> PyTorch Contributors. (2024). PyTorch documentation: Neural network modules. <a href="https://pytorch.org/docs/stable/nn.html" target="_blank" rel="noopener">pytorch.org/docs/stable/nn.html</a></li>
+    <li><span class="tag">[9]</span> Nag, D. (2017). Generative Adversarial Networks (GANs) in 50 lines of code (PyTorch). <a href="https://github.com/devnag/pytorch-generative-adversarial-networks" target="_blank" rel="noopener">github.com/devnag/pytorch-generative-adversarial-networks</a></li>
+  </ol>
+</section>

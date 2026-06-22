@@ -1,0 +1,377 @@
+---
+module: "M 12"
+cycle: "III"
+title: "StyleGAN Exploration"
+objective: "Explore the disentangled W-space of a trained StyleGAN2 model — generate fabric patterns, navigate latent paths with interpolation, mix coarse and fine styles across crossover layers, and tune diversity with the truncation trick."
+framework: "conceptual"
+duration: "35–45 min"
+level: "advanced"
+load: "4 core concepts"
+prereqs: "Lessons 12.1.1 (GAN Architecture) and 12.1.2 (DCGAN Art); PyTorch; ~500 MB disk for the pre-trained checkpoint"
+prev:
+  slug: "12.5.1"
+  title: "DreamBooth Personalization"
+next:
+  slug: "12.3.1"
+  title: "DDPM Basics"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/stylegan_demo.gif"
+  alt="Animated GIF showing StyleGAN2 generating diverse African fabric patterns through smooth latent space walks"
+  caption="StyleGAN2 walking through its latent space, generating new African fabric patterns frame by frame. Each step decodes to a plausible fabric — the smoothness is structural, not an artefact of training."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+DCGAN [Lesson 12.1.2](/lessons/12.1.2) generates images from random vectors but doesn't give you much control over what comes out. Change the seed, get a different image; that's the only knob. StyleGAN, introduced by Karras, Laine and Aila at NVIDIA in 2018 [1] and refined in StyleGAN2 [2], introduced an architecture that *separates* the entangled "random vector" from the styled controls — and once that separation exists, you can navigate the space deliberately rather than just sampling from it.
+
+The mechanism is conceptually simple. Before feeding the latent vector to the synthesis network, run it through an 8-layer fully-connected "mapping network" that produces an intermediate vector `w`. Inject `w` into the synthesis network at every resolution level via adaptive instance normalisation. The intermediate `w` ends up far more disentangled than the input `z` — different dimensions tend to control different visual features — which means you can interpolate, mix, and truncate in `w`-space and get predictable visual results.
+
+This lesson uses a StyleGAN2 model trained on the African fabric dataset (same source as 12.1.2) to demonstrate the three operations that make this architecture famous: smooth latent walks, style mixing across layer ranges, and the truncation trick for trading diversity against quality.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish StyleGAN's intermediate `w`-space from the original `z`-space and explain why disentanglement matters for control.</li>
+  <li>Walk a path between two latent vectors and produce a smooth morphing animation; understand why the smoothness is a property of `w`-space, not interpolation magic.</li>
+  <li>Combine coarse features from one source with fine features from another via style mixing — and predict which layer ranges control which feature scales.</li>
+  <li>Apply the truncation trick to trade off diversity for quality; pick the right ψ value for a given use case.</li>
+</ol>
+
+## Quick start — generate four fabrics from the trained model <a id="quick-start"></a>
+
+The pre-trained checkpoint is hosted on a GitHub Release. Place it under `models/african_fabrics/model_99.pt`, then run the generation script.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/stylegan-checkpoint/model_99.pt" label="model_99.pt — pre-trained StyleGAN2 checkpoint (~189 MB, GitHub Release)" />
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+from stylegan2_pytorch import ModelLoader
+import torch
+
+loader = ModelLoader(
+    base_dir='./',
+    name='african_fabrics',                  # expects models/african_fabrics/model_99.pt
+)
+
+noise = torch.randn(4, 512)                  # 4 latent vectors in z-space
+images = loader.styles_to_images(loader.noise_to_styles(noise, trunc_psi=0.7))
+
+for i, img in enumerate(images):
+    img.save(f'fabric_{i}.png')
+```
+</CodeBlock>
+
+Four random vectors → four distinct fabric patterns. The `trunc_psi=0.7` argument is the truncation trick at default strength; we'll unpack what it does in Concept 4.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — From entangled `z` to disentangled `w`
+
+DCGAN's generator takes a random latent vector `z ~ N(0, I)` and runs it through transposed convolutions until an image emerges. Every dimension of `z` participates in every aspect of the output simultaneously — pose, colour, texture, and content are all entangled. Change one coordinate of `z` slightly and many visual features shift together; you can't isolate "change the colour without changing the pose."
+
+StyleGAN [1] adds a small auxiliary network before the generator: an 8-layer fully-connected **mapping network** that transforms `z` into an intermediate latent vector `w`. Instead of feeding `z` directly to the synthesis network, the architecture feeds `w` into every resolution level via adaptive instance normalisation. The mapping network has no architectural reason to preserve `z`'s Gaussian shape, and during training it learns to map `z` into a more uniformly-distributed `w` where dimensions tend to align with semantically meaningful features.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/stylegan_concepts.png"
+  alt="Block diagram of StyleGAN2 showing the 8-layer mapping network producing w from z, with w being injected into the synthesis network at every resolution level via adaptive instance normalisation"
+  caption="StyleGAN architecture. The mapping network transforms `z ∈ R^512` (Gaussian) into `w ∈ R^512` (learned distribution). The synthesis network upsamples 4×4 → 8×8 → ... → final resolution, with `w` injected at every level via AdaIN."
+  num={2}
+  role="diagram"
+/>
+
+The practical consequence: walks through `w`-space produce smoother visual transitions than walks through `z`-space, and individual `w` dimensions are far more likely to control isolated features. White's survey of latent-space techniques [3] documents the difference quantitatively across multiple StyleGAN variants.
+
+<Admonition type="dyk" title="History — StyleGAN went from paper to viral website in three months">
+NVIDIA released the StyleGAN paper on arXiv in December 2018. By February 2019, software engineer Phillip Wang had built thispersondoesnotexist.com — a website that generated a new photorealistic face on every reload using the released checkpoint. It went viral within days. The image quality was so far ahead of what most people thought was possible that the site became a reference point for public discussions of synthetic media. StyleGAN's CVPR 2019 paper won an Honorable Mention for Best Paper.
+</Admonition>
+
+### Concept 2 — Latent walks and the smoothness of `w`-space
+
+Once you have a trained StyleGAN, the most basic creative operation is interpolation: pick two `w` vectors, walk a straight line between them, decode every step into an image. The intermediate frames form a smooth morphing animation because `w`-space is *continuous* in a way that matters — nearby points decode to similar images.
+
+<CodeBlock lang="python" file="latent interpolation in w-space">
+```python
+import numpy as np
+
+def interpolate_w(w_a, w_b, steps=10):
+    alphas = np.linspace(0, 1, steps)
+    return [(1 - a) * w_a + a * w_b for a in alphas]
+```
+</CodeBlock>
+
+That's the entire formula. The interesting question is *why* it works — the answer is the mapping network. The original `z`-space is a 512-dimensional Gaussian; straight lines through Gaussian space pass through low-density regions that the generator was rarely shown during training. `w`-space is more uniformly distributed (because the mapping network learned to make it so), so straight lines stay in regions the generator handles well.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/latent_interpolation.png"
+  alt="Heatmap showing 10 steps of linear interpolation between two 64-dimensional latent vectors with smooth gradients across the interpolation steps"
+  caption="Visualisation of 10-step interpolation in latent space. Each column is one step; each row is one latent dimension. The smooth gradients are what becomes smooth visual transitions when decoded."
+  num={3}
+  role="diagram"
+/>
+
+### Concept 3 — Style mixing across layer ranges
+
+StyleGAN injects `w` into the synthesis network at every resolution level — 4×4, 8×8, 16×16, 32×32, 64×64 (and beyond for larger models). Different layers control different scales of features. The trick that gives the architecture its name: use *different* `w` vectors at different layer ranges.
+
+For a model that outputs 1024×1024 images (18 layers), Karras et al. [1] map the layer ranges to feature scales:
+
+| Layer range | Resolution | Controls |
+|---|---|---|
+| 0–3 (coarse) | 4×4 → 16×16 | overall pose, face shape, presence of accessories |
+| 4–7 (middle) | 32×32 → 128×128 | facial features, hairstyle, eye shape |
+| 8–17 (fine) | 256×256 → 1024×1024 | colour, texture, lighting, micro-details |
+
+For the 64×64 fabric model in this lesson the structure is similar but compressed — early layers control overall pattern layout, later layers control colour and fine texture.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/style_mixing_grid.png"
+  alt="A 4x4 grid demonstrating style mixing between two source latent vectors with different crossover layers, showing how coarse features come from one source and fine features from the other"
+  caption="Style mixing across crossover layers. Rows are source A images (coarse features); columns are source B images (fine features); the diagonal-off cells show the mix — A's pose/shape with B's colour/texture."
+  num={4}
+  role="comparison"
+/>
+
+The implementation is direct: produce 18 `w` vectors per generated image (one per layer), and choose which source provides each one.
+
+<CodeBlock lang="python" file="style mixing">
+```python
+def mix_styles(w_a, w_b, crossover_layer, num_layers=18):
+    mixed = w_a.clone()                              # take all from A initially
+    mixed[crossover_layer:] = w_b[crossover_layer:]  # overwrite later layers from B
+    return mixed
+```
+</CodeBlock>
+
+For the fabric model, mixing at layer 4 gives you the overall pattern structure of A with the colour palette of B. Mixing at layer 6 keeps less of A and more of B. The right crossover depends on what feature transfer you want.
+
+### Concept 4 — The truncation trick: trading diversity for quality
+
+Latent vectors sampled from `N(0, I)` are not all created equal. Most samples cluster near the mean — the regions where the generator saw the most training data and produces high-quality outputs. Samples from the tails of the distribution are rare both during training and during inference, and the generator's behaviour there is less reliable; you'll occasionally get artefacts, off-palette colours, or implausible structure.
+
+The **truncation trick** [1] pulls every latent vector back toward the mean of the distribution before decoding:
+
+```
+w_truncated = w̄ + ψ · (w − w̄)
+```
+
+where `w̄` is the mean of many sampled `w` vectors (computed once, after training) and `ψ ∈ [0, 1]` is the truncation parameter. `ψ = 1.0` is no truncation (use the original sample); `ψ = 0` is full collapse to the mean (every output is the same). Intermediate values trade diversity for reliability.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/truncation_comparison.png"
+  alt="A 4x4 grid of generated fabric patterns at truncation values 0.3, 0.5, 0.7, and 1.0 showing decreasing diversity and increasing consistency as psi decreases"
+  caption="Same four random seeds at four truncation values. `ψ = 0.3` produces very similar, safe outputs. `ψ = 1.0` produces maximum diversity but some samples look unusual. `ψ = 0.7` is the conventional default."
+  num={5}
+  role="comparison"
+/>
+
+The conventional defaults: `ψ = 0.7` for general-purpose generation, `ψ = 0.5` for showcasing the model's best work, `ψ = 1.0` when you want the full diversity (and are willing to filter outputs manually). The fabric model in this lesson uses `ψ = 0.7` in the quick start.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/truncation_concept.png"
+  alt="Three-panel diagram showing the distribution of latent values, the before-versus-after of applying truncation, and the resulting quality-diversity trade-off curve"
+  caption="The truncation operation geometrically. Vectors at the tails of the latent distribution (left) get pulled toward the mean (centre); the resulting trade-off (right) is essentially a Pareto frontier between sample quality and sample diversity."
+  num={6}
+  role="diagram"
+/>
+
+<Admonition type="important">
+Truncation only changes what's *sampled*, not what's *generated*. The decoder weights are unchanged; truncation is purely an inference-time choice. You can re-run the same seed at different `ψ` values and watch the same point in latent space migrate toward the mean.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Generate 16 fabric patterns and compare two random seeds">
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/stylegan-checkpoint/model_99.pt" label="model_99.pt — pre-trained StyleGAN2 checkpoint (189 MB)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise1_generate.py" label="exercise1_generate.py — generates 4x4 grid at one seed" />
+
+Drop the checkpoint into `models/african_fabrics/model_99.pt`, then:
+
+<CodeBlock lang="bash">
+```bash
+pip install stylegan2-pytorch torch torchvision
+python exercise1_generate.py
+```
+</CodeBlock>
+
+This produces `generated_fabrics_seed42.png` — a 4×4 grid of patterns sampled at `ψ = 0.7`. Open the script, change `RANDOM_SEED = 42` to `RANDOM_SEED = 100`, and rerun. You now have two grids to compare.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/generated_fabrics_seed42.png"
+  alt="A 4x4 grid of 16 generated African fabric patterns featuring geometric shapes and vibrant colour palettes"
+  caption="16 fabric patterns generated at seed 42, truncation ψ = 0.7. Each is a unique sample; all share the trained model's sense of what an African fabric looks like."
+  num={7}
+  role="output"
+/>
+
+**Reflection**
+
+1. Every pattern in the two grids is unique, but both grids share an identifiable "African fabric" style. Which component of the StyleGAN architecture is responsible for the style consistency, and which is responsible for the per-sample variation?
+2. The seed controls *where* in the 512-dimensional latent space we sample. Why does every point in this space produce a *valid* fabric pattern rather than occasional nonsense?
+3. The model was trained on 1,059 fabric images. How can it generate visually distinct samples beyond what's literally in the dataset?
+
+<Dropdown summary="Discussion">
+
+1. The style consistency comes from the trained weights of the synthesis network — those weights *are* the model's notion of what fabric is. The per-sample variation comes from the latent vector `z`, which selects a specific point in the learned distribution. The mapping network sits between the two and shapes `z` into the disentangled `w` that the synthesis network actually uses.
+
+2. Because the generator was trained adversarially against a discriminator on the entire `N(0, I)` distribution. Anywhere a sample could plausibly come from, the discriminator pushed the generator to produce something fabric-like. The truncation trick is the optional refinement that biases toward the higher-density regions for slightly more reliable output.
+
+3. The model didn't memorise; it learned the *distribution*. The 1,059 training images are samples from a much larger space of plausible African fabric patterns, and the trained generator interpolates and recombines features it observed to produce new samples in that same space. This is the entire premise of generative modelling.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Truncation sweep and morphing animation">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise2_explore.py" label="exercise2_explore.py — truncation comparison + morphing animation" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise2_explore.py
+```
+</CodeBlock>
+
+Produces three files:
+
+- `truncation_comparison.png` — same 4 seeds at 4 truncation values (Figure 5).
+- `fabric_morph.gif` — smooth interpolation between two `w` vectors.
+- `morph_endpoints.png` — the start and end frames of the morph, side by side.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/fabric_morph.gif"
+  alt="Animated GIF showing a smooth morph between two distinct African fabric patterns over multiple interpolation steps"
+  caption="A smooth morph between two `w`-space points. Every intermediate frame is a valid fabric pattern, generated by decoding the interpolated latent vector at that step."
+  num={8}
+  role="output"
+/>
+
+**Goal 1 — Truncation tuning.** The script generates at ψ ∈ {0.3, 0.5, 0.7, 1.0}. Compare the grids: which ψ produces the most visually pleasing results *for you*? There's no universal answer — the "right" ψ depends on whether you prioritise quality or diversity for your specific application.
+
+**Goal 2 — Different morph endpoints.** Edit the script:
+
+```python
+SEED_A = 777     # try other starting patterns
+SEED_B = 2024    # try other ending patterns
+```
+
+**Goal 3 — Custom truncation values.** Try `TRUNCATION_VALUES = [0.2, 0.4, 0.6, 0.8]` to see the finer-grained progression.
+
+<Dropdown summary="What to expect — truncation">
+At `ψ = 0.3` the four outputs look almost identical — high consistency, low variation. At `ψ = 0.5` you have noticeable variation while every sample still looks clean. `ψ = 0.7` (default) gives meaningful diversity; `ψ = 1.0` shows the model's full range, but you'll occasionally see samples with off-palette colours or implausible structure.
+</Dropdown>
+
+<Dropdown summary="What to expect — morphing">
+The morph between two `w`-space vectors should look continuously plausible — no jarring transitions, no garbled intermediate frames. If you see a clear discontinuity in the middle of the morph, you're likely interpolating in `z`-space rather than `w`-space; switch to interpolating in `w` and the smoothness should return.
+</Dropdown>
+
+<Dropdown summary="What to expect — endpoints">
+Very distant seeds (e.g. 1 and 999999) sometimes produce morphs that pass through an unusual intermediate region — recognisable as the chord through `w`-space that connects two distant points. The animation may briefly look "in-between styles" rather than smoothly transforming. This is one place where `w`-space disentanglement isn't perfect; modern StyleGAN variants have improved on it.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="TRAIN" title="Use the pre-trained model, or train from scratch (10-12 hours GPU)">
+
+Two options. Most learners should use Option A unless they specifically want to live through a long training run.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise3_generate.py" label="exercise3_generate.py — generate with pre-trained checkpoint" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise3_train.py" label="exercise3_train.py — train from scratch (10-12 hours on GPU)" />
+
+<Dropdown summary="Option A — Generate from pre-trained checkpoint (recommended)">
+
+Same checkpoint as the Quick Start. The script produces a 4×4 grid of generated patterns plus an interpolation animation between two patterns.
+
+```bash
+python exercise3_generate.py
+```
+
+Saves `generated_fabrics.png` and `fabric_interpolation.png`.
+
+</Dropdown>
+
+<Dropdown summary="Option B — Train from scratch (10-12 hours)">
+
+Uses the lucidrains stylegan2-pytorch [8] implementation. Configuration:
+
+| Hyperparameter | Value |
+|---|---|
+| Dataset | 1,059 African fabric images, 64×64 (from Lesson 12.1.2) |
+| Batch size | 8 |
+| Learning rate | 2e-4 |
+| Training steps | 10,000 |
+| Estimated time | 10–12 hours on RTX 3070/4070 class |
+
+```bash
+python exercise3_train.py
+```
+
+What you should observe across training:
+- Initial outputs: pure noise (epoch 0).
+- ~1,000 steps in: basic colour regions and rough texture emerge.
+- ~5,000 steps in: recognisable fabric patterns appear.
+- ~10,000 steps in: high-quality diverse patterns matching the dataset's style.
+
+The 100 epoch checkpoints accumulate to ~18 GB of disk. Plan accordingly.
+
+</Dropdown>
+
+<Dropdown summary="Make it your own — experiment with parameters">
+
+After getting either option working, explore:
+
+**Truncation variations.** Change `TRUNCATION` in `exercise3_generate.py`:
+```python
+TRUNCATION = 1.0     # max diversity
+TRUNCATION = 0.7     # balanced (default)
+TRUNCATION = 0.5     # higher quality, less variation
+```
+
+**Larger grids.** Change `NUM_IMAGES`:
+```python
+NUM_IMAGES = 16      # 4x4 default
+NUM_IMAGES = 25      # 5x5
+NUM_IMAGES = 64      # 8x8 — wallpaper material
+```
+
+**Different starting seeds for the morph.** The interpolation between two specific seeds is reproducible; try a few until you find a morph you like.
+
+</Dropdown>
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+StyleGAN's contribution to GAN architecture is the *separation* between the random latent input `z` and the styled controls injected into the synthesis network — implemented by an 8-layer mapping network that transforms `z` into an intermediate `w` whose dimensions are much more disentangled. Once that separation exists, three creative operations follow: smooth interpolation through `w`-space (because nearby points decode to similar images), style mixing across layer ranges (because different resolution levels control different feature scales), and the truncation trick (which trades diversity for quality by pulling samples toward the mean of `w`). The same architecture underpins later StyleGAN variants and is a structural template that propagated into modern systems like StyleGAN-XL and StyleGAN-T.
+</Admonition>
+
+**Common pitfalls**
+
+- Interpolating in `z`-space instead of `w`-space. The morphs will be visibly less smooth and may pass through bad regions.
+- Using `ψ = 0.3` because "high quality is good." You'll get nearly-identical outputs and the model's range disappears.
+- Crossover layers off by one. Layer 0 vs layer 1 vs layer 2 makes a real difference in which features get inherited from which source.
+- Forgetting that truncation is computed against the *mean* `w̄`, not the origin. The script samples thousands of `w` vectors to estimate `w̄` once; if you skip that, truncation pulls toward zero instead of toward the trained distribution centre and outputs degrade.
+- Confusing `model.eval()` with `model.train()` mode. AdaIN behaves differently between modes; always evaluate in `eval`.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Karras, T., Laine, S. &amp; Aila, T. (2019). A Style-Based Generator Architecture for Generative Adversarial Networks. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/1812.04948" target="_blank" rel="noopener">arxiv:1812.04948</a></li>
+    <li><span class="tag">[2]</span> Karras, T., Laine, S., Aittala, M., Hellsten, J., Lehtinen, J. &amp; Aila, T. (2020). Analyzing and Improving the Image Quality of StyleGAN. *CVPR*. <a href="https://arxiv.org/abs/1912.04958" target="_blank" rel="noopener">arxiv:1912.04958</a></li>
+    <li><span class="tag">[3]</span> White, T. (2016). Sampling Generative Networks. *arXiv preprint*. <a href="https://arxiv.org/abs/1609.04468" target="_blank" rel="noopener">arxiv:1609.04468</a></li>
+    <li><span class="tag">[4]</span> Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A. &amp; Bengio, Y. (2014). Generative Adversarial Nets. *Advances in Neural Information Processing Systems*. <a href="https://arxiv.org/abs/1406.2661" target="_blank" rel="noopener">arxiv:1406.2661</a></li>
+    <li><span class="tag">[5]</span> Radford, A., Metz, L. &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. *ICLR*. <a href="https://arxiv.org/abs/1511.06434" target="_blank" rel="noopener">arxiv:1511.06434</a></li>
+    <li><span class="tag">[6]</span> Härkönen, E., Hertzmann, A., Lehtinen, J. &amp; Paris, S. (2020). GANSpace: Discovering Interpretable GAN Controls. *NeurIPS*. <a href="https://arxiv.org/abs/2004.02546" target="_blank" rel="noopener">arxiv:2004.02546</a></li>
+    <li><span class="tag">[7]</span> Karras, T., Aittala, M., Laine, S., Härkönen, E., Hellsten, J., Lehtinen, J. &amp; Aila, T. (2021). Alias-Free Generative Adversarial Networks (StyleGAN3). *NeurIPS*. <a href="https://arxiv.org/abs/2106.12423" target="_blank" rel="noopener">arxiv:2106.12423</a></li>
+    <li><span class="tag">[8]</span> Wang, P. (2024). *stylegan2-pytorch: Simplest working implementation of StyleGAN2*. GitHub repository (MIT License). <a href="https://github.com/lucidrains/stylegan2-pytorch" target="_blank" rel="noopener">github.com/lucidrains/stylegan2-pytorch</a></li>
+  </ol>
+</section>

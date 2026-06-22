@@ -1,0 +1,425 @@
+---
+module: "M 12"
+cycle: "III"
+title: "Pix2Pix Applications"
+objective: "Translate one image into another (label-to-photo, sketch-to-colour) with a conditional GAN: U-Net generator preserves spatial structure, PatchGAN discriminator enforces local realism, L1+adversarial loss balances accuracy against sharpness."
+framework: "conceptual"
+duration: "35–45 min"
+level: "intermediate-advanced"
+load: "4 core concepts"
+prereqs: "Lessons 12.1.1, 12.1.2, 12.1.3 (the GAN family); free Kaggle account for the optional from-scratch retrain"
+prev:
+  slug: "12.3.1"
+  title: "DDPM Basics"
+next:
+  slug: "12.3.2"
+  title: "ControlNet Guided Generation"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_epoch_100.png"
+  alt="Top row shows black-and-white anime line-art sketches; bottom row shows the Pix2Pix-generated colorised versions of those exact sketches with shading and colour palette applied"
+  caption="Anime line-art → colourised pairs from a Pix2Pix model trained 100 epochs on the Kaggle Anime Sketch Colorization dataset. The output preserves every line of the input while adding plausible colour and shading."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+DCGAN [Lesson 12.1.2](/lessons/12.1.2) generates fabric patterns from random noise. StyleGAN [Lesson 12.1.3](/lessons/12.1.3) generates them with controllable disentangled latents. Both are *unconditional* — the input is noise, and the only thing controlling the output is which random seed you picked.
+
+Pix2Pix, introduced by Isola, Zhu, Zhou and Efros at CVPR 2017 [1], does something structurally different. The input is no longer noise — it's another *image*. The model learns to translate input images into output images while preserving spatial structure. Feed it a black-and-white line drawing, get a colourised version. Feed it a building's segmentation label, get a photorealistic facade. Feed it a daytime satellite image, get the night-time version. The same architecture handles all of these tasks; what changes is the paired training data.
+
+This lesson works through two demonstrations on the same architecture: a pre-trained facades model (label-to-photo, ready to use) for Exercises 1 and 2, and an optional from-scratch retrain on the [Anime Sketch Colorization Pair dataset from Kaggle](https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair) [2] for Exercise 3. The underlying idea — conditional GAN, U-Net generator, PatchGAN discriminator, L1+adversarial loss — generalises to almost any image-to-image translation task you can find paired data for.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish conditional from unconditional GANs and explain what the conditioning input adds to the training signal.</li>
+  <li>Build a U-Net generator and explain why the skip connections are non-negotiable for pixel-aligned output.</li>
+  <li>Understand the PatchGAN discriminator's patch-level real/fake scoring and predict when it outperforms a full-image discriminator.</li>
+  <li>Combine adversarial loss with L1 reconstruction loss and tune `λ` for sharpness vs accuracy trade-off.</li>
+</ol>
+
+## Quick start — translate a facade label into a building photo <a id="quick-start"></a>
+
+The pre-trained `facades_label2photo` weights are on the GitHub Release. Place under `checkpoints/`, load with the helper script, run on one of the sample facade labels.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-pix2pix-weights/generator_weights.pth" label="generator_weights.pth — U-Net generator (~208 MB, GitHub Release)" />
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-pix2pix-weights/discriminator_weights.pth" label="discriminator_weights.pth — PatchGAN discriminator (~11 MB)" />
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+from facades_generator import create_facades_generator
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load pre-trained facades U-Net generator
+generator = create_facades_generator('checkpoints/generator_weights.pth')
+generator.eval()
+
+# Load a CMP Facades segmentation label
+label = Image.open('sample_facades/base/cmp_b0001.png').convert('RGB').resize((256, 256))
+label_arr = np.array(label).astype(np.float32) / 255.0
+x = torch.from_numpy((label_arr - 0.5) / 0.5).permute(2, 0, 1).unsqueeze(0)
+
+with torch.no_grad():
+    facade = generator(x)
+
+facade = ((facade.squeeze().permute(1, 2, 0).numpy() + 1) / 2).clip(0, 1)
+plt.imsave('quick_start_output.png', facade)
+```
+</CodeBlock>
+
+The input is a coloured segmentation label (different colours = walls, windows, doors, sky). The output is a photorealistic building photo that follows the label's structure but fills it with realistic textures.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/quick_start_output.png"
+  alt="A photorealistic building facade generated from a coloured segmentation label, showing walls, windows, and doors in plausible textures"
+  caption="Quick-start output. The input segmentation label is converted into a coherent building photo — the architectural layout comes from the input; the textures come from the model."
+  num={2}
+  role="output"
+/>
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Conditional vs unconditional generation
+
+The structural shift from DCGAN to Pix2Pix is that the input vector is no longer arbitrary noise but a meaningful *image*. Mirza and Osindero's 2014 paper [3] introduced the conditional GAN framework in the abstract — feed any conditioning information `c` alongside the noise — but Pix2Pix specialised it to a powerful case: when `c` is itself an image, you get image-to-image translation.
+
+```
+# Unconditional GAN (DCGAN)
+G(z) → image                    # z = noise, output is random
+
+# Conditional GAN with image conditioning (Pix2Pix)
+G(x) → image                    # x = input image, output is structured translation
+```
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/conditional_vs_unconditional.png"
+  alt="Side-by-side diagram comparing DCGAN taking noise input and producing a random image versus Pix2Pix taking an image input and producing a translated output"
+  caption="DCGAN (left) generates a random image from noise. Pix2Pix (right) translates an input image into an output image, with the spatial structure of the input preserved in the output."
+  num={3}
+  role="diagram"
+/>
+
+The conditioning shifts what the generator has to learn. Instead of "produce something that looks like a real image," the task becomes "produce the output image that corresponds to *this* input image." Training data becomes paired — every input must have a known correct output — but the supervision is much stronger as a result. The model can converge faster and produce more controllable results, in exchange for needing paired data.
+
+This same idea later evolved into the conditioning patterns used by Stable Diffusion (text-to-image, where the condition is a text embedding rather than an image) and ControlNet ([Lesson 12.3.2](/lessons/12.3.2), where structural conditioning is layered onto an existing text-to-image model).
+
+<Admonition type="dyk" title="History — Pix2Pix begat a whole family">
+The 2017 Pix2Pix paper [1] inspired an entire research line. CycleGAN [4] from the same lab the same year removed the paired-data requirement using cycle consistency. SPADE generalised conditioning to spatial layouts. Pix2PixHD scaled to megapixel resolution. By 2020, every image-to-image translation paper was either an extension of Pix2Pix or a competitor benchmarked against it. The fundamental template — conditional GAN with U-Net generator and patch-based discriminator — turned out to be remarkably general.
+</Admonition>
+
+### Concept 2 — U-Net generator and the necessity of skip connections
+
+Pix2Pix's generator is a U-Net [5] — the same encoder-decoder-with-skip-connections architecture used in [Lesson 12.3.1's DDPM](/lessons/12.3.1) for noise prediction. For image-to-image translation, the skip connections are not a tuning choice; they're a structural requirement.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/unet_skip_connections.png"
+  alt="U-Net encoder-decoder architecture diagram with skip connections shown as pink arrows linking matching encoder and decoder layers across the bottleneck"
+  caption="U-Net for image-to-image translation. Encoder (left) downsamples 256→128→...→1; decoder (right) upsamples back to 256; skip connections (pink) preserve fine spatial detail across the bottleneck."
+  num={4}
+  role="diagram"
+/>
+
+Consider what happens without skip connections. The encoder downsamples 256×256 → 128 → 64 → 32 → 16 → 8 → 4 → 2 → 1 (a 1×1 bottleneck with all the input information compressed into one vector). The decoder then has to reconstruct a 256×256 output that *aligns pixel-for-pixel* with the input. Without skip connections, every spatial detail has to survive the bottleneck round-trip — and most of it doesn't. The output ends up blurry and misaligned with the input lines.
+
+Skip connections fix this by piping each encoder layer's output directly to the corresponding decoder layer at the same resolution. Fine detail bypasses the bottleneck entirely; the bottleneck only has to encode the *high-level* transformation (this label means "wall", this means "window"), while the skip connections carry the spatial layout that the output must respect.
+
+<CodeBlock lang="python" file="U-Net forward pass with skip connections">
+```python
+def forward(self, x):
+    # Encoder — store every output for skip connections
+    d1 = self.down1(x)    # 256 → 128
+    d2 = self.down2(d1)   # 128 → 64
+    d3 = self.down3(d2)   # 64 → 32
+    d4 = self.down4(d3)   # 32 → 16
+    d5 = self.down5(d4)   # 16 → 8
+    d6 = self.down6(d5)   # 8 → 4
+    d7 = self.down7(d6)   # 4 → 2
+    d8 = self.down8(d7)   # 2 → 1 (bottleneck)
+
+    # Decoder — concatenate corresponding encoder feature at each step
+    u1 = self.up1(d8, d7)
+    u2 = self.up2(u1, d6)
+    u3 = self.up3(u2, d5)
+    u4 = self.up4(u3, d4)
+    u5 = self.up5(u4, d3)
+    u6 = self.up6(u5, d2)
+    u7 = self.up7(u6, d1)
+
+    return self.final(u7)  # → 256x256
+```
+</CodeBlock>
+
+### Concept 3 — PatchGAN: discriminator that scores patches, not images
+
+A standard GAN discriminator outputs a single scalar per image — real or fake. For high-resolution image-to-image translation, this single-scalar signal is too coarse: the discriminator can be fooled by a globally plausible image that has local artefacts (smeared windows, misaligned tiles, fuzzy edges).
+
+Pix2Pix's **PatchGAN** discriminator outputs a grid of real/fake predictions — typically 30×30 — where each prediction corresponds to a 70×70 pixel patch in the input. The generator is now penalised on *every patch*, not just the overall image. This concentrates training pressure on local texture quality, which is exactly where the L1 loss (Concept 4) is weakest.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/patchgan_diagram.png"
+  alt="Diagram showing the PatchGAN discriminator dividing an input image into overlapping 70-by-70 patches and producing a 30-by-30 grid of real-fake classifications"
+  caption="PatchGAN's structure. The discriminator outputs a 30×30 grid of real/fake scores, each corresponding to a 70×70 patch in the input. Training pressure is local; the generator is rewarded for *every* patch looking realistic."
+  num={5}
+  role="diagram"
+/>
+
+The discriminator receives *both* the input condition and the output image, concatenated along the channel dimension. This lets it check not just "is this output realistic?" but "is this output a *valid translation of the given input*?"
+
+<CodeBlock lang="python" file="PatchGAN forward pass">
+```python
+def forward(self, sketch, target):
+    x = torch.cat([sketch, target], dim=1)   # 3 + 3 = 6 channels
+    return self.model(x)                     # → (batch, 1, 30, 30)
+```
+</CodeBlock>
+
+Three practical advantages stack up: detail-awareness (more sensitive to local artefacts), denser training signal (one loss value per patch, not per image), and parameter efficiency (the discriminator can be smaller because it only ever processes a single patch's receptive field at a time).
+
+### Concept 4 — L1 + adversarial loss: accuracy from L1, sharpness from the GAN
+
+Pix2Pix's loss combines two complementary terms:
+
+```
+L_total = L_GAN(G, D) + λ · L_L1(G)
+```
+
+**Adversarial loss** is the standard GAN objective: generator tries to fool the discriminator, discriminator tries to catch fakes. This term rewards perceptual realism — sharpness, plausible textures, no obvious artefacts.
+
+**L1 reconstruction loss** is the pixel-wise absolute difference between the generator's output and the ground-truth output: `L_L1 = E[|y - G(x)|]`. This term rewards literal pixel accuracy. The L1 norm (rather than L2) is chosen because it's less sensitive to outliers and produces less blurry results than L2 would.
+
+Why both? Each fixes the other's weakness. Pure adversarial loss produces sharp but spatially-imprecise outputs — the generator can satisfy the discriminator with a realistic image that doesn't match the input. Pure L1 loss produces blurry but spatially-precise outputs — the L1 minimum at any pixel is the *average* of all plausible colours, which is grey-ish. Combining the two with `λ = 100` (the conventional default in the original paper) lets the L1 pin the output to the right location and the GAN sharpen the textures within that location.
+
+<Admonition type="important">
+The `λ = 100` default is calibrated for the original paper's tasks (facades, edges-to-photos, colourisation) at 256×256 resolution. For tasks where you want sharper outputs at the cost of slight spatial imprecision, lower `λ` (try 10–50). For tasks where you want pixel-perfect alignment at the cost of slight blurriness, raise it (try 200+). The trade-off is monotonic.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Run the pre-trained facades model on sample labels">
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-pix2pix-weights/generator_weights.pth" label="generator_weights.pth — 208 MB U-Net generator" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise1_observe.py" label="exercise1_observe.py — multi-facade comparison" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/facades_generator.py" label="facades_generator.py — generator loader helper" />
+
+Place the generator checkpoint at `checkpoints/facades_generator.pth`, then:
+
+<CodeBlock lang="bash">
+```bash
+python exercise1_observe.py
+```
+</CodeBlock>
+
+Output: `exercise1_output.png` — a grid showing several facade segmentation labels alongside their generated photo equivalents. The CMP Facades dataset [6] is also on Kaggle if you want more inputs to try.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise1_output.png"
+  alt="A grid of facade segmentation labels paired with their generated photorealistic building photos"
+  caption="Each row is one example: segmentation label on the left, generated photo on the right. The model has learned a consistent visual style for each label colour — walls are textured plaster, windows are darker glass, doors are wooden."
+  num={6}
+  role="comparison"
+/>
+
+**Reflection**
+
+1. The generated photos all share a particular visual style — warm beige walls, dark wooden doors, regular window grids. Where does that style come from?
+2. The same facade label decoded twice with the same model produces the same output. How does this differ from DCGAN, where the same noise vector also produces the same output?
+3. What would happen if you fed a label that wasn't a facade (e.g. a random colour blob) into this generator?
+4. The PatchGAN discriminator (Concept 3) outputs a 30×30 grid of patch scores. How does this granularity affect what the *generator* learns to do?
+
+<Dropdown summary="Discussion">
+
+1. The CMP Facades training dataset is dominated by buildings from a specific architectural style (mostly Central European 19th/20th-century apartment buildings). The model has learned the visual statistics of *that* dataset, not facades-in-general; train it on Japanese houses and you'd get a different style.
+
+2. Mechanically the same — both are deterministic forward passes through a frozen network. But conceptually different: DCGAN's input is meaningless noise that maps onto a *random* point in the learned distribution; Pix2Pix's input is a meaningful label that maps onto a *specific* translation of that label.
+
+3. The model would produce something — but it would be garbage. The model has been trained only on inputs from the segmentation-label distribution; outside that distribution its behaviour is undefined. You'd get textures vaguely reminiscent of facades but composed nonsensically.
+
+4. The generator must produce output that looks realistic at every 70×70-patch scale, not just globally. This is why Pix2Pix outputs have crisp local textures (the patch discriminator catches local artefacts) but can have slight global inconsistencies (the patch discriminator can't see across patches).
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Modify labels and see how output changes">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise2_explore.py" label="exercise2_explore.py — label-modification explorations" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise2_explore.py
+```
+</CodeBlock>
+
+Three explorations:
+
+**Goal 1 — Window count.** Modify a facade label to add or remove windows; observe how the generator responds. The output should track the input's structural changes.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise2_windows.png"
+  alt="Three facade variations showing the same building with different numbers of windows in the segmentation label and the corresponding generated photos with matching window counts"
+  caption="Window-count variations. The model faithfully tracks the structural change in the label — fewer windows in, fewer windows out."
+  num={7}
+  role="comparison"
+/>
+
+**Goal 2 — Colour palette injection.** Try modifying the label colour-coding to see how strict the model is about mapping label colours to specific materials.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise2_colors.png"
+  alt="Three facade outputs from labels using different colour palettes for the same architectural elements showing how the model interprets the colour-to-material mapping"
+  caption="The label-colour-to-material mapping is learned, not hard-coded. Off-distribution colours produce ambiguous textures."
+  num={8}
+  role="comparison"
+/>
+
+**Goal 3 — Partial labels.** Provide a label with large unlabelled regions; observe how the model fills them in.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise2_partial.png"
+  alt="A facade label with substantial blank areas and the corresponding generated photo showing how the model handles missing structural information"
+  caption="Partial labels test the generator under ambiguity — when the input doesn't specify enough structure, the model defaults to its training-distribution average."
+  num={9}
+  role="comparison"
+/>
+
+<Dropdown summary="What to expect — window modifications">
+The generator follows the input strictly — adding a window in the label adds a window in the output, in the right location. Spatial alignment is one of Pix2Pix's strongest properties; the skip connections + L1 loss combination is what enforces it.
+</Dropdown>
+
+<Dropdown summary="What to expect — colour palette">
+The colour-to-material mapping is learned from the training data, which used a specific colour code. If you stay within that code's vocabulary, the model produces clean textures. Inject colours from outside the training distribution and you get ambiguous outputs — the model has no learned mapping for that input colour, so it produces something in-between materials.
+</Dropdown>
+
+<Dropdown summary="What to expect — partial labels">
+Where labels are absent, the model produces output that approximates the *average* of plausible completions given the surrounding context. This is the same blurriness mechanism as VAE outputs (Lesson 12.2.1) — when the model is uncertain, MSE-like losses converge to the mean of valid options.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="TRAIN" title="Train Pix2Pix from scratch on anime sketch colourisation">
+
+This exercise trains a full Pix2Pix from scratch on the [Anime Sketch Colorization Pair dataset from Kaggle](https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair) [2] — ~17,000 paired sketch/colour images.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_train.py" label="exercise3_train.py — full Pix2Pix training (100 epochs, GPU)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/pix2pix_model.py" label="pix2pix_model.py — U-Net generator + PatchGAN discriminator" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/preprocess_anime_sketches.py" label="preprocess_anime_sketches.py — Kaggle dataset preprocessor" />
+
+**Step 1 — Get the dataset.** Visit [kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair](https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair), download (~14 GB compressed; free Kaggle account required), extract to `anime_sketch_dataset/`, then run:
+
+<CodeBlock lang="bash">
+```bash
+python preprocess_anime_sketches.py
+```
+</CodeBlock>
+
+This splits paired images into `anime_processed/sketches/` and `anime_processed/colors/` so the training script can find them.
+
+**Step 2 — Train.**
+
+<CodeBlock lang="bash">
+```bash
+python exercise3_train.py
+```
+</CodeBlock>
+
+Configuration:
+
+| Hyperparameter | Value |
+|---|---|
+| Image size | 256×256 |
+| Batch size | 1 (the original paper's choice) |
+| Generator | U-Net with 8 down/up blocks |
+| Discriminator | PatchGAN, 70×70 receptive field |
+| Optimiser | Adam, lr=2e-4, β₁=0.5 |
+| Loss weight | `λ_L1 = 100` |
+| Epochs | 100 |
+| Estimated time | ~3-5 hours on RTX 5070Ti |
+
+Sample images saved every epoch in `training_results/`. Loss curves and visual progression help diagnose training health.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_training_progress.png"
+  alt="Training loss curves for the generator and discriminator over 100 epochs showing the typical adversarial oscillation pattern"
+  caption="Training dynamics over 100 epochs. Adversarial losses oscillate (healthy); L1 loss decreases monotonically (also healthy)."
+  num={10}
+  role="training-log"
+/>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_epoch_25.png"
+  alt="Anime sketch colourisations after 25 training epochs showing rough colour blocking but imperfect detail"
+  caption="Epoch 25 — basic colour assignment learned, fine details still rough."
+  num={11}
+  role="comparison"
+/>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_epoch_75.png"
+  alt="Anime sketch colourisations after 75 training epochs showing improved detail consistency and shading"
+  caption="Epoch 75 — colour palette consistent, shading and shadows starting to look natural."
+  num={12}
+  role="comparison"
+/>
+
+<Dropdown summary="What to watch for during training">
+- L1 loss should decrease monotonically; if it spikes, learning rate is too high.
+- Adversarial losses should oscillate around a non-zero plateau — both reaching zero is a bad sign (discriminator dominated, generator stopped improving).
+- Sample images at epoch 25 should already show recognisable colour assignment; if they don't, dataset preprocessing may be off.
+- Memory: ~6 GB GPU at batch size 1. Lower if needed; quality holds.
+</Dropdown>
+
+<Dropdown summary="Issue triage">
+
+**Dataset extraction creates wrong folder structure** — the Kaggle archive sometimes nests deeper than expected; the preprocessor expects `anime_sketch_dataset/data/train/` with paired sketch+colour images side-by-side.
+
+**Loss oscillates wildly** — discriminator is too strong. Try training the generator twice per discriminator step.
+
+**Outputs are correctly coloured but blurry** — `λ_L1` is too high; try 50 instead of 100.
+
+**Outputs are sharp but spatially misaligned** — `λ_L1` is too low; raise it.
+
+</Dropdown>
+
+**Make it your own**
+
+After training, run the model on sketches you draw yourself. The model has seen ~17,000 anime sketches and generalises reasonably well to similar styles. For very different sketch styles (e.g., realistic line drawings), expect degraded results — that's the limit of supervised translation: it knows the distribution it was trained on, not the universe of possible sketches.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+Pix2Pix turns the GAN framework from random generation into structured image-to-image translation by replacing the noise input with an input image, training on paired data, and combining three architectural choices: a U-Net generator whose skip connections preserve pixel-aligned spatial detail through the bottleneck, a PatchGAN discriminator whose patch-level real/fake scoring concentrates training pressure on local texture, and a combined L1+adversarial loss whose two terms each fix the other's weakness (L1 for accuracy, GAN for sharpness). The same template — conditional GAN + U-Net + patch discriminator + L1+adversarial loss — generalises to almost any paired image-translation task: facades-to-photo, sketch-to-colour, day-to-night, edge-to-shoe. CycleGAN [4] and later work extended the approach to unpaired data; modern image-conditioned diffusion models like ControlNet (Lesson 12.3.2) carry the conditioning idea forward into the diffusion paradigm.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting that paired data is *required*. Pix2Pix supervises pixel-by-pixel — without aligned ground truth, the L1 loss is undefined and the model can't train.
+- Resizing input and output to different dimensions. The U-Net expects matching input/output resolutions; mismatch breaks the skip-connection alignment.
+- Setting `λ_L1 = 0` to try "pure adversarial" — the result is sharp but spatially garbage. The L1 term is what enforces the correspondence.
+- Training with a batch size that's too large. Pix2Pix's original paper used batch size 1; PatchGAN works best when each forward pass sees one example fully rather than averaging across a batch.
+- Using a single-scalar discriminator. Without PatchGAN's patch-level scoring, local artefacts go unpenalised and outputs look smeared up close.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Isola, P., Zhu, J.-Y., Zhou, T. &amp; Efros, A. A. (2017). Image-to-Image Translation with Conditional Adversarial Networks (Pix2Pix). *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/1611.07004" target="_blank" rel="noopener">arxiv:1611.07004</a></li>
+    <li><span class="tag">[2]</span> Kaggle dataset. (2018). Anime Sketch Colorization Pair. <a href="https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair" target="_blank" rel="noopener">kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair</a></li>
+    <li><span class="tag">[3]</span> Mirza, M. &amp; Osindero, S. (2014). Conditional Generative Adversarial Nets. *arXiv preprint*. <a href="https://arxiv.org/abs/1411.1784" target="_blank" rel="noopener">arxiv:1411.1784</a></li>
+    <li><span class="tag">[4]</span> Zhu, J.-Y., Park, T., Isola, P. &amp; Efros, A. A. (2017). Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN). *IEEE International Conference on Computer Vision (ICCV)*. <a href="https://arxiv.org/abs/1703.10593" target="_blank" rel="noopener">arxiv:1703.10593</a></li>
+    <li><span class="tag">[5]</span> Ronneberger, O., Fischer, P. &amp; Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *MICCAI*. <a href="https://arxiv.org/abs/1505.04597" target="_blank" rel="noopener">arxiv:1505.04597</a></li>
+    <li><span class="tag">[6]</span> Tyleček, R. &amp; Šára, R. (2013). Spatial Pattern Templates for Recognition of Objects with Regular Structure. *German Conference on Pattern Recognition (GCPR)*. CMP Facades dataset. <a href="https://cmp.felk.cvut.cz/~tylecr1/facade/" target="_blank" rel="noopener">cmp.felk.cvut.cz/~tylecr1/facade</a></li>
+    <li><span class="tag">[7]</span> Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A. &amp; Bengio, Y. (2014). Generative Adversarial Nets. *NeurIPS*. <a href="https://arxiv.org/abs/1406.2661" target="_blank" rel="noopener">arxiv:1406.2661</a></li>
+    <li><span class="tag">[8]</span> Wang, T.-C., Liu, M.-Y., Zhu, J.-Y., Tao, A., Kautz, J. &amp; Catanzaro, B. (2018). High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs (Pix2PixHD). *CVPR*. <a href="https://arxiv.org/abs/1711.11585" target="_blank" rel="noopener">arxiv:1711.11585</a></li>
+  </ol>
+</section>

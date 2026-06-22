@@ -36,7 +36,7 @@ export const MODULES: ModuleEntry[] = [
   { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II',  firstLesson: '9.1.1' },
   { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II' },
   { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II' },
-  { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.2' },
+  { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.1' },
   { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III' },
   { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III' },
   { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', capstone: true },

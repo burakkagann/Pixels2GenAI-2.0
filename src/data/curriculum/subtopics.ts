@@ -300,33 +300,33 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
 
   '12': [
     { id: '12.1', title: 'Generative Adversarial Networks', leaves: [
-      { id: '12.1.1', title: 'GAN Architecture' },
+      { id: '12.1.1', title: 'GAN Architecture', lessonSlug: '12.1.1' },
       { id: '12.1.2', title: 'DCGAN Art', lessonSlug: '12.1.2' },
-      { id: '12.1.3', title: 'StyleGAN Exploration' },
-      { id: '12.1.4', title: 'Pix2Pix Applications' },
+      { id: '12.1.3', title: 'StyleGAN Exploration', lessonSlug: '12.1.3' },
+      { id: '12.1.4', title: 'Pix2Pix Applications', lessonSlug: '12.1.4' },
     ]},
     { id: '12.2', title: 'Variational Autoencoders', leaves: [
-      { id: '12.2.1', title: 'Latent Space Exploration' },
-      { id: '12.2.2', title: 'Interpolation Animations' },
-      { id: '12.2.3', title: 'Conditional VAEs' },
+      { id: '12.2.1', title: 'Latent Space Exploration', lessonSlug: '12.2.1' },
+      { id: '12.2.2', title: 'Interpolation Animations', lessonSlug: '12.2.2' },
+      { id: '12.2.3', title: 'Conditional VAEs', lessonSlug: '12.2.3' },
     ]},
     { id: '12.3', title: 'Diffusion Models', leaves: [
-      { id: '12.3.1', title: 'DDPM Basics' },
-      { id: '12.3.2', title: 'ControlNet Guided Generation' },
+      { id: '12.3.1', title: 'DDPM Basics', lessonSlug: '12.3.1' },
+      { id: '12.3.2', title: 'ControlNet Guided Generation', lessonSlug: '12.3.2' },
     ]},
     { id: '12.4', title: 'Bridging Paradigms', leaves: [
-      { id: '12.4.1', title: 'Neural Style Transfer' },
-      { id: '12.4.2', title: 'VQ-VAE & VQ-GAN' },
+      { id: '12.4.1', title: 'Neural Style Transfer', lessonSlug: '12.4.1' },
+      { id: '12.4.2', title: 'VQ-VAE & VQ-GAN', lessonSlug: '12.4.2' },
     ]},
     { id: '12.5', title: 'Personalization & Efficiency', leaves: [
-      { id: '12.5.1', title: 'DreamBooth Personalization' },
+      { id: '12.5.1', title: 'DreamBooth Personalization', lessonSlug: '12.5.1' },
     ]},
     { id: '12.6', title: 'Transformer Generation', leaves: [
-      { id: '12.6.1', title: 'Taming Transformers' },
-      { id: '12.6.2', title: 'Diffusion Transformer (DiT)' },
+      { id: '12.6.1', title: 'Taming Transformers', lessonSlug: '12.6.1' },
+      { id: '12.6.2', title: 'Diffusion Transformer (DiT)', lessonSlug: '12.6.2' },
     ]},
     { id: '12.7', title: 'Modern Frontiers', leaves: [
-      { id: '12.7.1', title: 'Flow Matching' },
+      { id: '12.7.1', title: 'Flow Matching', lessonSlug: '12.7.1' },
     ]},
   ],
 
