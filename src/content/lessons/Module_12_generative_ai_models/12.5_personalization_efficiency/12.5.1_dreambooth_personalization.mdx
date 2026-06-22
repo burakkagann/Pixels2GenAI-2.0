@@ -1,0 +1,361 @@
+---
+module: "M 12"
+cycle: "III"
+title: "DreamBooth Personalization"
+objective: "Bind a unique token (`sks`) to a specific visual style by fine-tuning Stable Diffusion on 10 reference images, using LoRA adapters and prior-preservation loss to avoid catastrophic forgetting."
+framework: "conceptual"
+duration: "35–45 min"
+level: "advanced"
+load: "4 core concepts"
+prereqs: "Lesson 12.3.1 (DDPM Basics); a working diffusers + transformers install; Hugging Face account for Stable Diffusion weights"
+prev:
+  slug: "12.7.1"
+  title: "Flow Matching"
+next:
+  slug: "12.1.3"
+  title: "StyleGAN Exploration"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise1_output.png"
+  alt="A 3x3 grid of African fabric patterns rendered as dresses, wallpapers, and abstract art, all sharing a recognisable visual style learned from 10 training images"
+  caption="Nine generated images all containing the learned `sks african fabric pattern` token. Same style, very different contexts — a dress, a wallpaper, a tablecloth, a phone case."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+Stable Diffusion can render almost anything you can describe in English, but it can't render *your* specific thing. Ask it for "an African fabric pattern" and you'll get a plausible-looking African fabric pattern — drawn from the statistical average of what the model saw during training, not from any specific source. There is no prompt you can write to get *the* pattern you have on disk, because the model has never seen it.
+
+DreamBooth [1] is the technique that fixes this. Pick a rare token (the original paper used `sks`, others use `ohwx` or `[V]`), show the model 5–10 images of your subject paired with prompts that include that token, fine-tune for a few hundred steps with a special loss term that prevents the rest of the model from collapsing, and you end up with a model that responds to `sks <class name>` by rendering *your* subject in whatever context the rest of the prompt describes. This lesson does it for African fabric patterns — same dataset as Module 12.1.2 and 12.3.1, now with text control.
+
+The training itself fine-tunes the U-Net inside Stable Diffusion. Doing this naively would update every weight in a 1B-parameter model and require a server-class GPU; LoRA [2] reduces it to a few thousand low-rank parameters in the attention layers, which is small enough to ship as a 3 MB `.safetensors` file and train on a consumer card in 15–30 minutes.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Explain why a vanilla text-to-image model cannot reference a specific subject and what DreamBooth's token-binding mechanism adds to fix it.</li>
+  <li>Describe the prior-preservation loss and predict what happens to general capabilities if you train without it.</li>
+  <li>Distinguish Textual Inversion (embedding-only) from LoRA (attention-adapter) fine-tuning and pick the right tool per task.</li>
+  <li>Tune classifier-free guidance scale and predict how it interacts with personalised generation.</li>
+</ol>
+
+## Quick start — load the LoRA, generate with `sks` <a id="quick-start"></a>
+
+Pull the pre-trained LoRA from the GitHub Release, layer it on top of Stable Diffusion v1.5, and use the `sks` token in any prompt.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_model.safetensors" label="adapter_model.safetensors — pre-trained LoRA (~3 MB, GitHub Release)" />
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_config.json" label="adapter_config.json — PEFT config (required alongside the safetensors)" />
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+from diffusers import StableDiffusionPipeline
+
+pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    torch_dtype=torch.float16,
+).to("cuda")
+pipe.load_lora_weights("models/fabric_lora")     # folder with both downloaded files
+
+prompt = "a beautiful dress made of sks african fabric pattern, fashion photography"
+image = pipe(prompt, guidance_scale=7.5).images[0]
+image.save("personalized_fabric.png")
+```
+</CodeBlock>
+
+The same prompt *without* the `sks` token returns a generic African-fabric dress — pleasant, but not the specific pattern. The token does the steering.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Why "personalised" is structurally different from "fine-tuned"
+
+Fine-tuning a generative model on a new dataset is an old idea: take a pre-trained network, continue training on your data, hope the output distribution shifts toward what you want. It works, mostly, but it has two failure modes that make it the wrong tool for personalisation. First, it requires a lot of data — fine-tuning Stable Diffusion in the usual sense wants thousands of paired image-caption examples, not ten. Second, it catastrophically forgets: training on 1,000 images of fabrics teaches the model your fabrics, but at the cost of degrading every other concept it knew.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/conceptual_diagrams/dreambooth_architecture.png"
+  alt="Architecture diagram showing how the unique token sks gets bound to a specific visual concept through DreamBooth fine-tuning"
+  caption="DreamBooth's token-binding mechanism. The rare token `sks` enters the text encoder, the cross-attention paths in the U-Net learn to respond to it specifically, and after training that token triggers generation of the trained subject."
+  num={2}
+  role="diagram"
+/>
+
+DreamBooth solves both problems with two ideas working together. First, **token binding**: pick a token that is rare in the text encoder's vocabulary (so it doesn't already mean something), use it as the subject anchor in every training prompt (`a sks african fabric pattern`), and let the cross-attention layers learn to associate that token with your visual concept. This is data-efficient because you're not teaching the model what fabric is — only what *this specific* fabric looks like, indexed by a token name. Five to ten reference images is enough.
+
+Second, **prior preservation**: prevent the catastrophic forgetting by sneaking generic class images into the training mix. We'll get to that in Concept 3. The combined effect is a fine-tune that adds your subject without subtracting anything else — exactly what "personalisation" should mean.
+
+<Admonition type="dyk" title="Why `sks`?">
+The original DreamBooth paper's choice of `sks` wasn't arbitrary. The authors searched the CLIP tokenizer for tokens that appear rarely in natural text and don't already correspond to common visual concepts. `sks` made the cut because it was both short and semantically empty for CLIP. The community has since converged on a small set of similar tokens — `ohwx`, `zwx`, `[V]` — for the same reason: rare enough that the model has no prior associations to overwrite.
+</Admonition>
+
+### Concept 2 — Same U-Net, same noise prediction, plus text conditioning
+
+DreamBooth doesn't change the diffusion architecture from [Lesson 12.3.1](/lessons/12.3.1) — it inherits the U-Net, the noise schedule, the predict-noise-at-timestep-`t` objective. The new piece is text conditioning, threaded through cross-attention layers.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/conceptual_diagrams/knowledge_transfer_ddpm.png"
+  alt="Diagram showing the shared U-Net and noise prediction core between DDPM and DreamBooth, with text conditioning added on top"
+  caption="DDPM → DreamBooth knowledge transfer. The diffusion machinery is unchanged; text conditioning enters as cross-attention features into the same U-Net you trained in 12.3.1."
+  num={3}
+  role="diagram"
+/>
+
+The text encoder is CLIP [3] — same model used in Stable Diffusion's release configuration. A prompt is tokenized, embedded, and reduced to a sequence of vectors that are fed into the U-Net via cross-attention at multiple resolution levels. The noise-prediction loss now takes a third argument:
+
+```
+L = E_{x, c, ε, t} [ ‖ε - ε_θ(x_t, t, c)‖² ]
+```
+
+where `c` is the CLIP embedding of the prompt. During training, every training image is paired with a prompt template (`a sks african fabric pattern`) so the token-to-concept association builds through gradient updates on the cross-attention paths.
+
+Stable Diffusion is itself a *latent* diffusion model [4] — the noise is added to a compressed latent representation rather than to raw pixels, which is what makes 512×512 generation tractable. DreamBooth fine-tunes on top of this latent diffusion. The mechanics that interest you for personalisation are entirely in the attention layers; the encoder/decoder pair that produces the latent representation stays frozen.
+
+### Concept 3 — Prior preservation: the trick that lets you train on 10 images
+
+Fine-tune Stable Diffusion on 10 fabric images for 800 steps without any safeguards and a measurable thing happens: the model gets very good at generating your fabric, and noticeably worse at generating everything else. Ask for "a golden retriever" after such a fine-tune and you may get a fabric-textured golden retriever, or a golden retriever in the same colour palette as your training fabrics, or simply a degraded golden retriever. This is the catastrophic-forgetting problem and it scales with training time.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/conceptual_diagrams/prior_preservation_demo.png"
+  alt="Side-by-side comparison showing a model trained without prior preservation losing the ability to generate generic concepts while the prior-preserved model retains them"
+  caption="With prior preservation (right), the model keeps its general capabilities. Without it (left), generic class prompts visibly degrade as fine-tuning progresses."
+  num={4}
+  role="comparison"
+/>
+
+The DreamBooth fix is structural. Before fine-tuning, generate 100–200 *class-level* images using the original pre-trained model with a generic class prompt (`a fabric pattern`). During fine-tuning, mix these generated class images into every training batch alongside your subject images. The loss becomes two terms:
+
+<CodeBlock lang="python" file="prior preservation loss">
+```python
+# Instance loss — learn the specific subject from your 10 images
+instance_loss = F.mse_loss(noise_pred_instance, noise_instance)
+
+# Prior loss — keep generic class behaviour from the original model
+prior_loss = F.mse_loss(noise_pred_prior, noise_prior)
+
+# Combined loss; lambda balances the two (typically ~1.0)
+total_loss = instance_loss + lambda_prior * prior_loss
+```
+</CodeBlock>
+
+The instance loss pulls the model toward your subject. The prior loss tethers the model to its original behaviour on the broader class. Without the prior term, the only signal the model receives is "your 10 images are the truth" — and it eventually concludes that all fabric is your fabric. With the prior term, the model has to satisfy *both* constraints, and the only way to do that is to learn the subject as a token-conditioned specialisation that lives alongside the original class capability rather than replacing it.
+
+### Concept 4 — Textual Inversion vs LoRA: two ways to be parameter-efficient
+
+The naive DreamBooth implementation fine-tunes all of Stable Diffusion's U-Net — about 860M parameters. That works but it's expensive in compute (need a beefy GPU), storage (need to ship hundreds of MB per personalised model), and risk (you can break things you didn't mean to). Two lightweight alternatives dominate practice.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/conceptual_diagrams/ti_vs_lora_comparison.png"
+  alt="Comparison diagram showing Textual Inversion training only a token embedding while LoRA trains small low-rank adapter matrices in the attention layers"
+  caption="Textual Inversion (left) trains only the embedding vector for one new token; the model weights stay frozen. LoRA (right) freezes the model weights and trains small low-rank adapter matrices that modify attention outputs."
+  num={5}
+  role="comparison"
+/>
+
+**Textual Inversion** [5] freezes the entire model and trains *only* the embedding vector for a new placeholder token. The token becomes a vector in CLIP embedding space optimised so that, when fed through the frozen U-Net, it produces something that looks like your training images. Output is tiny (~3 KB — literally one vector), training is slow but stable, and the technique is excellent for *styles* but limited for *subjects* — there's only so much information you can pack into a single embedding vector.
+
+**LoRA** [2] freezes the model weights and adds small low-rank adapter matrices `A` and `B` (with `rank(AB) ≪ rank(W)`) inside the attention layers. Trained output is the adapter matrices themselves — typically 3–50 MB depending on rank. Quality is better than Textual Inversion for subjects because the adapters have more parameters and can modify attention behaviour layer by layer. Two practical advantages: LoRAs *compose* (you can load multiple at once, e.g. a subject LoRA plus a style LoRA), and they're stackable across base models (a LoRA trained against SD 1.5 often transfers usably to SD 1.5 variants).
+
+| Aspect | Textual Inversion | LoRA |
+|---|---|---|
+| Trained parameters | one embedding vector (~768 floats) | adapter matrices in attention (~1M params at rank 4) |
+| Output file size | ~3 KB | ~3–50 MB |
+| Training time | 30–60 min | 15–30 min |
+| Best for | styles, palettes, abstract concepts | specific subjects, distinctive objects |
+| Combinability | one TI at a time per token | multiple LoRAs can be loaded together |
+
+The default for this lesson is LoRA at rank 4 — small enough to train on a 12 GB consumer GPU, large enough to capture the African fabric patterns convincingly.
+
+<Admonition type="important">
+Classifier-free guidance [6] is the third lever and the one users tune most often during generation. The `guidance_scale` parameter in the diffusers pipeline controls how strongly the model follows the prompt: `1.0` means no guidance (unconditional), `7.5` is the default balance, `15+` produces very literal but often artificial-looking outputs. With personalised tokens, slightly higher guidance (8–10) often helps the `sks` token assert itself; too high (15+) and you get rigid, oversaturated outputs. The middle of Exercise 2 is the right place to develop intuition here.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Generate with the pre-trained LoRA in nine contexts">
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_model.safetensors" label="adapter_model.safetensors — 3 MB pre-trained LoRA" />
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_config.json" label="adapter_config.json — PEFT configuration" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise1_generate.py" label="exercise1_generate.py — nine-context generation grid" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/dreambooth_utils.py" label="dreambooth_utils.py — shared pipeline helpers" />
+
+Drop both downloaded LoRA files into `models/fabric_lora/`, then run:
+
+<CodeBlock lang="bash">
+```bash
+python exercise1_generate.py
+```
+</CodeBlock>
+
+The script renders the `sks` token in nine different contexts (dress, wallpaper, tablecloth, phone case, art print, etc.) and saves a grid like Figure 1. First-run download of Stable Diffusion v1.5 takes ~4 GB of disk and ~5 minutes; subsequent runs reuse the cached weights.
+
+**Reflection**
+
+1. What happens if you remove `sks` from the prompt? Try `"a beautiful dress made of african fabric pattern, fashion photography"` and compare.
+2. The model saw only 10 training fabric images. How can it render the pattern on a dress, a phone case, and a wall — none of which appeared in training?
+3. The opening figure shows nine outputs in nine different contexts but the *pattern style* is consistent across all of them. Which architectural component is responsible for keeping the style consistent?
+
+<Dropdown summary="Discussion">
+
+1. Without `sks`, the model falls back to its prior — what it learned about African fabric patterns during the original Stable Diffusion training. You'll get a fabric-textured dress, but the specific pattern characteristics (colour palette, geometric motifs, stroke style) won't match your training images. This is the cleanest demonstration of what the personalisation actually adds.
+
+2. Stable Diffusion already knew how to render dresses, phone cases, and walls from its base training. DreamBooth taught it one new thing: a token name (`sks`) that maps to a specific fabric style. The compositional combination ("dress made of [style]") was already a learned capability; you're just providing a new style.
+
+3. The cross-attention layers, where the text-conditioning signal enters the U-Net. The `sks african fabric pattern` portion of the prompt gets repeatedly injected at every cross-attention level — coarse to fine — which is what enforces the consistent style across very different compositions.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three explorations: guidance, style mix, seed variation">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise2_explore.py" label="exercise2_explore.py — three explorations in one script" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise2_explore.py
+```
+</CodeBlock>
+
+**Goal 1 — Guidance scale comparison.** Same prompt at `guidance_scale ∈ {1.5, 3.0, 7.5, 12.0, 20.0}`. Saves a side-by-side grid.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise2_guidance_comparison.png"
+  alt="Five generated images of the same prompt at guidance scales of 1.5, 3.0, 7.5, 12.0, and 20.0, showing increasing prompt adherence and rising oversaturation at high values"
+  caption="Guidance scale effect. Low values let the model wander; the default 7.5 balances quality and prompt adherence; values above 15 produce visible oversaturation."
+  num={6}
+  role="comparison"
+/>
+
+**Goal 2 — Style transfer grid.** Render the learned fabric pattern in nine artistic styles ("watercolour", "oil painting", "stained glass", "pixel art", …).
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise2_style_grid.png"
+  alt="A 3x3 grid of the learned fabric pattern rendered in nine different artistic styles"
+  caption="Same `sks` token, nine style modifiers. The fabric pattern's characteristic motifs are preserved while the rendering medium changes."
+  num={7}
+  role="output"
+/>
+
+**Goal 3 — Seed variation.** Hold the prompt constant, vary the random seed across 6 values. Useful for assessing consistency vs diversity.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise2_seed_comparison.png"
+  alt="Six generated images of the same prompt with different random seeds, showing variation in composition while preserving the learned fabric style"
+  caption="Seed variation. Composition changes substantially; the fabric style stays consistent — evidence the LoRA is tied to the token, not to the random noise."
+  num={8}
+  role="comparison"
+/>
+
+<Dropdown summary="What to expect — guidance scale">
+At `guidance_scale = 1.5` you'll see the model's prior dominate — generic African fabric without strong `sks` influence. At `7.5` (default) the prompt drives generation but the model retains compositional naturalness. At `12+` the prompt becomes near-literal: every detail you mentioned is enforced, colours saturate, lighting becomes flat. Most users settle in the 6–10 range; the upper end is for cases where the model won't listen.
+</Dropdown>
+
+<Dropdown summary="What to expect — style grid">
+The motifs and colour palette of the learned pattern persist across styles, while the rendering medium changes — "watercolour" softens edges, "stained glass" introduces black outlines, "pixel art" quantises the colours. This is evidence the LoRA has captured the pattern as a *style* concept, not as a single canonical image.
+</Dropdown>
+
+<Dropdown summary="What to expect — seed variation">
+Composition changes substantially across seeds: the dress is cut differently, the lighting differs, the pose changes. The pattern style stays consistent because it's anchored to the `sks` token, not the random initial noise. If you see the pattern *itself* shifting between seeds, you've under-trained the LoRA (try more steps).
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Train your own personalised LoRA (15-30 min on GPU)">
+
+This is the full training pipeline. Two scripts cover the two training approaches; LoRA is the recommended starting point.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise3b_train_lora.py" label="exercise3b_train_lora.py — LoRA fine-tuning (recommended)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise3a_train_textual_inversion.py" label="exercise3a_train_textual_inversion.py — Textual Inversion (smaller output, longer training)" />
+
+**Step 1 — Reference images.** Place 5–10 images of your subject in `training_images/`. Quality and variety matter more than quantity: include different lighting, angles, and (for fabrics) folds. All resized to 512×512.
+
+**Step 2 — Configuration.** The defaults are tuned for African fabric patterns; adjust for your subject:
+
+| Hyperparameter | Default | Note |
+|---|---|---|
+| Base model | `runwayml/stable-diffusion-v1-5` | Best balance of quality and resource use |
+| Instance prompt | `a sks african fabric pattern` | Replace `african fabric pattern` with your class noun |
+| Class prompt | `a fabric pattern` | Used for prior-preservation generation |
+| LoRA rank | 4 | Trade-off: higher rank = more capacity, more risk of overfitting |
+| Learning rate | 1e-4 | AdamW; lower if loss diverges |
+| Training steps | 800 | More for complex subjects, less for simple ones |
+| Prior preservation | enabled, 100 class images | Disable only if you've verified the resulting model degrades cleanly |
+
+**Step 3 — Train.**
+
+<CodeBlock lang="bash">
+```bash
+python exercise3b_train_lora.py
+```
+</CodeBlock>
+
+The script generates the 100 class images first (~5 min), then trains the LoRA for 800 steps (~15–30 min on RTX 5070Ti). Sample images get saved every 100 steps in `training_progress_lora/` so you can watch the subject emerge.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise3b_loss_curves.png"
+  alt="Training loss curves over 800 steps showing the instance loss and prior loss decreasing together with the combined total"
+  caption="LoRA training loss over 800 steps. Both terms decrease together — the instance loss faster, the prior loss slower. If the prior loss diverges, the regulariser is being overrun and you need more class images or a higher `lambda_prior`."
+  num={9}
+  role="training-log"
+/>
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/outputs/exercise3_ti_vs_lora.png"
+  alt="Side-by-side comparison of generated images from Textual Inversion training versus LoRA training, with LoRA showing visibly sharper subject details"
+  caption="Textual Inversion (left) vs LoRA (right) on the same subject. TI captures the style cleanly but smudges fine details; LoRA preserves details because it has more parameters to work with."
+  num={10}
+  role="comparison"
+/>
+
+<Dropdown summary="Issue triage">
+
+**CUDA OOM** — lower `TRAIN_BATCH_SIZE` from 2 to 1 and increase `GRADIENT_ACCUMULATION` to 4 to compensate.
+
+**Generated images look generic, not your style** — the `sks` token didn't bind. Check that your training prompts include the token, then try more training steps (1000–1500).
+
+**Generated images are repetitive/over-fit to training images** — too many training steps for too few reference images. Try fewer steps or more reference images.
+
+**Training takes >2 hours** — almost certainly running on CPU. Verify with `torch.cuda.is_available()`. If False, install CUDA-enabled PyTorch.
+
+**Loss decreases but quality plateaus** — your LoRA rank may be too low. Try `rank=8` or `rank=16` at the cost of larger output files.
+
+</Dropdown>
+
+**Make it your own**
+
+After training, swap the subject — feed in 10 photos of your own object (a sculpture, a mug, a pet), update the class prompt to match (`a sculpture`, `a coffee mug`, `a dog`), and watch the same pipeline learn it. The data-efficiency is the magic; the rest is mechanical.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+DreamBooth turns a general-purpose text-to-image model into a personalised one by binding a rare token (`sks` and friends) to a specific visual concept through a few hundred gradient steps on 5–10 reference images. Catastrophic forgetting is prevented by prior preservation — interleaving generated class-level images into training so the model has to learn the subject *in addition to* its prior capabilities, not in place of them. Parameter-efficient methods (Textual Inversion for styles, LoRA for subjects) make the technique tractable on consumer hardware; LoRA's combinability and richer parametrisation make it the default for most personalisation work. The same architecture (frozen U-Net plus low-rank adapter matrices in the attention layers) underlies most of the current community fine-tuning ecosystem around Stable Diffusion.
+</Admonition>
+
+**Common pitfalls**
+
+- Forgetting the subject token in generation prompts. Without `sks`, you get the model's prior; the LoRA does nothing.
+- Skipping prior preservation. With enough fine-tuning steps you'll see general concepts degrade visibly.
+- Training too many steps on too few images. The output becomes brittle — every generation looks suspiciously like one specific training image.
+- Setting `guidance_scale` too high in pursuit of "stronger" personalisation. Above ~12 you trade naturalness for oversaturated rigidity.
+- Mismatched base model. A LoRA trained against SD 1.5 won't load correctly into SD 2.x or SDXL — the attention architecture differs.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Ruiz, N., Li, Y., Jampani, V., Pritch, Y., Rubinstein, M. &amp; Aberman, K. (2023). DreamBooth: Fine Tuning Text-to-Image Diffusion Models for Subject-Driven Generation. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/2208.12242" target="_blank" rel="noopener">arxiv:2208.12242</a></li>
+    <li><span class="tag">[2]</span> Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L. &amp; Chen, W. (2022). LoRA: Low-Rank Adaptation of Large Language Models. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener">arxiv:2106.09685</a></li>
+    <li><span class="tag">[3]</span> Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. *International Conference on Machine Learning (ICML)*. <a href="https://arxiv.org/abs/2103.00020" target="_blank" rel="noopener">arxiv:2103.00020</a></li>
+    <li><span class="tag">[4]</span> Rombach, R., Blattmann, A., Lorenz, D., Esser, P. &amp; Ommer, B. (2022). High-Resolution Image Synthesis with Latent Diffusion Models. *IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*. <a href="https://arxiv.org/abs/2112.10752" target="_blank" rel="noopener">arxiv:2112.10752</a></li>
+    <li><span class="tag">[5]</span> Gal, R., Alaluf, Y., Atzmon, Y., Patashnik, O., Bermano, A. H., Chechik, G. &amp; Cohen-Or, D. (2023). An Image is Worth One Word: Personalizing Text-to-Image Generation using Textual Inversion. *International Conference on Learning Representations (ICLR)*. <a href="https://arxiv.org/abs/2208.01618" target="_blank" rel="noopener">arxiv:2208.01618</a></li>
+    <li><span class="tag">[6]</span> Ho, J. &amp; Salimans, T. (2022). Classifier-Free Diffusion Guidance. *NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications*. <a href="https://arxiv.org/abs/2207.12598" target="_blank" rel="noopener">arxiv:2207.12598</a></li>
+    <li><span class="tag">[7]</span> Ho, J., Jain, A. &amp; Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. *Advances in Neural Information Processing Systems*, 33, 6840–6851. <a href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener">arxiv:2006.11239</a></li>
+    <li><span class="tag">[8]</span> Hugging Face. (2024). DreamBooth Training with Diffusers. <a href="https://huggingface.co/docs/diffusers/training/dreambooth" target="_blank" rel="noopener">huggingface.co/docs/diffusers/training/dreambooth</a></li>
+  </ol>
+</section>

@@ -1,0 +1,402 @@
+---
+module: "M 12"
+cycle: "III"
+title: "ControlNet Guided Generation"
+objective: "Add spatial control to a frozen diffusion model with ControlNet's trainable encoder copy and zero-convolution skip path; combine with LoRA for content+style control over generation."
+framework: "conceptual"
+duration: "45–55 min"
+level: "advanced"
+load: "4 core concepts"
+prereqs: "Lessons 12.3.1 (DDPM) and 12.5.1 (DreamBooth); diffusers + transformers; GPU strongly recommended"
+prev:
+  slug: "12.1.4"
+  title: "Pix2Pix Applications"
+next:
+  slug: "12.4.1"
+  title: "Neural Style Transfer"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/controlnet_circle_morph.gif"
+  alt="Animated GIF showing the same circle shape filled with continuously changing colours over many frames, demonstrating that ControlNet keeps the spatial structure fixed while varying everything else"
+  caption="ControlNet morphing colour while holding shape constant. The circle outline is the structural control input; the prompt and seed change frame to frame; the output respects the structure unconditionally."
+  num={1}
+  role="output"
+/>
+
+## Overview <a id="overview"></a>
+
+[Lesson 12.3.1](/lessons/12.3.1) trained a DDPM that generates from pure noise — controllable by nothing other than the random seed. [Lesson 12.5.1](/lessons/12.5.1) added text conditioning to a pre-trained Stable Diffusion via DreamBooth: now the model responds to prompts but the *structure* of generated images is still up to the model's prior.
+
+ControlNet, introduced by Zhang, Rao and Agrawala at ICCV 2023 [1], adds the missing axis: **structural conditioning**. Feed the model a Canny edge map, a depth map, a pose skeleton, or any other spatial signal alongside the text prompt, and the output respects that structure while filling in everything else from the text. The headlining demo: take an edge map of a horse, prompt "a photo of a horse in a desert at sunset," get a photorealistic horse in a desert at sunset with exactly the outline of the input edge map.
+
+The architectural trick that makes this work without retraining Stable Diffusion is the *zero-convolution* initialisation, which lets a trainable conditioning branch fade in from zero contribution during training — guaranteeing the original model's capabilities are preserved on day one of fine-tuning. This lesson works through the architecture, demonstrates control with the Fill50k dataset, and combines ControlNet (structure) with a LoRA (style) for maximum-flexibility generation.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Distinguish DDPM's unconditional generation, DreamBooth's text-conditional generation, and ControlNet's spatial-conditional generation; predict which to use for which task.</li>
+  <li>Explain ControlNet's "clone the encoder, freeze the original, link with zero convolutions" architecture and why each piece is necessary.</li>
+  <li>Apply different control types (Canny edges, line art, depth) and predict which control suits which use case.</li>
+  <li>Combine ControlNet's structural control with a LoRA's style control to achieve simultaneous content and style direction.</li>
+</ol>
+
+## Quick start — generate fabric guided by edges <a id="quick-start"></a>
+
+The pre-trained ControlNet checkpoint for the Fill50k dataset is on the GitHub Release. The Stable Diffusion v1.5 base model is downloaded automatically on first run via `diffusers`.
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/controlnet_fill50k.pt" label="controlnet_fill50k.pt — pre-trained ControlNet (~1.38 GB, GitHub Release)" />
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/lora_african_fabrics.safetensors" label="lora_african_fabrics.safetensors — companion style LoRA (~3 MB)" />
+
+<CodeBlock lang="python" file="quick-start.py">
+```python
+import torch
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
+from PIL import Image
+import cv2, numpy as np
+
+# Load ControlNet + base SD pipeline
+controlnet = ControlNetModel.from_pretrained("./models/controlnet_fill50k")
+pipe = StableDiffusionControlNetPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5", controlnet=controlnet,
+    torch_dtype=torch.float16,
+).to("cuda")
+
+# Build a Canny edge map from any image
+image = cv2.imread("sample_inputs/circle.png")
+edges = cv2.Canny(image, 100, 200)
+edge_image = Image.fromarray(np.stack([edges]*3, axis=-1))
+
+result = pipe(
+    prompt="a vibrant african fabric pattern",
+    image=edge_image,
+    num_inference_steps=30, guidance_scale=7.5,
+).images[0]
+result.save("controlnet_output.png")
+```
+</CodeBlock>
+
+The output respects the edge map's spatial structure (a circle, say) while filling in the colour and texture according to the prompt.
+
+## Core concepts <a id="core-concepts"></a>
+
+### Concept 1 — Three axes of control: noise, text, structure
+
+Place ControlNet in context with the previous generative-AI lessons:
+
+| Model | Input | Output controlled by |
+|---|---|---|
+| [DDPM (12.3.1)](/lessons/12.3.1) | noise + timestep | random seed only |
+| [DreamBooth on SD (12.5.1)](/lessons/12.5.1) | noise + text prompt | seed + text |
+| **ControlNet on SD** | noise + text + spatial map | seed + text + structure |
+
+Each step adds an axis without removing the previous ones. ControlNet doesn't replace text conditioning — it layers spatial conditioning on top. The base Stable Diffusion model still produces text-conditioned output; ControlNet adds a constraint that the output's spatial structure must follow the input control image.
+
+The mechanical question is: how do you add this new conditioning to a 860M-parameter pre-trained model without retraining it from scratch *and* without breaking what it already does well? Zhang et al.'s answer [1] is the architecture in Concept 2.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/controlnet_architecture.png"
+  alt="Architecture diagram of ControlNet showing the frozen Stable Diffusion encoder and decoder on the left and the trainable encoder copy on the right linked back via zero convolutions"
+  caption="ControlNet architecture. Frozen base Stable Diffusion (left) keeps its full pre-trained behaviour. Trainable encoder copy (right) processes the control input; zero-convolution layers merge its features back into the frozen decoder."
+  num={2}
+  role="diagram"
+/>
+
+### Concept 2 — Clone, freeze, zero-init
+
+ControlNet's three structural moves:
+
+**1. Clone the encoder.** The U-Net inside Stable Diffusion has an encoder (downsampling) and decoder (upsampling). ControlNet creates a *trainable copy* of the encoder. This copy starts with the same weights as the frozen original, so it processes inputs identically to start with; only training will make them diverge.
+
+**2. Freeze the original.** The pre-trained Stable Diffusion U-Net weights stay locked. Training only updates the cloned encoder + the linking layers. The full text-to-image capability the base model already has is preserved untouched.
+
+**3. Connect with zero convolutions.** The cloned encoder's outputs need to feed back into the frozen decoder. The connection points are 1×1 convolutions initialised with all weights and biases at zero — so at the start of training the cloned encoder contributes *literally nothing*, the model behaves exactly like base Stable Diffusion, and as training progresses the zero convolutions learn appropriate scales for the conditioning signal.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/zero_convolution_diagram.png"
+  alt="Diagram showing a 1x1 convolution layer initialised with zero weights producing zero output initially and gradually learning non-zero contributions during training"
+  caption="Zero-convolution initialisation. At training step 0, the output is zero regardless of input — the conditioning branch has no effect. Gradients still flow back (the input isn't zero, just the weights), so the layer can learn appropriate non-zero values."
+  num={3}
+  role="diagram"
+/>
+
+The brilliance of this design is what it guarantees: on day one of training, ControlNet behaves identically to base Stable Diffusion because the zero convolutions force the conditioning branch's contribution to zero. The model can only get *better* than baseline from there — gradient descent will discover useful conditioning patterns and update the zero convolutions away from zero where doing so reduces loss. The pre-trained capability is preserved by construction, not by careful regularisation.
+
+<CodeBlock lang="python" file="zero convolution">
+```python
+class ZeroConv2d(nn.Conv2d):
+    def __init__(self, in_channels, out_channels):
+        super().__init__(in_channels, out_channels, kernel_size=1)
+        nn.init.zeros_(self.weight)
+        nn.init.zeros_(self.bias)
+
+# Step 0: output = input * 0 + 0 = 0 — no effect on the frozen decoder
+# After training: output = input * learned_weights + learned_bias
+```
+</CodeBlock>
+
+<Admonition type="dyk" title="History — ControlNet became a community phenomenon in months">
+Zhang et al. released ControlNet in February 2023. Within four months, the community had built and shared pre-trained ControlNets for over a dozen control types: Canny edges, HED soft edges, Hough lines, MLSD straight lines, depth maps, normal maps, OpenPose skeletons, MediaPipe pose, semantic segmentation, scribble, line-art. By mid-2023 it was the dominant approach to controlled generation in the Stable Diffusion ecosystem, and the same architectural pattern (frozen base + trainable conditioning branch + zero-init linking) has since been adapted to video, 3D, and audio diffusion models.
+</Admonition>
+
+### Concept 3 — Control types: pick the spatial signal that matches your task
+
+A trained ControlNet expects a specific control image format. The most common types, each with a corresponding pre-trained ControlNet checkpoint on Hugging Face:
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/control_types.png"
+  alt="Grid of four panels showing Canny edges, line art, depth maps, and pose keypoints as different control input types alongside their generated outputs"
+  caption="Four common control types. Each ControlNet is trained specifically for one input format — you can't feed Canny edges to a depth-trained ControlNet and expect it to work."
+  num={4}
+  role="diagram"
+/>
+
+| Control type | Spatial signal | Best for |
+|---|---|---|
+| **Canny edges** | sharp binary edges | architecture, geometric patterns, anything edge-defined |
+| **Line art** | clean artistic outlines | illustration, anime, hand-drawn references |
+| **Depth maps** | per-pixel depth (0=near, 1=far) | scenes with 3D structure, realistic compositions |
+| **Pose** | OpenPose skeleton keypoints | human figures, dance, character art |
+| **MLSD lines** | Hough straight lines | indoor scenes, architectural plans |
+| **Semantic segmentation** | per-pixel class labels | scenes built from semantic regions |
+| **Scribble** | rough freehand drawings | rapid prototyping, low-fidelity sketches |
+
+Picking the right control type is half the work. Use Canny edges when your task is "render this object's outline in a new style." Use depth when you care about 3D plausibility. Use pose for character work. The fabric demonstration in this lesson uses Canny edges on circular masks — the simplest possible control signal for the simplest possible structural constraint.
+
+### Concept 4 — Tuning conditioning strength + combining with LoRA
+
+Two run-time parameters tune how strictly the model follows the control signal:
+
+**`controlnet_conditioning_scale`** (typically 0.5–1.5) — the multiplicative weight applied to the ControlNet's contributions. `1.0` is the default training value; `0.5` halves the conditioning strength (letting the prompt assert itself more); `1.5` increases it (overriding the prompt where they conflict). Tune down if outputs look too rigidly locked to the control; tune up if the model is ignoring the control.
+
+**`guidance_scale`** (typically 7.5) — the classifier-free guidance from text conditioning, same parameter as DreamBooth. Independent of ControlNet's contribution. Use both together: higher CFG for stronger prompt adherence, higher conditioning scale for stronger structural adherence.
+
+For maximum flexibility, ControlNet can be combined with a LoRA (Lesson 12.5.1). The ControlNet handles structure; the LoRA handles style; the prompt handles content semantics. All three operate independently on the same generation step:
+
+<CodeBlock lang="python" file="ControlNet + LoRA + text">
+```python
+pipe = StableDiffusionControlNetPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5", controlnet=controlnet,
+    torch_dtype=torch.float16,
+).to("cuda")
+pipe.load_lora_weights("./models/lora_african_fabrics")  # style
+
+result = pipe(
+    prompt="a sks african fabric pattern with geometric shapes",
+    image=canny_edge_map,                                  # structure
+    controlnet_conditioning_scale=1.0,
+    guidance_scale=7.5,
+    num_inference_steps=30,
+).images[0]
+```
+</CodeBlock>
+
+<Admonition type="important">
+ControlNet checkpoints are trained against a specific base diffusion model. A ControlNet trained for Stable Diffusion v1.5 won't work with SDXL or SD 2.x — the U-Net architectures differ. Hugging Face hosts version-matched ControlNets for each major SD release; check compatibility before downloading.
+</Admonition>
+
+## Exercises <a id="exercises"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Generate guided fabric patterns from Canny edge maps">
+
+<Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/controlnet_fill50k.pt" label="controlnet_fill50k.pt — 1.38 GB ControlNet checkpoint" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise1_generate.py" label="exercise1_generate.py — Canny-edge-guided generation" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/controlnet_utils.py" label="controlnet_utils.py — shared pipeline helpers" />
+
+Place the checkpoint at `models/controlnet_fill50k/`, then:
+
+<CodeBlock lang="bash">
+```bash
+pip install diffusers transformers accelerate xformers opencv-python
+python exercise1_generate.py
+```
+</CodeBlock>
+
+First run downloads Stable Diffusion v1.5 (~4 GB) from Hugging Face; subsequent runs are fast. Output: `exercise1_output.png` — a comparison grid showing the original sample, its Canny edge map, and the ControlNet-generated output that respects the edges.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise1_output.png"
+  alt="A grid showing several original images, their extracted Canny edge maps, and the corresponding ControlNet-generated images that follow the edge structure but apply new colour and style"
+  caption="Each row: original image (used to extract edges), Canny edge map (the control input), and ControlNet-generated output that follows those edges while applying new colour/style from the prompt."
+  num={5}
+  role="comparison"
+/>
+
+**Reflection**
+
+1. The generated output respects the edge map *exactly* but the colours and textures are completely different from the original. Which architectural property gives ControlNet this strict structural adherence?
+2. Why does the first run download ~4 GB of weights? What's *not* in the 1.38 GB ControlNet checkpoint?
+3. The same edge map fed through the same model with two different text prompts produces structurally identical but stylistically different outputs. Which conditioning signal is doing which work?
+4. If you fed an edge map from a *photograph of a chair* into a ControlNet trained on *Fill50k circles*, what would happen?
+
+<Dropdown summary="Discussion">
+
+1. The zero-convolution-linked encoder branch processes the edge map and adds its features to the frozen decoder's computation; the training pressure during ControlNet's training was to follow the control input exactly, so the conditioning branch has learned strong weights that pull the output toward the control. Tuning `controlnet_conditioning_scale` below 1.0 weakens this.
+
+2. The 1.38 GB checkpoint is *only* ControlNet — the trainable encoder copy plus the zero-convolution links. The base Stable Diffusion U-Net, VAE, and CLIP text encoder are not included; they're downloaded separately because they're shared across thousands of fine-tunes/LoRAs/ControlNets and only need to be on disk once.
+
+3. The edge map drives spatial structure; the text prompt drives colour, texture, and semantic content. The model's training has cleanly separated these axes — the same edges with different prompts produce structurally consistent outputs with different content.
+
+4. The output would still follow the chair's edges, but the model has only learned to fill *circle-shaped* edges convincingly. Outside its training distribution, results will be erratic — the structure is followed, the content quality drops. This is why control-type-specific ControlNets exist for different content domains.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Three explorations: control strength, prompt variation, comparison">
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise2_explore.py" label="exercise2_explore.py — three explorations" />
+
+<CodeBlock lang="bash">
+```bash
+python exercise2_explore.py
+```
+</CodeBlock>
+
+**Goal 1 — Control strength sweep.** Same prompt + same edges at `controlnet_conditioning_scale ∈ {0.3, 0.6, 0.9, 1.2, 1.5}`.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise2_strength_sweep.png"
+  alt="Five generated images of the same prompt with control strength varying from 0.3 to 1.5 showing increasing adherence to the control input"
+  caption="Control strength sweep. At 0.3 the structural guide is suggestion-strength; at 1.0 it's enforced; at 1.5+ the model overrides prompt-driven details to fit the control."
+  num={6}
+  role="comparison"
+/>
+
+**Goal 2 — Prompt variation.** Same control + same strength, different prompts. The structure stays; the content changes.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise2_prompt_variation.png"
+  alt="Six generated images all sharing the same circular spatial structure but rendered with six different prompts producing six different colour-and-texture combinations"
+  caption="Same structure, six prompts. The circle outline persists; everything inside it changes with the prompt."
+  num={7}
+  role="comparison"
+/>
+
+**Goal 3 — Direct control-type comparison.** Run the same content through Canny, Line Art, and Scribble ControlNets to see how the same scene reacts to different structural signals.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise2_control_comparison.png"
+  alt="Three rows showing the same input image conditioned on Canny edges, line art, and scribble respectively, producing three different generated outputs reflecting the granularity of each control input"
+  caption="Canny (top) is strict — every edge is preserved. Line art (middle) is cleaner. Scribble (bottom) is the loosest — only the rough composition is enforced."
+  num={8}
+  role="comparison"
+/>
+
+<Dropdown summary="What to expect — control strength">
+At `0.3` the model treats the control as a hint and lets the prompt dominate. At `0.6–0.9` the control is followed loosely but consistently. At `1.0` (default) the control is enforced. At `1.2+` the control overrides the prompt in places of conflict; at `1.5+` the output can look slightly degraded as the model is pushed away from its prior.
+</Dropdown>
+
+<Dropdown summary="What to expect — prompt variation">
+Structure is invariant to prompt; content varies completely. This is the demonstration of axis separation: the ControlNet handles "where," the prompt handles "what." Make this visible by tweeting a screenshot of the same circle with six radically different prompts — palette, texture, lighting all differ, the circle persists.
+</Dropdown>
+
+<Dropdown summary="What to expect — control-type comparison">
+Canny preserves every edge, including ones you didn't intend to enforce. Line art produces cleaner, more artistic-looking results. Scribble gives the model the most creative freedom because it's the lowest-fidelity input. Choose based on what kind of control you actually want — strict, clean, or loose.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Train ControlNet from scratch + LoRA style adaptation">
+
+Three scripts cover the full pipeline. Most learners should focus on Option C (combined generation) since it demonstrates the architectural payoff; Options A and B are deep dives for those with multi-hour GPU time available.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3a_train_controlnet.py" label="exercise3a_train_controlnet.py — train ControlNet from scratch (2-4h GPU)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3b_train_lora.py" label="exercise3b_train_lora.py — train style LoRA on African fabrics (15-30 min)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3c_combined_generation.py" label="exercise3c_combined_generation.py — ControlNet + LoRA combined" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/download_fill50k.py" label="download_fill50k.py — fetches Fill50k dataset from Hugging Face" />
+
+<Dropdown summary="Option A — Train ControlNet on Fill50k (2-4 hours GPU)">
+
+Dataset: Fill50k from Hugging Face (50k circle-fill images, downloaded by `download_fill50k.py`). Architecture: the encoder of Stable Diffusion v1.5 cloned and trained with zero-convolution links.
+
+```bash
+python download_fill50k.py
+python exercise3a_train_controlnet.py
+```
+
+Configuration: batch size 4, learning rate 1e-5, 50k training steps. Loss decreases monotonically (no adversarial dynamics). Checkpoints saved every 5k steps.
+
+</Dropdown>
+
+<Dropdown summary="Option B — Train a style LoRA on African fabrics (15-30 min)">
+
+Same pattern as [Lesson 12.5.1's DreamBooth LoRA](/lessons/12.5.1), retrained for this lesson against the African fabric dataset to produce a *style* LoRA rather than a *subject* LoRA.
+
+```bash
+python exercise3b_train_lora.py
+```
+
+Output: `lora_african_fabrics.safetensors` (~3 MB) that can be loaded alongside any Stable Diffusion v1.5 pipeline to apply the African fabric style to whatever is being generated.
+
+</Dropdown>
+
+<Dropdown summary="Option C — Combine ControlNet + LoRA (recommended)">
+
+The architectural demonstration. Load both the Fill50k ControlNet and the African-fabric LoRA, then generate fabric-styled patterns that follow circle outlines.
+
+```bash
+python exercise3c_combined_generation.py
+```
+
+The ControlNet enforces structure (circles), the LoRA enforces style (African fabric texture and colour palette), the text prompt provides the semantic anchor.
+
+<Figure
+  src="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3c_combined_output.png"
+  alt="Generated images showing circular shapes filled with African fabric patterns, demonstrating ControlNet enforcing the circle structure while the LoRA enforces the fabric style"
+  caption="ControlNet + LoRA combined. The circle outlines come from the control map; the fabric textures come from the LoRA; the colour-and-content nuance comes from the prompt."
+  num={9}
+  role="output"
+/>
+
+</Dropdown>
+
+<Dropdown summary="Issue triage">
+
+**OOM on Stable Diffusion + ControlNet** — combined memory is ~10 GB. Enable `pipe.enable_attention_slicing()` and use `torch_dtype=torch.float16` to halve memory.
+
+**Control is ignored** — check `controlnet_conditioning_scale`. The default is 1.0; if it's 0 or very low, the control branch does nothing.
+
+**Output ignores the prompt** — `controlnet_conditioning_scale` may be too high (>1.5). The control is overriding the prompt; lower it.
+
+**LoRA + ControlNet doesn't compose cleanly** — confirm both target the same base model (SD 1.5). Mixing across base models silently degrades both.
+
+</Dropdown>
+
+**Make it your own**
+
+Try a control type the pre-trained ControlNet wasn't *trained* for (e.g. feed a depth map to a Canny-trained ControlNet). The output will still be generated but the structural adherence will be unpredictable. This is a useful exercise in understanding the limits of control-type specificity.
+
+</Exercise>
+
+## Summary <a id="summary"></a>
+
+<Admonition title="Key takeaways">
+ControlNet adds spatial conditioning to a pre-trained diffusion model by cloning the U-Net encoder, freezing the original model weights, and linking the cloned encoder back into the frozen decoder via zero-initialised 1×1 convolutions. The zero initialisation guarantees that on day one of training the model behaves identically to the unmodified base, so the pre-trained capabilities are preserved by construction and the conditioning branch can only improve from there. The architecture supports many control types (Canny edges, line art, depth, pose, segmentation, scribble) — each trained as its own checkpoint against the same frozen base — and combines naturally with text conditioning (CFG) and style conditioning (LoRA) for three-axis controlled generation. The same pattern of "frozen base + trainable conditioning branch + zero-init linking" has propagated into video, 3D, and audio diffusion models since 2023.
+</Admonition>
+
+**Common pitfalls**
+
+- Using a ControlNet trained for SD 1.5 with SDXL or SD 2.x — different U-Net architectures, incompatible weights.
+- Feeding the wrong control format for the ControlNet checkpoint (e.g. line art into a Canny-trained ControlNet). The model will produce *something*, but the structural adherence breaks.
+- `controlnet_conditioning_scale = 0` (or near-zero) — the conditioning branch is effectively disabled and the ControlNet does nothing.
+- `controlnet_conditioning_scale > 2.0` — the control overpowers the prompt to the point of degrading the output. Stay in `0.5–1.5` for clean outputs.
+- Combining a LoRA and a ControlNet trained against different base models. Both load, neither composes correctly, and the failure mode is subtle.
+
+## References <a id="references"></a>
+
+<section class="refs">
+  <ol>
+    <li><span class="tag">[1]</span> Zhang, L., Rao, A. &amp; Agrawala, M. (2023). Adding Conditional Control to Text-to-Image Diffusion Models (ControlNet). *IEEE International Conference on Computer Vision (ICCV)*. <a href="https://arxiv.org/abs/2302.05543" target="_blank" rel="noopener">arxiv:2302.05543</a></li>
+    <li><span class="tag">[2]</span> Rombach, R., Blattmann, A., Lorenz, D., Esser, P. &amp; Ommer, B. (2022). High-Resolution Image Synthesis with Latent Diffusion Models (Stable Diffusion). *CVPR*. <a href="https://arxiv.org/abs/2112.10752" target="_blank" rel="noopener">arxiv:2112.10752</a></li>
+    <li><span class="tag">[3]</span> Ho, J., Jain, A. &amp; Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. *NeurIPS*. <a href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener">arxiv:2006.11239</a></li>
+    <li><span class="tag">[4]</span> Hu, E. J. et al. (2022). LoRA: Low-Rank Adaptation of Large Language Models. *ICLR*. <a href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener">arxiv:2106.09685</a></li>
+    <li><span class="tag">[5]</span> Ho, J. &amp; Salimans, T. (2022). Classifier-Free Diffusion Guidance. *NeurIPS Workshop*. <a href="https://arxiv.org/abs/2207.12598" target="_blank" rel="noopener">arxiv:2207.12598</a></li>
+    <li><span class="tag">[6]</span> Canny, J. (1986). A Computational Approach to Edge Detection. *IEEE TPAMI*, 8(6), 679–698. <a href="https://doi.org/10.1109/TPAMI.1986.4767851" target="_blank" rel="noopener">doi.org/10.1109/TPAMI.1986.4767851</a></li>
+    <li><span class="tag">[7]</span> Hugging Face. (2024). ControlNet in Diffusers. <a href="https://huggingface.co/docs/diffusers/using-diffusers/controlnet" target="_blank" rel="noopener">huggingface.co/docs/diffusers/using-diffusers/controlnet</a></li>
+    <li><span class="tag">[8]</span> Mou, C., Wang, X., Xie, L., Wu, Y., Zhang, J., Qi, Z. et al. (2024). T2I-Adapter: Learning Adapters to Dig out More Controllable Ability for Text-to-Image Diffusion Models. *AAAI*. <a href="https://arxiv.org/abs/2302.08453" target="_blank" rel="noopener">arxiv:2302.08453</a></li>
+  </ol>
+</section>
