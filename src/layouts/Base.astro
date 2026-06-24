@@ -46,11 +46,13 @@ const ogImageUrl = new URL(ogImage, Astro.site).href;
 // Normalize to a list so callers can pass one object or several.
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
-// Privacy-friendly, cookieless analytics (Umami Cloud). The website ID is a
-// public token — safe to commit. While it's empty the script is not emitted at
-// all. Disclosed on /privacy (no consent banner needed: no cookies, no stored
-// IP, no PII). Endpoint below is cloud.umami.is (Umami's default region); if the
-// site is recreated in Umami's EU region, switch the src to eu.umami.is.
+// Privacy-friendly, cookieless analytics (Umami Cloud, EU/Germany region — the
+// website is provisioned under Umami's EU region, so analytics data is stored in
+// the EU). The website ID is a public token — safe to commit. While it's empty
+// the script is not emitted at all. Disclosed on /privacy (no consent banner
+// needed: no cookies, no stored IP, no PII). `cloud.umami.is/script.js` is
+// Umami's shared script host and is the exact embed the EU dashboard prescribes;
+// data ingestion routes by website ID to the EU region.
 const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
 ---
 
@@ -80,7 +82,8 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   <link rel="canonical" href={canonical} />
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="alternate" type="application/rss+xml" title="Pixels2GenAI — Lessons" href="/feed.xml" />
@@ -112,6 +115,7 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
 
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <GrainOverlay />
   <FrameTop onLanding={onLanding} />
 

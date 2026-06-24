@@ -1364,12 +1364,19 @@
   color: var(--cycle-soft, var(--accent-soft));
 }
 
+/* Long URLs anywhere in lesson prose, list items, callouts (admonitions) and
+   table cells must wrap, or a bare link like a long docs URL forces horizontal
+   page scroll on narrow screens (WCAG 1.4.10 Reflow / C33). `:where()` keeps
+   specificity at 0 so existing link colour rules still win. `anywhere` also lets
+   the link's min-content shrink, which `break-word` alone did not. */
+.lesson :where(p, li, dd, td, figcaption) a {
+  overflow-wrap: anywhere;
+}
+
 .refs ol li a {
   color: var(--cycle-soft, var(--accent-soft));
   border-bottom: 1px solid var(--line-2);
-  /* Break long URLs only when they would overflow (WCAG C33). */
-  overflow-wrap: break-word;
-  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 .refs ol li a:hover {
