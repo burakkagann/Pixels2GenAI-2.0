@@ -1,6 +1,7 @@
 ---
-// Site footer. Used on the landing page (and any future variants
-// that opt in). Styles live in src/styles/landing.css under `.foot*`
+// Site footer. Rendered on the landing page and the standalone pages
+// (research, workshops, exhibition, announce, imprint, privacy, 404).
+// Styles live in src/styles/landing.css under `.foot*`
 // (colophon star CTA under `.colo*`).
 import { getStarCount, formatStars, GITHUB_REPO } from '@/lib/github';
 import { SPARKLE_PIXELS } from '@/lib/pixelGlyphs';
@@ -8,6 +9,11 @@ import { SPARKLE_PIXELS } from '@/lib/pixelGlyphs';
 // Build-time star count — memoised module-wide, so this shares FrameTop's
 // single fetch rather than adding one.
 const stars = await getStarCount();
+
+// The "Manual" links target sections on the landing page. On any other page an
+// in-page "#curriculum" anchor is dead, so prefix with "/" off-landing (mirrors
+// FrameTop's onLanding handling).
+const prefix = Astro.url.pathname === '/' ? '' : '/';
 ---
 
 <footer class="foot" id="colophon">
@@ -57,11 +63,11 @@ const stars = await getStarCount();
     <div>
       <h4>Manual</h4>
       <ul>
-        <li><a href="#curriculum">§ 1 Curriculum</a></li>
-        <li><a href="#workshops">§ 2 Workshops</a></li>
-        <li><a href="#exhibition">§ 3 Exhibition</a></li>
-        <li><a href="#research">§ 4 Research</a></li>
-        <li><a href="#announcements">§ Announcements</a></li>
+        <li><a href={`${prefix}#curriculum`}>§ 1 Curriculum</a></li>
+        <li><a href={`${prefix}#workshops`}>§ 2 Workshops</a></li>
+        <li><a href={`${prefix}#exhibition`}>§ 3 Exhibition</a></li>
+        <li><a href={`${prefix}#research`}>§ 4 Research</a></li>
+        <li><a href={`${prefix}#announcements`}>§ Announcements</a></li>
       </ul>
     </div>
     <div>
