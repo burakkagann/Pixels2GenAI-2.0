@@ -1,4 +1,5 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from './Base.astro';
 import LessonHead from '@/components/lesson/LessonHead.astro';
 import OnThisPage from '@/components/lesson/OnThisPage.astro';
@@ -43,6 +44,14 @@ interface Props {
 
 const { slug, frontmatter, headings } = Astro.props;
 const f = frontmatter;
+
+// Frontmatter prev/next can point at leaves that aren't ported yet, which would
+// link to a 404. Only keep a neighbor link if its lesson is actually shipped
+// (exists in the lessons collection). scripts/check-lessons.mjs enforces the
+// same rule at build time so dangling links never ship.
+const shippedSlugs = new Set((await getCollection('lessons')).map((l) => l.id));
+const prev = f.prev && shippedSlugs.has(f.prev.slug) ? f.prev : null;
+const next = f.next && shippedSlugs.has(f.next.slug) ? f.next : null;
 
 const lessonJsonLd = {
   '@context': 'https://schema.org',
@@ -115,7 +124,7 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
 >
   <StageTracker currentModule={f.module} cycle={f.cycle} />
 
-  <main class="page" data-cycle={f.cycle}>
+  <main id="main-content" class="page" data-cycle={f.cycle}>
     <article class="col-main lesson">
       <LessonHead
         slug={slug}
@@ -129,7 +138,7 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
         prereqs={f.prereqs}
       />
       <slot />
-      <PrevNext slug={slug} prev={f.prev} next={f.next} backLink={f.backLink} />
+      <PrevNext slug={slug} prev={prev} next={next} backLink={f.backLink} />
     </article>
 
     <aside class="col-right">

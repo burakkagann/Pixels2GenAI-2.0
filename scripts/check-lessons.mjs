@@ -84,6 +84,31 @@ for (const m of view) {
 const ASSET_RE = /(?:src|href)\s*=\s*["'](\/lesson-media\/[^"']+)["']/g;
 const LEGACY_ASSET_RE = /["'](\/lessons\/[^"']+\/[^"']+)["']/g;
 const LESSON_LINK_RE = /(?:src|href)\s*=\s*["']\/lessons\/([^/"']+)\/?["']/g;
+
+// Extract the prev/next neighbor slugs from a lesson's YAML frontmatter.
+// Handles all three forms in use:  `prev: null`,  inline `next: { slug: "x" }`,
+// and block  `next:\n  slug: "x"`. Returns [{ dir, slug }, …].
+function neighborSlugs(frontmatter) {
+  const out = [];
+  const lines = frontmatter.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const head = lines[i].match(/^(prev|next):\s*(.*)$/);
+    if (!head) continue;
+    const dir = head[1];
+    const rest = head[2].trim();
+    if (rest === 'null' || rest === '~') continue;
+    let m = rest.match(/slug:\s*["']([^"']+)["']/); // inline { slug: "x" }
+    if (!m) {
+      // block form — scan the indented child lines for slug:
+      for (let j = i + 1; j < lines.length && /^\s+\S/.test(lines[j]); j++) {
+        m = lines[j].match(/^\s+slug:\s*["']([^"']+)["']/);
+        if (m) break;
+      }
+    }
+    if (m) out.push({ dir, slug: m[1] });
+  }
+  return out;
+}
 for (const slug of wiredSlugs) {
   const file = lessonFilePath(slug);
   if (!file) continue; // already reported as error above
@@ -105,6 +130,18 @@ for (const slug of wiredSlugs) {
     const target = match[1];
     if (!wiredSlugs.has(target) && !lessonFilePath(target)) {
       warnings.push(`Lesson "${slug}" links to /lessons/${target} which is not a shipped lesson.`);
+    }
+  }
+
+  // prev/next must point at a lesson page that exists, or it would 404. The
+  // Lesson layout auto-hides a dangling neighbor at build time, so this is a
+  // warning (pointing next-> at a not-yet-ported leaf is a normal in-progress
+  // state), but it surfaces the stale frontmatter so it can be corrected.
+  const fmEnd = content.indexOf('\n---', 4);
+  const frontmatter = fmEnd > 0 ? content.slice(0, fmEnd) : content;
+  for (const { dir, slug: target } of neighborSlugs(frontmatter)) {
+    if (!wiredSlugs.has(target) && !lessonFilePath(target)) {
+      warnings.push(`Lesson "${slug}" has ${dir} -> /lessons/${target}, which is not a shipped lesson (link auto-hidden; update the frontmatter).`);
     }
   }
 }
