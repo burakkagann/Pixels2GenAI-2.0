@@ -1,33 +1,30 @@
 ---
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 /**
- * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical).
+ * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical),
+ * an intrinsic-width cap (never upscale a small image into a blurry mess),
+ * and a click-to-zoom lightbox.
  *
- * PRINCIPLE: reading-first. A figure should support the prose, not
- * interrupt it. Most NumPy/PIL outputs are square — at full column
- * width they dominate the page. The `role` prop picks a sensible
- * size for the common cases; the rare hero moment is the only place
- * you'd reach for size="bleed" explicitly.
+ * PRINCIPLE: reading-first, and never bigger than the source. The `role` prop
+ * picks a sensible tier; the figure is then capped at min(tier, intrinsic
+ * width) so a 64px gif is shown at 64px, not stretched to 620px. For low-res
+ * art that SHOULD be enlarged (latent-walk gifs, tiny GAN stills), pass
+ * `pixelated` — it allows crisp nearest-neighbour upscaling up to 4x.
  *
  * Role → default size:
- *   role="output"        wide    520 → 620 px. The "look at this" punchline.
+ *   role="output"        wide    The "look at this" punchline.
  *   role="diagram"       wide    Conceptual sketch (RGB cube, recursion tree).
- *   role="gif"           default Square / 4:3 animation — 520 px is plenty.
+ *   role="gif"           default Square / 4:3 animation.
  *   role="training-log"  wide    Loss curves, training-time visualisations.
  *   role="comparison"    wide    Grid of variants, interpolation strip.
- *   role="architecture"  wide    Network / system diagram. Bump to bleed
- *                                manually if the diagram genuinely won't fit.
- *   role="reference"     small   360 px supporting thumb.
- *   (none)               default 520 px reading-first inset.
+ *   role="architecture"  wide    Network / system diagram.
+ *   role="reference"     small   360px supporting thumb.
+ *   (none)               default 520px reading-first inset.
  *
- * Explicit `size` always overrides the role. Resolution order:
- *   explicit size → role's implicit size → default (520 px).
- *
- * Figures nested inside <Exercise> or <Dropdown> auto-shrink to 360 px
- * via context-aware CSS in prose.css — opt back up with role/size.
- *
- * Sizes (see prose.css ".fig" block):
- *   small   360 px       default  520 px
- *   wide    620 px       bleed    extends past column into the gutter
+ * Explicit `size` overrides the role. Figures nested inside <Exercise> or
+ * <Dropdown> auto-shrink to 360px via prose.css; opt back up with role/size.
  */
 type FigureRole =
   | 'output'
@@ -50,7 +47,9 @@ interface Props {
   role?: FigureRole;
   /** Physical size tier. Overrides role's implicit size if both are set. */
   size?: FigureSize;
-  /** Optional explicit width hint for browser layout reservation. */
+  /** Allow crisp (nearest-neighbour) upscaling for low-res / pixel art. */
+  pixelated?: boolean;
+  /** Optional explicit width hint (fallback when the file can't be measured). */
   width?: number;
 }
 
@@ -60,21 +59,78 @@ const ROLE_SIZE: Record<FigureRole, FigureSize> = {
   'gif':           'default',
   'training-log':  'wide',
   'comparison':    'wide',
-  'architecture':  'wide',     // bleed is opt-in only — most architectures fit at 620 px
+  'architecture':  'wide',
   'reference':     'small',
 };
 
-const { src, alt, caption, num, role, size, width } = Astro.props;
+const SIZE_PX: Record<FigureSize, number | null> = {
+  small: 360,
+  default: 520,
+  wide: 620,
+  bleed: null,
+};
 
-// Resolve effective size: explicit size > role's implicit size > default.
+const { src, alt, caption, num, role, size, pixelated, width } = Astro.props;
+
 const effectiveSize: FigureSize = size ?? (role ? ROLE_SIZE[role] : 'default');
 const sizeClass = effectiveSize !== 'default' ? effectiveSize : null;
+
+// Read the image's intrinsic dimensions from the file at build time so we can
+// (a) cap the rendered width and (b) set width/height attrs for CLS. Supports
+// the formats lesson media actually uses: PNG, GIF, JPEG. SVG/unknown → no cap.
+function intrinsicDims(s: string): { w: number; h: number } | null {
+  try {
+    if (!s.startsWith('/')) return null;
+    const file = join(process.cwd(), 'public', s);
+    if (!existsSync(file)) return null;
+    const ext = s.split('.').pop()?.toLowerCase();
+    const b = readFileSync(file);
+    if (ext === 'png') return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+    if (ext === 'gif') return { w: b.readUInt16LE(6), h: b.readUInt16LE(8) };
+    if (ext === 'jpg' || ext === 'jpeg') {
+      let o = 2;
+      while (o < b.length) {
+        if (b[o] !== 0xff) { o++; continue; }
+        const m = b[o + 1];
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+          return { h: b.readUInt16BE(o + 5), w: b.readUInt16BE(o + 7) };
+        }
+        o += 2 + b.readUInt16BE(o + 2);
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const dims = intrinsicDims(src);
+const tierMax = SIZE_PX[effectiveSize];
+
+// Cap the rendered width: default never exceeds the source; pixelated allows
+// up to 4x crisp upscaling; bleed and unmeasurable images keep the CSS tier.
+let capPx: number | null = null;
+if (effectiveSize !== 'bleed' && dims?.w) {
+  capPx = pixelated
+    ? Math.min(tierMax ?? Infinity, dims.w * 4)
+    : Math.min(tierMax ?? dims.w, dims.w);
+}
+const figStyle = capPx ? `max-width:${capPx}px` : undefined;
+const attrW = dims?.w ?? width;
+const attrH = dims?.h;
 ---
 
-<figure class:list={['fig', sizeClass, role && `role-${role}`]}>
-  <div class="frame">
-    <img src={src} alt={alt} width={width} loading="lazy" />
-  </div>
+<figure class:list={['fig', sizeClass, role && `role-${role}`, pixelated && 'pixelated']} style={figStyle}>
+  <button
+    class="frame fig-zoom"
+    type="button"
+    title="Click to enlarge"
+    data-zoom-src={src}
+    data-zoom-alt={alt}
+    data-zoom-pixelated={pixelated ? '1' : undefined}
+  >
+    <img src={src} alt={alt} width={attrW} height={attrH} loading="lazy" />
+  </button>
   {(caption || num !== undefined) && (
     <figcaption>
       {num !== undefined && <span class="fnum">Fig. {num}</span>}
@@ -82,3 +138,49 @@ const sizeClass = effectiveSize !== 'default' ? effectiveSize : null;
     </figcaption>
   )}
 </figure>
+
+<script>
+  // One shared <dialog> lightbox for every figure on the page. Created lazily
+  // on first zoom; uses native showModal() for the focus trap, Esc-to-close,
+  // and inert background. Delegated listener, so it covers figures added later.
+  function ensureDialog(): HTMLDialogElement {
+    let d = document.getElementById('fig-lightbox') as HTMLDialogElement | null;
+    if (d) return d;
+    d = document.createElement('dialog');
+    d.id = 'fig-lightbox';
+    d.className = 'fig-lightbox';
+    d.innerHTML =
+      '<button class="fig-lightbox-close" type="button" aria-label="Close">×</button>' +
+      '<img alt=""><p class="fig-lightbox-cap"></p>';
+    document.body.appendChild(d);
+    d.addEventListener('click', (e) => { if (e.target === d) d!.close(); });
+    d.querySelector('.fig-lightbox-close')!.addEventListener('click', () => d!.close());
+    return d;
+  }
+
+  document.addEventListener('click', (e) => {
+    const t = e.target as Element | null;
+    const btn = t?.closest('.fig-zoom') as HTMLElement | null;
+    if (!btn) return;
+    const d = ensureDialog();
+    const img = d.querySelector('img') as HTMLImageElement;
+    // Scale the image to fill the viewport (up OR down), preserving aspect, so
+    // small diagrams enlarge to readable size and large ones fit on screen.
+    const fit = () => {
+      const vw = window.innerWidth * 0.92;
+      const vh = window.innerHeight * 0.84;
+      const nw = img.naturalWidth || 1;
+      const nh = img.naturalHeight || 1;
+      const scale = Math.min(vw / nw, vh / nh);
+      img.style.width = Math.round(nw * scale) + 'px';
+      img.style.height = 'auto';
+    };
+    img.onload = fit;
+    img.src = btn.dataset.zoomSrc || '';
+    img.alt = btn.dataset.zoomAlt || '';
+    img.classList.toggle('pixelated', btn.dataset.zoomPixelated === '1');
+    (d.querySelector('.fig-lightbox-cap') as HTMLElement).textContent = btn.dataset.zoomAlt || '';
+    if (img.complete) fit();
+    d.showModal();
+  });
+</script>
