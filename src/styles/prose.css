@@ -283,6 +283,71 @@
   border-bottom: 0;
 }
 
+/* ---------- Tables ----------
+   Markdown pipe-tables compile to bare <table> with no classes. Style them
+   to match the prose primitives: serif body, a mono/uppercase header with the
+   per-module --cycle accent, hairline cell borders + a subtle zebra (borders
+   carry the structure — never zebra alone, per a11y guidance). Header emphasis
+   is conveyed by three redundant channels (bg tint, weight/case, accent
+   underline) so it never relies on colour alone. Scrolls horizontally on
+   narrow screens rather than stacking, so column comparisons stay intact. */
+.lesson table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 22px 0;
+  font-family: var(--serif);
+  font-size: calc(15px * var(--t-scale));
+  line-height: 1.5;
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+}
+
+.lesson thead th {
+  font-family: var(--mono);
+  font-size: calc(11px * var(--t-scale));
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--cycle-soft, var(--accent-soft));
+  background: var(--bg-warm-2);
+  border-bottom: 2px solid var(--cycle-dim, var(--accent-dim));
+  padding: 10px 14px;
+  vertical-align: bottom;
+}
+
+.lesson tbody td {
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.lesson th:not(:last-child),
+.lesson td:not(:last-child) {
+  border-right: 1px solid var(--line);
+}
+
+/* Zebra — subtle, present in both themes, paired WITH the cell borders. */
+.lesson tbody tr:nth-child(even) {
+  background: var(--bg-2);
+}
+
+/* Inline code in cells stays legible on the header tint and zebra. */
+.lesson td code,
+.lesson th code {
+  font-size: 0.88em;
+}
+
+/* Narrow screens: horizontal scroll, no stacking (keeps cross-column reads). */
+@media (max-width: 640px) {
+  .lesson table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}
+
 /* ---------- Metadata strip ---------- */
 .meta-strip {
   display: grid;
@@ -323,8 +388,8 @@
 
 /* ---------- Code block ---------- */
 .code {
-  background: var(--bg-warm-1);
-  border: 1px solid var(--line-warm);
+  background: var(--code-surface);
+  border: 1px solid var(--code-border);
   font-family: var(--mono);
   font-size: calc(13px * var(--t-scale));
   line-height: 1.7;
@@ -394,22 +459,42 @@
   padding: 0;
 }
 
-/* Shiki override — keep Shiki's syntax colors but use our chrome */
+/* Bare code fences — a ``` block written directly in MDX without a
+   <CodeBlock> wrapper. Give it the SAME warm surface + border as a wrapped
+   block so the two are visually indistinguishable. (Before this, bare blocks
+   inherited Shiki's own background — #fff in light / #24292e in dark — which
+   is what produced the white slabs.) */
+.astro-code {
+  background: var(--code-surface);
+  border: 1px solid var(--code-border);
+  margin: 18px 0;
+  padding: 14px 18px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: calc(13px * var(--t-scale));
+  line-height: 1.7;
+}
+
+/* Wrapped blocks: the .code chrome already paints surface + border, so the
+   inner <pre> is transparent and borderless (edge-to-edge under the chrome). */
 .code .astro-code,
 .code pre.astro-code {
   background: transparent !important;
+  border: 0;
+  border-radius: 0;
   margin: 0;
   padding: 14px 18px;
 }
 
-/* Shiki dual-theme — Astro emits both palettes as CSS custom properties
-   per token. By default we paint the dark theme; under [data-theme="light"]
-   we swap to the light theme's tokens. Code blocks then follow page theme
-   without recompilation. */
+/* Shiki dual-theme (shikiConfig.defaultColor:false) — every token carries BOTH
+   palettes as CSS custom properties (--shiki-light / --shiki-dark). We take
+   ONLY the text color + font from Shiki and paint the surface ourselves above.
+   Crucially we do NOT set background-color here: a per-token background paints
+   a box behind every word (white in light theme, cool-grey in dark) over the
+   warm surface — that was the second half of the "white background" bug. */
 .astro-code,
 .astro-code span {
   color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
   font-style: var(--shiki-dark-font-style);
   font-weight: var(--shiki-dark-font-weight);
   text-decoration: var(--shiki-dark-text-decoration);
@@ -418,7 +503,6 @@
 [data-theme="light"] .astro-code,
 [data-theme="light"] .astro-code span {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
   font-style: var(--shiki-light-font-style);
   font-weight: var(--shiki-light-font-weight);
   text-decoration: var(--shiki-light-text-decoration);
@@ -458,12 +542,13 @@
 }
 
 .fig .frame {
-  /* Theme-invariant dark plate: lesson outputs were generated against
-     dark surrounds. The caption (figcaption) stays outside the frame
-     and tracks page theme. */
+  /* Light-touch plate that tracks the page theme (soft violet on dark, warm
+     paper on light — see --figure-frame-* in tokens.css). The caption stays
+     outside the frame. */
   border: 1px solid var(--figure-frame-line);
   background: var(--figure-frame-bg);
-  padding: 8px;
+  padding: 6px;
+  border-radius: 4px;
   display: block;
 }
 
@@ -492,6 +577,96 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-right: 8px;
+}
+
+/* The frame is a button (click/keyboard to enlarge) — strip button chrome,
+   keep the .fig .frame plate styling, add a zoom affordance. */
+.fig button.frame {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: zoom-in;
+}
+
+.fig button.frame:focus-visible {
+  outline: 2px solid var(--cycle, var(--accent));
+  outline-offset: 3px;
+}
+
+/* Low-res / pixel art: crisp nearest-neighbour scaling instead of blur. */
+.fig.pixelated img,
+.fig-lightbox img.pixelated {
+  image-rendering: pixelated;
+}
+
+/* ---------- Figure lightbox (native <dialog>) ---------- */
+.fig-lightbox {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: 94vw;
+  max-height: 94vh;
+  overflow: visible;
+}
+
+.fig-lightbox::backdrop {
+  background: rgba(8, 6, 12, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.fig-lightbox img {
+  display: block;
+  /* width/height are set by the fit() script to fill the viewport; these are
+     just safety caps. */
+  max-width: 94vw;
+  max-height: 84vh;
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.fig-lightbox .fig-lightbox-cap {
+  margin: 12px auto 0;
+  max-width: 70ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #F0E7D8;
+  text-align: center;
+}
+
+.fig-lightbox .fig-lightbox-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 231, 216, 0.4);
+  background: #1C1824;
+  color: #F0E7D8;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fig-lightbox .fig-lightbox-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fig-lightbox[open] {
+    animation: fig-lightbox-in 0.16s ease-out;
+  }
+  @keyframes fig-lightbox-in {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+  }
 }
 
 /* ---------- Admonitions ---------- */
@@ -575,54 +750,77 @@
   font-size: 0.7em;
 }
 
-/* ---------- Dropdown (solutions, hints) — uses <details> ---------- */
+/* ---------- Dropdown (solutions, hints) — uses <details> ----------
+   Summary reads as a clear clickable control: sentence-case sans at 14px/600
+   (was mono 11px/400 all-caps — the lowest-emphasis treatment on the site),
+   a distinct plate, a rotating chevron, and explicit hover/focus states. The
+   label stays --fg in EVERY state so contrast is always ~14:1 (AA-safe across
+   all three cycles in both themes); interactivity is signalled by the plate
+   tint + chevron, never by a low-contrast label colour. */
 .dropdown {
   border: 1px solid var(--line-2);
   margin: 16px 0;
   background: var(--bg-2);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .dropdown > summary {
   list-style: none;
   cursor: pointer;
-  padding: 10px 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fg-2);
+  padding: 12px 16px;
+  font-family: var(--sans);
+  font-size: calc(14px * var(--t-scale));
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--fg);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   background: var(--bg-3);
   border-bottom: 1px solid transparent;
-  transition: color .15s, border-color .15s;
+  transition: background .15s, border-color .15s;
 }
 
 .dropdown > summary::-webkit-details-marker {
   display: none;
 }
 
-/* Touch: lift the ~31px summary row to the 44px minimum. */
+/* Touch: lift the summary row to the 44px minimum. */
 @media (pointer: coarse) {
   .dropdown > summary { min-height: 44px; }
 }
 
+.dropdown > summary:hover {
+  background: var(--cycle-tint, var(--bg-4));
+}
+
+.dropdown > summary:focus-visible {
+  outline: 2px solid var(--cycle, var(--accent));
+  outline-offset: 2px;
+}
+
+/* Chevron — points down (expand) at rest, rotates up (collapse) when open.
+   A non-text affordance, so the cycle colour only needs 3:1 (clears it). */
 .dropdown > summary::after {
-  content: "+";
-  font-family: var(--mono);
-  color: var(--cycle-soft, var(--accent-soft));
-  font-size: 16px;
-  line-height: 1;
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--cycle, var(--accent));
+  border-bottom: 2px solid var(--cycle, var(--accent));
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .18s ease;
+  flex-shrink: 0;
+  margin-right: 3px;
 }
 
 .dropdown[open] > summary::after {
-  content: "–";
+  transform: rotate(225deg);
 }
 
 .dropdown[open] > summary {
-  /* Open state is a deliberate user action — keep full-strength cycle. */
-  color: var(--cycle, var(--accent));
+  background: var(--cycle-tint, var(--bg-3));
   border-bottom-color: var(--line-2);
 }
 
@@ -685,12 +883,33 @@
 .ex .ex-roman .num {
   font-family: var(--mono);
   font-style: normal;
-  color: var(--fg-3);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  color: var(--fg-3);            /* fallback for an unrecognised kicker */
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
+
+/* Lead-in rule before the kicker word — reuses the .ex::before marker-dot
+   language so the stage badge reads as native to the design system. Inherits
+   the stage colour via currentColor. */
+.ex .ex-roman .num::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  vertical-align: middle;
+  margin-right: 9px;
+  transform: translateY(-2px);
+}
+
+/* Per-stage colour ramp (Execute → Modify → Create), orthogonal to --cycle.
+   TRAIN maps to create in Exercise.astro, so it inherits the Create colour. */
+.ex .ex-roman .num[data-stage="execute"] { color: var(--stage-execute); }
+.ex .ex-roman .num[data-stage="modify"]  { color: var(--stage-modify); }
+.ex .ex-roman .num[data-stage="create"]  { color: var(--stage-create); }
 
 .ex .ex-title {
   font-family: var(--serif);
@@ -1113,17 +1332,19 @@
   margin: 0;
   display: grid;
   gap: 14px;
-  counter-reset: r;
 }
 
+/* Single-column hanging indent (APA-style): the [N] tag hangs in the left
+   gutter, the entry text reflows the FULL reading width, and continuation
+   lines align under the text — not under a fixed 110px tag column that wasted
+   ~95px per row. Markup is unchanged (<span class="tag">[N]</span>). */
 .refs ol li {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 16px;
+  padding-left: 2.4rem;
+  text-indent: -2.4rem;
   font-family: var(--serif);
-  font-size: 14px;
+  font-size: calc(15px * var(--t-scale));
   color: var(--fg-2);
-  line-height: 1.5;
+  line-height: 1.6;
   padding-bottom: 12px;
   border-bottom: 1px dotted var(--line-2);
 }
@@ -1133,25 +1354,25 @@
 }
 
 .refs ol li .tag {
+  display: inline-block;
+  width: 2.4rem;
+  text-indent: 0;            /* the tag itself is not indented */
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--cycle-soft, var(--accent-soft));
-  align-self: baseline;
 }
 
 .refs ol li a {
   color: var(--cycle-soft, var(--accent-soft));
   border-bottom: 1px solid var(--line-2);
+  /* Break long URLs only when they would overflow (WCAG C33). */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .refs ol li a:hover {
   color: var(--cycle, var(--accent));
   border-color: var(--cycle, var(--accent));
-}
-
-@media (max-width: 540px) {
-  .refs ol li {
-    grid-template-columns: 1fr;
-  }
 }
