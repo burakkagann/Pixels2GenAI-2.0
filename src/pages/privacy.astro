@@ -12,7 +12,7 @@ import Footer from '@/components/chrome/Footer.astro';
   title="Privacy"
   description="What personal data Pixels2GenAI stores, where, for how long, and how to have it removed. The announcements form is the only place on this site that collects personal data."
 >
-  <main class="privacy-page">
+  <main id="main-content" class="privacy-page">
     <article class="privacy">
       <header class="privacy-head">
         <div class="privacy-eyebrow">
@@ -109,7 +109,8 @@ import Footer from '@/components/chrome/Footer.astro';
           <a href="https://umami.is/" target="_blank" rel="noopener">
             Umami <span class="arr">↗</span>
           </a>, a privacy-first, cookieless analytics service
-          (Umami Software, Inc.). It records only aggregate, anonymous usage — page visits,
+          (Umami Software, Inc.), with analytics data processed and stored in
+          its EU (Germany) region. It records only aggregate, anonymous usage — page visits,
           the referring site, country, and device type — and sets
           <em>no cookies</em>, stores <em>no IP address</em>, and keeps
           <em>no information that could identify you</em>. Search terms typed
@@ -121,13 +122,25 @@ import Footer from '@/components/chrome/Footer.astro';
       </section>
 
       <section>
-        <h2>Everything else</h2>
+        <h2>Browser storage</h2>
         <p>
-          The rest of the site is static. It sets a single localStorage
-          entry for your theme preference, fetches a star count from the
-          public GitHub API, and serves all fonts and assets from its own
-          domain. No advertising, no cross-site tracking, and no embedded
-          third-party content beyond the analytics described above.
+          The rest of the site is static and stores a few small values in your
+          own browser to remember preferences. None of it is sent to us or to
+          any third party, and none of it identifies you:
+        </p>
+        <ul>
+          <li><code>p2g-theme</code> (localStorage) — your light/dark theme choice.</li>
+          <li><code>p2g-progress</code> (localStorage) — the lessons you mark as complete, so your progress persists.</li>
+          <li><code>p2g-stars</code> (sessionStorage) — a cached copy of the repository star count; cleared when you close the tab.</li>
+          <li><code>p2g-octo-greeted</code> (sessionStorage) — a one-time flag so the header animation plays once per visit; cleared when you close the tab.</li>
+        </ul>
+        <p>
+          The repository star count shown in the header and footer is fetched
+          from our own server endpoint — your browser does not contact GitHub
+          directly, so no request or IP is sent to GitHub on your behalf. All
+          fonts and assets are served from this domain. No advertising, no
+          cross-site tracking, and no embedded third-party content beyond the
+          analytics described above.
         </p>
       </section>
 
