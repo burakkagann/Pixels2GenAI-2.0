@@ -44,8 +44,22 @@ export default defineConfig({
     // Dual-theme Shiki: emits both palettes as CSS custom properties on each
     // token, then a CSS rule in prose.css swaps which set wins based on the
     // data-theme attribute on <html>.
+    //
+    // defaultColor:false is REQUIRED — without it Shiki writes the light theme
+    // as literal inline `color`/`background-color` (with only the dark theme as
+    // CSS vars). A bare ``` fence not wrapped in <CodeBlock> then keeps that
+    // inline `background-color:#fff` and renders as a WHITE box in dark theme.
+    // With defaultColor:false neither palette is inlined — both are emitted as
+    // --shiki-light / --shiki-dark custom properties — so the swap rules in
+    // prose.css govern every block (wrapped or bare) and the white-box bug
+    // cannot recur. See prose.css ".astro-code" dual-theme block.
     shikiConfig: {
-      themes: { light: 'github-light', dark: 'github-dark' },
+      // github-light-high-contrast keeps every token at WCAG AA even on a WARM
+      // CREAM code surface (stock github-light and github-light-default both
+      // drop the keyword/comment tokens below 4.5:1 on cream — only the
+      // high-contrast palette holds). github-dark is unchanged for dark theme.
+      themes: { light: 'github-light-high-contrast', dark: 'github-dark' },
+      defaultColor: false,
     },
   },
   integrations: [
