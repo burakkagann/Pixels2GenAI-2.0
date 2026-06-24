@@ -108,7 +108,7 @@ It works for *non-uniform* rows too, as long as each row ends up the same total 
 ```python
 top    = np.hstack([a, b])               # widths: 300 + 300 = 600
 bottom = np.hstack([c, d, e])            # widths: 300 + 100 + 200 = 600
-grid   = np.vstack([top, bottom])        # ✓ matching widths
+grid   = np.vstack([top, bottom])        # OK: matching widths
 ```
 
 The bottom row uses three pieces to match the top row's two pieces — `vstack` only cares about the totals.
