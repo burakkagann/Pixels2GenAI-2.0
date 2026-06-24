@@ -26,7 +26,7 @@ const navItems = [
 ];
 ---
 
-<div class="frame-top">
+<header class="frame-top">
   <canvas class="octo-canvas" aria-hidden="true"></canvas>
   <a href="/" class="mark" aria-label="Pixels2GenAI — home">
     <svg class="octo" viewBox="0 0 14 14" shape-rendering="crispEdges" aria-hidden="true">
@@ -170,16 +170,18 @@ const navItems = [
       </svg>
     </button>
   </div>
-</div>
+</header>
 
 <script>
-  import { formatStars, GITHUB_REPO } from '@/lib/github';
+  import { formatStars } from '@/lib/github';
 
   // Live star count. The number baked in at build time goes stale between
-  // deploys, so refresh it client-side: one unauthenticated API call per
-  // browser session (cached in sessionStorage for an hour), patching the
-  // header chip and the footer colophon count. No-JS visitors keep the
-  // build-time number.
+  // deploys, so refresh it client-side via a same-origin serverless proxy
+  // (/.netlify/functions/github-stars) — the browser never contacts GitHub
+  // directly, so no visitor IP leaves for a US third party. Cached in
+  // sessionStorage for an hour, patching the header chip and footer colophon
+  // count. No-JS visitors (and local `astro preview`, where the function isn't
+  // served) keep the build-time number.
   const STARS_KEY = 'p2g-stars';
   const STARS_TTL = 60 * 60 * 1000;
 
@@ -199,22 +201,20 @@ const navItems = [
     if (cached && typeof cached.n === 'number' && Date.now() - cached.t < STARS_TTL) {
       applyStars(cached.n);
     } else {
-      fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
-        headers: { Accept: 'application/vnd.github+json' },
-      })
+      fetch('/.netlify/functions/github-stars')
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data && typeof data.stargazers_count === 'number') {
+          if (data && typeof data.stars === 'number') {
             try {
               sessionStorage.setItem(
                 STARS_KEY,
-                JSON.stringify({ n: data.stargazers_count, t: Date.now() }),
+                JSON.stringify({ n: data.stars, t: Date.now() }),
               );
             } catch {}
-            applyStars(data.stargazers_count);
+            applyStars(data.stars);
           }
         })
-        .catch(() => {}); // offline / rate-limited: keep the build-time number
+        .catch(() => {}); // offline / function unavailable: keep the build-time number
     }
   } catch {}
 
