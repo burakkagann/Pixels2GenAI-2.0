@@ -24,6 +24,14 @@
   --bg-warm-2: #271F18;
   --bg-warm-3: #322823;
 
+  /* ---------- Code-block surface (bare ``` fences + <CodeBlock>, both themes) ----------
+     One surface for every code block so bare and wrapped render identically.
+     Dark: warm plate sits only 1.1:1 above the page, so --code-border carries
+     the block's edge/elevation. Token text comes from Shiki; the surface never
+     does (see prose.css ".astro-code"). */
+  --code-surface: #1E1A14;
+  --code-border:  #3C3329;
+
   /* ---------- Cool / archival pockets (.ad.note, left rail, refs) ---------- */
   --bg-cool-1: #17131E;
   --bg-cool-2: #1E1928;
@@ -72,6 +80,15 @@
   /* ---------- Highlight — Warm Yellow (editorial only — eyebrows, drop caps) ---------- */
   --highlight: #F0C26B;
 
+  /* ---------- Exercise stage accents (Execute → Modify → Create) ----------
+     A per-stage colour ramp keyed off the exercise kicker, ORTHOGONAL to the
+     per-module --cycle colour. cool → warm → bold mirrors rising learner
+     agency (run it → change it → make it). Used by .ex .num in prose.css.
+     TRAIN maps to the Create family (Exercise.astro). */
+  --stage-execute: #66B8FF;   /* = --c2 electric blue — calm: run it */
+  --stage-modify:  #F0C26B;   /* = --highlight amber — active: change it */
+  --stage-create:  #B585E8;   /* = --c3 violet — bold: make it */
+
   /* ---------- Semantic aliases ---------- */
   --accent:      var(--c3);          /* primary action = violet */
   --accent-soft: var(--c3-soft);
@@ -90,11 +107,11 @@
   --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.08'/></svg>");
   --grain-blend: overlay;
 
-  /* ---------- Always-dark figure frame ----------
-     Powers the per-figure dark wrapper that stays dark in BOTH themes.
-     Lesson outputs and research PNGs are rendered against dark surrounds;
-     these tokens are intentionally NOT overridden under [data-theme="light"]. */
-  --figure-frame-bg:   #17131E;
+  /* ---------- Figure frame ----------
+     A light-touch plate behind lesson outputs / research PNGs. Dark theme:
+     a soft violet plate slightly LIFTED off the page (not a black void).
+     Light theme overrides these to a warm paper inset (see [data-theme]). */
+  --figure-frame-bg:   #1C1824;
   --figure-frame-line: #2B2536;
   --figure-frame-fg:   #F0E7D8;
 
@@ -148,6 +165,13 @@
   --bg-warm-2: #ECDFC4;
   --bg-warm-3: #E5D3B0;
 
+  /* ---------- Code-block surface — WARM CREAM (not white), a touch lighter
+     than the page (#F5F1E8) so it reads as a raised paper card while staying
+     in the warm family. github-light-high-contrast tokens hold WCAG AA on
+     this surface (verified against the emitted palette). ---------- */
+  --code-surface: #FAF4E6;
+  --code-border:  #D9CCB2;
+
   /* ---------- Cool / archival pockets (.ad.note, left rail, refs) — pale archival ---------- */
   --bg-cool-1: #ECEAE3;
   --bg-cool-2: #E3E1DA;
@@ -193,6 +217,11 @@
   /* ---------- Highlight — deep amber (drop caps, eyebrows) ---------- */
   --highlight: #B57B17;
 
+  /* ---------- Exercise stage accents — darkened to hold AA on cream (--bg-warm-1) ---------- */
+  --stage-execute: #134A82;   /* = --c2-dim */
+  --stage-modify:  #8A5A0C;   /* deep amber (--highlight #B57B17 is too light on cream) */
+  --stage-create:  #482675;   /* = --c3-dim */
+
   /* ---------- Semantic aliases — accent-glow needs explicit re-derivation ---------- */
   --accent-glow: rgba(107, 63, 170, 0.45);
   --link-hover: #155299;
@@ -201,6 +230,11 @@
   /* ---------- Admonition note ---------- */
   --note-border: #6F7A8C;
   --note-title:  #4A5566;
+
+  /* ---------- Figure frame — warm paper inset on light (was locked dark) ---------- */
+  --figure-frame-bg:   #FFFCF3;
+  --figure-frame-line: #D9CCB2;
+  --figure-frame-fg:   #15101C;
 
   /* ---------- Grain overlay — dark noise + multiply blend on cream ---------- */
   --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.10'/></svg>");
