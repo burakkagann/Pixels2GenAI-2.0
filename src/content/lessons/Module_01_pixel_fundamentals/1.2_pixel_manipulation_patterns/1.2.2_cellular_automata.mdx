@@ -72,6 +72,7 @@ imageio.mimsave('glider_animation.gif', frames, fps=2, duration=0.5)
   caption="The glider — five cells, no movement code, four generations per step diagonally."
   num={1}
   role="output"
+  pixelated
 />
 
 <Dropdown summary="Key functions used above">
@@ -185,6 +186,7 @@ The horizontal line becomes vertical, then horizontal again. This is a **period-
   caption="The blinker — always three living cells, but orientation flips every tick."
   num={4}
   role="diagram"
+  pixelated
 />
 
 A more theatrical oscillator is the **beacon**, which alternates between six and eight living cells:
@@ -203,6 +205,7 @@ Generation 0:    Generation 1:    Generation 2:
   caption="The beacon — two diagonal blocks 'reach' toward each other and pull back, period 2."
   num={5}
   role="diagram"
+  pixelated
 />
 
 **Spaceships — moving patterns.** Where an oscillator transforms in place, a spaceship rebuilds itself one cell over each cycle. The **glider** moves diagonally:
@@ -223,6 +226,7 @@ The glider reconstructs itself one cell down and one cell to the right every fou
   caption="The glider walks down-and-right by reconstructing itself one cell over every four ticks."
   num={6}
   role="diagram"
+  pixelated
 />
 
 <Admonition type="tip">
