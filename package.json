@@ -13,6 +13,7 @@
     "status": "node scripts/lesson-status.mjs",
     "copy-assets": "node scripts/copy-v1-assets.mjs",
     "gen-icons": "node scripts/gen-icons.mjs",
+    "gen-og-bg": "node scripts/gen-og-bg.mjs",
     "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
