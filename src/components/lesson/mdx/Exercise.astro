@@ -4,11 +4,24 @@ interface Props {
   n: number;
   /** Short title, e.g. "Modify Parameters". */
   title: string;
-  /** Optional kicker label, e.g. "EXECUTE", "MODIFY", "RE-CODE", "ARCHITECT". */
+  /** Optional kicker label. Canonical: "EXECUTE", "MODIFY", "CREATE".
+      "TRAIN" is allowed for GPU-training Create-stage exercises. */
   kicker?: string;
 }
 
 const { n, title, kicker } = Astro.props;
+
+// Map the kicker to one of three pedagogical stages for per-stage colouring
+// (see --stage-* tokens + .ex .num in prose.css). TRAIN is a Create-stage
+// variant kept for GPU-training lessons; it styles as Create but keeps its
+// label. Unknown kickers get no stage and fall back to the muted default.
+const STAGE: Record<string, string> = {
+  execute: 'execute',
+  modify: 'modify',
+  create: 'create',
+  train: 'create',
+};
+const stage = kicker ? STAGE[kicker.trim().toLowerCase()] ?? null : null;
 
 const roman = (num: number): string => {
   const map: Array<[number, string]> = [
@@ -29,7 +42,7 @@ const roman = (num: number): string => {
 <article class="ex" id={`ex${n}`}>
   <header class="ex-head">
     <div class="ex-roman">
-      {kicker && <span class="num">{kicker}</span>}
+      {kicker && <span class="num" data-stage={stage}>{kicker}</span>}
       {roman(n)}.
     </div>
     <h3 class="ex-title">{title}</h3>
