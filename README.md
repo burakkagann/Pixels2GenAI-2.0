@@ -17,16 +17,16 @@ swarm, a neural network, an image dreamed up by a generative model.
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="https://pixels2genai.art/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/boids_simulation.gif" alt="A flocking swarm of agents (boids) self-organising" width="260"><br>
-      <sub><b>Cycle I · Foundations</b><br>pixels, geometry, simulation</sub>
+      <img src=".github/readme/fractal-square.webp" alt="A fractal square subdividing recursively, frame by frame" width="260"><br>
+      <sub><b>Module 04 · Fractals</b><br>recursion &amp; self-similarity</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://pixels2genai.art/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/infinite_blossom.gif" alt="An organic blossom growing through procedural animation" width="260"><br>
-      <sub><b>Cycle II · Machine Learning</b><br>noise, animation, neural nets</sub>
+      <img src=".github/readme/double-pendulum.webp" alt="A double pendulum tracing a chaotic path" width="260"><br>
+      <sub><b>Module 05 · Simulation</b><br>chaos &amp; emergent behaviour</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://pixels2genai.art/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/dcgan_fabric_animation.gif" alt="A GAN learning to generate fabric-like imagery during training" width="260"><br>
-      <sub><b>Cycle III · Generative AI</b><br>GANs, diffusion, your capstone</sub>
+      <img src=".github/readme/controlnet-morph.webp" alt="A diffusion model morphing imagery under ControlNet guidance" width="260"><br>
+      <sub><b>Module 12 · Generative AI</b><br>diffusion &amp; ControlNet</sub>
     </td>
   </tr>
 </table>

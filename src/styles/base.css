@@ -32,6 +32,34 @@ body {
   overflow-x: hidden;
 }
 
+/* Skip-to-content link (WCAG 2.4.1). Off-screen until focused, then pinned
+   top-left as the first keyboard stop. Colours invert with the theme via
+   --fg/--bg, so it stays high-contrast in both. */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  transform: translateY(-150%);
+  padding: 0.6rem 1rem;
+  background: var(--fg);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: transform 0.15s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--c2);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}
+
 /* Subtle grain — fixed overlay above all content but below modals.
    SVG and blend mode come from tokens so light theme swaps to dark noise
    with multiply blend (white-noise overlay only reads on dark surrounds). */

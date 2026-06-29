@@ -5,6 +5,12 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Serverless functions (Netlify Functions v2). github-stars proxies the repo
+# star count so the browser never calls api.github.com directly (no visitor IP
+# sent to a US third party). This is the default location, declared explicitly.
+[functions]
+  directory = "netlify/functions"
+
 # Legacy workshop-only signup URLs — superseded by the shared
 # announcements capture (one Netlify form serving workshops AND
 # exhibitions). Old submissions remain in the dashboard under the
@@ -37,7 +43,11 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Fingerprinted build output — hashed JS, CSS, and bundled @fontsource fonts
+# all emit to /_astro/ with content hashes in the filename, so they are safe to
+# cache forever. (Replaces a stale "/fonts/*" rule: fonts are not served from
+# /fonts/ — they bundle into /_astro/.)
 [[headers]]
-  for = "/fonts/*"
+  for = "/_astro/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
