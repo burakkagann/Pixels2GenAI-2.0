@@ -40,7 +40,16 @@ const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
 
 // Absolute URLs for canonical + social tags. Astro.site comes from the
 // `site` field in astro.config.mjs (https://pixels2genai.art).
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+//
+// Under build.format:'file', Astro.url.pathname carries the .html extension
+// (/lessons/2.1.1.html) — a known Astro quirk (withastro/astro#11575). Left
+// raw, the canonical tag would point at a URL Netlify 301-redirects to the
+// extensionless form, re-creating the "Page with redirect" problem we are
+// fixing. Strip the .html and any trailing slash so the canonical matches the
+// sitemap and our JSON-LD exactly (no extension, no trailing slash; the bare
+// origin for the homepage).
+const canonicalPath = Astro.url.pathname.replace(/\.html$/, '');
+const canonical = new URL(canonicalPath, Astro.site).href.replace(/\/$/, '');
 const ogImageUrl = new URL(ogImage, Astro.site).href;
 
 // Normalize to a list so callers can pass one object or several.

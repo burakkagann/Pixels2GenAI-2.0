@@ -40,6 +40,17 @@ function remarkSectionize() {
 
 export default defineConfig({
   site: 'https://pixels2genai.art',
+  // One canonical URL form, enforced at every layer. The whole site's internal
+  // links and JSON-LD already emit no-trailing-slash paths (/lessons/2.1.1), but
+  // the default 'directory' build format served every page from an index.html at
+  // /lessons/2.1.1/ — so Google reached the no-slash form via our own links,
+  // got 301'd to the slash form, and logged the no-slash URL as "Page with
+  // redirect" (26 of them). 'file' format emits /lessons/2.1.1.html (served at
+  // /lessons/2.1.1), and 'never' makes Astro.url + @astrojs/sitemap agree on the
+  // no-slash form, so links, canonical tag, and sitemap all match. See Google's
+  // "To slash or not to slash": pick one form, use it everywhere.
+  trailingSlash: 'never',
+  build: { format: 'file' },
   markdown: {
     // Dual-theme Shiki: emits both palettes as CSS custom properties on each
     // token, then a CSS rule in prose.css swaps which set wins based on the
