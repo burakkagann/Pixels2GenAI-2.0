@@ -8,6 +8,7 @@ import PrevNext from '@/components/lesson/PrevNext.astro';
 import StageTracker from '@/components/lesson/StageTracker.astro';
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS } from '@/data/curriculum/subtopics';
+import { curriculumOrder, lessonNav } from '@/lib/lessonNav';
 import '@/styles/prose.css';
 import '@/styles/lesson-layout.css';
 
@@ -45,13 +46,19 @@ interface Props {
 const { slug, frontmatter, headings } = Astro.props;
 const f = frontmatter;
 
-// Frontmatter prev/next can point at leaves that aren't ported yet, which would
-// link to a 404. Only keep a neighbor link if its lesson is actually shipped
-// (exists in the lessons collection). scripts/check-lessons.mjs enforces the
-// same rule at build time so dangling links never ship.
-const shippedSlugs = new Set((await getCollection('lessons')).map((l) => l.id));
-const prev = f.prev && shippedSlugs.has(f.prev.slug) ? f.prev : null;
-const next = f.next && shippedSlugs.has(f.next.slug) ? f.next : null;
+// Previous/Next come from curriculum order, skipping leaves that aren't
+// shipped yet, so they never dead-end and track new lessons automatically.
+// Frontmatter prev/next is only a fallback for an MDX not yet wired into
+// subtopics.ts. See src/lib/lessonNav.ts.
+const lessonTitles = new Map(
+  (await getCollection('lessons')).map((l) => [l.id, l.data.title] as const)
+);
+const { prev, next } = lessonNav(
+  slug,
+  curriculumOrder(MODULES, SUBTOPICS),
+  lessonTitles,
+  { prev: f.prev, next: f.next }
+);
 
 const lessonJsonLd = {
   '@context': 'https://schema.org',

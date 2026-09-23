@@ -14,6 +14,9 @@
  * WARNINGS (intentional in-progress states — never fail):
  *   - an MDX file that exists but is not yet wired into subtopics.ts
  *   - a module whose firstLesson is not among its own wired leaves
+ *   - a frontmatter prev/next slug that isn't a curriculum leaf id at all
+ *   - an unwired MDX whose frontmatter prev/next targets an unshipped lesson
+ *     (unwired lessons fall back to frontmatter navigation)
  */
 
 import fs from 'node:fs';
@@ -53,6 +56,8 @@ for (const [slug, users] of slugUsage) {
 
 // 2. Orphan MDX (exists but not wired) -> warning.
 const wiredSlugs = new Set([...slugUsage.keys()]);
+const shippedSlugs = new Set(allLeaves.filter((l) => l.slug && l.hasFile).map((l) => l.slug));
+const leafIds = new Set(allLeaves.map((l) => l.id));
 for (const file of files) {
   if (!wiredSlugs.has(file)) {
     warnings.push(
@@ -133,15 +138,30 @@ for (const slug of wiredSlugs) {
     }
   }
 
-  // prev/next must point at a lesson page that exists, or it would 404. The
-  // Lesson layout auto-hides a dangling neighbor at build time, so this is a
-  // warning (pointing next-> at a not-yet-ported leaf is a normal in-progress
-  // state), but it surfaces the stale frontmatter so it can be corrected.
+  // Previous/Next for a wired lesson is computed from curriculum order
+  // (src/lib/lessonNav.ts), so frontmatter prev/next pointing at a
+  // not-yet-shipped leaf is harmless. It is only flagged when the slug isn't
+  // a curriculum leaf at all (a typo that no future port will resolve).
   const fmEnd = content.indexOf('\n---', 4);
   const frontmatter = fmEnd > 0 ? content.slice(0, fmEnd) : content;
   for (const { dir, slug: target } of neighborSlugs(frontmatter)) {
-    if (!wiredSlugs.has(target) && !lessonFilePath(target)) {
-      warnings.push(`Lesson "${slug}" has ${dir} -> /lessons/${target}, which is not a shipped lesson (link auto-hidden; update the frontmatter).`);
+    if (!leafIds.has(target)) {
+      warnings.push(`Lesson "${slug}" has ${dir} -> "${target}", which is not a leaf id in subtopics.ts (typo in the frontmatter?).`);
+    }
+  }
+}
+
+// 5. Unwired MDX lessons still build a page, but sit outside curriculum order,
+//    so their Previous/Next falls back to frontmatter (shipped targets only).
+//    There, a neighbor that isn't shipped is auto-hidden — surface it.
+for (const slug of files) {
+  if (wiredSlugs.has(slug)) continue;
+  const content = fs.readFileSync(lessonFilePath(slug), 'utf8');
+  const fmEnd = content.indexOf('\n---', 4);
+  const frontmatter = fmEnd > 0 ? content.slice(0, fmEnd) : content;
+  for (const { dir, slug: target } of neighborSlugs(frontmatter)) {
+    if (!shippedSlugs.has(target)) {
+      warnings.push(`Unwired lesson "${slug}" has ${dir} -> /lessons/${target}, which is not a shipped lesson (link auto-hidden until "${slug}" is wired into subtopics.ts).`);
     }
   }
 }
