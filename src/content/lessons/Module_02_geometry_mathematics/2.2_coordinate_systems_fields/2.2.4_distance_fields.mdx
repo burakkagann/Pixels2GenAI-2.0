@@ -5,6 +5,7 @@ title: "Distance Fields & SDFs"
 objective: "Keep the actual distance values instead of thresholding them. Subtract a radius to get a signed distance function, then combine SDFs with `min`, `max`, and negation — the algebra behind modern shape composition."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-12-09
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "2.1.3 (circle masks), 2.2.1 (broadcasting), 2.2.3 (np.ogrid)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 In 2.1.3 you drew a circle by *thresholding* a distance — `square_distance < r²` gave a boolean mask and you threw the actual distance values away. Keep them instead and you have a **distance field**: a 2D scalar where each pixel stores the distance to the nearest point on a shape. Subtract the radius and you have a **signed distance function** (SDF): negative inside, positive outside, zero on the boundary [1]. The payoff is composition — three operations (`min`, `max`, and negation) let you take unions, intersections, and subtractions of any two SDFs, which is how modern font renderers, demoscene shaders, and Pixar's recent shape pipelines do CSG without ever building polygons [2, 3].
 
@@ -66,7 +67,7 @@ Image.fromarray(normalized, mode='L').save('simple_distance_field.png')
 The gradient appears circular even though the canvas is square. Euclidean distance is rotation-symmetric — every level set of the distance field is a circle.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Distance field vs. boolean mask
 
@@ -160,7 +161,7 @@ subtraction  = np.maximum(circle1, -circle2)
 
 The rectangle SDF is the same idea applied per axis: `np.maximum(np.abs(x) - half_w, np.abs(y) - half_h)`. The maximum of the two axis-aligned signed distances is itself a valid SDF, with the corner subtleties handled by the absolute value [2].
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: visualise a distance field, vary the centre and shape, then compose multiple SDFs.
 
@@ -364,13 +365,13 @@ Image.fromarray(normalized, mode='L').save('sdf_combination.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/simple_distance_field.py" label="simple_distance_field.py — quick start" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/sdf_shapes.py" label="sdf_shapes.py — circle/rect/union/intersection" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/sdf_combination_solution.py" label="sdf_combination_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -385,7 +386,7 @@ A distance field stores actual distances instead of inside/outside booleans, ope
 - Misnormalising for visualisation — distance values that go negative will wrap when cast to `uint8` without clipping/shifting.
 - Trusting the rectangle SDF for corner cases — it underestimates distance just outside a corner. Good enough for visualisation, but not for ray-marching where precision matters.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

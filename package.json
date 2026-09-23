@@ -12,6 +12,7 @@
     "check": "node scripts/check-lessons.mjs",
     "status": "node scripts/lesson-status.mjs",
     "copy-assets": "node scripts/copy-v1-assets.mjs",
+    "gif-stills": "node scripts/gen-gif-stills.mjs",
     "gen-icons": "node scripts/gen-icons.mjs",
     "gen-og-bg": "node scripts/gen-og-bg.mjs",
     "indexnow": "node scripts/indexnow.mjs"
@@ -27,8 +28,11 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "astro": "^5.1.1",
     "astro-og-canvas": "^0.11.1",
+    "katex": "^0.18.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "shiki": "^1.24.4"
   },
   "devDependencies": {

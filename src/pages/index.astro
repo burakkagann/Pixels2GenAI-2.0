@@ -161,7 +161,8 @@ const ALL_LEAVES = MODULES.flatMap(m =>
 
     <div class="curriculum-results" id="curriculum-results" data-results hidden role="list">
       {ALL_LEAVES.map(leaf => {
-        const haystack = `${leaf.id} ${leaf.title} m${leaf.mIdx} ${leaf.mLabel} ${leaf.subTitle}`.toLowerCase();
+        // m06 and m6 / "module 6" all match: people rarely type the zero pad.
+        const haystack = `${leaf.id} ${leaf.title} m${leaf.mIdx} m${Number(leaf.mIdx)} module ${Number(leaf.mIdx)} ${leaf.mLabel} ${leaf.subTitle}`.toLowerCase();
         const inner = (
           <>
             <span class="r-id">{leaf.id}</span>
@@ -170,12 +171,14 @@ const ALL_LEAVES = MODULES.flatMap(m =>
           </>
         );
         return leaf.slug
-          ? <a class="result" role="listitem" data-search={haystack} data-leaf-slug={leaf.slug} href={`/lessons/${leaf.slug}`} hidden>
-              {inner}
+          ? <div class="result" role="listitem" data-search={haystack} data-leaf-slug={leaf.slug} hidden>
+              {/* Link and toggle are siblings: a <button> inside an <a> is
+                  invalid nesting and garbled the link's accessible name. */}
+              <a class="result-link" href={`/lessons/${leaf.slug}`}>{inner}</a>
               <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${leaf.id} complete`} title="Mark complete">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
-            </a>
+            </div>
           : <span class="result soon" role="listitem" data-search={haystack} hidden>
               {inner}
               <span class="r-soon">soon</span>
@@ -226,8 +229,9 @@ const ALL_LEAVES = MODULES.flatMap(m =>
                     <b>M {m.idx}</b>
                     <span class="card-fw">{m.fw}</span>
                   </div>
-                  <h4>{m.title}<br /><em>{m.em}</em></h4>
-                  <div class="card-meta">{c.subs} sub · {c.leaves} lessons</div>
+                  {/* span, not h4: a <button> may only hold phrasing content. */}
+                  <span class="card-title">{m.title}<br /><em>{m.em}</em></span>
+                  <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons</div>
                 </button>
               );
             })}
@@ -250,12 +254,14 @@ const ALL_LEAVES = MODULES.flatMap(m =>
                         <h6><span class="snum">{s.id}</span>{s.title}</h6>
                         {s.leaves.map(l => (
                           l.lessonSlug
-                            ? <a class="leaf" href={`/lessons/${l.lessonSlug}`} data-leaf-slug={l.lessonSlug}>
-                                <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
+                            ? <div class="leaf" data-leaf-slug={l.lessonSlug}>
+                                <a class="leaf-link" href={`/lessons/${l.lessonSlug}`}>
+                                  <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
+                                </a>
                                 <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${l.id} complete`} title="Mark complete">
                                   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
-                              </a>
+                              </div>
                             : <span class="leaf soon">
                                 <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
                               </span>
@@ -275,8 +281,9 @@ const ALL_LEAVES = MODULES.flatMap(m =>
 
   <script is:inline>
     // § 1 Curriculum — station accordion. One panel open per station; clicking
-    // an already-active card closes it. Module cards are roving-tabindex: arrow
-    // keys move focus within a station, Enter/Space toggle (native <button>),
+    // an already-active card closes it. Every card is its own Tab stop (plain
+    // disclosure buttons, no roving tabindex); arrow keys also move focus
+    // between cards within a station, Enter/Space toggle (native <button>),
     // Escape closes the open panel.
     //
     // Panel placement is layout-aware: on phones (≤540px, where the cards are a
@@ -441,13 +448,19 @@ const ALL_LEAVES = MODULES.flatMap(m =>
           currentMatches = 0;
           return;
         }
-        const terms = q.split(/\s+/);
+        // "module 6" / "m 6" -> "m6". A module term (m6, m06) must match a
+        // whole token: as a substring "m1" also hit m10-m15, and the bare "6"
+        // of "module 6" hit any lesson id containing a 6.
+        const terms = q.replace(/\b(?:module|m)\s+(\d+)\b/g, 'm$1').split(/\s+/);
+        const MODULE_TERM = /^m\d+$/;
         let matches = 0;
+        let soon = 0;
         rows.forEach((row) => {
           const hay = row.getAttribute('data-search') || '';
-          const hit = terms.every((t) => hay.includes(t));
+          const tokens = hay.split(/\s+/);
+          const hit = terms.every((t) => (MODULE_TERM.test(t) ? tokens.includes(t) : hay.includes(t)));
           row.hidden = !hit;
-          if (hit) matches++;
+          if (hit) { matches++; if (row.classList.contains('soon')) soon++; }
         });
         currentMatches = matches;
         results.hidden = false;
@@ -455,7 +468,8 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         clearBtn.hidden = false;
         empty.hidden = matches !== 0;
         summary.hidden = false;
-        summary.textContent = `${matches} ${matches === 1 ? 'lesson' : 'lessons'}`;
+        // Say how many are not yet published, so the count isn't a promise.
+        summary.textContent = `${matches} ${matches === 1 ? 'lesson' : 'lessons'}` + (soon ? ` · ${soon} coming soon` : '');
       };
 
       // Privacy-friendly DBR signal: record settled searches (not keystrokes)

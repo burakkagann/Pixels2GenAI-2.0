@@ -5,6 +5,7 @@ title: "Flower Assembly"
 objective: "Slice an image into tiles, scatter the tiles to random offscreen positions, then animate them flying back into place — the canonical reverse-explosion technique."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2026-06-10
 level: "intermediate"
 prereqs: "8.1.3 (interpolation), 8.1.2 (easing)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The **flower assembly** is the canonical "reverse-explosion" animation: an image is divided into a grid of tiles, the tiles are scattered to random positions off the canvas, and then they fly back into their correct positions to assemble the original image. It looks like a complicated effect; mechanically it is just **interpolation between two known positions** for each of $N^2$ tiles, with an easing curve to make the arrival look organic.
 
@@ -83,7 +84,7 @@ frames[0].save('flower_assembly.gif', save_all=True,
 The animation has **no explicit physics** — no velocities, no accelerations. Each tile linearly interpolates between two known positions, modulated by an easing curve. That is the entire algorithm. Every "explosion reversed" animation you've ever seen on screen uses some variation of this pattern.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Slicing the image into tiles
 
@@ -120,7 +121,7 @@ Ease-out cubic — $1 - (1 - t)^3$ — is the natural choice: the tiles fly in f
 The visual grammar of Christopher Nolan's *Tenet* (2020) repeatedly inverts time on a per-object basis: explosions reverse into intact buildings, bullets fly back into guns. In post-production, those shots used **forward-time exploding rigs filmed at high frame rate, then reversed** — which is exactly the inverse of the technique here. We're animating a known assembly; *Tenet* filmed the explosion and played the tape backwards [1]. Both work because the "explosion" form is statistically symmetric in time.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: render the default assembly, sweep parameters, then add per-tile rotation.
 
@@ -243,12 +244,12 @@ Combining the above produces a "tile-twirl" assembly: each tile starts off-canva
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower_assembly.py" label="flower_assembly.py — full reference" />
 <Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower.png" label="flower.png — synthetic input" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -263,7 +264,7 @@ A flower assembly is a per-tile interpolation between a scatter position and a h
 - **No bounds check.** Tiles flying off-canvas during animation would crash the index assignment. Skip blits with out-of-range destinations.
 - **No held frames at the end.** The viewer can't tell the animation finished without a pause to see the completed image.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

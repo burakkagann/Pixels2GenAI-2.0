@@ -131,6 +131,10 @@ export const STAGE_FNS: PatternFn[] = [
 export interface Stage {
   code: string;
   name: string;
+  /** Shorter label for the 8-up tick row under the journey slider, where
+   *  each cell is ~55px and a long name overlaps its neighbours. Falls back
+   *  to `name`. The cube face and the tick's aria-label keep `name`. */
+  tick?: string;
   desc: string;
   cycle: 'c1' | 'c2' | 'c3';
 }
@@ -138,7 +142,7 @@ export interface Stage {
 export const STAGES: Stage[] = [
   { code: 'M 01', name: 'Pixels',          desc: 'raw arrays, before any algorithm',                             cycle: 'c1' },
   { code: 'M 02', name: 'Distance Fields', desc: 'coordinates become rings, the first mathematical image',      cycle: 'c1' },
-  { code: 'M 03', name: 'Transformations', desc: 'rotation, affine, kaleidoscope — fields become motion',       cycle: 'c1' },
+  { code: 'M 03', name: 'Transformations', tick: 'Transforms', desc: 'rotation, affine, kaleidoscope — fields become motion',       cycle: 'c1' },
   { code: 'M 04', name: 'Fractals',        desc: 'recursion: an image inside itself, again and again',          cycle: 'c1' },
   { code: 'M 05', name: 'Simulation',      desc: 'rules become particles, particles become worlds',             cycle: 'c1' },
   { code: 'M 07', name: 'Clustering',      desc: 'the first machine learning, on pixels we already know',       cycle: 'c2' },

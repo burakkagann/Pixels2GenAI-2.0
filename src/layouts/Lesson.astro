@@ -9,6 +9,9 @@ import StageTracker from '@/components/lesson/StageTracker.astro';
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS } from '@/data/curriculum/subtopics';
 import { curriculumOrder, lessonNav } from '@/lib/lessonNav';
+import { inlineMarkdownText } from '@/lib/inlineMarkdown';
+import { metaDescription } from '@/lib/metaDescription';
+import 'katex/dist/katex.min.css';
 import '@/styles/prose.css';
 import '@/styles/lesson-layout.css';
 
@@ -30,8 +33,10 @@ interface Props {
     cycle: 'I' | 'II' | 'III';
     title: string;
     objective: string;
+    description?: string;
     framework: 'hands-on' | 'conceptual' | 'hybrid' | 'project';
     duration: string;
+    published?: Date;
     level: string;
     load?: string;
     prereqs?: string;
@@ -41,10 +46,24 @@ interface Props {
     faq?: { q: string; a: string }[];
   };
   headings: Heading[];
+  /** URL of this lesson's /lesson-media/ folder; used by the in-browser Python runner. */
+  mediaBase?: string;
 }
 
-const { slug, frontmatter, headings } = Astro.props;
+const { slug, frontmatter, headings, mediaBase } = Astro.props;
+
+// In-browser Python runner (AI tutor Milestone 1b), behind a flag:
+// always on in `npm run dev`; in production only when PUBLIC_PYTHON_RUNNER=true is set
+// in Netlify, or for one visitor who opens a lesson with ?runner=1 (for live testing).
+// Scope: Modules 1-3, whose scripts are verified to run in Pyodide.
+const RUNNER_MODULES = new Set(['1', '2', '3']);
+const runnerInScope = RUNNER_MODULES.has(slug.split('.')[0]) && Boolean(mediaBase);
+const runnerDefault = import.meta.env.DEV || import.meta.env.PUBLIC_PYTHON_RUNNER === 'true';
 const f = frontmatter;
+// Plain-text objective (no `code` / *em* markers) for meta, og and JSON-LD.
+const plainObjective = inlineMarkdownText(f.objective);
+// Search snippet: frontmatter description, else the objective trimmed to ~160.
+const snippet = metaDescription(plainObjective, f.description);
 
 // Previous/Next come from curriculum order, skipping leaves that aren't
 // shipped yet, so they never dead-end and track new lessons automatically.
@@ -60,16 +79,28 @@ const { prev, next } = lessonNav(
   { prev: f.prev, next: f.next }
 );
 
+// schema.org timeRequired is an ISO 8601 duration. Frontmatter holds a range
+// ("20–25 min"), which ISO can't express, so use the rounded midpoint as the
+// typical time (PT23M). Anything unparseable is simply omitted.
+function isoDuration(d: string): string | null {
+  const m = d.match(/(\d+)\s*[–-]\s*(\d+)\s*min/) ?? d.match(/(\d+)\s*min/);
+  if (!m) return null;
+  const minutes = m[2] ? Math.round((Number(m[1]) + Number(m[2])) / 2) : Number(m[1]);
+  return `PT${minutes}M`;
+}
+
 const lessonJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LearningResource',
   name: f.title,
-  description: f.objective,
+  description: plainObjective,
   educationalLevel: f.level,
   learningResourceType: 'lesson',
-  timeRequired: f.duration,
-  isPartOf: { '@type': 'Course', name: 'Pixels2GenAI' },
+  ...(isoDuration(f.duration) ? { timeRequired: isoDuration(f.duration) } : {}),
+  // Same @id as the homepage Course entity, so the lesson joins that graph.
+  isPartOf: { '@type': 'Course', '@id': new URL('/#course', Astro.site).href, name: 'Pixels2GenAI' },
   inLanguage: 'en',
+  ...(f.published ? { datePublished: f.published.toISOString().slice(0, 10) } : {}),
   url: new URL(`/lessons/${slug}`, Astro.site).href,
 };
 
@@ -83,7 +114,7 @@ const subtopicId = `${moduleNum}.${subNum}`; // "2.1"
 const moduleEntry = MODULES.find((m) => m.idx === moduleIdx);
 const subtopicEntry = SUBTOPICS[moduleIdx]?.find((s) => s.id === subtopicId);
 const moduleName = moduleEntry
-  ? `${moduleEntry.title} ${moduleEntry.em}`.trim()
+  ? (moduleEntry.name ?? `${moduleEntry.title} ${moduleEntry.em}`.trim())
   : `Module ${moduleNum}`;
 const curriculumUrl = new URL('/#curriculum', Astro.site).href;
 
@@ -125,14 +156,18 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
 
 <Base
   title={`${slug} ${f.title}`}
-  description={f.objective}
+  description={snippet}
   ogImage={`/og/lessons/${slug}.png`}
   jsonLd={jsonLdBlocks}
 >
   <StageTracker currentModule={f.module} cycle={f.cycle} />
 
   <main id="main-content" class="page" data-cycle={f.cycle}>
-    <article class="col-main lesson">
+    <article
+      class="col-main lesson"
+      data-runner={runnerInScope ? (runnerDefault ? 'on' : 'flag') : undefined}
+      data-lesson-media={runnerInScope ? mediaBase : undefined}
+    >
       <LessonHead
         slug={slug}
         module={f.module}

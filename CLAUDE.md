@@ -2,13 +2,17 @@
 
 This file provides guidance to Claude Code for the **Pixels2GenAI v2** website — the second-generation site for the Pixels2GenAI educational platform.
 
-For deeper guidelines, see the reference documents in [`docs/references/`](docs/references/). Curriculum structure and research framing live in [`docs/curriculum.md`](docs/curriculum.md).
+The quality standards below are the working rules. `docs/` is gitignored (see `.gitignore`), so the longer reference
+documents that used to live there (`curriculum.md`, `scaffolding-rules.md`, `duration-guidelines.md`,
+`citation-guidelines.md`, `visual-guidelines.md`, `ai-revision-framework.md`) exist only on the desktop machine.
+Do not assume they are present; everything needed day to day is summarised in this file. Only
+[`docs/references/design-system.md`](docs/references/design-system.md) is present on every machine.
 
 ---
 
 ## Project Overview
 
-**Pixels2GenAI** is an educational platform teaching generative art and AI through 15 progressive modules + a capstone (193 leaf exercises). The project is a **Master's thesis** using Design-Based Research (DBR) methodology — every module contributes to answering 5 research questions (see [`docs/curriculum.md`](docs/curriculum.md)).
+**Pixels2GenAI** is an educational platform teaching generative art and AI through 15 progressive modules + a capstone (193 leaf exercises). The project is a **Master's thesis** using Design-Based Research (DBR) methodology — every module contributes to answering 5 research questions.
 
 **Target audience**: Semi-beginners to semi-experienced programmers interested in creative AI.
 
@@ -16,7 +20,7 @@ For deeper guidelines, see the reference documents in [`docs/references/`](docs/
 
 ### v1 vs v2 — two repositories, one curriculum
 
-The platform has two codebases on this machine:
+The platform has two codebases:
 
 | Aspect | v1 (`numpy-to-genAI`) | v2 (`Pixels2GenAI-v2`) — this repo |
 |--------|------------------------|------------------------------------|
@@ -24,7 +28,12 @@ The platform has two codebases on this machine:
 | Status | Frozen but live (https://burakkagann.github.io/numpy-to-genAI) | Live at `pixels2genai.art`; lessons ported module by module (`npm run status` for the current count) |
 | Content | All leaf exercises (RST + Python + outputs) | MDX hand-ports of the same curriculum |
 | Authority | Source of truth for lesson **prose and Python**; treated as **read-only** by v2 | Source of truth for the **published site, design system, MDX components, and curriculum catalog** |
-| Location | `C:\Users\User\Desktop\git-repos\numpy-to-genAI` | `C:\Users\User\Desktop\git-repos\Pixels2GenAI-v2` |
+| GitHub | https://github.com/burakkagann/Pixels2GenAI (renamed from `numpy-to-genAI`) | https://github.com/burakkagann/Pixels2GenAI-2.0 |
+| Location (laptop) | `C:\Users\aslih\OneDrive\Masaüstü\git-repos\Pixels2GenAI-v1` | `C:\Users\aslih\OneDrive\Masaüstü\Pixels2GenAI-v2` |
+| Location (desktop) | `C:\Users\User\Desktop\git-repos\numpy-to-genAI` | `C:\Users\User\Desktop\git-repos\Pixels2GenAI-v2` |
+
+Paths differ per machine. Scripts under `scripts/migration/` and the `lesson-port`, `exercise-testing` and
+`exhibition-ideation` skills still hardcode the desktop v1 path; substitute the laptop path when running them here.
 
 v2's content tree mirrors v1's `content/` hierarchy verbatim (same `Module_xx_…/x.y_…/x.y.z_…` folder names), so navigating between the repos during a port is 1:1. Use the **`lesson-port`** skill for that workflow.
 
@@ -38,23 +47,17 @@ Pixels2GenAI-v2/
 ├── netlify.toml                    # Netlify build, redirects, cache headers
 ├── package.json                    # npm scripts (dev, build, check, status, copy-assets)
 ├── tsconfig.json
-├── docs/
-│   ├── curriculum.md               # Module framework mapping + research context
-│   ├── references/                 # Quality standards ported from v1
-│   │   ├── scaffolding-rules.md
-│   │   ├── duration-guidelines.md
-│   │   ├── citation-guidelines.md
-│   │   ├── visual-guidelines.md
-│   │   └── ai-revision-framework.md
-│   └── reports/                    # Generated artifacts (migration-inventory.json)
+├── docs/                           # GITIGNORED, local only (see note at the top)
+│   ├── references/design-system.md # the only doc present on every machine
+│   └── reports/                    # generated locally: migration-inventory.json
+├── ai-tutor-planning/              # Planning docs for the AI tutor (see "AI Tutor" below)
 ├── public/
 │   ├── favicon.svg
 │   ├── lesson-media/               # Per-lesson assets (PNG / GIF / .py / .pth),
 │   │   └── Module_xx_…/x.y_…/x.y.z_…/   #   mirrors src/content/lessons/ exactly
 │   ├── exhibitions/                # Poster + print images for /exhibitions/<id>
 │   ├── workshops/                  # Workshop posters + participant gallery
-│   ├── research/                   # /research page assets
-│   └── explorations/               # Misc visual explorations
+│   └── research/                   # /research page assets
 ├── scripts/
 │   ├── check-lessons.mjs           # Lesson integrity check (npm run check, gates build)
 │   ├── lesson-status.mjs           # Per-module progress table (npm run status)
@@ -128,8 +131,10 @@ module: "M 04"             # Display label
 cycle: "I"                 # I | II | III
 title: "…"
 objective: "One-sentence italic lead under the H1."
+description: "…"           # optional search snippet, ≤ 160 chars (else the objective is trimmed)
 framework: "hands-on"      # hands-on | conceptual | hybrid | project
 duration: "20–25 min"
+published: 2026-06-22      # date the lesson first went live (v1 deploy date for ports); RSS + JSON-LD
 level: "beginner"          # beginner | beginner-intermediate | intermediate | intermediate-advanced | advanced
 load: "3 core concepts"    # optional cognitive-load chip
 prereqs: "Basic Python"    # optional
@@ -151,6 +156,10 @@ backLink: { href: "/#curriculum", label: "Back to Curriculum" }
 | `<Download href=… label=…>` | Asset download links |
 
 The remark plugin in `astro.config.mjs` auto-wraps content between `## h2` headings into `<section class="lesson-section">` (drives the manuscript-margin side-rail).
+
+**Math** is rendered at build time by KaTeX (`remark-math` + `rehype-katex`): write `$…$` inline and put display math on its own lines (`$$`, formula, `$$`; a one-line `$$…$$` renders inline). A literal dollar sign in prose must be `\$`. Frontmatter (`objective`) and component props (`caption=`, `title=`, `summary=`) are not Markdown, so keep math there as plain text (e.g. `z → z² + c`). Inline `` `code` `` and `*em*` in those props do render (src/lib/inlineMarkdown.ts).
+
+**Animated GIFs** need a reduced-motion still: after adding or replacing a GIF, run `npm run gif-stills` (writes `<name>.still.png` next to it; `<Figure>` serves it under `prefers-reduced-motion`) and commit the PNG. `npm run check` warns when one is missing.
 
 ---
 
@@ -183,7 +192,7 @@ The site emits JSON-LD structured data and an RSS feed for search + AI-answer-en
 ### Documentation Quality
 - Academic yet friendly tone (like a patient teacher)
 - **No emojis** in lesson MDX or downloadable scripts
-- All factual claims cited (APA 7th edition; see [`docs/references/citation-guidelines.md`](docs/references/citation-guidelines.md))
+- All factual claims cited (APA 7th edition)
 - Use the v2 custom MDX components, not raw HTML, for admonitions / figures / exercises / dropdowns
 - Every Core Concept should have at least one `<Figure>`
 
@@ -191,32 +200,28 @@ The site emits JSON-LD structured data and an RSS feed for search + AI-answer-en
 - **Exercise 1 (Execute)**: complete runnable script, 3-5 min, reflection questions with `<Dropdown>` answers
 - **Exercise 2 (Modify)**: 2-5 labeled parameters (CONFIG section or inline edit zones), 8-12 min, numbered Goals each with "What to expect" dropdown
 - **Exercise 3 (Create)**: 60-85% complete starter, 3-6 TODOs with what + why, 10-15 min, progressive hint Dropdowns + final solution Dropdown, "Make It Your Own" section
-- Full details: [`docs/references/scaffolding-rules.md`](docs/references/scaffolding-rules.md)
 
 ### Duration Targets
 - **Modules 0-6**: 15-20 minutes maximum (target: 18 min avg)
 - **Modules 7-15**: 30-45 minutes maximum (target: 40 min avg)
 - **Cognitive load**: ≤ 3-4 new concepts per lesson, ≤ 5 code blocks per `## h2` section
-- Full details: [`docs/references/duration-guidelines.md`](docs/references/duration-guidelines.md)
 
 ### Citations
 - **Modules 0-6**: 5-7 citations minimum (APA 7th edition)
 - **Modules 7-15**: 7-10 citations minimum
 - Rendered in MDX as a numbered list inside `<section class="refs"><ol><li>...</li></ol></section>`
-- Full details: [`docs/references/citation-guidelines.md`](docs/references/citation-guidelines.md)
 
 ### Visuals
 - Every image must serve a pedagogical purpose
 - Output images: < 500 KB, PNG for static, GIF for animations
 - Animated diagrams: 700×380px, 15 FPS, < 500 KB
 - Include `alt=` and `caption=` on every `<Figure>`
-- Full details: [`docs/references/visual-guidelines.md`](docs/references/visual-guidelines.md)
 
 ---
 
 ## Asset Migration (v1 → public/lesson-media/)
 
-[`scripts/copy-v1-assets.mjs`](scripts/copy-v1-assets.mjs) copies PNG / GIF / JPG / SVG / PY / TXT (and opt-in PTH) from v1 lesson folders into `public/lesson-media/<same v1-relative path>/`. It is driven by [`docs/reports/migration-inventory.json`](docs/reports/migration-inventory.json) (regenerate with `node scripts/migration/inventory-v1.mjs`). It:
+[`scripts/copy-v1-assets.mjs`](scripts/copy-v1-assets.mjs) copies PNG / GIF / JPG / SVG / PY / TXT (and opt-in PTH) from v1 lesson folders into `public/lesson-media/<same v1-relative path>/`. It is driven by `docs/reports/migration-inventory.json`, which is gitignored: on a fresh machine generate it first with `node scripts/migration/inventory-v1.mjs` (point it at the local v1 path). It:
 
 - Treats v1 as **read-only**
 - Is **idempotent** — re-running overwrites destination files
@@ -296,17 +301,21 @@ lesson-port  →  exercise-testing  →  ai-revision  →  ship (update subtopic
 
 ## Reference Documents
 
-For detailed guidelines, read these files in [`docs/references/`](docs/references/):
+- [`docs/references/design-system.md`](docs/references/design-system.md): the design system (present on every machine).
+- The longer quality references (scaffolding, duration, citation, visual, AI-revision) and `docs/curriculum.md` are local to the desktop machine because `docs/` is gitignored. The rules that matter are summarised under **Quality Standards** above; treat that section as authoritative when the files are absent.
 
-| Document | Contents |
-|----------|----------|
-| [`scaffolding-rules.md`](docs/references/scaffolding-rules.md) | Execute / Modify / Create pass criteria, red flags, CONFIG vs inline edit zones |
-| [`duration-guidelines.md`](docs/references/duration-guidelines.md) | Duration estimation formulas, cognitive load limits, trimming guidelines |
-| [`citation-guidelines.md`](docs/references/citation-guidelines.md) | APA 7th edition formats, MDX rendering, quality checklist |
-| [`visual-guidelines.md`](docs/references/visual-guidelines.md) | When to create visuals, technical requirements, `<Figure>` embedding |
-| [`ai-revision-framework.md`](docs/references/ai-revision-framework.md) | AI pattern detection taxonomy, risk levels, transformation techniques |
+---
 
-Curriculum structure (module/framework table) and the thesis research context: [`docs/curriculum.md`](docs/curriculum.md).
+## AI Tutor (planned)
+
+An AI tutor for the lesson pages is being designed. Planning documents live in [`ai-tutor-planning/`](ai-tutor-planning/); start with its `README.md`. Until the plan is approved there, no tutor code is written.
+
+Rules that apply to all tutor work:
+- **Learn-while-building:** the user writes the first version of core pieces (retrieval, prompt policy, code checker, eval harness, chat island); Claude reviews, explains and drafts boilerplate only. Nothing ships that the user cannot explain. Details in `ai-tutor-planning/working-agreement.md`.
+- **Scope:** only shipped lessons (those wired via `lessonSlug`) are tutor knowledge; never answer from "Coming soon" leaves or from v1 RST.
+- **Privacy:** no learner accounts; learner code and questions are not stored beyond short-term logs without consent; update `src/pages/privacy` when the tutor ships.
+- **Workshop data:** use only the anonymised findings published in `public/research/thesis.pdf`. Raw participant spreadsheets never enter this repo.
+- Rule 1 still applies: never auto-commit.
 
 ---
 

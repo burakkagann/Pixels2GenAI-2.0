@@ -5,6 +5,7 @@ title: "Image Transformations"
 objective: "The twelve single-frame operators that every animation in Module 08 will later time-vary. Brightness, channel ops, masks, distance fields — each one a tiny function, ready to wear a clock."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2026-06-10
 level: "beginner-intermediate"
 prereqs: "1.1.1 (RGB arrays), 3.1.1 (rotations and basic NumPy indexing)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Animation is, mechanically, a sequence of still images displayed fast enough that the eye reads continuity into the discrete frames — the **persistence of vision** illusion that has driven moving pictures since Eadweard Muybridge's 1878 *Sallie Gardner at a Gallop* [1]. Before you can build an animation, you need a vocabulary of single-frame operators — functions that take an image and return a transformed image. Module 08 then animates by varying *the parameters of these operators with respect to time*.
 
@@ -66,7 +67,7 @@ Image.fromarray(g).save('purple.png')
 Each operator is **deterministic** and **per-pixel** — it sees only the current frame's pixels, no history. That is the same constraint a vertex shader works under, and the same constraint that lets every operator in this lesson be re-used unchanged inside an animation loop later.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Channel ops and slice operators
 
@@ -126,7 +127,7 @@ Same boolean-mask paradigm you saw with the Mandelbrot iteration (4.1.3); same `
 The squared-distance trick — never call `np.sqrt` unless you absolutely need true distance — is the standard optimisation in any pixel-level distance test. Squaring preserves order (`a² < b²` iff `a < b` for non-negatives), so threshold comparisons can use squared distances directly. Same trick the Voronoi lesson (3.3.4) used.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the full transformation pipeline, swap individual operators, then build a vignette from a distance field.
 
@@ -272,13 +273,13 @@ Image.fromarray(vignette(a, strength=0.85)).save('vignette.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_logo.py" label="transform_logo.py — twelve operators, ten PNGs" />
 <Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_grid.py" label="transform_grid.py — composite 3×4 grid" />
 <Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/python_logo.png" label="python_logo.png — input image" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -293,7 +294,7 @@ Animation is a sequence of single-frame operators applied with time-varying para
 - **`np.roll` without an `axis` argument.** Defaults to flattening the array first; the shift is then per-element across the entire raster, not per-axis. Always specify `axis=0` or `axis=1`.
 - **Square-root distances when you only need to compare.** Use squared distances for thresholding; reserve `sqrt` for displays where the visual falloff matters.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

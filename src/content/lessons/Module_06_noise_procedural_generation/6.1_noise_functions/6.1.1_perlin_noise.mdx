@@ -5,6 +5,7 @@ title: "Perlin & Value Noise"
 objective: "Build smooth, organic noise by sampling a random grid and interpolating between cells with a smoothstep. Stack octaves of decreasing amplitude and increasing frequency for cloud-like fractal Brownian motion."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-10-29
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.4.3 (scalar fields), basic NumPy broadcasting"
@@ -18,24 +19,28 @@ backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
 faq:
-  - q: "Why does fractal Brownian motion divide by norm at the end?"
+  # Mirrors the "Reflection questions" and their "Answers" dropdown verbatim
+  # (plain text: code backticks dropped). Google requires FAQ markup to match
+  # visible on-page Q&A; edit both together.
+  - q: "Why does fbm divide by norm at the end?"
     a: >-
       Without it, the sum of octaves overshoots the unit range. norm accumulates
-      the same geometric series as the amplitude, so dividing rescales the
-      result back into [0, 1] regardless of how many octaves you stacked.
-  - q: "What happens if you drop octaves to 1 in Perlin or value noise?"
+      the same geometric series as amp, so dividing rescales the result back
+      into [0, 1] regardless of how many octaves you stacked.
+  - q: "What happens if you drop octaves to 1?"
     a: >-
-      The picture becomes a soft, blobby field with features at exactly the base
-      scale and no fine detail — it reads as a depth gradient rather than a
-      texture.
-  - q: "What does raising persistence to 0.9 do to noise?"
+      The picture becomes a soft blobby field with features at exactly the base
+      scale (90 pixels here). No fine detail; reads as a depth gradient rather
+      than a texture.
+  - q: "What happens if you raise persistence to 0.9?"
     a: >-
-      Higher octaves contribute almost as much as the base, so the texture turns
-      coarse and rough and the larger-scale features get drowned in
-      high-frequency content. Useful when you want noise, less so for clouds.
+      Higher octaves contribute almost as much as the base. The texture turns
+      coarse and rough; the larger-scale features get drowned in the
+      high-frequency content. Useful when you want noise; less useful when you
+      want clouds.
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Random pixel-by-pixel noise looks like television static — every cell independent of its neighbours, no structure at any scale. Ken Perlin's 1983 insight was that *coherent* noise (where neighbouring samples are correlated) reads as natural — clouds, smoke, marble veins, terrain [1]. The recipe is two ingredients: a grid of random values, and a *smooth* interpolation between them. Layer several such noise fields at different scales and you get **fractional Brownian motion** (fBm), the workhorse of every procedural texture in games and VFX since *Tron* [2]. This lesson builds the pipeline in NumPy from scratch, so you can read every pixel-level decision.
 
@@ -102,7 +107,7 @@ Image.fromarray(img, 'L').save('value_clouds.png')
 **Value noise** uses random values at the grid corners; **Perlin noise** uses random *gradient vectors* and computes dot products. Both share the same smoothstep + bilinear-interp scaffold; Perlin gives slightly cleaner edges, but value noise is the one-screen version that fits in this lesson [3].
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Random vs coherent
 
@@ -163,7 +168,7 @@ Each subsequent octave halves the wavelength (lacunarity = 2) and halves the amp
 Ken Perlin invented the noise function in 1983 for the movie *Tron* (then later wrote the algorithm down in *SIGGRAPH 1985*). The technique became so ubiquitous in CGI texturing that the Academy gave him a *Technical Achievement Award* in 1997. He published the improved quintic-smoothstep version in 2002 — many implementations still use the original cubic, and the difference shows when normal maps amplify derivatives [1].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the cloud generator, tune octaves and persistence, then build a blue-tinted cloud panorama.
 
@@ -346,13 +351,13 @@ Image.fromarray(rgb).save('blue_clouds.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise/value_clouds.png" label="value_clouds.png — quick-start output reference" />
 <Download href="/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise/octaves_grid.png" label="octaves_grid.png — octave comparison" />
 <Download href="/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise/perlin_clouds.png" label="perlin_clouds.png — v1 cloud reference (noise library)" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -368,7 +373,7 @@ Coherent noise — Perlin's family, including its value-noise cousin — replace
 - Persistence above 1 — higher octaves dominate the lower ones; the texture turns into noise.
 - Reusing the same seed across octaves — same noise patterns at different scales line up suspiciously. Offset the seed by the octave index.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

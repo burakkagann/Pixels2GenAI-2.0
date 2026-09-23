@@ -133,10 +133,12 @@ export default function JourneyCube() {
       const ctx = cv.getContext('2d');
       if (!ctx) return;
 
+      // offsetWidth/Height are the face's untransformed layout size. The
+      // bounding rect would measure the rotated projection, which for the
+      // side faces is a thin sliver at mount and left them low-res.
       const resize = () => {
-        const r = cv.getBoundingClientRect();
-        cv.width = Math.max(64, Math.floor(r.width * dpr));
-        cv.height = Math.max(64, Math.floor(r.height * dpr));
+        cv.width = Math.max(64, Math.floor(cv.offsetWidth * dpr));
+        cv.height = Math.max(64, Math.floor(cv.offsetHeight * dpr));
       };
       resize();
       resizers.push(resize);
@@ -159,8 +161,16 @@ export default function JourneyCube() {
 
     if (!faces.length) return;
 
-    const onResize = () => resizers.forEach((r) => r());
-    window.addEventListener('resize', onResize);
+    // Observe the stage, not the window: on desktop its size follows the
+    // viewport height and the controls panel, which can change without a
+    // window resize (web fonts loading, the controls reflowing). Resizing a
+    // canvas clears it, so repaint when the RAF loop is not running.
+    const onResize = () => {
+      resizers.forEach((r) => r());
+      paintIdleRef.current();
+    };
+    const ro = new ResizeObserver(onResize);
+    if (stageElRef.current) ro.observe(stageElRef.current);
 
     let t = 0;
     let last = performance.now();
@@ -377,7 +387,7 @@ export default function JourneyCube() {
       stop();
       io.disconnect();
       reduceMotion.removeEventListener('change', onMotionChange);
-      window.removeEventListener('resize', onResize);
+      ro.disconnect();
       paintIdleRef.current = () => {};
     };
   }, []);
@@ -404,6 +414,23 @@ export default function JourneyCube() {
   const handleTickClick = (i: number) => {
     const v = i / (STAGES.length - 1);
     updateSlider('j', v);
+  };
+
+  // Arrow keys on the master slider jump stage to stage. The fine 0.001 step
+  // keeps dragging smooth, but as the keyboard step it moved 0.1% per press.
+  // Home/End/PageUp/PageDown keep their native behaviour.
+  const handleJourneyKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const dir = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1
+      : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    const pos = ui.j * (STAGES.length - 1);
+    // Loose tolerance: a value set by dragging is rounded to the 0.001 step.
+    const onStage = Math.abs(pos - Math.round(pos)) < 0.02;
+    const target = dir > 0
+      ? (onStage ? Math.round(pos) + 1 : Math.ceil(pos))
+      : (onStage ? Math.round(pos) - 1 : Math.floor(pos));
+    handleTickClick(Math.max(0, Math.min(STAGES.length - 1, target)));
   };
 
   const handlePauseToggle = () => {
@@ -460,31 +487,35 @@ export default function JourneyCube() {
 
   return (
     <>
-      <div ref={stageElRef} className={styles['cube-stage']} id="cubeStage">
-        <div
-          ref={cubeElRef}
-          className={`${styles.cube}${ui.paused ? ' ' + styles.paused : ''}`}
-          id="cube"
-        >
-          {faceMetaEntries.map(([key, meta]) => (
-            <div key={key} className={`${styles.face} ${styles[meta.rot]}`}>
-              <span className={`${styles.corner} ${styles.tl}`}></span>
-              <span className={`${styles.corner} ${styles.tr}`}></span>
-              <span className={`${styles.corner} ${styles.bl}`}></span>
-              <span className={`${styles.corner} ${styles.br}`}></span>
-              <canvas
-                ref={(el) => {
-                  canvasRefs.current[key] = el;
-                }}
-                data-face={key}
-              />
-              <div className={styles['lbl-top']}>{meta.code}</div>
-              <div className={styles['lbl-bot']}>
-                <span className={styles.ttl}>{currentStage.code} · {currentStage.name}</span>
-                <span className={styles.n}>f {meta.idx} / 6</span>
+      {/* Slot: on desktop the flexible, height-fitting cell the stage is
+          sized inside (see .cube-slot); a plain block elsewhere. */}
+      <div className={styles['cube-slot']}>
+        <div ref={stageElRef} className={styles['cube-stage']} id="cubeStage">
+          <div
+            ref={cubeElRef}
+            className={`${styles.cube}${ui.paused ? ' ' + styles.paused : ''}`}
+            id="cube"
+          >
+            {faceMetaEntries.map(([key, meta]) => (
+              <div key={key} className={`${styles.face} ${styles[meta.rot]}`}>
+                <span className={`${styles.corner} ${styles.tl}`}></span>
+                <span className={`${styles.corner} ${styles.tr}`}></span>
+                <span className={`${styles.corner} ${styles.bl}`}></span>
+                <span className={`${styles.corner} ${styles.br}`}></span>
+                <canvas
+                  ref={(el) => {
+                    canvasRefs.current[key] = el;
+                  }}
+                  data-face={key}
+                />
+                <div className={styles['lbl-top']}>{meta.code}</div>
+                <div className={styles['lbl-bot']}>
+                  <span className={styles.ttl}>{currentStage.code} · {currentStage.name}</span>
+                  <span className={styles.n}>f {meta.idx} / 6</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -511,7 +542,9 @@ export default function JourneyCube() {
               step="0.001"
               value={ui.j}
               onChange={(e) => updateSlider('j', parseFloat(e.target.value))}
+              onKeyDown={handleJourneyKey}
               aria-label="Journey position"
+              aria-valuetext={`${currentStage.code} · ${currentStage.name}, ${progressPct}%`}
             />
           </div>
           <div className={styles['journey-ticks']}>
@@ -529,7 +562,7 @@ export default function JourneyCube() {
                   onClick={() => handleTickClick(i)}
                   aria-label={`Jump to ${s.name}`}
                 >
-                  <b>{s.code}</b><span className={styles.tname}>{s.name}</span>
+                  <b>{s.code}</b><span className={styles.tname}>{s.tick ?? s.name}</span>
                 </button>
               );
             })}

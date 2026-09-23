@@ -5,6 +5,7 @@ title: "Contour Lines"
 objective: "Visualise a 2D scalar field two ways: stepped bands by integer quantisation, and thin isolines by a modulo on the height. Build the terrain from a sum of Gaussian hills and render both styles."
 framework: "hands-on"
 duration: "15–18 min"
+published: 2025-12-13
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic NumPy meshgrid"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A **contour map** turns a continuous 2D scalar field into a readable picture. Topographic maps use it for elevation; weather maps use it for pressure; medical images use it for tissue density. The same construction shows up everywhere a scientist wants to see *level sets* — the lines or bands along which a function takes a fixed value. Modern usage traces back to 18th-century French hydrographers mapping seabed depth; the principle stayed unchanged, and CT scans, marching cubes, and ggplot's `geom_contour` all sit on top of it [1, 2]. This short lesson builds the field as a sum of Gaussian hills and renders it in the two canonical styles: stepped bands by integer quantisation, and thin isolines by a modulo test.
 
@@ -69,7 +70,7 @@ Image.fromarray(contour, 'L').save('simple_contour.png')
 The quantisation is `(normalised * 8).astype(np.uint8) * 32`. Multiply by 8 to spread the values into the range `[0, 8]`, cast to int (floor), multiply by 32 to spread back into `[0, 256)`. The cast is what creates the steps — float-to-int loses information, deliberately.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Scalar fields and meshgrid
 
@@ -132,7 +133,7 @@ Tighter spacing comes from a smaller `step` (more lines); a higher `scale` means
 The naïve modulo isoline is *staircase-aliased* — it picks discrete pixels, so lines on a near-horizontal slope can look like a row of dots. Real cartographic software uses the **marching-squares** algorithm: for every 2×2 cell of the grid, it linearly interpolates where the level crosses each cell edge and draws a continuous polyline. The output is smooth at any zoom level. Marching cubes (Lorensen, 1987) is the 3D generalisation, used in medical visualisation and game terrain [2].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: render both styles, vary the level count, then sum random hills into a richer terrain.
 
@@ -338,14 +339,14 @@ Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/simple_contour.py" label="simple_contour.py — quick-start single hill" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour.py" label="contour.py — three-hill stepped + isolines" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_starter.py" label="contour_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_solution.py" label="contour_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -361,7 +362,7 @@ A contour visualisation turns a 2D scalar field into a level-set picture. Build 
 - Isolines too dense — `% 2 == 0` against `(field * 100)` gives 50 levels and the picture turns into solid white.
 - Mixing `np.meshgrid` indexing conventions — by default `meshgrid` returns `X, Y` with `Y` first along axis 0. If your hills appear rotated, swap `(X, Y)` to `(Y, X)`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

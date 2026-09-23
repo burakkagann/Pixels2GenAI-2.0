@@ -5,6 +5,7 @@ title: "Kaleidoscope Effects"
 objective: "Build an N-fold kaleidoscope by reading every pixel's polar angle, folding it into a single wedge, and mirroring alternate wedges. Then stack three wedge-rings into a mandala."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.1.3 (coordinate remapping), polar coordinates"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A kaleidoscope turns one wedge of pattern into a full circle through two mathematical moves: rotational repetition and mirror reflection. David Brewster built the first physical one in 1816 from two angled mirrors in a brass tube, and the optics of those mirrors are exactly the geometry we will recreate in code [1]. Every pixel asks the same question — *what is my polar angle?* — and the answer, after folding and mirroring, decides which colour it gets. That single algorithm scales from a clean 6-fold pattern to a multi-ring mandala by varying the wedge count per ring.
 
@@ -84,7 +85,7 @@ Image.fromarray(out).save('simple_kaleidoscope.png')
 The kaleidoscope is built entirely from polar coordinates and integer arithmetic on angles — no rotations, no `scipy.ndimage`. The colour function never sees `(x, y)`; it sees `(angle_mirrored, radius)`.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Polar coordinates everywhere
 
@@ -145,7 +146,7 @@ A physical kaleidoscope with mirror angle `θ` produces `2π/(2θ)` reflected we
   role="output"
 />
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the 6-fold quick start, tune fold counts and palette, then assemble a multi-ring mandala.
 
@@ -374,14 +375,14 @@ Image.fromarray(canvas).save('mandala.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/simple_kaleidoscope.py" label="simple_kaleidoscope.py — 6-fold quick start" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/kaleidoscope_variations.py" label="kaleidoscope_variations.py — fold-count comparison" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/mandala_starter.py" label="mandala_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/mandala_solution.py" label="mandala_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -397,7 +398,7 @@ A kaleidoscope is two operations stacked: rotational repetition by integer-divid
 - Sampling the colour function from `(x, y)` instead of `(angle_mirrored, radius)` — the symmetry is lost; the colour ignores the fold.
 - Forgetting the circular mask — the rectangular canvas corners show un-folded artefacts.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Convolution"
 objective: "Slide a 3×3 or 5×5 kernel across an image and compute a weighted sum at every pixel. The same four-line loop, with different weights, gives identity, blur, sharpen, and edge-detection in turn."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.2.1 (masks), basic NumPy indexing"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 **Convolution** is the workhorse of image processing: slide a small matrix of weights (the *kernel*) across the image, compute the weighted sum of the pixels under the kernel at every position, and the output is a transformed image. The kernel's *values* decide what the transformation does — equal weights give a blur, a positive centre with negative surround gives a sharpen, a sign-flipped surround gives edge detection [1]. The same operation runs the convolutional layer of a CNN, the Gaussian smoothing of every photo app, the unsharp mask of every printing pipeline. This lesson implements convolution from scratch with two nested loops, so the *what-the-kernel-does* intuition lives inside your hands.
 
@@ -74,7 +75,7 @@ Image.fromarray(out.astype(np.uint8), 'L').save('simple_convolution.png')
 The whole transformation lives in the line `out[y, x] = np.sum(region * blur)` — multiply pixel values by kernel weights, sum to one number. Change the kernel and the picture changes; the loop stays identical.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Convolution in three steps
 
@@ -199,7 +200,7 @@ normalised = (out - out.min()) / (out.max() - out.min()) * 255      # full dynam
 
 Use clipping when you only care about strong responses; normalise when you want every edge visible, including weak ones [1].
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a 4-kernel comparison, swap kernels, then write your own convolve function with edge padding.
 
@@ -394,7 +395,7 @@ Image.fromarray(np.clip(blurred, 0, 255).astype(np.uint8), 'L').save('gauss_blur
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/simple_convolution.py" label="simple_convolution.py — quick-start box blur" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/exercise1_execute.py" label="exercise1_execute.py — four-kernel comparison" />
@@ -403,7 +404,7 @@ Image.fromarray(np.clip(blurred, 0, 255).astype(np.uint8), 'L').save('gauss_blur
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/convolution_solution.py" label="convolution_solution.py — same-size reference" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/bbtor.jpg" label="bbtor.jpg — input photo" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -419,7 +420,7 @@ Convolution slides a small matrix of weights over an image and computes a weight
 - Mixing up `np.sum(a * b)` and `np.dot(a.ravel(), b.ravel())` — equivalent for matching shapes, but the dot product surprises beginners with shape errors.
 - Reusing kernels across `uint8` and `float64` images — make sure the dtype is consistent end-to-end.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

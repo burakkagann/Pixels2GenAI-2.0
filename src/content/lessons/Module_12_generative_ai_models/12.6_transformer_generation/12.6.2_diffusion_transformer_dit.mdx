@@ -5,6 +5,7 @@ title: "Diffusion Transformer (DiT)"
 objective: "Replace the U-Net in a diffusion model with a transformer that operates on image patches; condition on the diffusion timestep through adaptive layer norm. This is the architecture behind Sora, Stable Diffusion 3, and PixArt-α."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-06-22
 level: "advanced"
 load: "3 core concepts"
 prereqs: "Lessons 12.3.1 (DDPM), 12.6.1 (Taming Transformers); ViT or transformer familiarity"
@@ -17,7 +18,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Every diffusion model in [Lesson 12.3.1](/lessons/12.3.1) and the variants that followed (Stable Diffusion, ControlNet, DreamBooth) shares one architectural component: a U-Net for noise prediction. The choice of U-Net was inherited from medical-image segmentation [1] where its encoder/decoder/skip-connection structure handled pixel-level prediction naturally, and it stuck because it worked well enough that no one had a compelling reason to swap it out.
 
@@ -49,7 +50,7 @@ python dit_block_demo.py
 
 Output: parameter count, input/output shapes confirming the model accepts `(batch, 3, 32, 32)` images plus a `(batch,)` timestep and produces noise predictions of the same shape.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why move from U-Net to Transformer
 
@@ -135,7 +136,7 @@ This is structurally the same idea as ControlNet's zero convolutions ([Lesson 12
 The choice of patch size matters enormously. Smaller patches (`2×2`) give the model finer spatial detail but quadratically more tokens to attend over; larger patches (`8×8`) are cheap but blurrier. DiT-XL/2 (the largest model in the original paper) uses patch size 2 on `256×256` images — that's `128×128 = 16,384 tokens` per image, the maximum the architecture can handle on contemporary GPUs. Sora reportedly extends this further by patchifying in 3D (space + time) for video.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Forward-run TinyDiT and verify the patch pipeline">
 
@@ -273,7 +274,7 @@ The DiT paper compares four variants for how to inject conditioning: (1) in-cont
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 DiT replaces the U-Net in a diffusion model with a Vision Transformer that operates on flattened image patches. The structural innovation that makes this work cleanly is adaptive LayerNorm with zero-initialisation: the diffusion timestep doesn't enter the attention or MLP paths directly, but instead modulates the scale, shift, and gate of every transformer block's normalisation, with the modulation MLP's output initialised to zero so the model starts in a known-stable state. The trade-off relative to U-Net diffusion is well-understood: U-Nets retain an edge at small scale on small datasets, but transformers scale much more cleanly to large model sizes. Every commercial high-end text-to-image and text-to-video system in 2024 — Sora, Stable Diffusion 3, PixArt-α, FLUX.1, Lumina-T2X — is a DiT variant, and the architectural community now treats transformer-based diffusion as the default for production-scale work.
@@ -287,7 +288,7 @@ DiT replaces the U-Net in a diffusion model with a Vision Transformer that opera
 - Using the same model weights for both score-based and noise-prediction diffusion variants without re-parameterising. DiT was originally designed for noise prediction (DDPM-style); switching to score prediction requires a small head modification.
 - Mixing up DiT (Diffusion Transformer, 2022) with iGPT (Image GPT, 2020). iGPT generates pixels autoregressively token-by-token; DiT generates images by iteratively denoising with a transformer-as-noise-predictor. Different paradigms entirely.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

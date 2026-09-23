@@ -5,6 +5,7 @@ title: "Latent Space Exploration"
 objective: "Train a Variational Autoencoder on simple geometric patterns and see why one specific term in its loss function — the KL divergence — turns its latent space into a navigable map you can interpolate through."
 framework: "conceptual"
 duration: "30–35 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "Python, PyTorch fundamentals, basic probability"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 Pick two images. Encode each one into a vector. Draw a straight line between the vectors. Decode every point along the way. If your model is a regular autoencoder, what you get is a sequence of garbage frames between two recognisable endpoints — the path passes through regions of latent space the decoder was never trained on. If your model is a *variational* autoencoder, you get the figure above: a smooth, plausible transformation where every step looks like something the decoder could have learned to produce.
 
@@ -90,7 +91,7 @@ The output reports `Input (4, 256) -> Latent mu (4, 8) -> Recon (4, 256)`. The f
   role="comparison"
 />
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — A latent space, and what makes a VAE's "structured"
 
@@ -174,7 +175,7 @@ Once trained, the VAE supports three operations the original autoencoder doesn't
 VAE reconstructions look slightly blurry compared to GAN outputs from [Lesson 12.1.2](/lessons/12.1.2). This is not a bug — it follows from the loss function. Binary cross-entropy on the output pixels makes the decoder learn the *mean* of all plausible reconstructions for each latent point, and the mean of plausible images is, by construction, blurrier than any single sharp image. If you need both sharp samples and a navigable latent space, VAE-GAN hybrids and modern diffusion models combine the two.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Train the VAE and inspect every visualisation">
 
@@ -331,7 +332,7 @@ Replace the `create_test_patterns()` outputs with patterns of your own — a cir
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 A VAE is an encoder/decoder pair with one extra rule: the encoder must produce distributions that stay close to a fixed `N(0, I)` prior, measured by KL divergence and enforced by including that divergence in the loss. The reparameterisation trick — sampling `z = μ + σ ε` with `ε ~ N(0, I)` drawn outside the gradient path — is what makes the architecture trainable end-to-end. The combined effect is a latent space where similar inputs land near each other, empty regions are still decodable, and the operations that interest a generative-AI practitioner (sampling, interpolation, latent arithmetic) all work because the space has been shaped, not just compressed.
@@ -345,7 +346,7 @@ A VAE is an encoder/decoder pair with one extra rule: the encoder must produce d
 - VAE samples will not look as sharp as GAN samples, by design. Pick the model whose trade-off matches your goal.
 - Reconstruction-loss numbers aren't comparable across runs with different `β` values, because you've changed what the model is being asked to optimise in the first place.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

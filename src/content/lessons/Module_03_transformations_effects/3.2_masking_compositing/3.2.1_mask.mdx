@@ -5,6 +5,7 @@ title: "Boolean Masks"
 objective: "Build a 2D boolean array — `True` for *keep*, `False` for *cut* — and use it as the gatekeeper for every per-pixel edit. A circular vignette, a colour swap, and a custom shape are all the same one-line indexing trick."
 framework: "hands-on"
 duration: "15–18 min"
+published: 2026-06-09
 level: "beginner"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic NumPy broadcasting"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The next subtopic — masking and compositing — runs on a single idea: a **boolean mask** is a 2D array of `True`/`False` values, one per pixel, that decides where an operation applies. Where the mask is `True`, the operation fires; where it is `False`, the original pixels are left untouched. Every alpha channel, every layer mask in Photoshop, every "select all blue pixels" tool comes down to the same construction [1]. This lesson focuses on the boolean operation itself: build a mask from a geometric condition, apply it with NumPy fancy indexing, and read it as a single composable operator that the rest of the subtopic builds on.
 
@@ -71,7 +72,7 @@ Image.fromarray(image).save('mask.png')
 The whole effect is the single line `image[outside] = 0`. NumPy's fancy indexing treats the boolean array as a selector — only the pixels where `outside` is `True` are touched. There is no per-pixel Python loop anywhere in the pipeline.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — A mask is a `(H, W)` boolean array
 
@@ -137,7 +138,7 @@ The boolean algebra is exactly what lets you build complex masks compositionally
 `(X - cx) ** 2 + (Y - cy) ** 2 < r_sq` skips the square root that a *real* distance check would need. `sqrt` is monotonic and non-negative, so `d² < r²` ⇔ `d < r`. Saving a `sqrt` over a million pixels is the standard optimisation in any distance-field code [2].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the vignette, swap the mask formula, then build a custom shape mask of your own.
 
@@ -313,12 +314,12 @@ Image.fromarray(image).save('heart_mask.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask/mask.py" label="mask.py — vignette starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask/bbtor.jpg" label="bbtor.jpg — input photograph" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -334,7 +335,7 @@ A boolean mask is a 2D `bool` array, one entry per pixel, computed from a vector
 - Computing `sqrt(d²)` when you only need to compare against a radius — squaring the radius and skipping `sqrt` is faster *and* numerically cleaner.
 - Assigning a tuple `image[mask] = (255, 0, 0)` — works, but a list `[255, 0, 0]` is the more conventional NumPy style.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

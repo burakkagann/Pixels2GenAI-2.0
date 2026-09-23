@@ -28,13 +28,16 @@ const pairs = [
   { pre: 4, post: 10 },
 ];
 
+// Figure label, set by the page so numbering follows reading order.
+const { num = 'Fig. 1' } = Astro.props as { num?: string };
+
 const meanPre = pairs.reduce((s, p) => s + p.pre, 0) / pairs.length;
 const meanPost = pairs.reduce((s, p) => s + p.post, 0) / pairs.length;
 ---
 
 <figure class="research-figure slope-chart" id="fig-slope">
   <div class="figure-eyebrow">
-    <span class="fig-num">Fig. 1</span>
+    <span class="fig-num">{num}</span>
     <span>Pre → Post knowledge gain · pilot n=8</span>
   </div>
   <h4 class="figure-title">Every participant gained ground.</h4>

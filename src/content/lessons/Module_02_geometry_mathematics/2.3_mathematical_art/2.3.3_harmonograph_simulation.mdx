@@ -5,6 +5,7 @@ title: "Harmonograph Simulation"
 objective: "Add exponential damping to two perpendicular sinusoids and the Lissajous figures from the previous lesson start to spiral inward — the same effect that gives Victorian harmonographs their characteristic decaying motion."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-13
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "2.3.1 (Lissajous curves), exponential functions"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A harmonograph is a Victorian drawing machine — two pendulums, one driving the pen along x and the other along y, leaving an ink trace on a sheet of paper [1]. The two pendulums oscillate at slightly different frequencies and lose energy slowly to friction, so the resulting trace is a Lissajous figure that *spirals inward* as the swings die out. Mathematically you add one factor to the Lissajous equations from 2.3.1 — an exponential decay `exp(-d·t)` — and the curve picks up that same drift toward the centre. The harmonograph belongs to a pattern you will meet again throughout this module: complex behaviour emerging from two simple oscillations plus a slow dissipation.
 
@@ -74,7 +75,7 @@ image.save('simple_harmonograph.png')
 The harmonograph is a Lissajous curve with a damping multiplier. Everything from 2.3.1 still applies; the inward drift is the only new ingredient.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Two damped pendulums
 
@@ -156,7 +157,7 @@ for d in [0.001, 0.005, 0.01]:
 ```
 </CodeBlock>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a 3:2 harmonograph, swap frequency ratios and damping, then colour-fade the stroke by decay.
 
@@ -348,13 +349,13 @@ image.save('colored_harmonograph.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation/simple_harmonograph.py" label="simple_harmonograph.py — 3:2 quick start" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation/harmonograph_variations.py" label="harmonograph_variations.py — frequency-ratio panel" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.3_harmonograph_simulation/colored_harmonograph_solution.py" label="colored_harmonograph_solution.py — colour-faded reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -369,7 +370,7 @@ A harmonograph is a damped Lissajous curve: same two-sinusoid scaffold from 2.3.
 - Damping zero — the curve traces the same Lissajous indefinitely on top of itself, no inward spiral.
 - Too few sample points — high frequency ratios alias. 5000 points covers ratios up to about 7:5 cleanly.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -2,9 +2,10 @@
 module: "M 04"
 cycle: "I"
 title: "Mandelbrot Set"
-objective: "Iterate $z \\to z^2 + c$ on a complex grid and colour each pixel by the number of steps before it escapes. The boundary is infinite detail from one quadratic rule."
+objective: "Iterate z → z² + c on a complex grid and colour each pixel by the number of steps before it escapes. The boundary is infinite detail from one quadratic rule."
 framework: "hybrid"
 duration: "25–30 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "4.1.2 (recursion/iteration), NumPy broadcasting, basic complex-number intuition"
@@ -18,25 +19,30 @@ backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
 faq:
-  - q: "Why is the boundary of the Mandelbrot set the interesting part?"
+  # Mirrors the "Reflection questions" and their "Answers" dropdown verbatim
+  # (plain text: code backticks dropped, math as Unicode). Google requires FAQ
+  # markup to match visible on-page Q&A; edit both together.
+  - q: "Where is the most detail? Why is the boundary of the set the interesting part?"
     a: >-
-      The inside is mathematically just "stayed bounded." The boundary is where
-      the set is fractal — an infinite-perimeter, finite-area curve. Every zoom
-      reveals miniature Mandelbrot copies, swirls, seahorses, and lightning.
-  - q: "Why does the Mandelbrot set's main body look like a heart (cardioid)?"
+      The inside is mathematically just “stayed bounded.” The boundary is where
+      the set is fractal: an infinite-perimeter, finite-area curve. Every zoom
+      reveals miniature Mandelbrot copies, swirls, “seahorses,” and “lightning.”
+      Self-similarity (almost) — there are tiny rotated/distorted copies, but the
+      boundary is not strictly self-similar.
+  - q: "Why does the cardioid look like a heart? What property of squaring a complex number produces that shape?"
     a: >-
       Squaring a complex number doubles its angle and squares its modulus. The
       set of c for which the orbit of 0 under z → z² + c has a stable fixed
-      point is exactly the cardioid |c − 1/4| = 1/2·(1 − cos θ). The heart shape
-      falls out of the algebra.
-  - q: "What changes if you raise max_iterations from 100 to 500 in the Mandelbrot set?"
+      point is exactly the cardioid traced by |c − 1/4| = 1/2 · (1 − cos θ). The
+      heart shape falls out of the algebra.
+  - q: "What would change if you raised max_iterations from 100 to 500?"
     a: >-
-      The silhouette stays the same — points inside still never escape — but the
-      fringe gains finer gradations and dimmer "near misses" become visible, at
-      roughly five times the runtime.
+      The silhouette stays the same (points inside still never escape), but the
+      fringe gains finer gradations and dimmer “near misses” become visible.
+      Cost: roughly 5× the runtime.
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The Mandelbrot set is the most famous fractal in mathematics, but the rule that produces it is almost embarrassingly short: at every step, replace $z$ with $z$-squared plus $c$. For each point $c$ in the complex plane, start with $z_0 = 0$ and iterate. If the orbit stays bounded forever, $c$ belongs to the set; if it shoots off to infinity, $c$ is outside. Colour each pixel by *how fast* it escapes and the result is the iconic cardioid-and-bulbs silhouette with an infinitely complex boundary that Benoit Mandelbrot first rendered at IBM in 1980 [1].
 
@@ -90,7 +96,7 @@ Image.fromarray(gray).save('mandelbrot_basic.png')
 The whole picture is **one quadratic map applied in parallel to every pixel**. NumPy's broadcasting and boolean masking let you iterate 262,144 points (a 512×512 grid) without a single Python loop over individual coordinates. Vectorisation is what makes this run in under a second instead of several minutes.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Complex numbers as pixel coordinates
 
@@ -99,7 +105,7 @@ A **complex number** $c = a + bi$ has a real part $a$ and an imaginary part $b$,
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/complex_plane_diagram.png"
   alt="A diagram of the complex plane with real and imaginary axes, a circle of radius 2 marking the escape boundary, and two example iteration trajectories — one staying bounded and one escaping"
-  caption="The complex plane and the escape disc $|z| \\le 2$. The green trajectory stays inside (point is in the set); the red trajectory escapes."
+  caption="The complex plane and the escape disc |z| ≤ 2. The green trajectory stays inside (point is in the set); the red trajectory escapes."
   num={2}
   role="diagram"
 />
@@ -183,7 +189,7 @@ image[~outside] = [0, 0, 0]
 
 The same `iterations` array can be coloured with cyclic palettes (`np.sin(norm * k)` with phase offsets per channel) for high-contrast bands, or with a smooth `matplotlib` colormap like `'twilight'`. The colour is a render decision; the mathematics is in `iterations`.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the basic Mandelbrot, retune the viewport and palette, then wrap the whole pipeline in a reusable `mandelbrot_zoom` function.
 
@@ -231,7 +237,7 @@ A field of "seahorses" — paired spirals all curling the same way, separated by
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot_zoomed.png"
   alt="A zoomed view of the Mandelbrot set showing the seahorse valley region — a field of spiral structures in blue and white"
-  caption="Seahorse Valley at $(-0.745, 0.113)$, viewport width $\\approx 0.11$ units, max iterations 200."
+  caption="Seahorse Valley at (−0.745, 0.113), viewport width ≈ 0.11 units, max iterations 200."
   num={4}
   role="output"
 />
@@ -383,14 +389,14 @@ if __name__ == '__main__':
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot_set.py" label="mandelbrot_set.py — Exercise 1 reference" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot_colors.py" label="mandelbrot_colors.py — four-palette comparison" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot_zoom.py" label="mandelbrot_zoom.py — Exercise 3 reference" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot.py" label="mandelbrot.py — minimal one-file version" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -405,7 +411,7 @@ The Mandelbrot set is the set of complex numbers $c$ whose orbit under $z \to z^
 - **Underiterating at zoom.** Deep zooms need more iterations to resolve the boundary. Rule of thumb: double `max_iter` whenever zoom passes a factor of 10.
 - **Hard-coding `dtype=float64` for `z`.** It silently kills the imaginary part. Use `np.zeros_like(c)` to inherit the dtype.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

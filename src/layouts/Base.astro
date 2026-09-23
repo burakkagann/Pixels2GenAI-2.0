@@ -26,6 +26,9 @@ interface Props {
    * page (e.g. a LearningResource + a BreadcrumbList).
    */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Keep this page out of search results (form confirmations, 404). Emits
+   *  robots noindex and drops the self-canonical, which would contradict it. */
+  noindex?: boolean;
 }
 
 const {
@@ -34,6 +37,7 @@ const {
   onLanding = false,
   ogImage = '/og/home.png',
   jsonLd,
+  noindex = false,
 } = Astro.props;
 
 const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
@@ -88,7 +92,7 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   </script>
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
-  <link rel="canonical" href={canonical} />
+  {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
@@ -144,6 +148,14 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
       const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
       el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
       history.replaceState(null, '', `#${id}`);
+      // preventDefault() also cancels the browser's own fragment focus move,
+      // so the skip link and TOC links scrolled but left keyboard focus in
+      // the header. Move it explicitly; tabindex=-1 makes a non-interactive
+      // target (main, a heading) focusable without adding it to the Tab order.
+      if (!el.hasAttribute('tabindex') && !el.matches('a[href], button, input, select, textarea, summary')) {
+        el.setAttribute('tabindex', '-1');
+      }
+      el.focus({ preventScroll: true });
     });
 
     // When no explicit theme choice is stored, track OS preference live.
@@ -151,8 +163,12 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
     // handles changes while a tab is open.
     const mq = matchMedia('(prefers-color-scheme: light)');
     const applySystem = (e: MediaQueryListEvent | MediaQueryList) => {
-      if (localStorage.getItem('p2g-theme')) return;
-      document.documentElement.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+      try { if (localStorage.getItem('p2g-theme')) return; } catch {}
+      const theme = e.matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      // Same event the toggle fires, so the toggle's aria state and the
+      // header octopus colours follow an OS switch too.
+      document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
     };
     mq.addEventListener('change', applySystem);
   </script>

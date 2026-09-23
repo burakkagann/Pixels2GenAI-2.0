@@ -5,6 +5,7 @@ title: "Sobel Edge Detection"
 objective: "Specialise convolution into a gradient operator. Two 3×3 kernels — one measuring horizontal change, one measuring vertical — combine via Euclidean magnitude into an orientation-independent edge map."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.4.1 (convolution)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The previous lesson's "edge detection" kernel was a single 3×3 grid that fires wherever the centre pixel differs from its neighbours. The **Sobel operator**, developed by Irwin Sobel at Stanford in 1968 [1], does something more refined: it splits the question into *horizontal* and *vertical* gradient measurements with two separate kernels, then recombines them via the gradient magnitude `√(Gₓ² + Gᵧ²)`. The result is an orientation-independent edge map that handles diagonal boundaries as cleanly as axis-aligned ones [2]. The same Sobel kernels live inside every modern edge detector, from the Canny algorithm to the convolutional stages of deep object-detection networks.
 
@@ -79,7 +80,7 @@ Image.fromarray(mag, 'L').save('edge_detection_output.png')
 The shapes' *interiors* are exactly zero because the gradient there is zero. Sobel only "sees" change, not absolute brightness — that is what makes it an edge detector rather than a filter.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The two Sobel kernels
 
@@ -149,7 +150,7 @@ Roberts is fastest but noisy because it only samples two pixels. Prewitt and Sob
 Irwin Sobel never published the operator. He described it in a 1968 talk at Stanford's Artificial Intelligence Project; the world found out through Pingle's 1969 PhD dissertation and the textbook by Duda and Hart in 1973. The kernel is now everywhere — every photo app, every CNN initial layer, every robotics codebase — but its history is a footnote in a thesis [1].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the geometric shapes, restrict to one direction or threshold, then implement Sobel on a custom pattern.
 
@@ -322,14 +323,14 @@ Image.fromarray(mag, 'L').save('my_edges.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/simple_edge_detection.py" label="simple_edge_detection.py — quick-start Sobel" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/gradient_comparison.py" label="gradient_comparison.py — Gx/Gy comparison" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/edge_detection_starter.py" label="edge_detection_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/edge_detection_solution.py" label="edge_detection_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -345,7 +346,7 @@ Sobel splits edge detection into two perpendicular gradient measurements. `Gₓ`
 - Skipping the border — the 3×3 kernel cannot be centred on the outermost pixels. Either pad first (3.4.1) or loop from `(1, 1)` to `(H-1, W-1)` and accept a 1-pixel ring of black.
 - Working in `uint8` — the multiplication overflows immediately. Cast to `float64` before convolving.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

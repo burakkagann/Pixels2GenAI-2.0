@@ -138,7 +138,11 @@
 .face .lbl-bot .ttl {
   font-family: var(--serif);
   font-style: italic;
+  /* Scales with the stage (its size container): 17px at the full 520px
+     stage, down to 12px when the desktop cover shrinks the cube to fit
+     a short screen, where a fixed 17px wrapped "M 01 · Pixels". */
   font-size: 17px;
+  font-size: clamp(12px, 3.3cqw, 17px);
   color: var(--figure-frame-fg);
   text-transform: none;
   letter-spacing: 0;
@@ -186,9 +190,42 @@
   .cube-stage { max-width: 300px; }
 }
 
+/* ---------- Cube slot: fit-to-height (desktop, >960px) ----------
+   On desktop the cover plate (landing.css) has a viewport-derived height
+   and is a flex column: caption, slot, controls. The slot takes the space
+   the caption and controls leave, and the stage becomes the largest square
+   that fits in it: min(slot width, slot height), capped at 520px. The
+   24px keeps the stage's -12px mat line (::before) off the neighbours.
+   Only valid where the plate has a definite height: a size container with
+   an auto height collapses to 0, so below 961px the slot is a plain block
+   and the stage keeps its width-driven sizing above. */
+@media (min-width: 961px) {
+  .cube-slot {
+    flex: 1 1 auto;
+    min-height: 0;
+    container-type: size;
+    display: grid;
+    place-items: center;
+  }
+  .cube-slot .cube-stage {
+    width: min(100cqw - 24px, 100cqh - 24px);
+    max-width: 520px;
+    margin: 0;
+  }
+  /* Flex-column child with auto side margins: without an explicit width it
+     would shrink to its content instead of spanning the plate. flex: none
+     so the cube, not the sliders, absorbs any shortage of height. */
+  .cube-controls {
+    flex: none;
+    width: 100%;
+  }
+}
+
+
 /* ---------- Controls panel ---------- */
 .cube-controls {
   margin: 40px auto 0;
+  margin: clamp(12px, 2.5svh, 40px) auto 0;
   max-width: 520px;
   border: 1px solid var(--line);
   background: var(--bg-2);
@@ -233,7 +270,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--studio);
+  color: var(--studio-text);
 }
 
 .cube-controls .ctrl-head .live .d {
@@ -343,6 +380,26 @@
      (same trap documented on .sliders below). */
   grid-template-columns: repeat(8, minmax(0, 1fr));
   margin-top: 4px;
+  /* The row's own width decides whether stage names fit (see the
+     @container rule below), wherever the panel happens to be laid out. */
+  container: ticks / inline-size;
+}
+
+/* Stage names under the codes, one step smaller and without tracking. The
+   longest single words ("Simulation", "Clustering", "Transforms") measured
+   ~60.6px at 9px, wider than the 59px cells of the full 474px row, so
+   neighbours touched; at 8px they are ~54px, leaving a visible gap. */
+.journey-ticks .tick .tname {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 0;
+}
+
+/* Below 8 x 58px cells (54px label + 2px air each side) a long name would
+   touch its neighbour: show codes only. The full name is still on the cube
+   face and in each tick's aria-label. */
+@container ticks (max-width: 464px) {
+  .journey-ticks .tick .tname { display: none; }
 }
 
 .journey-ticks .tick {
@@ -407,6 +464,9 @@
 
 .sl {
   display: grid;
+  /* minmax(0, …) for the same reason as .sliders above: an implicit auto
+     track would never shrink below the label row's min-content. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
 }
 
@@ -436,10 +496,28 @@
   background: transparent;
   outline: none;
   border-radius: 2px;
-  flex: 1;
-  width: auto;
+  /* width: 0 + flex-grow: the track takes only the space the label text
+     leaves. With width: auto a range input keeps its ~129px intrinsic width
+     as its min-content contribution (min-width: 0 does not change that), so
+     every slider row overflowed the panel, by up to 85px at ~1000px wide. */
+  flex: 1 1 0;
+  width: 0;
   min-width: 0;
   margin-left: 6px;
+}
+
+/* Narrow slider area (the 961-1250px desktop band, where the plate is
+   ~360-470px): side by side, the label text left the track as little as
+   30px. Drop each track onto its own full-width line under its label.
+   Keyed to the slider grid's own width, not the viewport. */
+.sliders { container: sliders / inline-size; }
+
+@container sliders (max-width: 420px) {
+  .sl label { flex-wrap: wrap; }
+  .sl input[type="range"] {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
 }
 
 .sl input[type="range"]::-webkit-slider-runnable-track {
@@ -556,4 +634,21 @@
   .ctrl-foot .note { display: none; }
   /* Codes only — eight stage names don't fit ~40px tick cells. */
   .journey-ticks .tick .tname { display: none; }
+}
+
+/* Short desktop screens (laptops, 125-150% Windows scaling): every pixel
+   the controls give up goes to the cube, so tighten their vertical rhythm
+   and keep the footer hint on one line instead of wrapping to two. */
+@media (min-width: 961px) and (max-height: 860px) {
+  .cube-controls { padding-top: 10px; padding-bottom: 10px; }
+  .cube-controls .ctrl-head { margin-bottom: 8px; padding-bottom: 6px; }
+  .journey { margin-bottom: 8px; }
+  .sliders { row-gap: 2px; }
+  .ctrl-foot { margin-top: 6px; padding-top: 6px; align-items: center; }
+  .ctrl-foot .note {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

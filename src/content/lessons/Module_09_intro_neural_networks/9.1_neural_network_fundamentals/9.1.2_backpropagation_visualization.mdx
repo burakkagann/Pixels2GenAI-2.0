@@ -5,6 +5,7 @@ title: "Backpropagation Visualisation"
 objective: "Train a 2-2-1 network on the XOR problem the perceptron couldn't solve. Watch the chain rule propagate gradients backward through the hidden layer, and visualise the decision boundary as it warps from a straight line into a curve."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2025-12-27
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "9.1.1 (perceptron), basic calculus (chain rule)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Big question <a id="big-question"></a>
+## Big question
 
 *How does a neural network with hidden layers learn?* A single perceptron can't solve XOR — there is no straight line that separates the points. Adding a **hidden layer** of perceptrons gives the network enough flexibility to learn a curved boundary, but presented a new problem: how do you adjust the *hidden* weights when you can only observe the *output* error? The answer is **backpropagation**, the chain-rule trick rediscovered for neural networks by Rumelhart, Hinton, and Williams in 1986 [1]. This lesson trains a 2-2-1 network on XOR and traces each gradient step so the math feels concrete.
 
@@ -210,12 +211,12 @@ Two hidden neurons can carve out a rough disc boundary, but bumping to 4+ neuron
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.2_backpropagation_visualization/simple_xor_train.py" label="simple_xor_train.py — train + plot training" />
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.2_backpropagation_visualization/backprop_solution.py" label="backprop_solution.py — reference implementation" />
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

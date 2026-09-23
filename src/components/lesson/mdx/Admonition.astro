@@ -1,4 +1,5 @@
 ---
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
 type AdmonitionType = 'default' | 'note' | 'dyk' | 'important' | 'tip' | 'warning';
 
 interface Props {
@@ -32,6 +33,6 @@ const displayedTitle = title ?? defaultTitle[type];
 ---
 
 <aside class:list={['ad', variant]} role="note">
-  {displayedTitle && <span class="ad-title">{displayedTitle}</span>}
+  {displayedTitle && <span class="ad-title" set:html={inlineMarkdownHtml(displayedTitle)} />}
   <slot />
 </aside>

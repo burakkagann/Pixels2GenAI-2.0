@@ -5,6 +5,7 @@ title: "Fractal Trees"
 objective: "Recursive branching with three parameters — depth, angle, and length ratio. The same rule produces pines, oaks, and weeping willows depending on how you tune them."
 framework: "hybrid"
 duration: "20–25 min"
+published: 2025-12-15
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "4.1.1 (recursion basics), 4.1.5 (iterated function systems)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Trees are the natural-world poster child for fractal geometry. The trunk splits into branches, each branch splits into smaller branches, each twig terminates in still-smaller twigs — and at every scale the geometry looks similar. Mandelbrot devoted a chapter of *The Fractal Geometry of Nature* to this exact observation [1]. The reason is not just aesthetic: fractal branching solves a real engineering problem — maximise leaf-surface exposure to sunlight, distribute water through xylem, and stay mechanically stable — with a tiny ruleset, which is why evolution rediscovered it independently in plants, rivers, blood vessels, and lightning bolts [2].
 
@@ -70,7 +71,7 @@ img.save('fractal_tree.png')
 The recursion calls itself **twice** per branch — once for the left child, once for the right. Branch count doubles per level: depth 8 means $2^9 - 1 = 511$ branch segments drawn. Track this when you increase depth: every extra level doubles the runtime.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why trees are fractal
 
@@ -153,7 +154,7 @@ The three knobs:
 The tree is **deterministic**. Run it twice with the same parameters and you get the exact same picture. Real trees are not — they are stochastic perturbations of an underlying fractal program. Exercise 3 adds that perturbation by jittering the angle and length ratio at each recursion step.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the default tree, tune the three parameters, then add randomness to make it organic.
 
@@ -342,12 +343,12 @@ img.save('natural_tree.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree.py" label="fractal_tree.py — deterministic reference" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_starter.py" label="fractal_tree_starter.py — Exercise 3 skeleton" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -362,7 +363,7 @@ A binary fractal tree is recursion with two children per call — left rotated b
 - **Length ratio ≥ 1.** Children grow longer than parents; recursion explodes. Keep `length_ratio` strictly below 1.
 - **Forgetting `length < 2` short-circuit.** With jitter, a child branch can become microscopically short and waste recursion levels. Bail out when sub-pixel.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

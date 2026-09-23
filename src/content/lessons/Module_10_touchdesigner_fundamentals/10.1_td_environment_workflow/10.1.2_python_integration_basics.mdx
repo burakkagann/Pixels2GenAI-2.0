@@ -5,6 +5,7 @@ title: "Python Integration — op() and Parameter Access"
 objective: "Wire Python into a TD network. Learn where Python lives (Script DAT/CHOP/TOP), how `op('name')` references any operator, and how `.par.X` reads or writes parameters — turning your network into a programmable instrument."
 framework: "conceptual"
 duration: "30–36 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 conceptual pieces"
 prereqs: "10.1.1 (node networks), Python basics"
@@ -173,7 +174,7 @@ Build a small TD project where one Script DAT reads time, computes a handful of 
 - **Web-driven**: a Web DAT periodically fetches a JSON file; a Script DAT parses it and updates parameters. The network is now controllable from a web page.
 - **Network-of-networks**: a control container holds Python scripts that manage state; multiple visual containers expose their parameters via custom parameters; the control container reads and writes to all of them.
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -189,7 +190,7 @@ Python in TouchDesigner is identical to standalone Python except for one additio
 - Re-cooking an operator inside its own script (write-after-read on the same operator). Creates an infinite cook loop in older TD versions.
 - Forgetting `.eval()` when reading. `blur.par.size` is the parameter *object*; `.eval()` returns its current value.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

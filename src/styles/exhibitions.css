@@ -150,7 +150,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fg-3);
+  color: color-mix(in srgb, var(--fg-3) 85%, var(--fg));
   white-space: nowrap;
 }
 

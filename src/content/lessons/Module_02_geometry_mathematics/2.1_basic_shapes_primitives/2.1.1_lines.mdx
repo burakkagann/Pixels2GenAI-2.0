@@ -5,6 +5,7 @@ title: "Drawing Lines"
 objective: "Translate continuous mathematical lines into discrete pixel grids. Use NumPy's linspace as a parametric interpolator, then iterate the same draw_line call to build sunbursts and parallel-line compositions."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-01
 level: "beginner"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic Python loops"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A mathematical line is a continuous object — infinitely many points between two endpoints. A computer screen is a discrete grid of pixels with integer coordinates. The whole field of **rasterization** exists to bridge that gap, and the line is its simplest case. In this lesson you will draw lines by interpolation, then turn the same three-line `draw_line` function into a sunburst by varying its endpoints inside a loop. The conceptual thread — *iteration plus simple rules equals emergent pattern* — runs through every later lesson in this module [1].
 
@@ -70,7 +71,7 @@ Image.fromarray(canvas).save('simple_line.png')
 The line is **not drawn** in any continuous sense. It is sampled — `linspace` produces 301 evenly-spaced (x, y) pairs, and each pair lights one pixel. Choosing the sample count so it equals the longer axis length is what keeps the line gap-free.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Rasterizing a continuous line
 
@@ -86,7 +87,9 @@ Bresenham's algorithm was not for screens — it was for **pen plotters**, machi
 
 The parametric line is the cleaner mental model:
 
-$$P(t) = (1 - t)\,P_0 + t\,P_1, \quad t \in [0, 1]$$
+$$
+P(t) = (1 - t)\,P_0 + t\,P_1, \quad t \in [0, 1]
+$$
 
 At $t = 0$ you are at the start, at $t = 1$ you are at the end, and at $t = 0.5$ you are at the midpoint. This blending operation — **linear interpolation**, often shortened to "lerp" — underlies most of computer graphics: animation keyframes, colour gradients, image scaling, Bézier curves [4].
 
@@ -148,7 +151,7 @@ Image.fromarray(canvas).save('sunburst.png')
 
 The endpoint `(int(cx + radius * cos(theta)), int(cy + radius * sin(theta)))` is the polar-to-Cartesian conversion. Multiplying the unit circle by `radius` scales it, adding `(cx, cy)` translates it. You are not drawing a circle — you are drawing 24 straight lines whose endpoints *happen to land on* a circle.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a working line script, vary its parameters, then build a sunburst from scratch.
 
@@ -398,13 +401,13 @@ Image.fromarray(canvas).save('sunburst.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines/simple_line.py" label="simple_line.py — Exercise 1 starter" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines/line_pattern.py" label="line_pattern.py — radial pattern demo" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines/sunburst_solution.py" label="sunburst_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -420,7 +423,7 @@ Rasterizing a continuous line means sampling it at enough integer coordinates to
 - Forgetting `endpoint=False` on angle arrays — the first and last ray collide on the same pixels.
 - Using `np.random.rand()` (floats in 0–1) as image data — Pillow wants `uint8` in 0–255.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

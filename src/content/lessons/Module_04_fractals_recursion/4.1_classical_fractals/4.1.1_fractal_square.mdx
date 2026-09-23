@@ -5,6 +5,7 @@ title: "Fractal Square"
 objective: "Build a self-similar geometric figure with three nested calls. Watch recursion run."
 framework: "hybrid"
 duration: "20–25 min"
+published: 2025-12-15
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "NumPy basics, Python functions"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Fractals are geometric patterns that repeat at large and small scales, creating infinitely complex structures from a set of simple rules. In this exercise you will generate a classic fractal using recursive square subdivision: each square contains four smaller copies of itself in its corners.
 
@@ -91,7 +92,7 @@ Image.fromarray(canvas).save("quickstart_fractal.png")
 
 The pattern emerges by applying a simple rule repeatedly. Divide a region into nine parts, fill the center, then repeat on the four corners. Each iteration adds more detail, creating the characteristic self-similar structure.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — What are fractals?
 
@@ -202,7 +203,7 @@ The value `32` is added to the green channel of each pixel. Areas filled by mult
 The corner regions overlap with the centre. This overlap is intentional — it produces the nested appearance. Each corner contains **two-thirds** of the parent region in each dimension, not just one-third.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Run and observe">
 
@@ -418,7 +419,7 @@ def square_with_depth_color(canvas, x_min, x_max, y_min, y_max, depth, max_depth
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -438,7 +439,7 @@ def square_with_depth_color(canvas, x_min, x_max, y_min, y_max, depth, max_depth
 - **Wrong corner boundaries** — each corner must cover 2/3 of the parent, not 1/3.
 - **Array index order** — NumPy arrays use `[y, x]`, not `[x, y]`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

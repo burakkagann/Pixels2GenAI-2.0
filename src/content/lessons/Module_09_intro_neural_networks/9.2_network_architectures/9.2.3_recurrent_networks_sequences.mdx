@@ -5,6 +5,7 @@ title: "Recurrent Networks"
 objective: "Process sequences with a network that has *memory* — a hidden state passed from step to step. The vanilla RNN learns to generate sequences character by character; LSTMs and Transformers are the modern descendants of the same recurrent idea."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-02-06
 level: "intermediate-advanced"
 load: "3 core concepts"
 prereqs: "9.2.1 (feedforward), 9.1.3 (activations)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Big question <a id="big-question"></a>
+## Big question
 
 *How does a neural network handle data that arrives one item at a time, where the meaning of each item depends on what came before?* Text is the canonical example: the meaning of "bank" depends on whether we previously said "river" or "money." A feedforward network has no way to remember previous inputs. **Recurrent Neural Networks** (RNNs) maintain a hidden state vector that is updated at every time step, carrying information forward [1]. The vanilla RNN of 1986 became the LSTM of 1997 [2], the GRU of 2014 [3], and eventually the Transformer of 2017 [4]. The recurrent idea has evolved, but it began here.
 
@@ -187,11 +188,11 @@ A vanilla RNN with `T = 5` learns this task in a few epochs. With `T = 100`, the
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.3_recurrent_networks_sequences/rnn_starter.py" label="rnn_starter.py — char-level RNN" />
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

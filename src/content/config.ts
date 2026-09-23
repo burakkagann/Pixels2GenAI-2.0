@@ -22,8 +22,14 @@ const lessons = defineCollection({
     title: z.string(),
     /** One-sentence italic lead under the H1. */
     objective: z.string(),
+    /** Optional search-snippet text (<= 160 chars) for meta/og descriptions.
+     *  Omitted: the objective, trimmed to fit (src/lib/metaDescription.ts). */
+    description: z.string().optional(),
     framework: z.enum(['hands-on', 'conceptual', 'hybrid', 'project']),
     duration: z.string(),
+    /** Date the lesson first went live (v1 deploy date for ported lessons).
+     *  Feeds RSS pubDate and LearningResource datePublished. */
+    published: z.coerce.date().optional(),
     level: z.enum([
       'beginner',
       'beginner-intermediate',

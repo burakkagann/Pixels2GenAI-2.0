@@ -35,14 +35,18 @@ const label = file ? `${lang} · ${file}` : lang;
     document.querySelectorAll<HTMLButtonElement>('[data-copy-btn]').forEach((btn) => {
       if (btn.dataset.copyWired) return;
       btn.dataset.copyWired = 'true';
+      // Read the label once: capturing it per click stored "Copied" on a
+      // quick second click, and the button then stayed stuck on "Copied".
+      const label = btn.textContent;
+      let resetTimer = 0;
       btn.addEventListener('click', async () => {
         const pre = btn.closest('.code')?.querySelector('pre');
         if (!pre) return;
         try {
           await navigator.clipboard.writeText(pre.innerText);
-          const orig = btn.textContent;
           btn.textContent = 'Copied';
-          window.setTimeout(() => { btn.textContent = orig; }, 1200);
+          window.clearTimeout(resetTimer);
+          resetTimer = window.setTimeout(() => { btn.textContent = label; }, 1200);
         } catch {
           /* clipboard blocked — ignore */
         }
@@ -51,4 +55,150 @@ const label = file ? `${lang} · ${file}` : lang;
   }
   setupCopyButtons();
   document.addEventListener('astro:page-load', setupCopyButtons);
+
+  // ---------------------------------------------------------------------------
+  // In-browser Python runner (AI tutor Milestone 1b).
+  // The lesson <article> says whether the runner applies (data-runner) and where
+  // the lesson's files live (data-lesson-media); see Lesson.astro. The Python runs
+  // in a Web Worker with Pyodide (public/runner/python-worker.mjs), never on a server.
+  // ---------------------------------------------------------------------------
+  const RUN_TIMEOUT_MS = 120_000;   // includes the first-time Pyodide download
+  const STORAGE_KEY = 'p2g-runner';
+
+  type RunResult = {
+    id: number; ok: boolean; stdout: string; stderr: string; error?: string;
+    images: { name: string; mime: string; bytes: Uint8Array }[];
+    timings: { loadMs?: number; packagesMs?: number; runMs?: number };
+  };
+
+  let worker: Worker | null = null;
+  let pythonLoaded = false;
+  let nextRunId = 1;
+  const pending = new Map<number, (result: RunResult) => void>();
+
+  function runnerEnabled(article: HTMLElement | null): boolean {
+    const mode = article?.dataset.runner;
+    if (mode === 'on') return true;
+    if (mode !== 'flag') return false;
+    // Production is off by default; ?runner=1 turns it on for this browser, ?runner=0 off.
+    const param = new URLSearchParams(window.location.search).get('runner');
+    try {
+      if (param === '1') localStorage.setItem(STORAGE_KEY, '1');
+      if (param === '0') localStorage.removeItem(STORAGE_KEY);
+      return localStorage.getItem(STORAGE_KEY) === '1';
+    } catch {
+      return param === '1';   // storage blocked: honour the URL only
+    }
+  }
+
+  // Only complete scripts get a Run button: fragments (no imports, no output) would fail.
+  function isRunnable(code: string): boolean {
+    const hasImport = /^\s*(import|from)\s+\w+/m.test(code);
+    const hasOutput = /(\.save\(|savefig\(|print\(|imwrite\(|mimsave\()/.test(code);
+    return hasImport && hasOutput;
+  }
+
+  function getWorker(): Worker {
+    if (!worker) {
+      worker = new Worker('/runner/python-worker.mjs', { type: 'module' });
+      worker.onmessage = ({ data }: MessageEvent<RunResult>) => {
+        pending.get(data.id)?.(data);
+        pending.delete(data.id);
+      };
+    }
+    return worker;
+  }
+
+  function runPython(code: string, assetBase: string): Promise<RunResult> {
+    const id = nextRunId++;
+    return new Promise((resolve) => {
+      const timer = window.setTimeout(() => {
+        // A runaway script (e.g. an endless loop) can only be stopped by killing the worker;
+        // the next run starts a fresh one (and reloads Python from the browser cache).
+        worker?.terminate();
+        worker = null;
+        pythonLoaded = false;
+        pending.delete(id);
+        resolve({ id, ok: false, stdout: '', stderr: '', images: [], timings: {},
+          error: `Stopped after ${RUN_TIMEOUT_MS / 1000} seconds.` });
+      }, RUN_TIMEOUT_MS);
+      pending.set(id, (result) => { window.clearTimeout(timer); resolve(result); });
+      getWorker().postMessage({ id, code, assetBase });
+    });
+  }
+
+  function showResult(output: HTMLElement, result: RunResult) {
+    output.querySelectorAll('img').forEach((img) => URL.revokeObjectURL(img.src));
+    output.replaceChildren();
+    const status = document.createElement('p');
+    status.className = 'code-output-status';
+    const seconds = ((result.timings.runMs ?? 0) / 1000).toFixed(1);
+    status.textContent = result.ok ? `Ran in ${seconds} s in your browser.` : 'The script stopped with an error.';
+    output.append(status);
+
+    // textContent everywhere: program output is shown as text, never as HTML.
+    const text = [result.stdout, result.ok ? '' : (result.error ?? result.stderr)].filter(Boolean).join('\n');
+    if (text) {
+      const pre = document.createElement('pre');
+      pre.textContent = text.length > 8000 ? `${text.slice(0, 8000)}\n…(output shortened)` : text;
+      output.append(pre);
+    }
+    for (const image of result.images) {
+      const figure = document.createElement('figure');
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(new Blob([image.bytes], { type: image.mime }));
+      img.alt = `Output of the script: ${image.name}`;
+      const caption = document.createElement('figcaption');
+      caption.textContent = image.name;
+      figure.append(img, caption);
+      output.append(figure);
+    }
+  }
+
+  function setupRunButtons() {
+    const article = document.querySelector<HTMLElement>('article.lesson');
+    if (!runnerEnabled(article)) return;
+    const assetBase = article!.dataset.lessonMedia ?? '/';
+
+    document.querySelectorAll<HTMLElement>('.code').forEach((block) => {
+      if (block.dataset.runWired) return;
+      block.dataset.runWired = 'true';
+      const pre = block.querySelector('pre');
+      const label = block.querySelector('.chrome .lang')?.textContent ?? '';
+      if (!pre || !label.toLowerCase().startsWith('python') || !isRunnable(pre.innerText)) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'run';
+      button.textContent = 'Run';
+      button.title = 'Run this code in your browser';
+      block.querySelector('.chrome .copy')?.before(button);
+
+      const output = document.createElement('div');
+      output.className = 'code-output';
+      output.setAttribute('aria-live', 'polite');
+      output.hidden = true;
+      block.after(output);
+
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.textContent = 'Running…';
+        output.hidden = false;
+        output.replaceChildren();
+        const status = document.createElement('p');
+        status.className = 'code-output-status';
+        status.textContent = pythonLoaded
+          ? 'Running…'
+          : 'Loading Python into your browser from cdn.jsdelivr.net (first run only; this can take up to a minute)…';
+        output.append(status);
+        const result = await runPython(pre.innerText, assetBase);
+        pythonLoaded = pythonLoaded || result.ok || Boolean(result.timings.loadMs);
+        showResult(output, result);
+        button.disabled = false;
+        button.textContent = 'Run again';
+      });
+    });
+  }
+  setupRunButtons();
+  document.addEventListener('astro:page-load', setupRunButtons);
 </script>

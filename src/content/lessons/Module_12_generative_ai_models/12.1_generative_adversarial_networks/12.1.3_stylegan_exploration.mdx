@@ -5,6 +5,7 @@ title: "StyleGAN Exploration"
 objective: "Explore the disentangled W-space of a trained StyleGAN2 model — generate fabric patterns, navigate latent paths with interpolation, mix coarse and fine styles across crossover layers, and tune diversity with the truncation trick."
 framework: "conceptual"
 duration: "35–45 min"
+published: 2026-01-14
 level: "advanced"
 load: "4 core concepts"
 prereqs: "Lessons 12.1.1 (GAN Architecture) and 12.1.2 (DCGAN Art); PyTorch; ~500 MB disk for the pre-trained checkpoint"
@@ -28,7 +29,7 @@ backLink:
   pixelated
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 DCGAN [Lesson 12.1.2](/lessons/12.1.2) generates images from random vectors but doesn't give you much control over what comes out. Change the seed, get a different image; that's the only knob. StyleGAN, introduced by Karras, Laine and Aila at NVIDIA in 2018 [1] and refined in StyleGAN2 [2], introduced an architecture that *separates* the entangled "random vector" from the styled controls — and once that separation exists, you can navigate the space deliberately rather than just sampling from it.
 
@@ -71,7 +72,7 @@ for i, img in enumerate(images):
 
 Four random vectors → four distinct fabric patterns. The `trunc_psi=0.7` argument is the truncation trick at default strength; we'll unpack what it does in Concept 4.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — From entangled `z` to disentangled `w`
 
@@ -186,7 +187,7 @@ The conventional defaults: `ψ = 0.7` for general-purpose generation, `ψ = 0.5`
 Truncation only changes what's *sampled*, not what's *generated*. The decoder weights are unchanged; truncation is purely an inference-time choice. You can re-run the same seed at different `ψ` values and watch the same point in latent space migrate toward the mean.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate 16 fabric patterns and compare two random seeds">
 
@@ -349,7 +350,7 @@ NUM_IMAGES = 64      # 8x8 — wallpaper material
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 StyleGAN's contribution to GAN architecture is the *separation* between the random latent input `z` and the styled controls injected into the synthesis network — implemented by an 8-layer mapping network that transforms `z` into an intermediate `w` whose dimensions are much more disentangled. Once that separation exists, three creative operations follow: smooth interpolation through `w`-space (because nearby points decode to similar images), style mixing across layer ranges (because different resolution levels control different feature scales), and the truncation trick (which trades diversity for quality by pulling samples toward the mean of `w`). The same architecture underpins later StyleGAN variants and is a structural template that propagated into modern systems like StyleGAN-XL and StyleGAN-T.
@@ -363,7 +364,7 @@ StyleGAN's contribution to GAN architecture is the *separation* between the rand
 - Forgetting that truncation is computed against the *mean* `w̄`, not the origin. The script samples thousands of `w` vectors to estimate `w̄` once; if you skip that, truncation pulls toward zero instead of toward the trained distribution centre and outputs degrade.
 - Confusing `model.eval()` with `model.train()` mode. AdaIN behaves differently between modes; always evaluate in `eval`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -116,13 +116,12 @@ const next = UPCOMING_WORKSHOPS[0];
             });
           });
           dlg.querySelector('.g-close')?.addEventListener('click', () => dlg.close());
-          // Click outside the image (on the dialog background) closes the modal.
+          // Click outside the image (on the dialog background or backdrop)
+          // closes the modal. Test the event target, not clientX/Y:
+          // keyboard-synthesised clicks report (0, 0) and would read as
+          // "outside" (the bug that closed the announce dialog).
           dlg.addEventListener('click', (e) => {
-            const r = dlgImg.getBoundingClientRect();
-            const x = (e as MouseEvent).clientX;
-            const y = (e as MouseEvent).clientY;
-            const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-            if (!inside) dlg.close();
+            if (e.target === dlg) dlg.close();
           });
         }
       </script>

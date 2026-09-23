@@ -5,6 +5,7 @@ title: "Archimedean Spiral"
 objective: "Convert polar coordinates (angle, radius) to Cartesian pixels and trace an Archimedean spiral with `r = a + bθ`, then tune the growth rate and colour-interpolate along the curve."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-09
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.1.1 (line drawing), 2.2.1 (linspace), basic trigonometry"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The Archimedean spiral has one equation: $r = a + b\theta$. The radius grows linearly with the angle, so consecutive turns sit at a constant distance from each other [1]. Translate that single line of polar-coordinate arithmetic into pixels — convert each $(r, \theta)$ to Cartesian, draw a line to the previous point — and you have the spiral. The same template extends to logarithmic spirals (replace `+` with `*`), star-like rose curves (next module), and the entire family of polar-coordinate art that comes after.
 
@@ -81,13 +82,15 @@ Image.fromarray(canvas, mode='RGB').save('simple_spiral.png')
 The spiral lives in polar space. The conversion `(r·cos θ, r·sin θ)` is the only place where Cartesian pixels enter. Change the polar equation and the same scaffold draws any polar curve.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Polar coordinates and the conversion
 
 A point can be addressed two ways. In Cartesian coordinates you give horizontal and vertical offsets `(x, y)` from an origin. In **polar coordinates** you give an angle `θ` and a distance `r`, and the same point comes out:
 
-$$x = r \cos\theta, \qquad y = r \sin\theta$$
+$$
+x = r \cos\theta, \qquad y = r \sin\theta
+$$
 
 For anything with rotational structure — circles, spirals, rose curves, sunbursts — polar is the natural language. The conversion is one line of code per coordinate [2].
 
@@ -107,7 +110,9 @@ NumPy's `np.cos`, `np.sin`, `np.tan` all take angles in **radians**, not degrees
 
 Archimedes' spiral is the simplest polar curve where both `r` and `θ` vary:
 
-$$r = a + b\,\theta$$
+$$
+r = a + b\,\theta
+$$
 
 with `a` the starting radius and `b` the growth rate. Each full turn of `θ` (one `2π` increment) adds `2πb` to the radius — a constant gap between successive turns. This separates it from the **logarithmic** spiral seen in nautilus shells, where the radius multiplies rather than adds, and the gap grows with each turn [3].
 
@@ -161,7 +166,7 @@ Three reasons generators fit this kind of work: memory (no list of 1000 tuples s
 Archimedes described his spiral around 225 BCE in *On Spirals*, centuries before polar coordinates were formalised by Newton and Bernoulli in the 17th century [3]. He used purely geometric language — the spiral was defined as a point moving outward along a rotating ray at constant speed, which is exactly the parametric equation we still use.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the basic spiral, tune its parameters, then add a colour gradient along the path.
 
@@ -395,13 +400,13 @@ Image.fromarray(canvas, mode='RGB').save('color_spiral.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral/simple_spiral.py" label="simple_spiral.py — quick start" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral/spiral_variations.py" label="spiral_variations.py — parameter sweep" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral/color_spiral_solution.py" label="color_spiral_solution.py — gradient stroke" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -416,7 +421,7 @@ The Archimedean spiral fits in a single line of polar arithmetic, `r = a + b·θ
 - Picking a `growth_rate` so large that the second turn already exits the canvas.
 - Casting floats to `int` with `.astype(int)` after broadcasting and getting truncation gaps — use `np.round().astype(int)` if a gap is visible.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Nonlinear Distortions"
 objective: "Move past affine: warp an image by *coordinate remapping*. Use sinusoidal, radial, and rotational offsets to build wave, barrel, and swirl distortions, then combine two waves for a wobbly effect."
 framework: "hands-on"
 duration: "20–24 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.1.2 (affine), basic trig"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The last lesson stayed inside the affine family — straight lines stayed straight. Nonlinear distortions break that rule on purpose: vertical lines become wavy, circles bulge out into fish-eye shapes, and the interior of an image swirls around its centre. The unifying technique is **coordinate remapping**: rather than transforming the *pixels* with a matrix, you transform the *coordinates* with a function, then read the pixel at the new location. The mechanic is the same one used by lens-correction software, by photo-editing filters like "twirl" and "spherize," and by every CRT-distortion shader [1, 2].
 
@@ -74,7 +75,7 @@ Image.fromarray(distorted).save('wave_distortion.png')
 Notice that the loop reads `image[y, source_x]` — it does *not* write to a new position. The whole technique hinges on going **backwards**: pick an output pixel, ask "which input pixel should I copy here?", and copy it.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Inverse mapping
 
@@ -161,7 +162,7 @@ Distortions push source coordinates outside the input image. Two policies, both 
 
 Choosing the wrong policy is the most common visual bug in coordinate-remapping code. The wobbling checkerboard wraps cleanly because the input is already periodic; a face under the same wrap policy is going to look unsettling.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a single wave, swap axes/parameters, then build a 2-axis wobble from scratch.
 
@@ -346,7 +347,7 @@ Image.fromarray(distorted).save('combined_waves.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/simple_wave_distortion.py" label="simple_wave_distortion.py — horizontal wave starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/wave_variations.py" label="wave_variations.py — amplitude/frequency grid" />
@@ -354,7 +355,7 @@ Image.fromarray(distorted).save('combined_waves.png')
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/swirl_distortion.py" label="swirl_distortion.py — twirl reference" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/combined_waves_solution.py" label="combined_waves_solution.py — Exercise 3 solution" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -370,7 +371,7 @@ Nonlinear distortions trade matrix algebra for coordinate functions. Loop over e
 - Plain `(x + offset)` without `% size` on an offset that can go negative — Python's `%` behaves correctly, but the same code in C-like languages flips signs.
 - Inflating `amplitude` so much that the wave reads from far past the source image — at some point the pattern is *all* wraparound.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

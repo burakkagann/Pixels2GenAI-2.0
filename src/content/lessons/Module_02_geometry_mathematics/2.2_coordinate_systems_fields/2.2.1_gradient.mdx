@@ -5,6 +5,7 @@ title: "Gradient Fields"
 objective: "Map a 1D linspace into a 2D image by tiling rows or columns, then use broadcasting to combine horizontal and vertical components into diagonal and radial gradients — the same coordinate-to-value scheme behind every procedural texture."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2025-12-01
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.1.5 (n-gon vertices), NumPy linspace and broadcasting"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A gradient is the simplest possible **coordinate field** — a function `f(x, y)` that turns pixel positions into brightness values. Set `f(x, y) = x` and you get a horizontal gradient. Set `f(x, y) = y` and you get a vertical one. Set `f(x, y) = (x + y) / 2` and you get a diagonal. This pattern — *value as a function of position* — is the conceptual seed of every procedural texture you will write later in the module: spirals, vector fields, distance fields, and the noise textures of Module 06. The mechanic for turning a 1D `linspace` into a 2D image is two NumPy operations: `np.tile` (for axis-aligned gradients) and broadcasting (for everything else) [1].
 
@@ -63,7 +64,7 @@ Image.fromarray(gradient_image, mode='L').save('simple_gradient.png')
 The gradient has no per-pixel loop. `linspace` gives you the row in one call, and `tile` clones it into a 2D image. Both operations run in C inside NumPy, so the whole image is built in microseconds.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — `np.linspace` as the value generator
 
@@ -146,7 +147,7 @@ The division by 2 keeps the result in the displayable range — adding two value
 Broadcasting does not materialise the repeated rows in memory — it uses the singleton axes as "virtual repetitions" and produces the output in one pass [4]. For a 400×400 gradient, broadcasting reads 800 values total (one row plus one column); tiling explicitly would touch 320,000. Same result, far less memory traffic.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a horizontal gradient, change its direction and range, then combine components into a diagonal.
 
@@ -349,13 +350,13 @@ Image.fromarray(gradient_image, mode='L').save('diagonal_gradient.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient/simple_gradient.py" label="simple_gradient.py — quick start" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient/gradient_variations.py" label="gradient_variations.py — direction panel" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient/diagonal_gradient_solution.py" label="diagonal_gradient_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -370,7 +371,7 @@ Image.fromarray(gradient_image, mode='L').save('diagonal_gradient.png')
 - Mixing up `(size,)` and `(size, 1)` shapes — broadcasting still produces a 2D array, but along the wrong axis.
 - Reshaping with the wrong dimension order: `.reshape(1, -1)` makes a row, `.reshape(-1, 1)` makes a column. The minus sign tells NumPy which dimension to infer.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

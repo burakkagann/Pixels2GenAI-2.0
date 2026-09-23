@@ -5,6 +5,7 @@ title: "Puzzle — Array Concatenation"
 objective: "Use `np.vstack` and `np.hstack` to assemble image fragments — first as obedient jigsaw pieces with matching dimensions, then as an artistic shuffle that turns a single photo into an abstract puzzle."
 framework: "hands-on"
 duration: "15–18 min"
+published: 2025-12-13
 level: "beginner"
 load: "3 core concepts"
 prereqs: "1.1.1 (image shape), 3.3.1 (slicing for grids)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 `np.vstack` glues arrays top-to-bottom; `np.hstack` glues them side-by-side. Together they are NumPy's "assemble images from pieces" pair — the same machinery that powers panorama stitching, contact sheets, and the diagnostic grids you have already built in this module [1, 2]. The mental model in this lesson is the jigsaw puzzle: every piece carries its own `(h, w, 3)` shape, and the dimension *facing the seam* must match for the stack to succeed. Once that constraint clicks, you can slice any image into quadrants, shuffle the pieces, and reassemble them — turning a documentary photo into an abstract collage with three NumPy calls.
 
@@ -63,7 +64,7 @@ Image.fromarray(row).save('quick_start_output.png')
 Both functions take a **list** of arrays: `np.hstack([a, b])` not `np.hstack(a, b)`. Skipping the brackets is the most common typo and produces a misleading error about "missing argument."
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — `vstack` and `hstack` shape rules
 
@@ -145,7 +146,7 @@ abstract = np.vstack([
 
 The shuffle is the artistic move: every piece keeps its content but lands in the wrong cell, and you get the disjointed look of late-Cubist collage from a single source photograph. Hannah Höch built a whole career on this [5].
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: stack two pieces, build a 2×3 grid, then shuffle a real photo into an abstract puzzle.
 
@@ -329,14 +330,14 @@ Image.fromarray(scrambled).save('shuffled_puzzle.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise1_two_pieces.py" label="exercise1_two_pieces.py — print + stack" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise2_starter.py" label="exercise2_starter.py — 2×3 grid starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/exercise3_create_puzzle_solution.py" label="exercise3_create_puzzle_solution.py — shuffle reference" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/source_image.png" label="source_image.png — input photo" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -352,7 +353,7 @@ Image.fromarray(scrambled).save('shuffled_puzzle.png')
 - Forgetting that quadrant slicing on an *odd-sized* image leaves the four pieces with off-by-one widths; pad with one zero column to recover symmetry.
 - Comparing with `==` on whole arrays instead of `np.array_equal(a, b)` — `==` is per-element and produces an array, not a scalar.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

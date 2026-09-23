@@ -5,6 +5,7 @@ title: "Hexpanda — Hexbin Image Filter"
 objective: "Turn an image into a sparse `(x, y, intensity)` table with pandas, then aggregate it into a hexagonal density plot. The result reads as an impressionist mosaic of the original photograph."
 framework: "hands-on"
 duration: "15–18 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "1.1.1 (image arrays), basic pandas DataFrames"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Hexagonal binning is a tool from statistical graphics: every data point gets dropped into the nearest hexagonal cell, and each cell is coloured by how many points it caught. Originally Dan Carr designed it in 1987 to render scatter plots of millions of points without saturating the canvas [1]. The clever filter trick is to flip that pipeline backwards — treat every dark pixel of a photograph as a *data point*, sample a fraction of them, and plot the result with `pandas.DataFrame.plot.hexbin`. The picture comes back as a hex-mosaic version of the original, with detail abstracted into density and edges turned into honeycomb seams [2]. This is a short lesson that bridges NumPy image work to the pandas/matplotlib ecosystem you will use throughout Modules 7 and 14.
 
@@ -73,7 +74,7 @@ plt.savefig('hexpanda.png', bbox_inches='tight', dpi=120)
 The whole filter is *data*-mediated. You convert the image into points, then plot the points with hexbin. NumPy is not in the rendering pipeline at all — matplotlib does the actual hexagons.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — From pixel grid to long-format DataFrame
 
@@ -129,7 +130,7 @@ A `gridsize=30` hexbin lays down 30 hexagons across the x-axis. Smaller values g
 Honeybees build hexagonal cells because hexagons are the most perimeter-efficient tiling of the plane — proven mathematically by Thomas Hales in 2001 [5]. The same efficiency is why hexagonal binning has less directional bias than square binning: each hexagon has exactly six equidistant neighbours, while a square has four near and four far.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the hexpanda, swap `gridsize` and `cmap`, then build a hexbin from a procedural gradient.
 
@@ -287,14 +288,14 @@ plt.savefig('gradient_hexbin.png', bbox_inches='tight', dpi=120)
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/hexpanda.py" label="hexpanda.py — quick-start script" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/hexbin_comparison.py" label="hexbin_comparison.py — gridsize grid" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/colormap_variations.py" label="colormap_variations.py — cmap variations" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/panda.png" label="panda.png — input photo" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -310,7 +311,7 @@ Hexbin filtering treats every dark pixel as a data point and aggregates the poin
 - Choosing a colormap that is hard for colourblind viewers — `viridis`, `plasma`, `cividis` are perceptually uniform and safe; `Greys` is always fine.
 - `gridsize` too small (single-digit) — the hexagons swallow the entire image and the output is just a few coloured blobs.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -77,10 +77,15 @@
 }
 
 .lesson h1 {
-  font-size: calc(52px * var(--t-scale));
+  /* Fluid below ~580px: a fixed 52px pushed single long words
+     ("Transformations", "Backpropagation") past a 360-390px screen. */
+  font-size: calc(clamp(34px, 9vw, 52px) * var(--t-scale));
   line-height: 1.02;
   font-weight: 400;
   margin-bottom: 14px;
+  /* Safety net for a word still wider than the column. */
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .lesson h1 .num {
@@ -113,13 +118,14 @@
   margin-bottom: 14px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
+  /* Block, not flex: a flex heading turned each inline <code> into its own
+     flex item, with stray gaps and odd breaks ("using  cos  and  sin"). */
 }
 
 .lesson h2 .sec-num {
+  display: inline-block;
+  margin-right: 14px;
+  vertical-align: 0.2em;
   font-family: var(--mono);
   font-size: 10px;
   color: var(--cycle-soft, var(--accent-soft));
@@ -136,13 +142,13 @@
   margin-top: 28px;
   margin-bottom: 10px;
   color: var(--fg);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+  /* Block, not flex — same reason as h2 above. */
 }
 
 .lesson h3 .sec-num {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: 0.15em;
   font-family: var(--mono);
   font-size: 9px;
   color: var(--cycle-soft, var(--accent-soft));
@@ -261,26 +267,42 @@
   counter-reset: o;
 }
 
+/* Block, not flex: as a flex container every text run and every inline
+   <code>/<strong>/<em> became its own flex item, so an objective with inline
+   code was laid out as side-by-side columns that ran off phone screens. The
+   numeral hangs in the left padding instead (24px numeral + 14px gap); as an
+   inline-block it stays on the first line's baseline, as the flex baseline
+   alignment did. */
 .lesson .obj-list li {
-  padding: 8px 0;
+  padding: 8px 0 8px 38px;
   border-bottom: 1px dotted var(--line-2);
-  display: flex;
-  gap: 14px;
-  align-items: baseline;
 }
 
 .lesson .obj-list li::before {
   counter-increment: o;
   content: counter(o, lower-roman) ".";
+  display: inline-block;
+  width: 38px;
+  margin-left: -38px;
   font-family: var(--mono);
   font-style: normal;
   color: var(--cycle-soft, var(--accent-soft));
   font-size: 11px;
-  min-width: 24px;
 }
 
 .lesson .obj-list li:last-child {
   border-bottom: 0;
+}
+
+/* ---------- Math (KaTeX, rendered at build time by rehype-katex) ----------
+   Display formulas never wrap, so a long one (2.3.2's parametric pair is
+   ~450px) would widen the whole page on a phone. Scroll it inside its own
+   block, like a code block. The small vertical padding keeps the scroll box
+   from clipping tall glyphs (integrals, fractions). */
+.lesson .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
 }
 
 /* ---------- Tables ----------
@@ -440,6 +462,75 @@
   border-color: var(--cycle, var(--accent));
 }
 
+/* In-browser Python runner (AI tutor Milestone 1b): the Run button sits before
+   Copy and uses the cycle accent so it reads as the primary action. */
+.code .chrome .run {
+  margin-left: auto;
+  background: transparent;
+  color: var(--cycle, var(--accent));
+  border: 1px solid var(--cycle, var(--accent));
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+
+.code .chrome .run:hover:not(:disabled) {
+  background: var(--cycle, var(--accent));
+  color: var(--bg);
+}
+
+.code .chrome .run:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.code-output {
+  margin: -18px 0 18px;          /* attach to the code block above */
+  padding: 12px 18px;
+  border: 1px solid var(--code-border);
+  border-top: 0;
+  background: var(--bg-warm-2);
+  font-family: var(--mono);
+  font-size: calc(12px * var(--t-scale));
+  color: var(--fg-2);
+}
+
+.code-output-status {
+  margin: 0 0 8px;
+  color: var(--fg-3);
+  font-size: calc(11px * var(--t-scale));
+}
+
+.code-output pre {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.code-output figure {
+  margin: 8px 0 0;
+}
+
+.code-output img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line-2);
+  image-rendering: pixelated;    /* lesson outputs are pixel art; keep edges crisp */
+}
+
+.code-output figcaption {
+  margin-top: 4px;
+  color: var(--fg-3);
+  font-size: calc(11px * var(--t-scale));
+}
+
 /* Touch: grow the Copy hit area; negative margin keeps the bar height. */
 @media (pointer: coarse) {
   .code .chrome .copy {
@@ -559,6 +650,10 @@
   object-fit: contain;
   display: block;
 }
+
+/* GIF figures wrap the <img> in <picture> (reduced-motion still); keep it a
+   block so the inline wrapper adds no baseline gap. */
+.fig picture { display: block; }
 
 .fig figcaption {
   font-family: var(--serif);
@@ -685,7 +780,8 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--cycle-soft, var(--accent-soft));
+  /* Small text on a tinted surface: nudged toward --fg so it holds WCAG AA (4.5:1) in both themes. */
+  color: color-mix(in srgb, var(--cycle-soft, var(--accent-soft)) 85%, var(--fg));
   margin-bottom: 6px;
   display: block;
 }
@@ -713,7 +809,7 @@
 }
 
 .ad.dyk .ad-title {
-  color: var(--cycle-soft, var(--accent-soft));
+  color: color-mix(in srgb, var(--cycle-soft, var(--accent-soft)) 85%, var(--fg));
 }
 
 .ad.important {
@@ -725,7 +821,7 @@
 }
 
 .ad.important .ad-title {
-  color: var(--cycle, var(--accent));
+  color: color-mix(in srgb, var(--cycle, var(--accent)) 85%, var(--fg));
   font-weight: 600;
 }
 
@@ -1068,7 +1164,9 @@
 }
 
 .toc-card li.cur a {
-  color: var(--cycle, var(--accent));
+  /* Small text on the tinted current-row background: nudged toward --fg for
+     AA (plain --cycle was 3.9:1 in light mode). */
+  color: color-mix(in srgb, var(--cycle, var(--accent)) 85%, var(--fg));
   font-style: normal;
   font-family: var(--mono);
   font-size: 11px;
@@ -1152,9 +1250,21 @@
   font-style: normal;
 }
 
+/* Unpublished lessons: readable secondary grey (AA 4.5:1+ in both themes)
+   instead of the faded --fg-4, set apart from the links by the "soon" tag
+   rather than by near-invisible text. Matches the landing search's soon rows. */
 .continue-card .soon .k,
 .continue-card .soon .ttl {
-  color: var(--fg-4);
+  color: var(--fg-3);
+}
+
+.continue-card .soon-tag {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-left: 4px;
 }
 
 /* ---------- Mark-complete ---------- */

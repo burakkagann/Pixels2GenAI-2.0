@@ -5,6 +5,7 @@ title: "Thank You"
 objective: "A four-track staggered cinematic: characters slide in, a speech bubble fades in, text rises. Independent timelines composited per frame."
 framework: "hands-on"
 duration: "22–28 min"
+published: 2026-06-10
 level: "intermediate"
 prereqs: "8.1.2 (easing), 8.2.1 (multi-object animation)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A motion-graphics cinematic is rarely a single animation — it's **multiple staggered animations** that compose into a sequence. This lesson builds a "thank you" closing card from four independent timelines: a left character slides in, a right character slides in, a speech bubble fades in, and a "Thank You" text rises from below. Each animation runs on its own clock; the composer picks the right element from each timeline every frame.
 
@@ -67,7 +68,7 @@ text_ys = [200] * 100 + sine_move(200, 30, 40)
 The four animation tracks have no dependencies on each other — they're pure functions of frame index. You can rearrange the staggering by editing the offsets without touching the rendering code.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Per-parameter value sequences
 
@@ -125,7 +126,7 @@ For a more sophisticated composition, replace `paste` with explicit alpha compos
 The "fade in" of the bubble uses **alpha-channel modulation** — `bubble_alpha[f]` is multiplied into the bubble's existing alpha map before pasting. This works even if the bubble has a complex pre-existing transparency (rounded corners, drop shadow). For solid-rectangle elements, a simpler `alpha_composite` or blend would work.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: render the scene, restagger the timing, then add a fifth animation track.
 
@@ -254,11 +255,11 @@ The scene now has a celebratory confetti shower starting as the text appears. Co
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.2_thank_you/thank_you.py" label="thank_you.py — staggered cinematic" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -273,7 +274,7 @@ A motion-graphics cinematic is multiple animated parameters composed per frame. 
 - **Forgetting z-order.** Pasting the text first puts it behind the bubble. Order matters; back-to-front always.
 - **Stagger that hides motion.** If two tracks start and stop at the same time, you lose the cascading effect. Always offset by at least 5-10 frames.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

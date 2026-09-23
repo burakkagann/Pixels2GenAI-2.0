@@ -5,6 +5,7 @@ title: "Feedforward Networks"
 objective: "Stack multiple hidden layers and discover what depth buys you over width. A 2-8-8-1 network learns curved boundaries the perceptron and shallow XOR-trainer can't, and the same architecture scales up to classify handwriting and recognise images."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "9.1.2 (backprop on 2-2-1), 9.1.3 (activations)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Big question <a id="big-question"></a>
+## Big question
 
 *If a single hidden layer can approximate any continuous function (Universal Approximation Theorem, 1989), why does anybody build deeper networks?* The answer is that *width* and *depth* are different resources. A shallow but wide network needs exponentially many neurons to express the same function a deep narrow network captures in polynomially many [1]. Depth gives you **compositional structure**: each layer learns features built from features below. This is the central insight of modern deep learning — the network "discovers" useful intermediate representations on its own.
 
@@ -188,12 +189,12 @@ The fun of this exercise is *watching* the boundary morph. Networks don't go dir
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/feedforward_network.py" label="feedforward_network.py — train + visualise" />
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/feedforward_starter.py" label="feedforward_starter.py — Exercise starter" />
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

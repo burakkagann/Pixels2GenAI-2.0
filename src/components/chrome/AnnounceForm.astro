@@ -31,17 +31,19 @@ const { autofocus = false } = Astro.props;
   class="signup-form"
 >
   <input type="hidden" name="form-name" value="announcements" />
-  <p class="honeypot">
-    <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+  {/* Spam trap: off-screen, and also out of the Tab order and hidden from
+      screen readers so keyboard / AT users never land in it. */}
+  <p class="honeypot" aria-hidden="true">
+    <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
   </p>
 
   <label>
-    Email <span class="req">*</span>
+    <span class="lbl">Email <span class="req">*</span></span>
     <input type="email" name="email" required autocomplete="email" autofocus={autofocus} />
   </label>
 
   <label>
-    Name <span class="opt">— optional</span>
+    <span class="lbl">Name <span class="opt">— optional</span></span>
     <input type="text" name="name" autocomplete="name" />
   </label>
 
@@ -55,7 +57,7 @@ const { autofocus = false } = Astro.props;
   </fieldset>
 
   <label>
-    What would you hope the next one covers? <span class="opt">— optional</span>
+    <span class="lbl">What would you hope the next one covers? <span class="opt">— optional</span></span>
     <textarea name="interests" rows="3" placeholder="One or two sentences. For workshops, this genuinely shapes the module selection."></textarea>
   </label>
 

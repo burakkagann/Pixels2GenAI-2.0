@@ -5,6 +5,7 @@ title: "Flow Matching"
 objective: "Train a generative model that learns a velocity field mapping noise to data along straight paths, sample with an Euler ODE integrator in 50 steps, and see why it needs 5-20× fewer steps than DDPM for comparable quality."
 framework: "conceptual"
 duration: "35–45 min"
+published: 2026-02-09
 level: "advanced"
 load: "3 core concepts"
 prereqs: "Lesson 12.3.1 (DDPM Basics) helpful but not required; PyTorch, basic ODE intuition"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 DDPM trains a network to undo a noise schedule and samples by reversing that schedule step by step — a curved, stochastic walk through a thousand small denoisings. It works, and the [Lesson 12.3.1](/lessons/12.3.1) lessons go through the details, but the curve is the problem. Curved paths through high-dimensional space need a lot of small steps to follow accurately. Cut the step count and the trajectory drifts off the curve into regions the model can't recover from.
 
@@ -75,7 +76,7 @@ x = x.clamp(-1, 1)                 # fabric patterns
 
 That's the whole sampling procedure. No noise schedule, no posterior-variance bookkeeping, no separate clamping at each step. Train one network to predict `dx/dt`, then numerically integrate.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Straight paths instead of stochastic curves
 
@@ -155,7 +156,7 @@ Higher-order integrators (midpoint, RK4, Heun) need fewer steps for the same num
 The integer-vs-float-time difference between DDPM and Flow Matching catches people. DDPM's `t` is a discrete index into a noise schedule (`t = 0, 1, ..., T-1`). Flow Matching's `t` is a continuous real number in `[0, 1]`. Mixing them up by feeding `t = 50` to a Flow Matching model where you meant `t = 50/1000 = 0.05` is a common porting bug; the model produces noise-like output for the entire trajectory and you spend an hour debugging the wrong thing.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate 16 fabric patterns from the pre-trained model">
 
@@ -288,7 +289,7 @@ python exercise3_train.py --train     # starts the 100k-step run
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 Flow Matching reframes generative modelling as learning a velocity field along straight-line paths from noise to data, rather than learning to undo a noise schedule. The training objective collapses to a five-line MSE between the network's predicted velocity and the constant displacement `x_1 - x_0`; sampling is plain Euler integration of the learned velocity field, typically 20–50 steps for image quality competitive with DDPM at 200+ steps. The same U-Net backbone works for both — only the objective and the sampler change — which means Flow Matching is a drop-in replacement for diffusion in most pipelines, and explains why it has propagated rapidly into production text-to-image systems like FLUX.1 and Stable Diffusion 3.
@@ -302,7 +303,7 @@ Flow Matching reframes generative modelling as learning a velocity field along s
 - Forgetting `model.eval()` before sampling. BatchNorm in training mode is the usual culprit when "the same trained model gives different results."
 - Using Euler when a higher-order integrator would help — for `n_steps < 10`, switch to midpoint or RK4 to recover quality without retraining.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

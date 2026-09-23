@@ -231,8 +231,15 @@ const navItems = [
 
   // First arrival per session: the GitHub star chip assembles once. The
   // octocat wave only plays when it isn't roaming the header (see canRoam).
-  if (!sessionStorage.getItem(SESSION_KEY)) {
-    sessionStorage.setItem(SESSION_KEY, '1');
+  // sessionStorage throws when storage is blocked (some privacy modes);
+  // unguarded, that aborted this whole module before the theme toggle below
+  // was wired up. Treat "can't tell" as not-first-visit: no animation.
+  let firstVisit = false;
+  try {
+    firstVisit = !sessionStorage.getItem(SESSION_KEY);
+    if (firstVisit) sessionStorage.setItem(SESSION_KEY, '1');
+  } catch {}
+  if (firstVisit) {
     if (!canRoam) octo?.classList.add('octo--play');
     if (ghChip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       ghChip.classList.add('gh-play');
@@ -440,6 +447,12 @@ const navItems = [
   };
 
   syncToggleState(document.documentElement.getAttribute('data-theme') ?? 'dark');
+  // Base.astro dispatches themechange when the OS theme flips and no choice
+  // is stored; keep the toggle's pressed state and label in step with it.
+  document.addEventListener('themechange', (e) => {
+    const theme = (e as CustomEvent<{ theme: string }>).detail?.theme;
+    if (theme) syncToggleState(theme);
+  });
 
   toggle?.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme') ?? 'dark';

@@ -5,6 +5,7 @@ title: "Interpolation Animations"
 objective: "Use a pre-trained convolutional VAE on 64×64 RGB abstract patterns to build smooth morphing animations — first linear paths, then spherical paths, then multi-keypoint loops."
 framework: "conceptual"
 duration: "30–35 min"
+published: 2026-02-06
 level: "intermediate-advanced"
 load: "3 core concepts"
 prereqs: "Lesson 12.2.1 (Latent Space Exploration), PyTorch basics"
@@ -28,7 +29,7 @@ backLink:
   pixelated
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 [Lesson 12.2.1](/lessons/12.2.1) trained a tiny VAE on four 16×16 line patterns and made a single 8-step interpolation between two of them. The interpolation worked, but the toy data limited what you could actually see — the morphs looked like line drawings sliding into each other.
 
@@ -80,7 +81,7 @@ imageio.mimsave('my_animation.gif', frames, fps=15)
 
 That's Figure 1, give or take the random seed. The rest of this lesson is about the choices hiding inside that one-line interpolation expression and the loop wrapped around it.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — A bigger VAE, the same KL guarantee
 
@@ -186,7 +187,7 @@ Frame count is the other knob worth understanding. Roughly: 5–10 frames per se
 The VAE decoder outputs values in `[-1, 1]` because the training data was normalised that way. Forgetting the `(img + 1) / 2` step in the conversion pipeline produces frames that imageio writes as either solid black (if you also clamp) or noisy garbage (if you don't). This is the single most common GIF-pipeline bug.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate the 30-frame morph and four sample frames">
 
@@ -361,7 +362,7 @@ def ease_in_out(t):
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 VAE latent spaces produce smooth morphing animations because their KL-regularised structure guarantees that every point along a continuous path decodes to a plausible output. Linear interpolation between two latent vectors is the default and is enough for most cases, but spherical interpolation (slerp) corrects the midpoint magnitude dip that linear paths introduce in high-dimensional spaces — useful when latent magnitude correlates with output intensity. Chaining segments through multiple keypoints, trimming duplicate frames, and setting `loop=0` on the GIF write turns single-segment morphs into seamless loops.
@@ -375,7 +376,7 @@ VAE latent spaces produce smooth morphing animations because their KL-regularise
 - Slerp without the small-omega fallback — when the two endpoints are nearly parallel, `sin(omega)` approaches zero and you get NaN frames mid-animation.
 - GIF file bloat — 30+ frames at high resolution can hit several megabytes fast; balance perceived smoothness against bandwidth.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

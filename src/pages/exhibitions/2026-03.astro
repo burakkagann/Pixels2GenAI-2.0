@@ -21,7 +21,7 @@ const printGroups = ex.printSeries ?? [
 
 <Base
   title={`Exhibition ${indexDisplay} · ${ex.date}`}
-  description={`Pixels2GenAI · Exhibition ${indexDisplay} — a one-day group show in ${ex.city} on ${ex.date}. Six artists working across printed and code-driven media. Co-organised with Academis.`}
+  description={`Pixels2GenAI · Exhibition ${indexDisplay} — a two-day group show in ${ex.city}, opening ${ex.date}. Six artists working across printed and code-driven media. Co-organised with Academis.`}
   ogImage={ex.poster}
 >
   <main id="main-content" class="exhibition-page">
@@ -39,7 +39,7 @@ const printGroups = ex.printSeries ?? [
     <section class="exhibition-section" id="feature">
       <h2>Exhibition {ex.ordinal.toUpperCase()} · <em>{ex.date}.</em></h2>
       <p class="deck">
-        A one-day group show co-organised with
+        A two-day group show co-organised with
         <a href={ex.organiserHref} target="_blank" rel="noopener">{ex.organiser}</a>.
         Six artists. Printed work on the walls; code-driven installations on screens and projection.
       </p>

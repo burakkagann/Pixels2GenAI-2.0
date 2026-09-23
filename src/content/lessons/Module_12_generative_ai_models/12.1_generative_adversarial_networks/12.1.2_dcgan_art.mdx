@@ -5,6 +5,7 @@ title: "DCGAN Art"
 objective: "Generate abstract art with a Deep Convolutional GAN; explore the learned latent space; train the network from scratch on African fabric patterns."
 framework: "conceptual"
 duration: "35–40 min"
+published: 2026-01-12
 level: "intermediate-advanced"
 load: "3 architecture concepts"
 prereqs: "PyTorch basics, convolutions"
@@ -28,7 +29,7 @@ backLink:
   pixelated
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 Deep Convolutional Generative Adversarial Networks (DCGANs) were introduced by Radford et al. in 2015. They apply convolutional neural network architectures to the GAN framework, producing images with coherent spatial structure where fully-connected GANs produced noise.
 
@@ -86,7 +87,7 @@ plt.savefig('quick_start_output.png', dpi=150)
 
 The generator transforms 100-dimensional random noise vectors into 64×64 pixel RGB images. The patterns exhibit smooth gradients, geometric shapes, and colour harmonies learned from training data.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — From fully-connected to convolutional
 
@@ -196,7 +197,7 @@ def interpolate(z1, z2, steps=10):
 Latent spaces are fundamental to many generative models, not just GANs. Variational Autoencoders (VAEs) and diffusion models also use latent representations, though they organise and sample from these spaces differently. Understanding latent spaces in DCGANs provides a foundation for those more advanced architectures.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Observe DCGAN generation">
 
@@ -386,7 +387,7 @@ Watch the generator's visual progression across checkpoints:
 
 </Exercise>
 
-## Implementation note <a id="implementation-note"></a>
+## Implementation note
 
 <Admonition type="note">
 
@@ -428,7 +429,7 @@ Generated patterns are AI interpretations, not authentic cultural artifacts. Thi
 
 </Admonition>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -449,7 +450,7 @@ Generated patterns are AI interpretations, not authentic cultural artifacts. Thi
 - **Wrong output range** — forgetting Tanh or input normalisation causes divergence.
 - **Dimension mismatches** — latent vectors must have shape `(batch, latent_dim, 1, 1)`, not `(batch, latent_dim)`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Pix2Pix Applications"
 objective: "Translate one image into another (label-to-photo, sketch-to-colour) with a conditional GAN: U-Net generator preserves spatial structure, PatchGAN discriminator enforces local realism, L1+adversarial loss balances accuracy against sharpness."
 framework: "conceptual"
 duration: "35–45 min"
+published: 2026-01-14
 level: "intermediate-advanced"
 load: "4 core concepts"
 prereqs: "Lessons 12.1.1, 12.1.2, 12.1.3 (the GAN family); free Kaggle account for the optional from-scratch retrain"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 DCGAN [Lesson 12.1.2](/lessons/12.1.2) generates fabric patterns from random noise. StyleGAN [Lesson 12.1.3](/lessons/12.1.3) generates them with controllable disentangled latents. Both are *unconditional* — the input is noise, and the only thing controlling the output is which random seed you picked.
 
@@ -86,7 +87,7 @@ The input is a coloured segmentation label (different colours = walls, windows, 
   role="output"
 />
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Conditional vs unconditional generation
 
@@ -202,7 +203,7 @@ Why both? Each fixes the other's weakness. Pure adversarial loss produces sharp 
 The `λ = 100` default is calibrated for the original paper's tasks (facades, edges-to-photos, colourisation) at 256×256 resolution. For tasks where you want sharper outputs at the cost of slight spatial imprecision, lower `λ` (try 10–50). For tasks where you want pixel-perfect alignment at the cost of slight blurriness, raise it (try 200+). The trade-off is monotonic.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Run the pre-trained facades model on sample labels">
 
@@ -395,7 +396,7 @@ After training, run the model on sketches you draw yourself. The model has seen 
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 Pix2Pix turns the GAN framework from random generation into structured image-to-image translation by replacing the noise input with an input image, training on paired data, and combining three architectural choices: a U-Net generator whose skip connections preserve pixel-aligned spatial detail through the bottleneck, a PatchGAN discriminator whose patch-level real/fake scoring concentrates training pressure on local texture, and a combined L1+adversarial loss whose two terms each fix the other's weakness (L1 for accuracy, GAN for sharpness). The same template — conditional GAN + U-Net + patch discriminator + L1+adversarial loss — generalises to almost any paired image-translation task: facades-to-photo, sketch-to-colour, day-to-night, edge-to-shoe. CycleGAN [4] and later work extended the approach to unpaired data; modern image-conditioned diffusion models like ControlNet (Lesson 12.3.2) carry the conditioning idea forward into the diffusion paradigm.
@@ -409,7 +410,7 @@ Pix2Pix turns the GAN framework from random generation into structured image-to-
 - Training with a batch size that's too large. Pix2Pix's original paper used batch size 1; PatchGAN works best when each forward pass sees one example fully rather than averaging across a batch.
 - Using a single-scalar discriminator. Without PatchGAN's patch-level scoring, local artefacts go unpenalised and outputs look smeared up close.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

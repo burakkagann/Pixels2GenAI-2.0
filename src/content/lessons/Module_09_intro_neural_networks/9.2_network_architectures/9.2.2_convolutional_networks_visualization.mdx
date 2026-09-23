@@ -5,6 +5,7 @@ title: "Convolutional Networks"
 objective: "Replace fully-connected layers with convolutions: shared weights that slide across the image. The same trick used as a kernel in 3.4.1 becomes the central operation of every computer-vision network from LeNet (1998) to today."
 framework: "conceptual"
 duration: "35–40 min"
+published: 2026-02-06
 level: "intermediate-advanced"
 load: "3 core concepts"
 prereqs: "3.4.1 (convolution), 9.2.1 (feedforward nets)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Big question <a id="big-question"></a>
+## Big question
 
 *Why don't we just use a giant feedforward network on images?* A 224×224 RGB image has 150,528 input pixels. A single fully-connected hidden layer with 1000 neurons would have 150 million weights — *for one layer*. Most of those weights would learn redundant local-pattern detectors for every pixel position. Yann LeCun's insight in 1989 was that the same edge detector should work at every location: share the weights across positions. The **convolutional layer** is born — a tiny 3×3 or 5×5 filter, slid across the image, learning *one* feature detector that runs everywhere [1, 2]. This single architectural idea is what made computer-vision deep learning practical.
 
@@ -209,12 +210,12 @@ You're rebuilding LeNet's first half. The convolution implementation in pure Pyt
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.2_convolutional_networks_visualization/cnn_visualization.py" label="cnn_visualization.py — apply learned filters" />
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.2_convolutional_networks_visualization/cnn_starter.py" label="cnn_starter.py — tiny CNN forward pass" />
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

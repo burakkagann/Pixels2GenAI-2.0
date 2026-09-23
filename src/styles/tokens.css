@@ -41,7 +41,7 @@
   --fg:   #F0E7D8;
   --fg-2: #ABA294;
   --fg-3: #8A8273;
-  --fg-4: #443F38;
+  --fg-4: #66625C; /* was #443F38 (1.75:1): inactive/decorative tier, now 3:1 on --bg-2 */
 
   /* ---------- Lines ---------- */
   --line:        #2B2536;
@@ -76,6 +76,9 @@
   --studio-dim:  #862E54;
   --studio-tint: rgba(244, 102, 154, 0.10);
   --studio-glow: rgba(244, 102, 154, 0.45);
+  /* Pink as TEXT (research-question tags, live readouts). Same as --studio
+     on dark; the light theme darkens it, because #F4669A is 2.6:1 on cream. */
+  --studio-text: var(--studio);
 
   /* ---------- Highlight — Warm Yellow (editorial only — eyebrows, drop caps) ---------- */
   --highlight: #F0C26B;
@@ -125,6 +128,12 @@
   --pad-x: clamp(20px, 4vw, 56px);
   --read-w: 72ch;
   --t-scale: 1;
+  /* Rendered height of the single-row sticky FrameTop (>920px). The landing
+     cover subtracts it to fit the first screen. Not load-bearing: if the
+     header grows and this is not updated, the cover overshoots the fold by
+     the difference and the page simply scrolls. Keep in step with
+     .frame-top padding in landing.css. */
+  --frame-h: 64px;
 
   /* Clearance for in-page anchor targets under the sticky FrameTop
      (consumed by the [id] scroll-margin rule in base.css; lesson pages
@@ -181,7 +190,7 @@
   --fg:   #15101C;
   --fg-2: #3A3340;
   --fg-3: #5C5564;
-  --fg-4: #8C8694;
+  --fg-4: #86818E; /* 3:1 on --bg-2 (inactive/decorative tier only; body copy uses --fg-3 or darker) */
 
   /* ---------- Lines — warm-gray hairlines ---------- */
   --line:        #CFC7B5;
@@ -190,22 +199,25 @@
   --line-warm-2: #C2B596;
 
   /* ---------- Foundations — deeper lichen green ---------- */
-  --c1:      #4D7A2F;
-  --c1-soft: #5E8F3E;
+  /* --c1 / --c1-soft / --c2 / --c2-soft / --c3-soft / --warn are used as small
+     text: each is the smallest darkening of its hue that holds WCAG AA 4.5:1 on
+     both --bg and --bg-2 (previously 2.9-4.5:1). */
+  --c1:      #48712C; /* was #4D7A2F */
+  --c1-soft: #4A7131; /* was #5E8F3E */
   --c1-dim:  #2F5018;
   --c1-tint: rgba(77, 122, 47, 0.14);
   --c1-wash: rgba(77, 122, 47, 0.06);
 
   /* ---------- Machine Learning — deep electric blue ---------- */
-  --c2:      #1E6FBF;
-  --c2-soft: #2E83D2;
+  --c2:      #1C69B5; /* was #1E6FBF */
+  --c2-soft: #256AAA; /* was #2E83D2 */
   --c2-dim:  #134A82;
   --c2-tint: rgba(30, 111, 191, 0.14);
   --c2-wash: rgba(30, 111, 191, 0.06);
 
   /* ---------- Generative AI — deep violet ---------- */
   --c3:      #6B3FAA;
-  --c3-soft: #7F52C0;
+  --c3-soft: #7C50BC; /* was #7F52C0 */
   --c3-dim:  #482675;
   --c3-tint: rgba(107, 63, 170, 0.14);
   --c3-wash: rgba(107, 63, 170, 0.06);
@@ -213,6 +225,7 @@
   /* ---------- Studio Ink — brand pink invariant. Alpha variants bumped for cream. ---------- */
   --studio-tint: rgba(244, 102, 154, 0.16);
   --studio-glow: rgba(244, 102, 154, 0.55);
+  --studio-text: #A8466A; /* AA 4.5:1 on cream; --studio stays the brand pink for fills */
 
   /* ---------- Highlight — deep amber (drop caps, eyebrows) ---------- */
   --highlight: #B57B17;
@@ -225,7 +238,7 @@
   /* ---------- Semantic aliases — accent-glow needs explicit re-derivation ---------- */
   --accent-glow: rgba(107, 63, 170, 0.45);
   --link-hover: #155299;
-  --warn:       #A85F1F;
+  --warn:       #99561C; /* was #A85F1F */
 
   /* ---------- Admonition note ---------- */
   --note-border: #6F7A8C;

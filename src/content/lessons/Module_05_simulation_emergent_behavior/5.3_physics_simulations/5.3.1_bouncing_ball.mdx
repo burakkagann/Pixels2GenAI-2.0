@@ -5,6 +5,7 @@ title: "Bouncing Ball — Gravity and Collisions"
 objective: "Build the smallest possible physics simulation — gravity, integration, and wall collisions — and use it to feel the fundamental loop that powers every later simulation in this module."
 framework: "hands-on"
 duration: "14–18 min"
+published: 2026-06-11
 level: "beginner"
 load: "3 core concepts"
 prereqs: "5.1.1 (particle systems)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A bouncing ball is the smallest non-trivial physics simulation. It has one moving object, one constant force (gravity), and one event type (wall collision). That is enough to require **Euler integration**, **velocity-clamp collision response**, and a per-frame loop — and those three primitives recur in every later simulation in the module, from N-body gravity to cloth dynamics. Get the bouncing ball right and you have most of the toolbox. Get it wrong — for example, by forgetting to clamp the position to the wall after a collision — and the same bug will haunt you for ten lessons. This lesson keeps the physics as small as possible so the bugs are easy to see.
 
@@ -60,7 +61,7 @@ if self.y + self.radius > HEIGHT:
 Setting `BOUNCE_DAMPING = 1.0` makes the bounce perfectly elastic — the ball would bounce forever. Real-world surfaces dissipate energy as heat and sound; we approximate that with one multiplicative factor per bounce.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Euler integration with constant force
 
@@ -123,7 +124,7 @@ The trail is bounded (`TRAIL_LEN` is constant), the fade is linear in age, and e
 Asteroids (Atari, 1979) used the vector-display CRT's phosphor afterglow to *automatically* produce ship trails — no code at all. The hardware faded old strokes. When the game was ported to raster displays in the 1980s, the trail had to be reproduced explicitly, exactly as we do above.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order.
 
@@ -229,12 +230,12 @@ The `elif` keeps both x-walls from triggering on a single frame; same for y.
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball.py" label="bouncing_ball.py — full reference implementation" />
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball_starter.py" label="bouncing_ball_starter.py — Exercise 3 scaffold" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -250,7 +251,7 @@ The bouncing ball is three primitives: Euler integration, clamp-then-reflect col
 - Drawing the trail *after* the ball. The ball is hidden by its own trail tail.
 - Using `int` for position. Sub-pixel motion vanishes and slow balls freeze.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

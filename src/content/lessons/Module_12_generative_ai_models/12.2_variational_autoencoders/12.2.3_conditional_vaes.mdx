@@ -5,6 +5,7 @@ title: "Conditional VAEs"
 objective: "Add label conditioning to a VAE by concatenating one-hot vectors into both encoder and decoder inputs; train it on MNIST and generate digits on demand."
 framework: "conceptual"
 duration: "30–35 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "Lessons 12.2.1 and 12.2.2, basic PyTorch"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 The VAE from the previous two lessons can generate samples, but it can't generate *specific* samples. Sampling `z ~ N(0, I)` and decoding gives you something the model considers plausible — which abstract pattern, which digit, which face, you don't get to say. For artistic work that's often fine. For anything that needs targeted output it isn't.
 
@@ -93,7 +94,7 @@ print(f"Generated a '7': shape {m.generate([7]).shape}")
 
 Run it with random (untrained) weights and you get noise — the architecture is there but the model knows nothing yet.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why vanilla VAEs can't take requests
 
@@ -187,7 +188,7 @@ The interesting demonstration of what conditioning bought you is to fix `z` and 
 The CVAE only works if the encoder *uses* the label channel. The failure mode where the encoder learns to encode the digit identity into the latent vector — silently making the label redundant — is called **label leakage**. The KL penalty mitigates it (the prior is class-agnostic, so encoding identity wastes KL budget) but doesn't prevent it entirely. The diagnostic is the top row of Figure 3: if all ten outputs look like the same digit despite different `y`, the encoder is leaking and you need a stronger KL weight or a smaller latent dimension.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Train the CVAE on MNIST and inspect every visualisation">
 
@@ -381,7 +382,7 @@ Add a second conditioning variable for digit *thickness* — thin, medium, thick
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 A Conditional VAE adds targeted-generation control to the VAE framework with a single architectural change: concatenate a one-hot label vector onto both the encoder input and the decoder input, leave everything else (reparameterisation, KL-regularised latent, BCE reconstruction loss) unchanged. The label channel takes over class-identity separation; the latent space is freed to encode the within-class style variation that the unconditional VAE had to use for identity. Training pressure makes the model use the label correctly because the reconstruction loss demands class-appropriate outputs, and the KL penalty prevents the encoder from leaking identity information back into the latent.
@@ -395,7 +396,7 @@ A Conditional VAE adds targeted-generation control to the VAE framework with a s
 - Mismatched one-hot encoding — using `labels.float()` instead of `F.one_hot(labels, 10).float()` feeds a scalar where the decoder expects a 10-vector; the resulting weight matrix dimension errors are sometimes hard to read.
 - Forgetting `model.eval()` before generation — leaves BatchNorm and Dropout in training mode and produces noisier outputs than the model is actually capable of.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

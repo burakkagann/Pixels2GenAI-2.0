@@ -5,6 +5,7 @@ title: "Face Detection"
 objective: "MediaPipe Face Mesh returns 478 landmark points per detected face. Feed them into Delaunay triangulation (3.3.5) and you get an instant low-poly portrait."
 framework: "hands-on"
 duration: "30–35 min"
+published: 2026-01-04
 level: "intermediate"
 prereqs: "3.3.5 (Delaunay triangulation), 11.1.1 (capture loop)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Face detection — finding where faces are in an image — is one of the oldest computer-vision applications. The Viola-Jones cascade classifier (2001) made it real-time on desktop hardware [1]; deep-net detectors made it real-time on mobile in the 2010s. Today, Google's **MediaPipe Face Mesh** (2019) is the de facto choice: 478 facial landmarks per detected face, 30+ fps on a laptop CPU, runs in the browser via WebAssembly [2].
 
@@ -84,7 +85,7 @@ cv2.imwrite('lowpoly.png', cv2.cvtColor(output, cv2.COLOR_RGB2BGR))
 The whole pipeline is **three lines** under MediaPipe's API: detect landmarks, triangulate, fill polygons. The hard work (the deep neural net that finds 478 facial landmarks at 30 fps) is hidden inside MediaPipe's `FaceLandmarker`. Everything you write is the *artistic interpretation* on top.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Detection vs. recognition
 
@@ -112,7 +113,7 @@ for face in result.face_landmarks:
 The 478 points are organised into named regions: 27 around each eye, 80 around the mouth, 40 along the jawline, etc. Face Mesh's documentation [3] includes a connectivity diagram showing which points form which features. You can filter to specific regions (jawline only, eyes only) by indexing the landmarks array with the published index ranges.
 
 <Admonition type="dyk" title="Did you know · Snapchat invented the modern face filter">
-Snapchat Lenses launched in 2015 with face-tracking-driven AR filters — sunglasses pasted onto your eyes, dog ears on your head, face swaps. The underlying technology was an Israeli company (Looksery) that Snapchat acquired in 2015 for $150M [4]. Their detection model used a similar landmark architecture to MediaPipe's. By 2024, every major social platform (Instagram, TikTok, BeReal, Threads) has integrated face filters built on the same primitive: detect landmarks, render geometry anchored to them.
+Snapchat Lenses launched in 2015 with face-tracking-driven AR filters — sunglasses pasted onto your eyes, dog ears on your head, face swaps. The underlying technology was an Israeli company (Looksery) that Snapchat acquired in 2015 for \$150M [4]. Their detection model used a similar landmark architecture to MediaPipe's. By 2024, every major social platform (Instagram, TikTok, BeReal, Threads) has integrated face filters built on the same primitive: detect landmarks, render geometry anchored to them.
 </Admonition>
 
 ### Concept 3 — Landmark Delaunay + colour fill
@@ -151,7 +152,7 @@ The result reads as a low-poly portrait: facial structure is preserved (the tria
 Sampling **one pixel per triangle** loses fine colour detail (skin tone variation, eye colour) because each triangle gets exactly one source pixel. For more nuanced results, average over the triangle's interior pixels: `color = image[mask].mean(axis=0)`. The visual difference between 1-pixel-sample and full-mean-sample is subtle but noticeable in mouth and eye regions.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: render the demo, sweep parameters, then build a real-time version.
 
@@ -273,7 +274,7 @@ The `IMAGE` running mode processes one frame at a time synchronously — good en
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/lowpoly_face.py" label="lowpoly_face.py — still-image reference" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/realtime_lowpoly.py" label="realtime_lowpoly.py — webcam version" />
@@ -281,7 +282,7 @@ The `IMAGE` running mode processes one frame at a time synchronously — good en
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/face_detection_basic.py" label="face_detection_basic.py — bounding-box detection" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/sample_face.jpg" label="sample_face.jpg — CC0 sample portrait" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -296,7 +297,7 @@ Face *detection* finds where faces are; face *recognition* identifies who they a
 - **Forgetting `num_faces`.** Default is 1; for group photos set higher.
 - **Treating detection as recognition.** The 478 landmarks describe *shape*, not *identity*. Don't repurpose this pipeline for access control.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

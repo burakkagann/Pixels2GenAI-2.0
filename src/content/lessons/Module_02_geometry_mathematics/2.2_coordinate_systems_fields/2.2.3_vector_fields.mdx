@@ -5,6 +5,7 @@ title: "Vector Fields"
 objective: "Assign a direction to every pixel, recover its angle with `np.arctan2(dy, dx)`, then map angle to hue on the colour wheel — turning invisible flow into visible pattern."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-09
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.2.1 (linspace, broadcasting), 2.2.2 (polar coordinates)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A vector field assigns a direction to every point in space — wind across a weather map, water in a current, the gravity vector pointing back toward Earth's centre [1]. Most of those fields are invisible. Visualising one is the inverse problem: take `(dx, dy)` per pixel, recover the **angle** with `np.arctan2`, then map angle to **hue** on the colour wheel. The result is a pattern where colour reveals direction, and combining a few simple fields — radial in, radial out, rotational — gives you vortexes, spirals, and the whole vocabulary of fluid-style flow.
 
@@ -78,7 +79,7 @@ Image.fromarray(rgb, mode='RGB').save('simple_vector_field.png')
 Each pixel carries an arrow you cannot see directly. The colour wheel makes the arrows visible by giving every direction its own hue — the same trick used in scientific flow visualisation [2].
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Vector fields and `arctan2`
 
@@ -152,7 +153,7 @@ dy = 0.7 * dy_rot + 0.3 * dy_rad
 
 The weights set the character: 100% rotation gives clean circular flow; 100% inward gives a sink; 70/30 gives the spiral pull of a draining bath or a hurricane seen from above. Maxwell's equations describe real electromagnetic fields the same way — as superpositions of simple radial and rotational components [5].
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the radial field, swap to outward and rotational, then build a weighted vortex.
 
@@ -362,13 +363,13 @@ Image.fromarray(rgb, mode='RGB').save('vortex_field.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields/simple_vector_field.py" label="simple_vector_field.py — radial inward" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields/vector_field_variations.py" label="vector_field_variations.py — four primitives" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields/vortex_field_solution.py" label="vortex_field_solution.py — weighted vortex" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -383,7 +384,7 @@ A vector field is `(dx, dy)` per pixel; `np.arctan2(dy, dx)` recovers the angle,
 - Dividing by `distance` without guarding `distance == 0` — silent NaNs propagate through the entire image.
 - Mismatched broadcasting: if your `dx`, `dy` aren't both `(H, W)` after broadcasting, `arctan2` will broadcast in an unexpected direction.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

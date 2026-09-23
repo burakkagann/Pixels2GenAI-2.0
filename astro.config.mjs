@@ -2,6 +2,8 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // Wrap content from each h2 to the next h2 in a <section class="lesson-section">.
 // Drives the manuscript-margin-gloss side-rail (Option F) in prose.css —
@@ -68,17 +70,26 @@ export default defineConfig({
       // github-light-high-contrast keeps every token at WCAG AA even on a WARM
       // CREAM code surface (stock github-light and github-light-default both
       // drop the keyword/comment tokens below 4.5:1 on cream — only the
-      // high-contrast palette holds). github-dark is unchanged for dark theme.
-      themes: { light: 'github-light-high-contrast', dark: 'github-dark' },
+      // high-contrast palette holds). Dark uses github-dark-default: the older
+      // github-dark's comment grey #6A737D was 3.6:1 on the warm --code-surface
+      // (#1E1A14); -default's #8B949E is 5.6:1 and every other token is >= 6.9:1.
+      themes: { light: 'github-light-high-contrast', dark: 'github-dark-default' },
       defaultColor: false,
     },
   },
   integrations: [
     react(),
-    mdx({ remarkPlugins: [remarkSectionize] }),
+    // remark-math parses $…$ / $$…$$ in lesson prose into math nodes (before
+    // MDX escape handling, so `\,` and `\theta` survive); rehype-katex renders
+    // them to static HTML at build time, no client JS. KaTeX CSS is imported
+    // by Lesson.astro. A literal dollar sign in prose must be written `\$`.
+    // Frontmatter strings and component props (objective, caption=…) are not
+    // Markdown and are not rendered: keep them plain text.
+    mdx({ remarkPlugins: [remarkSectionize, remarkMath], rehypePlugins: [rehypeKatex] }),
     sitemap({
       // The /og/*.png endpoints are social-card images, not crawlable pages.
-      filter: (page) => !page.includes('/og/'),
+      // /announce/thanks (form confirmation) and /404 are noindex pages.
+      filter: (page) => !page.includes('/og/') && !/\/(announce\/thanks|404)(\.html)?$/.test(page),
     }),
   ],
   vite: {

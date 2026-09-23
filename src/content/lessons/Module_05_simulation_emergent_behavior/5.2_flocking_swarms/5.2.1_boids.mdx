@@ -5,6 +5,7 @@ title: "Boids — Flocking from Three Rules"
 objective: "Implement Craig Reynolds's 1987 boids algorithm — separation, alignment, cohesion — and watch coordinated flocks emerge from agents that only see their nearest neighbours."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-12-16
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "5.1.1 (particle systems), basic NumPy broadcasting"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A starling murmuration looks like one organism, but each bird is following three rules and looking at maybe seven neighbours. Craig Reynolds published that observation in 1987 as the **boids algorithm** — short for *bird-oid objects* — and it became the canonical demonstration of **emergent behaviour**, the way that complex global patterns arise from agents that share no global view [1]. In this lesson you will implement separation, alignment, and cohesion, render 30 boids into a 400×400 GIF, and feel the moment when the system tips from random drift into coordinated motion. The same three-rule recipe ran the bat swarm in *Batman Returns* (1992) and the wildebeest stampede in *The Lion King* (1994); it has not aged a day.
 
@@ -73,7 +74,7 @@ imageio.mimsave('simple_flock.gif', frames, fps=20)
 The above quick-start has *only* cohesion, no neighbourhood, and no separation — which is why the dots collapse into one tight blob. Adding separation prevents collisions; adding alignment is what turns the cluster into a moving flock rather than a vibrating ball.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Emergence from local rules
 
@@ -169,7 +170,7 @@ Push separation high and the flock spreads into a nervous cloud. Push cohesion h
 Boids has been called the "Hello World" of agent-based simulation. Every later flocking algorithm — Couzin's zonal model, Vicsek's self-propelled particles, modern swarm robotics — is a refinement of the same three primitives [3, 5].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the canonical simulation, retune its weights, then add a fourth rule of your own.
 
@@ -300,12 +301,12 @@ Add `OBSTACLE_WEIGHT * obstacle_avoidance(positions)` to the velocity update wit
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/boids.py" label="boids.py — full reference implementation" />
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/boids_starter.py" label="boids_starter.py — Exercise 3 scaffold with TODOs" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -321,7 +322,7 @@ Boids is three rules applied to a local neighbourhood: separation (push), alignm
 - Tuning weights without re-randomising the seed each run. You will mistake one lucky initial condition for the algorithm's behaviour.
 - Edge-wrapping in pixel space without also wrapping in the neighbour search. Boids on opposite sides of the canvas should see each other if the world is toroidal.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

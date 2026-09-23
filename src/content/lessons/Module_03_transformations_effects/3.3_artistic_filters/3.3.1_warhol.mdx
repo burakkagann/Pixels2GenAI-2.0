@@ -5,6 +5,7 @@ title: "Warhol Pop Art"
 objective: "Permute the RGB channel order — `image[:, :, [2, 0, 1]]` — to build six instantly different colour palettes from one source image, then arrange four of them into a 2×2 grid in Warhol's silkscreen tradition."
 framework: "hands-on"
 duration: "15–18 min"
+published: 2025-12-13
 level: "beginner"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic NumPy slicing"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Andy Warhol's *Marilyn Diptych* (1962) showed the same photographic image fifty times, with different ink colours per silkscreen pass. The radical idea was treating the colour palette itself as a *variable* of the work, not a fixed property of the subject [1]. In NumPy this collapses to one operation — **channel permutation** — `image[:, :, [2, 0, 1]]` reorders the colour axis without touching the pixel values. Six permutations of three channels give six instantly different palettes, all from a single source array. Lay four of them in a 2×2 grid and you have a Warhol pastiche in about ten lines of code [2].
 
@@ -74,7 +75,7 @@ Image.fromarray(canvas).save('simple_warhol.png')
 The four quadrants share *identical pixel values*. The only thing that differs between them is the order in which those three values are interpreted as red, green, and blue. The visual variety comes from human perception, not from any computation.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Channel permutation
 
@@ -146,7 +147,7 @@ Reads as *paste them in row-major order.* Shorter for regular grids; awkward whe
 
 The two methods are interchangeable for this lesson. Pick the one whose intent matches yours.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a six-panel grid, swap permutations, then build a 2×2 from your own source image.
 
@@ -337,13 +338,13 @@ Image.fromarray(canvas).save('my_warhol.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol/simple_warhol.py" label="simple_warhol.py — quick-start 2×2 grid" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol/warhol_starter.py" label="warhol_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol/warhol_solution.py" label="warhol_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -359,7 +360,7 @@ Image.fromarray(canvas).save('my_warhol.png')
 - Using `np.concatenate(axis=0)` instead of `np.vstack` — equivalent in 2D and 3D but `vstack` is more readable.
 - Forgetting that the second slice endpoint is exclusive: `0:H` covers pixels `0..H-1`, not `0..H`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

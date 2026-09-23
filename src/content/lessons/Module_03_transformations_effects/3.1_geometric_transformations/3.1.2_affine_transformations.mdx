@@ -5,6 +5,7 @@ title: "Affine Transformations"
 objective: "Move beyond a single rotation into the four affine building blocks — translate, scale, rotate, shear — expressed as one 3×3 matrix and composed with `@` to build a spiral of 24 squares from a single base shape."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-12-13
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "3.1.1 (rotation), basic linear algebra"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Rotation was one library call. The full set of geometric transformations that preserve straight lines and parallelism — *affine* transformations — is four building blocks: translate, scale, rotate, shear. The trick that makes them practical is a notational sleight of hand: a 2D point gets a phantom third coordinate set to 1, and all four operations collapse into a single 3×3 matrix multiplication. Once that is true, *composing* transformations is just multiplying matrices, and a spiral of 24 squares becomes a single loop with one combined matrix per step [1]. This lesson is the foundation for every geometric transformation in the rest of the module.
 
@@ -80,7 +81,7 @@ img.save('simple_affine.png')
 Stacking the `1` onto each point is what lets a single matrix mix translation (which is *not* linear) with scale/rotate/shear (which are). The cost of that trick is one extra column in your point array; the win is everything composes.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The 3×3 matrix and homogeneous coordinates
 
@@ -172,7 +173,7 @@ Swapping `translate(100, 50)` and `rotate(30)` gives a different output — tran
 **Read right to left.** `translate @ scale @ rotate` means *"rotate first, then scale, then translate."* If your spiral is rotating around the wrong centre, the most likely culprit is the order of multiplication.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a simple comparison, swap matrix values to match a goal, then build a 24-square spiral.
 
@@ -401,13 +402,13 @@ img.save('spiral.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/simple_affine.py" label="simple_affine.py — quick-start scale + translate" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/transformation_comparison.py" label="transformation_comparison.py — four-primitive grid" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/combined_transform_solution.py" label="combined_transform_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -423,7 +424,7 @@ Affine transformations are anything that preserves straight lines and parallelis
 - Scaling around a non-origin pivot without translating first; the shape will drift instead of staying put.
 - Trying to invert an affine by transposing the 3×3. The transpose works for rotation matrices, but scaling and translation need a proper `np.linalg.inv`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

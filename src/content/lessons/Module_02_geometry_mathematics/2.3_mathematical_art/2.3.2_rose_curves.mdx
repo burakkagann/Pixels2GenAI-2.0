@@ -5,6 +5,7 @@ title: "Rose Curves"
 objective: "Trace the polar equation `r = a·cos(k·θ)` to render flower-like rhodonea curves. Then learn the odd-k / even-k rule that controls petal count and colour each petal individually."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2025-12-13
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.2.2 (polar coordinates), 2.3.1 (parametric curves)"
@@ -19,11 +20,13 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The rose curve — Guido Grandi's *rhodonea*, 1723 — is a polar curve so compact that the whole flower fits in one equation:
 
-$$r = a \cos(k\theta).$$
+$$
+r = a \cos(k\theta).
+$$
 
 A controls the petal length; k controls everything else. The most surprising result, and the one Grandi noticed first, is the **parity rule**: if k is *odd*, the curve has exactly k petals; if k is *even*, it has 2k petals [1]. In this lesson you will draw rhodonea curves in NumPy using the same polar-to-Cartesian conversion from the spiral lesson, see the parity rule for yourself across a panel of k values, then colour each petal individually by mapping the angle to a palette index.
 
@@ -78,17 +81,21 @@ image.save('simple_rose.png')
 The whole flower is one polar equation. The radius oscillates between `+a` and `-a` as `θ` sweeps, and each positive hump of `cos(kθ)` traces one petal outward from the centre.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The rose curve equation
 
 The **rose** (or **rhodonea**) curve is the polar curve
 
-$$r = a \cos(k\theta).$$
+$$
+r = a \cos(k\theta).
+$$
 
 `a` is the amplitude — the petal length. `k` decides the petal count (next concept). To plot on a pixel canvas, the same polar-to-Cartesian transform from the spiral lesson:
 
-$$x(\theta) = c_x + r(\theta) \cos\theta, \qquad y(\theta) = c_y + r(\theta) \sin\theta.$$
+$$
+x(\theta) = c_x + r(\theta) \cos\theta, \qquad y(\theta) = c_y + r(\theta) \sin\theta.
+$$
 
 A sine version `r = a sin(kθ)` exists too — same shape, rotated by 90°. The mechanism is identical for both [2].
 
@@ -160,7 +167,7 @@ def petal_color(theta_value, k):
 
 The `% len(PETAL_COLORS)` makes the function robust if the palette has fewer entries than petals — it cycles. Drawing per-segment then becomes the standard parametric pattern: for each `t`, query the petal colour and draw the line segment between the previous and current `(x, y)`.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run a 5-petal rose, change the parameters to see the parity rule, then build a multi-coloured rose.
 
@@ -369,13 +376,13 @@ image.save('colored_rose.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/simple_rose.py" label="simple_rose.py — 5-petal quick start" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/rose_variations.py" label="rose_variations.py — parity-rule panel" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/colored_rose_solution.py" label="colored_rose_solution.py — per-petal colour reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -390,7 +397,7 @@ The rose curve is `r = a · cos(k · θ)` — one polar equation, one amplitude,
 - Amplitude too large — petal tips clip the canvas. Keep `AMPLITUDE` under `CANVAS_SIZE // 2 - margin`.
 - Forgetting the centre offset — `x = r · cos(θ)` (without `+ CENTER`) renders in the top-left corner.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

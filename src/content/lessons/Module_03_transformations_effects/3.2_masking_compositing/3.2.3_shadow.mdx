@@ -5,6 +5,7 @@ title: "Shadow Compositing"
 objective: "Build a content-aware drop shadow: threshold the blue channel to select the sky, shift a grey shadow layer up-and-left by 20 pixels, then copy the shifted shadow back into the masked region of the original photo."
 framework: "hands-on"
 duration: "16–20 min"
+published: 2026-06-09
 level: "beginner"
 load: "3 core concepts"
 prereqs: "3.2.1 (masks), 3.2.2 (image I/O)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A drop shadow is two operations stacked: select the *background* (the sky in our reference photo) with a channel threshold, then paint a *displaced* version of the foreground silhouette into the masked region. The trick is that the shadow image carries the silhouette of the subject without ever drawing the subject — a uniform grey, white where the subject is, then translated by `(20, 20)`. Where it lands on the sky, the white pixels read as a sharp shadow cast back onto the bright background. The same construction underlies every "drop shadow" filter, every poster-style outline, and every CSS `box-shadow` [1].
 
@@ -70,7 +71,7 @@ Image.fromarray(photo, 'RGB').save('shadow.png')
 The shadow is white-on-grey, not black-on-white. We are painting *light* into the sky, not blocking it — the perception of "shadow" comes from the white sky against the grey echo, exactly the same way as a real cast shadow on a bright surface.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Channel thresholds as content-aware masks
 
@@ -121,7 +122,7 @@ photo[sky_mask] = shadow[sky_mask]
 
 `shadow[sky_mask]` indexes the translated silhouette at sky positions. Within the sky, most of those positions are white (which paints over the original sky as white), but the translated grey region — the shadow itself — sits over a small crescent of sky just behind the building, and *those* pixels become grey. The crescent is what you read as the cast shadow.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the script, tune three knobs, then build a coloured shadow.
 
@@ -274,12 +275,12 @@ Image.fromarray(photo).save('warm_shadow.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow/shadow.py" label="shadow.py — drop-shadow starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow/bbtor.jpg" label="bbtor.jpg — input photograph" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -295,7 +296,7 @@ A drop shadow is a three-step composite: build a content-aware mask from a chann
 - Letting the silhouette layer share `dtype=float` with the photo's `uint8` — the assignment crashes or silently truncates. Use the same dtype in both arrays.
 - Painting the silhouette layer everywhere instead of through the mask — you flood the building with grey too.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

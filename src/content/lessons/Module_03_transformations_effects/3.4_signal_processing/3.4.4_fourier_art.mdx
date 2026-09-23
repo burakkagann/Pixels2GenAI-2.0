@@ -5,6 +5,7 @@ title: "Fourier Art"
 objective: "Round-trip an image through `np.fft.fft2`, manipulate the frequency-domain magnitude with circular masks, and inverse-transform back. Low-pass blurs, high-pass extracts edges, glitch holes corrupt for art's sake."
 framework: "hands-on"
 duration: "20–24 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.4.1 (convolution), 3.4.2 (Sobel)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A Fourier transform expresses an image as a sum of sinusoidal waves at different frequencies — Joseph Fourier's 1822 idea, generalised by Cooley and Tukey's 1965 FFT algorithm into the workhorse computation of modern signal processing [1, 2]. The 2D FFT of an image lives in the *frequency domain*: low frequencies near the centre (smooth gradients, overall brightness), high frequencies near the edges (sharp transitions, fine details). Filter the frequency representation with a circular mask, inverse-transform, and you have a blur, edge map, band-pass, or glitch artefact — all with the same three-step pipeline. The same machinery underlies JPEG compression, the optical-flow stage of every video codec, and the Fourier-feature layers showing up in modern neural networks [3].
 
@@ -73,7 +74,7 @@ Image.fromarray(combo, 'L').save('simple_fft_output.png')
 The spectrum is *symmetric* around its centre because the input is real-valued. The bright cross through the centre comes from the DC component (mean brightness) and its low-order spatial harmonics; the off-centre dots are the higher-frequency content carrying the checkerboard's regular pattern.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The frequency domain
 
@@ -156,7 +157,7 @@ Notes on the inverse pass:
 Cooley and Tukey's 1965 algorithm dropped FFT complexity from O(N²) to O(N log N), making frequency-domain image processing practical. Before 1965, computing the DFT of a 1024-pixel signal required about a million operations; after, only about ten thousand. The IEEE later named it one of the *Top 10 Algorithms of the 20th Century*. Curiously, Gauss had described essentially the same algorithm in an 1805 manuscript that was not published until 1866 — a century before Cooley–Tukey rediscovered it [2].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: visualise the spectrum, try three filters, then build glitch art.
 
@@ -355,7 +356,7 @@ Image.fromarray(side_by_side, 'L').save('glitch.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/simple_fft.py" label="simple_fft.py — quick-start spectrum view" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/frequency_filter.py" label="frequency_filter.py — low/high/band-pass starter" />
@@ -363,7 +364,7 @@ Image.fromarray(side_by_side, 'L').save('glitch.png')
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/glitch_art_starter.py" label="glitch_art_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/glitch_art_solution.py" label="glitch_art_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -379,7 +380,7 @@ The 2D FFT decomposes an image into spatial-frequency components, with `np.fft.f
 - Not log-scaling the magnitude for display — DC dominates and the off-centre energy is invisible.
 - Trying to apply a frequency mask of shape `(H, W, 3)` to an `(H, W)` FFT — the FFT is per-channel for colour images, do them one channel at a time.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

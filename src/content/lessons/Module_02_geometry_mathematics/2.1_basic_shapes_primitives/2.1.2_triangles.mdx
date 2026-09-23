@@ -5,6 +5,7 @@ title: "Drawing Triangles"
 objective: "Fill a triangle as the intersection of three half-planes using the edge function — the same algorithm GPUs run in hardware millions of times per frame — then stack triangles into a layered mountain landscape."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-01
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.1.1 (line drawing), basic NumPy broadcasting"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Every 3D mesh you have ever seen — from polygon-era game characters to film-quality digital doubles — is broken into triangles before the GPU touches it. The reason is geometric, not graphical: three points always define exactly one flat plane, so the rasterizer can decide which pixels belong to a triangle without ambiguity. The deciding step is called the **edge function**, a 1988 algorithm from Pixar that is now baked into the silicon of every modern GPU [1]. In this lesson you will implement the edge function in NumPy, contrast it with a much shorter `x + x.T` trick that only works for right triangles, and stack triangles into a mountain silhouette using the painter's algorithm.
 
@@ -76,13 +77,15 @@ Image.fromarray(canvas).save('simple_triangle.png')
 The triangle is *never drawn*. Three independent edge tests label every pixel as inside or outside; the triangle is what survives an `&` of those three masks. Same logic, no rasterizer loop.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — A triangle is three half-planes intersected
 
 Pick any line through two points $(x_1, y_1)$ and $(x_2, y_2)$. The plane on either side of that line is a **half-plane**. The edge function
 
-$$E(x, y) = (x - x_1)(y_2 - y_1) - (y - y_1)(x_2 - x_1)$$
+$$
+E(x, y) = (x - x_1)(y_2 - y_1) - (y - y_1)(x_2 - x_1)
+$$
 
 is positive on one half-plane, negative on the other, and zero exactly on the line itself [1]. It is just the 2D cross product of the edge vector and the vector from the start of the edge to the test point, so its sign tells you which way the test point lies.
 
@@ -139,7 +142,7 @@ for m in mountains:
 
 Reverse the iteration order and the foreground gets buried behind the background — same data, wrong result. The painter's algorithm fails when triangles can mutually occlude each other (interlocking shapes), which is why GPUs use **z-buffering** for full 3D scenes. For a 2D silhouette landscape, painter's order is exactly enough.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: rasterize a triangle, vary it, then layer triangles into a landscape.
 
@@ -388,13 +391,13 @@ Image.fromarray(canvas).save('triangle_mountain.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/simple_triangle.py" label="simple_triangle.py — edge-function rasterizer" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_matrix.py" label="triangle_matrix.py — x + x.T pattern" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/triangle_mountain.py" label="triangle_mountain.py — layered landscape" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -409,7 +412,7 @@ A triangle is the intersection of three half-planes. Pineda's edge function deci
 - Drawing the foreground first — closer mountains end up *behind* distant ones.
 - Float vertices feeding the edge function — fine numerically, but rounded pixel boundaries can drift; use integer vertices when you want pixel-exact silhouettes.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

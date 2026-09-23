@@ -5,6 +5,7 @@ title: "Sand Simulation"
 objective: "Build a particle system from scratch — thousands of independent grains, each carrying a few floats of state, animated frame by frame into a GIF of wind-blown sand."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2026-02-06
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic Python classes"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Watch sand blow across a desert and what looks like one shifting carpet is actually thousands of grains, each moving on its own. A **particle system** is the computational mirror of that observation: many small agents, each with a tiny piece of state — position, velocity, colour — updated under the same simple rules every frame. William Reeves invented this technique at Lucasfilm in 1982 for the Genesis sequence in *Star Trek II*, and the same pattern now powers smoke in games, sparks in films, and the digital sand you will build here [1]. By the end of this lesson you will have a GIF of roughly 6,700 grains drifting and accelerating to the right, generated from one Python script and one tight render loop.
 
@@ -86,7 +87,7 @@ imageio.mimsave('quick_sand.gif', frames, fps=24)
 The grains start dark and motionless, then turn beige and accelerate as they begin moving. That two-tone trick — colour as a proxy for state — is what makes the wind look like wind and not a uniform translation.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — A particle is a bag of state
 
@@ -168,7 +169,7 @@ self.delay = max(0, int(random.gauss(50, 15)))
 Gaussians show up everywhere natural variation matters: heights of people, measurement errors, the brightness of stars. Picking a Gaussian as the delay distribution is not arbitrary — it is the distribution your eye already expects.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the desert as it ships, retune four parameters, then build your own particle effect on top of the same engine.
 
@@ -367,13 +368,13 @@ Spawning all particles at the centre with uniformly-random angles produces a cle
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand.py" label="sand.py — minimal quick-start used in the Overview" />
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation.py" label="sand_simulation.py — full reference implementation" />
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation_starter.py" label="sand_simulation_starter.py — Exercise 3 scaffold" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -389,7 +390,7 @@ A particle system is a list of small independent agents, each owning its own pos
 - Skipping the `max(0, ...)` clamp on `random.gauss`. A negative delay means a grain that started "in the past" — usually harmless, occasionally a crash.
 - Spawning ten thousand particles before the loop is fast. Profile on a hundred first.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

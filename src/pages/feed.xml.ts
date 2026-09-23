@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
+import { inlineMarkdownText } from '@/lib/inlineMarkdown';
 
 // RSS feed of every shipped lesson. Discovery + freshness signal for crawlers
 // and a "new lesson" channel while the curriculum is ported module by module.
@@ -28,10 +29,15 @@ export async function GET(context: APIContext) {
     site: context.site!,
     items: ordered.map((lesson) => ({
       title: `${lesson.id} · ${lesson.data.title}`,
-      description: lesson.data.objective,
+      description: inlineMarkdownText(lesson.data.objective),
       link: `/lessons/${lesson.id}`,
+      // First-live date, so readers can sort and flag new lessons.
+      ...(lesson.data.published ? { pubDate: lesson.data.published } : {}),
       categories: [lesson.data.module],
     })),
-    customData: '<language>en</language>',
+    // atom:link rel=self is what feed validators and some readers expect so
+    // the feed can identify its own canonical URL.
+    xmlns: { atom: 'http://www.w3.org/2005/Atom' },
+    customData: `<language>en</language><atom:link href="${new URL('/feed.xml', context.site).href}" rel="self" type="application/rss+xml"/>`,
   });
 }

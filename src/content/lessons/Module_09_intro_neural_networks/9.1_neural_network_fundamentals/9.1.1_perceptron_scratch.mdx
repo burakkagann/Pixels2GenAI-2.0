@@ -5,6 +5,7 @@ title: "Perceptron from Scratch"
 objective: "Build Rosenblatt's 1958 perceptron in NumPy: a linear weighted sum, a step activation, and the weight-update rule that adjusts inputs after every wrong prediction. Train it as a binary classifier on a 2D dataset."
 framework: "conceptual"
 duration: "30–35 min"
+published: 2025-12-27
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "Basic NumPy, dot products, linear algebra intuition"
@@ -18,26 +19,28 @@ backLink:
   href: "/#curriculum"
   label: "Back to Curriculum"
 faq:
-  - q: "Why does a perceptron stop updating after some number of epochs?"
+  # Mirrors the "Reflection questions" and their "Answers" dropdown verbatim
+  # (plain text: code backticks and emphasis dropped). Google requires FAQ
+  # markup to match visible on-page Q&A; edit both together.
+  - q: "Why does the line stop moving after some number of epochs?"
     a: >-
       Once every training point is classified correctly, the error term is zero
-      for all of them, so the weights stop updating. The perceptron has
-      converged.
-  - q: "What does the learning rate control in a perceptron?"
+      for all of them, so weights stop updating. The perceptron has converged.
+  - q: "What does the learning rate control, and what goes wrong if it’s too large or too small?"
     a: >-
-      It controls the update step size. Too small means very slow convergence;
-      too large may overshoot and oscillate around the optimum. For linearly
-      separable data the convergence proof is rate-insensitive; for real data
-      the rate matters.
-  - q: "Which separating line does a perceptron find when many exist?"
+      Controls update step size. Too small → very slow convergence. Too large →
+      may overshoot and oscillate around the optimum (especially for noisier
+      data). For separable data the convergence proof is rate-insensitive; for
+      real data the rate matters a lot.
+  - q: "The trained line is one valid separator; there are infinitely many others. Which one does the perceptron find?"
     a: >-
-      The first one it happens to land on as it processes training points.
-      Different initial weights or shuffling order give different lines.
-      Perceptrons care only about correctness, not margin — unlike SVMs, which
-      maximize the margin.
+      The first one the perceptron happens to land on as it processes training
+      points. Different initial weights or different shuffling order give
+      different separating lines. (SVMs add a max-margin objective; perceptrons
+      don’t care about margin, only correctness.)
 ---
 
-## Big question <a id="big-question"></a>
+## Big question
 
 *What is the simplest machine that can learn to classify data?* Frank Rosenblatt's 1958 perceptron is the answer — and it is so simple you can implement it in thirty lines of NumPy. Three operations: multiply inputs by weights, sum the products, threshold the result. The novel addition was a **learning rule**: after every wrong prediction, nudge each weight in the direction that would have produced the right answer. Run this loop on linearly separable data and the weights converge to a hyperplane that splits the two classes [1, 2]. The same weight-update logic, generalised through calculus, runs inside every modern neural network with billions of parameters.
 
@@ -211,12 +214,12 @@ The perceptron will *not* converge. The four XOR points are not linearly separab
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.1_perceptron_scratch/simple_perceptron.py" label="simple_perceptron.py — train + plot the boundary" />
 <Download href="/lesson-media/Module_09_intro_neural_networks/9.1_neural_network_fundamentals/9.1.1_perceptron_scratch/perceptron_solution.py" label="perceptron_solution.py — reference implementation" />
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

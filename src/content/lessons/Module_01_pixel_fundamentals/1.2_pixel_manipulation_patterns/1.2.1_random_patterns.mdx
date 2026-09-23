@@ -5,6 +5,7 @@ title: "Random Pattern Generation"
 objective: "Turn uniform random numbers into compelling visual compositions. Use Kronecker products for pixel-perfect scaling, seed-based reproducibility, and discrete colour palettes inspired by Gerhard Richter's colour charts."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2025-11-05
 level: "beginner"
 load: "3 core concepts"
 prereqs: "1.1.1 (RGB arrays)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Random number generation is a fundamental building block of computational art and generative design. In this lesson you will discover how simple random processes can create compelling visual patterns, from abstract colour compositions to structured artistic grids inspired by pioneers like Gerhard Richter [1].
 
@@ -68,7 +69,7 @@ result.save('quick_random_tiles.png')
 Notice how each tile has a completely different colour, yet the overall composition feels balanced. This is the power of uniform distribution — no colour is favoured over any other.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Uniform random distribution
 
@@ -184,7 +185,7 @@ This perceptual non-uniformity creates visually interesting compositions because
 Perceptual colour spaces like CIELAB and OKLCH were designed to address this non-uniformity [5]. In CIELAB, equal numerical steps correspond to approximately equal perceived differences. For generative art, the "unfairness" of RGB can actually be a feature — the uneven brightness distribution creates visual tension and hierarchy that a perceptually uniform space would flatten.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three progressively challenging exercises, each building on the previous using the **Execute → Modify → Create** approach.
 
@@ -404,11 +405,11 @@ After the TODOs work, try these extensions by editing the script directly:
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.1_random_patterns/random_tiles.py" label="random_tiles.py — combined script" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -423,7 +424,7 @@ Uniform distribution creates unbiased randomness — essential for fair colour s
 - Running without a seed and expecting the same output — each run produces a different image unless you set `np.random.seed()` beforehand.
 - Using `np.random.rand()` (float 0--1) instead of `np.random.randint()` (integer 0--255) for direct image arrays. Float arrays require multiplication and casting before they work with Pillow.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Taming Transformers"
 objective: "Use the VQ-GAN tokeniser from Lesson 12.4.2 to turn images into integer sequences, then train an autoregressive transformer over those sequences — the architectural template behind DALL-E 1, Parti, and Muse."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-06-22
 level: "advanced"
 load: "3 core concepts"
 prereqs: "Lessons 12.4.2 (VQ-VAE/VQ-GAN), 9.x (Transformers); PyTorch"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 [Lesson 12.4.2](/lessons/12.4.2) ended with a question: VQ-GAN turns images into sequences of integer codebook indices, but the VQ-GAN itself isn't a generative model — it's an autoencoder. To actually *generate* novel images, you need a second-stage model that learns the distribution over those integer sequences and can sample from it.
 
@@ -51,7 +52,7 @@ python transformer_image_demo.py
 
 5 epochs, ~30 seconds on CPU. Output: per-epoch loss, then 4 sampled sequences. With the random training data the model can't learn meaningful structure; the real value is seeing the architecture's pieces line up.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Two stages: tokeniser and generator
 
@@ -123,7 +124,7 @@ Other orderings have been tried. Spiral orderings let the model build outward fr
 Sampling temperature is one of the most under-tuned parameters in this architecture. The conventional default of `1.0` (sample directly from the trained distribution) is rarely what you want for image generation — outputs are often too noisy. `0.7` to `0.9` typically produces visibly cleaner results. Going below `0.5` makes the model overly deterministic and outputs become repetitive. Tune this against your validation FID scores, not against the loss.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Train the demo transformer on synthetic sequences and sample">
 
@@ -259,7 +260,7 @@ Two extensions worth trying:
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 The Taming Transformers architecture is a two-stage generative pipeline: a VQ-GAN tokeniser ([Lesson 12.4.2](/lessons/12.4.2)) compresses an image into a sequence of integer codebook indices, then an autoregressive transformer learns the joint distribution over those sequences and samples new ones left-to-right via the same next-token-prediction mechanism that powers language models. Causal self-attention with a lower-triangular mask is what enforces the autoregressive constraint — each position can attend to past positions but not future ones, so the model can be trained in parallel but sample sequentially. The architectural template propagated through DALL-E 1, Parti, Muse, and many descendants; the discrete-tokenizer-plus-transformer pattern remains one of the dominant approaches to high-quality image generation alongside diffusion models, with the trade-off being slower sampling (sequential by sequence length) in exchange for cleaner mode coverage and easier conditioning.
@@ -273,7 +274,7 @@ The Taming Transformers architecture is a two-stage generative pipeline: a VQ-GA
 - Naively scaling to longer sequences. Attention is `O(N²)` in sequence length; doubling the sequence quadruples the compute. Past 1024-2048 tokens you need sparse-attention or parallel-decoding variants.
 - Training the transformer and the VQ-GAN jointly. They can be trained jointly in principle but stability is poor; the canonical recipe is sequential: train the VQ-GAN first to convergence, then freeze it and train the transformer.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

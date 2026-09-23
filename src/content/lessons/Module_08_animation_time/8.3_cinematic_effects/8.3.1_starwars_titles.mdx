@@ -5,6 +5,7 @@ title: "Star Wars Titles"
 objective: "Build the iconic *Star Wars* opening crawl: yellow text on a starfield, projected into a receding trapezoid. Inverse perspective sampling, no shader required."
 framework: "hands-on"
 duration: "25–30 min"
+published: 2026-06-10
 level: "intermediate"
 prereqs: "8.1.1 (image operators), 8.1.3 (interpolation), basic trigonometry"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The opening crawl of *Star Wars: A New Hope* (1977) is one of the most recognisable shots in cinema. Yellow capitalised text floats up into deep space, receding into a vanishing point so the lines at the top of the screen are smaller and closer together than the lines at the bottom. The technical achievement is not the typeface — it's the **perspective projection**. The original 1977 sequence was shot on an animation stand with a paper crawl card pulled physically across a glass plate; modern recreations are a few lines of NumPy.
 
@@ -69,7 +70,7 @@ def prepare_perspective(c=PERSPECTIVE_C):
 The perspective math runs **once**, during setup. The frame loop is just `frame[yy, dst_x] = msg[scroll_y, src_x]` — fancy indexing into a tall bitmap. That decoupling between setup-cost and frame-cost is what makes the animation real-time on any laptop.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The perspective transformation
 
@@ -125,7 +126,7 @@ for f in range(N_FRAMES):
 
 This loop runs at hundreds of FPS on a modern machine: every operation is a NumPy fancy-index. No `cos`/`sin`/`atan` per frame — the geometry was solved once during setup.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the scroll, sweep parameters, then add a starfield with twinkling.
 
@@ -241,12 +242,12 @@ The full solution swaps `make_starfield()` for `make_twinkling_starfield(seed, f
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/starwars.py" label="starwars.py — perspective crawl renderer" />
 <Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/message.txt" label="message.txt — Zen of Python text" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -261,7 +262,7 @@ A perspective crawl is an inverse-sampling lookup: for each output pixel `(x, y)
 - **Too-small text bitmap.** If the bitmap doesn't have enough vertical headroom, the scroll runs out of content. Always size it generously (2-3× screen height + total scroll distance).
 - **Wrong y-axis convention.** Mixing screen-y (top-down) with mathematical-y (bottom-up) is the most common bug in any perspective code. Pick one and stick with it.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

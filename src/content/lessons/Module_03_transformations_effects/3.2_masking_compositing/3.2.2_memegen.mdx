@@ -5,6 +5,7 @@ title: "Meme Generator — Text on Images"
 objective: "Step out of NumPy briefly: use Pillow's `ImageDraw.text` and a TrueType font to layer captions onto a photo, then convert the result back into a NumPy array for further pixel work."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2026-06-09
 level: "beginner"
 load: "3 core concepts"
 prereqs: "3.2.1 (boolean masks), basic file I/O"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 NumPy is excellent at moving pixels around, but it has no concept of *type*. Drawing a glyph means turning a TrueType outline into a rasterised silhouette and then alpha-blending that silhouette onto the canvas — a small ecosystem of font hinting, kerning, and anti-aliasing that you do not want to re-implement. Pillow's `ImageDraw.text` wraps all of that in three lines [1]. This short lesson is the bridge between the pixel arrays you have been editing and a richer rendering surface, and the round-trip — `np.array(image)` and `Image.fromarray(array)` — is the same trick every later "annotate this output" workflow needs.
 
@@ -63,7 +64,7 @@ img.save('bridge_meme.png')
 The `Draw` object is bound to the image's underlying pixel buffer. Every `draw.text(...)` call mutates `img` in place, so the final `img.save(...)` writes the captioned result without an explicit composite step.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Pillow's drawing surface
 
@@ -113,7 +114,7 @@ The pixel buffer is shared on the read; copied on the write. So a common workflo
 
 Skipping the NumPy step is fine for "just add a caption" lessons like this one. Skipping the Pillow step is fine when you have no text or shape work to do. Most real pipelines hop back and forth as needed.
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the quick start, vary the captioning, then build a translucent banner.
 
@@ -276,12 +277,12 @@ result.save('caption_with_banner.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen/memegen.py" label="memegen.py — caption starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen/bridge.png" label="bridge.png — input photograph" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -297,7 +298,7 @@ Pillow handles typography; NumPy handles pixels. Open with `Image.open`, wrap wi
 - Saving as JPEG when the workflow uses RGBA — JPEG does not support transparency; PNG does.
 - Forgetting that `ImageDraw.Draw(img)` binds to `img`. If you discard the `Draw` object, `img` already has your edits.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

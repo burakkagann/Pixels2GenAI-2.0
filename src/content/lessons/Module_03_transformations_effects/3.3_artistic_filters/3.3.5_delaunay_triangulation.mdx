@@ -5,6 +5,7 @@ title: "Delaunay Triangulation"
 objective: "Use `scipy.spatial.Delaunay` to wire a cloud of points into a clean triangular mesh whose triangles avoid sliver shapes, then sample the source image at each triangle's centroid to render a low-poly version of the original."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-13
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "3.3.4 (Voronoi), basic matplotlib"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A **Delaunay triangulation** connects a point cloud into triangles such that *no point sits inside any other triangle's circumcircle*. The constraint is elegant: out of the many ways to triangulate the same point set, this one maximises the smallest angle across all triangles — slivers are avoided and the mesh feels visually balanced [1]. Borrowed by graphics from finite-element meshing, Delaunay is now the standard triangulation for terrain generation, low-poly art, and the "facets" filter in every photo app. Boris Delaunay published the theorem in 1934; `scipy.spatial.Delaunay` packages it into one constructor call [2, 3].
 
@@ -66,7 +67,7 @@ plt.savefig('simple_delaunay.png', dpi=150, bbox_inches='tight')
 The output of `Delaunay(points)` is an *index* into your original point array. `tri.simplices` has shape `(num_triangles, 3)`, and each row is `[i, j, k]` — the indices of the three points making up one triangle. The points themselves never move; only the connectivity is computed.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The circumcircle property
 
@@ -135,7 +136,7 @@ ax.set_xlim(0, W); ax.set_ylim(H, 0)        # flip y so image-down stays down
 The triangulation is *only* defined inside the convex hull of the points. To cover the whole rectangular canvas, append the four corners and a few edge midpoints to your point cloud before calling `Delaunay`. Otherwise the borders of the low-poly image will be empty triangles flooding outside the hull.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the wireframe, try different distributions, then render a low-poly image from a procedural source.
 
@@ -353,14 +354,14 @@ plt.savefig('lowpoly.png', dpi=150, bbox_inches='tight', pad_inches=0)
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/simple_delaunay.py" label="simple_delaunay.py — wireframe quick start" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/colored_triangulation.py" label="colored_triangulation.py — randomly coloured triangles" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/lowpoly_art_starter.py" label="lowpoly_art_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/lowpoly_art_solution.py" label="lowpoly_art_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -376,7 +377,7 @@ A Delaunay triangulation connects a point cloud into triangles whose circumcircl
 - Plotting without `ax.set_ylim(H, 0)` — the picture renders upside-down because matplotlib defaults to y-up.
 - Sampling colours as `source[cy, cx]` without `np.clip` — points can land just outside the image bounds and crash the indexing.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Animated Fractals"
 objective: "Add time to the Mandelbrot set: animate the view window's centre and zoom, render each frame from scratch, save as an infinitely-looping GIF that appears to dive into the fractal."
 framework: "hands-on"
 duration: "25–30 min"
+published: 2026-02-06
 level: "intermediate"
 prereqs: "4.1.3 (Mandelbrot set), 8.1.2 (easing functions)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A static Mandelbrot render (4.1.3) is beautiful but is a single window into an infinitely deep mathematical object. Adding the dimension of **time** unlocks the fractal's most hypnotic property: the infinite zoom. Each frame is the same Mandelbrot computation with a smaller view window centred on a fixed interesting point. With exponential interpolation of the window size, the apparent dive feels constant-velocity even though the absolute distance to the "bottom" of the well is geometrically shrinking.
 
@@ -83,7 +84,7 @@ frames[0].save('zoom.gif', save_all=True, append_images=frames[1:], duration=33,
 Exponential zoom is the entire secret. Linear zoom — width = 3 × (1 - progress) — feels mechanical (very fast at the start, very slow at the end). Exponential zoom — `width = 3 * 500 ** (-progress)` — keeps the *visible window shrinking by a constant percentage per frame*, which the eye reads as constant speed.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Exponential zoom interpolation
 
@@ -144,7 +145,7 @@ The black region (points *in* the Mandelbrot set) is `inside == True`. Everythin
 Pre-cropping the iteration array, applying the palette in fully vectorised NumPy, and only converting to PIL at the last step makes the per-frame cost predictable. Avoid per-pixel Python loops in the palette function — for 400×400 it's the difference between 0.1s and 30s per frame.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the default zoom, sweep parameters, then code the rendering pipeline from scratch.
 
@@ -293,12 +294,12 @@ The reference `animated_fractal.py` ties it all together and saves as a GIF with
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals/animated_fractal.py" label="animated_fractal.py — full reference" />
 <Download href="/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals/animated_fractal_starter.py" label="animated_fractal_starter.py — Exercise 3 skeleton" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -313,7 +314,7 @@ Adding time to a fractal renders an infinite zoom. Exponential interpolation of 
 - **Black-on-black palette mistakes.** Points inside the Mandelbrot set should be black; check `inside` mask is correct.
 - **Per-pixel Python loops in the palette.** Render times balloon. Vectorise with NumPy `np.where`.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

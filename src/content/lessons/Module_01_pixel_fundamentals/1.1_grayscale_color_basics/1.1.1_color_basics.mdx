@@ -5,6 +5,7 @@ title: "Images as Arrays & RGB"
 objective: "Treat every digital image as a NumPy array of intensity values; build colour from scratch by writing red, green, and blue channels by hand."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-10-11
 level: "beginner"
 load: "3 core concepts"
 prereqs: "Basic Python"
@@ -17,7 +18,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Digital images are arrays of numbers. A single 4K image contains 26 million pixels. Three integers per pixel, each specifying the intensity of the red, green, and blue channels. Manipulating these arrays directly opens every technique from vintage photo filters to training convolutional networks.
 
@@ -60,7 +61,7 @@ pil_image.save('cyan_magenta.png')
 The shape of the image is `(200, 200, 3)` — read as **(height, width, channels)**. The channels dimension holds the red, green, and blue values. Height and width are the dimensions of the image, and channels is the number of colour components per pixel.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Grayscale, the foundation
 
@@ -196,7 +197,7 @@ RGB is fundamentally different from mixing paint. Paint uses **subtractive colou
 The human eye has three types of cone cells for colour vision, but they are not actually "red," "green," and "blue" receptors. The L-cones peak around 559 nm (yellow-green), M-cones around 530 nm (green), and S-cones around 420 nm (blue-violet). RGB is a computational convenience that *approximately* matches this trichromatic system.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three progressively challenging exercises, each building on the previous using the **Execute → Modify → Create** approach.
 
@@ -376,12 +377,12 @@ This extends the horizontal gradient by requiring you to think in two dimensions
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.1_color_basics/rgb.py" label="rgb.py — combined script" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.1_grayscale_color_basics/1.1.1_color_basics/rgb_additive_mixing_diagram.py" label="rgb_additive_mixing_diagram.py — diagram generator" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 In 15–20 minutes, three core concepts: grayscale, RGB, and array indexing.
 
@@ -398,7 +399,7 @@ An RGB image is a 3D NumPy array with shape `(height, width, 3)`. Each pixel hol
 - Always use `dtype=np.uint8` for standard 0–255 image data.
 - Different libraries may use BGR instead of RGB (OpenCV in particular).
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

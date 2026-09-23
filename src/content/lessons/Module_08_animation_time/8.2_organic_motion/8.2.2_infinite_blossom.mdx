@@ -5,6 +5,7 @@ title: "Infinite Blossom"
 objective: "Petals spawn at the edge in polar coordinates, spiral inward as they rotate, and disappear at the centre. New ones spawn forever — no start, no end."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2026-06-10
 level: "intermediate"
 prereqs: "8.2.1 (per-object animation), 2.2.2 (polar coordinates)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The **infinite blossom** is the opposite of the flower assembly (8.2.1): instead of N pre-placed tiles converging to a finished image, *new* objects spawn continuously at the canvas edge, each one with its own lifetime. There is no end state. The animation runs forever, and yet the canvas stays bounded because every object eventually disappears at the centre.
 
@@ -76,7 +77,7 @@ class Petal:
 The blossom **never repeats** at the pixel level — each cycle has different petal phases because the spawn timing isn't synchronised with the loop length. Yet the animation reads as seamlessly looping because its **statistics** are constant: the same average number of petals at every distance, the same average orientation, the same average colour distribution.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Polar coordinates as the natural state
 
@@ -134,7 +135,7 @@ The 100 px margin on each side hides the spawn moment: by the time petals enter 
 The spawn position must be **beyond the visible canvas boundary** for the illusion to work. If petals spawn inside the cropped viewport, the user sees them materialise from nothing — an immersion-breaking pop. Tune the margin so spawn-radius > viewport-half-diagonal.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: render the loop, sweep parameters, then build a multi-direction emitter.
 
@@ -277,11 +278,11 @@ The combined system supports any number of shapes — extend with stars, lines, 
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/infinite_blossom.py" label="infinite_blossom.py — reference implementation" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -296,7 +297,7 @@ Polar coordinates make rotational+radial motion trivial: rotate by adding to the
 - **Unbounded object list.** Forgetting to retire arrived objects leaks memory and slows down the animation over time.
 - **Frame-loop count desynchronised with spawn cadence.** If `FRAMES % SPAWN_PERIOD != 0`, the GIF loop point may show a visible jump. Either match the periods or use a long enough total to make the discontinuity sub-frame.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "Rotation"
 objective: "Rotate a NumPy image array by an arbitrary angle with `scipy.ndimage.rotate`, then turn that one call into a fan-shaped composition by accumulating rotated copies with additive blending."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-13
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.3.4 (parametric trajectories), basic NumPy slicing"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A rotation is a geometric transformation that preserves distances. Every pixel travels along an arc around a chosen pivot, and the picture as a whole turns by a single angle. Computationally it is one library call — `scipy.ndimage.rotate` — but it is also the first transformation in this module that produces *resampled* pixels: most rotated coordinates do not land on integer grid positions, so the library has to interpolate. In this lesson you will rotate a single shape, watch interpolation smooth the edges, and then iterate the rotation in a loop to draw a radial fan from one rectangle [1].
 
@@ -69,7 +70,7 @@ Image.fromarray(comparison).save('simple_rotation.png')
 `scipy.ndimage.rotate` is one of those one-line library calls that hides a lot of machinery — a rotation matrix, a coordinate inversion, and bilinear interpolation. The next sections unpack each piece.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The rotation matrix
 
@@ -143,7 +144,7 @@ for i in range(18):
 
 The `0.4` scaling is what stops the overlapping centre from saturating to pure white on the second or third rotation. Each contribution stays sub-maximal, and only the regions that *many* rotations overlap reach full brightness — that gradient is what makes the fan readable [4].
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the fan pattern, change three parameters at once, then build a single-rotation compositor from scratch.
 
@@ -335,14 +336,14 @@ Image.fromarray(canvas).save('my_rotation.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/simple_rotation.py" label="simple_rotation.py — quick-start side-by-side" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_pattern.py" label="rotation_pattern.py — 18-rotation fan" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_starter.py" label="rotation_starter.py — Exercise 3 starter" />
 <Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/rotation_solution.py" label="rotation_solution.py — Exercise 3 reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -358,7 +359,7 @@ Image.fromarray(canvas).save('my_rotation.png')
 - Default `order=1` softens hard edges; if the lesson calls for crisp pixel art, drop to `order=0` (nearest-neighbour).
 - Confusing screen direction with mathematical direction — positive degrees rotate counter-clockwise in maths and clockwise on screen because image arrays index y downward.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

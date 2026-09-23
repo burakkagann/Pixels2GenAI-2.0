@@ -62,7 +62,8 @@ code, pre, kbd, samp {
 
 .eyebrow b {
   font-weight: 500;
-  color: var(--highlight);
+  /* --highlight amber is 3.2:1 on cream as small text; nudged toward --fg for AA. */
+  color: color-mix(in srgb, var(--highlight) 75%, var(--fg));
 }
 
 /* The eyebrow text is wrapped in a single <span> so the flex container sees

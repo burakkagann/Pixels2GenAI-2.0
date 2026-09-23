@@ -5,6 +5,7 @@ title: "Cellular Automata (Game of Life)"
 objective: "Generate dynamic, lifelike behaviour from four arithmetic rules. Implement Conway's Game of Life with NumPy and SciPy convolutions, then watch gliders walk, blinkers oscillate, and blocks sit still — none of which you ever programmed."
 framework: "hands-on"
 duration: "20–25 min"
+published: 2025-11-05
 level: "beginner"
 load: "4 core concepts"
 prereqs: "1.1.1 (RGB arrays), basic Python"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Five live cells on a 20×20 grid. Eight frames later, those five cells have walked diagonally across the canvas — without a single line of movement code. That illusion of motion comes from one of the most studied systems in twentieth-century mathematics: Conway's Game of Life [1]. Four arithmetic rules, applied uniformly to every cell, produce structures that move, blink, and persist [2].
 
@@ -91,7 +92,7 @@ imageio.mimsave('glider_animation.gif', frames, fps=2, duration=0.5)
 The glider was *never told* to move. It emerges from four rules about neighbour counts, applied locally and simultaneously to every cell. Movement is a side effect of arithmetic.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — What a cellular automaton is
 
@@ -319,7 +320,7 @@ For art and exploration, wrap-around produces more interesting long-run behaviou
   role="diagram"
 />
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in the standard **Execute → Modify → Create** progression [10, 11].
 
@@ -529,13 +530,13 @@ Run for 50+ generations and watch the collision. The outcome depends on exactly 
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata/exercise1_execute.py" label="exercise1_execute.py — blinker (Execute)" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata/exercise2_modify.py" label="exercise2_modify.py — blinker variations (Modify)" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.2_pixel_manipulation_patterns/1.2.2_cellular_automata/exercise3_create.py" label="exercise3_create.py — pattern garden (Create)" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -549,7 +550,7 @@ Four arithmetic rules, applied uniformly to every cell at every tick, generate e
 - Forgetting `mode='wrap'` and then wondering why edge patterns die.
 - Confusing the kernel with the rule — the kernel of ones only *counts* neighbours, it does not encode B3/S23. The rule lives in the birth/survival comparison afterwards.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

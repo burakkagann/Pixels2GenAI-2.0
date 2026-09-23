@@ -5,6 +5,7 @@ title: "Webcam Processing"
 objective: "Turn a webcam into a 30 fps NumPy array stream. Capture → process → display loop, with frame differencing as the canonical 'detect motion' demo."
 framework: "hands-on"
 duration: "25–30 min"
+published: 2026-02-06
 level: "intermediate"
 prereqs: "3.4.1 (convolution), 8.1.1 (per-frame operators)"
 prev:
@@ -18,7 +19,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A webcam is a NumPy array generator. Every 30-millisecond tick it produces a new `(H, W, 3)` array, the same data structure you have manipulated since lesson 1.1.1. The job of an interactive system is to put a transformation between *capture* and *display* — anything from a colour filter to motion detection to a full pose-estimation network. The pipeline is identical regardless of complexity:
 
@@ -68,7 +69,7 @@ cv2.destroyAllWindows()
 **No webcam? No problem.** The pipeline works on any `(H, W, 3)` array source. Pass a video filename to `VideoCapture('clip.mp4')`, generate frames synthetically as in `synthetic_webcam.py`, or read from an HTTP stream — the rest of the code doesn't change.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — The capture-process-display loop
 
@@ -137,7 +138,7 @@ Two pre-processing tricks are doing real work here. First, **convert to grayscal
 Frame differencing detects **anything that moves**, including camera shake, lighting flicker, and JPEG compression noise. For robust motion detection in production, use a **background subtraction** technique with a learned model (OpenCV's `cv2.createBackgroundSubtractorMOG2()`) instead of consecutive-frame differencing [2].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the capture loop, add a filter, then build a motion detector.
 
@@ -270,14 +271,14 @@ out[motion > 0] = [0, 255, 0]
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_capture.py" label="webcam_capture.py — minimal capture loop" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_effects.py" label="webcam_effects.py — real-time filters" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/background_subtraction.py" label="background_subtraction.py — motion detection" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — no-camera demo" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -292,7 +293,7 @@ A webcam is a NumPy array source: `(H, W, 3)` uint8 frames at 30 fps. The intera
 - **Ignoring `ret`.** A `False` return on disconnect crashes the next line.
 - **Comparing colour frames directly.** 3× the work for no benefit; convert to grayscale first.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

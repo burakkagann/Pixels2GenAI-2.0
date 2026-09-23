@@ -5,6 +5,7 @@ title: "Neural Style Transfer"
 objective: "Recreate the content of one image in the artistic style of another by minimising two losses computed from a frozen VGG-19's intermediate feature maps: content from a deep layer, style from Gram matrices across multiple layers."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-06-22
 level: "intermediate-advanced"
 load: "3 core concepts"
 prereqs: "PyTorch, basic CNN intuition (Module 8); ImageNet-pretrained VGG-19"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 In 2015, Gatys, Ecker and Bethge [1] published a result that helped popularise generative AI long before GANs, VAEs or diffusion models reached the broader public: feed a photograph and a painting through a frozen pre-trained classifier, optimise the photograph's pixels to match the painting's *style* while preserving its own *content*, and out comes the photograph reimagined as a painting. The technique requires no special training, no dataset, no generative model — just an off-the-shelf VGG-19 [2] and gradient descent on pixel values.
 
@@ -55,7 +56,7 @@ python neural_style_transfer.py \
 
 300 L-BFGS steps takes ~30 seconds on a GPU, ~3–5 minutes on CPU. The output is the content image re-rendered in the style of the painting.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Content and style live at different depths
 
@@ -118,7 +119,7 @@ Initialisation matters. Starting from the content image (the choice in the refer
 The optimisation is slow because it's per-image and per-style-pair. Every new (content, style) pair requires another 300-step L-BFGS run. Johnson, Alahi and Fei-Fei's 2016 fast-NST paper [3] solved this by training a *feed-forward* network for each style: train once for hours, then style-transfer any image in a single forward pass. The trade-off is one model per style (the production app pattern); the optimisation approach in this lesson handles arbitrary (content, style) pairs but is inherently per-image-slow.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Run NST on a photograph and a famous painting">
 
@@ -279,7 +280,7 @@ Try a few `tv_weight` values (`1e-5`, `1e-4`, `1e-3`) and observe how the output
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 Neural Style Transfer uses a *frozen* pre-trained CNN (VGG-19) as a fixed feature extractor, and optimises the *input image's pixels* directly to minimise a combined loss: content loss (MSE on a deep layer's feature map) plus style loss (MSE on Gram matrices summed across multiple shallow-to-middle layers). The Gram matrix captures spatially-invariant feature co-activation statistics, which is what makes it a robust style representation independent of where features appear in the image. The technique has no generator network — the image *is* the parameter — and L-BFGS is the standard optimiser because the problem is small enough for quasi-Newton methods to be efficient. The optimisation-based version is per-image and slow; Johnson et al.'s fast feed-forward NST [3] trains one network per style for real-time inference, the production-app pattern.
@@ -293,7 +294,7 @@ Neural Style Transfer uses a *frozen* pre-trained CNN (VGG-19) as a fixed featur
 - Using a different CNN than VGG-19 without recalibrating the layers — ResNet or DenseNet have different layer numbering and feature statistics, and the standard `conv_4`/`conv_1..5_1` choices won't transfer.
 - Starting optimisation from random noise expecting fast convergence — works eventually but takes ~3× longer than starting from the content image.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "ControlNet Guided Generation"
 objective: "Add spatial control to a frozen diffusion model with ControlNet's trainable encoder copy and zero-convolution skip path; combine with LoRA for content+style control over generation."
 framework: "conceptual"
 duration: "45–55 min"
+published: 2026-02-22
 level: "advanced"
 load: "4 core concepts"
 prereqs: "Lessons 12.3.1 (DDPM) and 12.5.1 (DreamBooth); diffusers + transformers; GPU strongly recommended"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 [Lesson 12.3.1](/lessons/12.3.1) trained a DDPM that generates from pure noise — controllable by nothing other than the random seed. [Lesson 12.5.1](/lessons/12.5.1) added text conditioning to a pre-trained Stable Diffusion via DreamBooth: now the model responds to prompts but the *structure* of generated images is still up to the model's prior.
 
@@ -81,7 +82,7 @@ result.save("controlnet_output.png")
 
 The output respects the edge map's spatial structure (a circle, say) while filling in the colour and texture according to the prompt.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Three axes of control: noise, text, structure
 
@@ -198,7 +199,7 @@ result = pipe(
 ControlNet checkpoints are trained against a specific base diffusion model. A ControlNet trained for Stable Diffusion v1.5 won't work with SDXL or SD 2.x — the U-Net architectures differ. Hugging Face hosts version-matched ControlNets for each major SD release; check compatibility before downloading.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate guided fabric patterns from Canny edge maps">
 
@@ -372,7 +373,7 @@ Try a control type the pre-trained ControlNet wasn't *trained* for (e.g. feed a 
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 ControlNet adds spatial conditioning to a pre-trained diffusion model by cloning the U-Net encoder, freezing the original model weights, and linking the cloned encoder back into the frozen decoder via zero-initialised 1×1 convolutions. The zero initialisation guarantees that on day one of training the model behaves identically to the unmodified base, so the pre-trained capabilities are preserved by construction and the conditioning branch can only improve from there. The architecture supports many control types (Canny edges, line art, depth, pose, segmentation, scribble) — each trained as its own checkpoint against the same frozen base — and combines naturally with text conditioning (CFG) and style conditioning (LoRA) for three-axis controlled generation. The same pattern of "frozen base + trainable conditioning branch + zero-init linking" has propagated into video, 3D, and audio diffusion models since 2023.
@@ -386,7 +387,7 @@ ControlNet adds spatial conditioning to a pre-trained diffusion model by cloning
 - `controlnet_conditioning_scale > 2.0` — the control overpowers the prompt to the point of degrading the output. Stay in `0.5–1.5` for clean outputs.
 - Combining a LoRA and a ControlNet trained against different base models. Both load, neither composes correctly, and the failure mode is subtle.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

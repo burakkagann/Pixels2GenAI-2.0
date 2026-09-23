@@ -5,6 +5,7 @@ title: "DreamBooth Personalization"
 objective: "Bind a unique token (`sks`) to a specific visual style by fine-tuning Stable Diffusion on 10 reference images, using LoRA adapters and prior-preservation loss to avoid catastrophic forgetting."
 framework: "conceptual"
 duration: "35–45 min"
+published: 2026-02-09
 level: "advanced"
 load: "4 core concepts"
 prereqs: "Lesson 12.3.1 (DDPM Basics); a working diffusers + transformers install; Hugging Face account for Stable Diffusion weights"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 Stable Diffusion can render almost anything you can describe in English, but it can't render *your* specific thing. Ask it for "an African fabric pattern" and you'll get a plausible-looking African fabric pattern — drawn from the statistical average of what the model saw during training, not from any specific source. There is no prompt you can write to get *the* pattern you have on disk, because the model has never seen it.
 
@@ -70,7 +71,7 @@ image.save("personalized_fabric.png")
 
 The same prompt *without* the `sks` token returns a generic African-fabric dress — pleasant, but not the specific pattern. The token does the steering.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why "personalised" is structurally different from "fine-tuned"
 
@@ -173,7 +174,7 @@ The default for this lesson is LoRA at rank 4 — small enough to train on a 12 
 Classifier-free guidance [6] is the third lever and the one users tune most often during generation. The `guidance_scale` parameter in the diffusers pipeline controls how strongly the model follows the prompt: `1.0` means no guidance (unconditional), `7.5` is the default balance, `15+` produces very literal but often artificial-looking outputs. With personalised tokens, slightly higher guidance (8–10) often helps the `sks` token assert itself; too high (15+) and you get rigid, oversaturated outputs. The middle of Exercise 2 is the right place to develop intuition here.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate with the pre-trained LoRA in nine contexts">
 
@@ -331,7 +332,7 @@ After training, swap the subject — feed in 10 photos of your own object (a scu
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 DreamBooth turns a general-purpose text-to-image model into a personalised one by binding a rare token (`sks` and friends) to a specific visual concept through a few hundred gradient steps on 5–10 reference images. Catastrophic forgetting is prevented by prior preservation — interleaving generated class-level images into training so the model has to learn the subject *in addition to* its prior capabilities, not in place of them. Parameter-efficient methods (Textual Inversion for styles, LoRA for subjects) make the technique tractable on consumer hardware; LoRA's combinability and richer parametrisation make it the default for most personalisation work. The same architecture (frozen U-Net plus low-rank adapter matrices in the attention layers) underlies most of the current community fine-tuning ecosystem around Stable Diffusion.
@@ -345,7 +346,7 @@ DreamBooth turns a general-purpose text-to-image model into a personalised one b
 - Setting `guidance_scale` too high in pursuit of "stronger" personalisation. Above ~12 you trade naturalness for oversaturated rigidity.
 - Mismatched base model. A LoRA trained against SD 1.5 won't load correctly into SD 2.x or SDXL — the attention architecture differs.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

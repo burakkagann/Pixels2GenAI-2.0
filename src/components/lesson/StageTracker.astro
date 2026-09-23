@@ -9,8 +9,8 @@
  * cycle long-name) divided from the ticks by a 1 px vertical line.
  * No right-side endpoints — those duplicated the landing-page Cube.
  *
- * Non-shipped ticks render as anchors with `href="#"` — visually
- * identical, just not navigable.
+ * Non-shipped ticks render as plain <span>s — visually identical, not
+ * navigable, not in the Tab order.
  */
 import { MODULES, windowAround, moduleIndexFromLabel } from '@/data/curriculum/modules';
 
@@ -63,12 +63,22 @@ const cycleClass: Record<'I' | 'II' | 'III', string> = { 'I': 'c1', 'II': 'c2', 
         if (i < curIdx) cls.push('past');
         if (i === curIdx) cls.push('cur');
         if (!m.firstLesson) cls.push('soon');
-        const href = m.firstLesson ? `/lessons/${m.firstLesson}` : '#';
         const label = shortTitles[m.idx] ?? m.title;
+        // Unshipped module: a plain <span>, not <a href="#"> — a "#" link
+        // was still a Tab stop, announced as a link, and on click jumped
+        // the reader back to the top of the lesson.
+        if (!m.firstLesson) {
+          return (
+            <span class={cls.join(' ')}>
+              <b>M {m.idx}</b><span class="tname">{label}</span>
+              <span class="sr-only">(coming soon)</span>
+            </span>
+          );
+        }
         return (
           <a
             class={cls.join(' ')}
-            href={href}
+            href={`/lessons/${m.firstLesson}`}
             aria-current={i === curIdx ? 'step' : undefined}
             aria-label={`Module ${m.idx} · ${label}`}
           >

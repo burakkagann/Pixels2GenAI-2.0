@@ -5,6 +5,7 @@ title: "Node Networks — The TouchDesigner Paradigm"
 objective: "Shift from sequential Python scripts to continuously-cooking node networks. Learn the four operator families (TOP, CHOP, SOP, DAT), the meaning of cooking, and why your NumPy mental model carries over almost unchanged."
 framework: "conceptual"
 duration: "35–40 min"
+published: 2026-01-07
 level: "intermediate"
 load: "3 paradigm shifts"
 prereqs: "Modules 0-9 (NumPy fluency, image processing)"
@@ -248,7 +249,7 @@ The architecture has three regions:
 
 The key TD-specific operator: **Feedback TOP**, with `Target TOP` parameter set to `add1`. Feedback continuously reads the output of `add1` and stores it as its own output for one frame, completing the loop.
 
-**Why does this produce cells?** Local activation (edge amplification by `Math`) plus lateral inhibition (dampening by `Level` and blur) plus temporal recursion equals Turing's reaction-diffusion mechanism from 1952 — see [lesson 5.4.4 Turing Patterns](/lessons/5.4.4) for the chemistry version. You have just built a real-time analogue computer for morphogenesis using ten node graphs and zero Python.
+**Why does this produce cells?** Local activation (edge amplification by `Math`) plus lateral inhibition (dampening by `Level` and blur) plus temporal recursion equals Turing's reaction-diffusion mechanism from 1952 — lesson 5.4.4 Turing Patterns (coming soon) covers the chemistry version. You have just built a real-time analogue computer for morphogenesis using ten node graphs and zero Python.
 
 <Dropdown summary="Challenge extensions">
 
@@ -262,7 +263,7 @@ The key TD-specific operator: **Feedback TOP**, with `Target TOP` parameter set 
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -278,7 +279,7 @@ Node-based programming inverts the relationship between code and time. Instead o
 - Treating parameter expressions like Python. Expressions are evaluated each frame in TD's expression language, which is *similar* to Python but not identical (no imports, no statements — only expressions).
 - Forgetting the Null TOP at the end of every chain. It is a reference point that downstream nodes can wire into without modifying the upstream signal — invaluable for editing without breaking dependencies.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

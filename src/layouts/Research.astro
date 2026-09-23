@@ -50,7 +50,8 @@ const articleJsonLd = {
     url: new URL('/', Astro.site).href,
   },
   inLanguage: 'en',
-  url: new URL(Astro.url.pathname, Astro.site).href,
+  // Canonical form: build.format:'file' leaves .html on Astro.url.pathname.
+  url: new URL(Astro.url.pathname.replace(/\.html$/, ''), Astro.site).href.replace(/\/$/, ''),
   image: new URL('/og/home.png', Astro.site).href,
   ...(f.datePublished ? { datePublished: f.datePublished } : {}),
   ...(f.dateModified ? { dateModified: f.dateModified } : {}),

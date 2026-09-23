@@ -5,6 +5,7 @@ title: "GAN Architecture"
 objective: "Implement the original GAN as a two-player game between a Generator and a Discriminator; watch it learn to match a target distribution; then bridge from numbers to simple visual patterns."
 framework: "conceptual"
 duration: "35–40 min"
+published: 2026-01-12
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "Python, PyTorch fundamentals, basic statistics"
@@ -27,7 +28,7 @@ backLink:
   role="diagram"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 Two networks, the same training data, opposite goals. One tries to forge convincing samples; the other tries to catch the forgeries. Train them together for long enough and a strange thing happens — both get good, and at the equilibrium point the forger is producing samples the detective can no longer reliably tell apart from real data.
 
@@ -77,7 +78,7 @@ print(f"Mean: {output.mean():.2f}, Std: {output.std():.2f}")
 
 A typical run prints something like `Mean: 0.01, Std: 0.02` — random weights, random output, nowhere near `N(4.0, 1.25)`. The full training script in Exercise 1 closes this gap by pairing the Generator with a Discriminator that supplies the feedback signal.
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Two networks, opposite jobs
 
@@ -144,7 +145,7 @@ The DCGAN paper [4] codified a set of practical rules — Adam with `β₁ = 0.5
 If your GAN diverges, the first thing to check is almost never the architecture. It is the learning-rate balance between `G` and `D`, or a missing `.detach()`, or input data outside the `[-1, 1]` range the Tanh output assumes. Those three account for the vast majority of "my GAN doesn't work" cases.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Train a GAN on a Gaussian">
 
@@ -244,7 +245,7 @@ Fully-connected layers treat each output pixel as independent. The network can't
 
 </Exercise>
 
-## Implementation note <a id="implementation-note"></a>
+## Implementation note
 
 <Admonition type="note">
 
@@ -255,7 +256,7 @@ The number-distribution GAN in `gan_architecture.py` is adapted from Dev Nag's w
 
 </Admonition>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 A GAN is two networks with opposite goals — a Generator turning noise into samples and a Discriminator scoring those samples against real data — coupled through a single scalar signal and trained alternately. The minimax loss expresses this as a zero-sum game, but in practice the networks are updated step-by-step rather than solved in closed form. The fragility of that interaction (mode collapse, vanishing gradients, oscillation) is a feature of the framework, not a bug in any specific implementation, and most of the rules-of-thumb you'll meet in DCGAN and StyleGAN exist to manage it.
@@ -268,7 +269,7 @@ A GAN is two networks with opposite goals — a Generator turning noise into sam
 - Reading the loss curves like a classifier's. Smoothly-decreasing losses in a GAN usually mean one player is dominating, not that the system is converging.
 - Trying to debug instability by adding capacity to the Generator. Most early-training failures come from input normalisation, learning-rate balance, or the missing `.detach()` — not from the network being too small.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

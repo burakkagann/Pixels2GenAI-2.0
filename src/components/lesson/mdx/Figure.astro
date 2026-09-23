@@ -1,6 +1,7 @@
 ---
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
 
 /**
  * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical),
@@ -116,6 +117,14 @@ if (effectiveSize !== 'bleed' && dims?.w) {
     : Math.min(tierMax ?? dims.w, dims.w);
 }
 const figStyle = capPx ? `max-width:${capPx}px` : undefined;
+
+// Animated GIF: a sibling `<name>.still.png` (scripts/gen-gif-stills.mjs) is
+// served instead under prefers-reduced-motion. No still on disk: GIF as before.
+const stillSrc =
+  src.toLowerCase().endsWith('.gif') &&
+  existsSync(join(process.cwd(), 'public', src.replace(/\.gif$/i, '.still.png')))
+    ? src.replace(/\.gif$/i, '.still.png')
+    : null;
 const attrW = dims?.w ?? width;
 const attrH = dims?.h;
 ---
@@ -129,12 +138,21 @@ const attrH = dims?.h;
     data-zoom-alt={alt}
     data-zoom-pixelated={pixelated ? '1' : undefined}
   >
-    <img src={src} alt={alt} width={attrW} height={attrH} loading="lazy" />
+    {stillSrc ? (
+      <picture>
+        {/* Reduce-motion visitors get a still frame instead of the looping
+            GIF (WCAG 2.2.2); the browser only downloads the matching one. */}
+        <source media="(prefers-reduced-motion: reduce)" srcset={stillSrc} />
+        <img src={src} alt={alt} width={attrW} height={attrH} loading="lazy" />
+      </picture>
+    ) : (
+      <img src={src} alt={alt} width={attrW} height={attrH} loading="lazy" />
+    )}
   </button>
   {(caption || num !== undefined) && (
     <figcaption>
       {num !== undefined && <span class="fnum">Fig. {num}</span>}
-      {caption}
+      {caption && <Fragment set:html={inlineMarkdownHtml(caption)} />}
     </figcaption>
   )}
 </figure>

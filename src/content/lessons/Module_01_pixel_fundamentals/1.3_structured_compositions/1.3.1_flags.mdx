@@ -5,6 +5,7 @@ title: "Flags (Array Slicing)"
 objective: "Select and modify rectangular regions of NumPy arrays using slice notation. Build structured colour compositions — national flags — by combining row slices, column slices, and broadcasting."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2025-12-01
 level: "beginner"
 load: "2 core concepts"
 prereqs: "1.1.1 (RGB arrays)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Flags are structured patterns made of rectangular colour blocks. Creating them teaches you one of NumPy's most powerful features: **array slicing**. You will learn to select and modify rectangular regions of images using simple slice notation, building the foundation for complex compositions and transformations.
 
@@ -78,7 +79,7 @@ result.save('france_flag.png')
 The slice notation `[start:stop]` is **inclusive of start, exclusive of stop**. So `[0:150]` selects indices 0, 1, 2, ..., 149 (not 150). This matches Python's built-in `range()` function behaviour.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Array slicing syntax
 
@@ -176,7 +177,7 @@ img[0:100, 0:100] = [255, 0, 0]
 Broadcasting is one of NumPy's most useful features. When you write `img[0:100, 0:100] = [255, 0, 0]`, NumPy recognises that the left side has shape `(100, 100, 3)` and the right side has shape `(3,)`. It stretches the right side across both spatial dimensions automatically, filling every pixel in the region with the same RGB value. Harris et al. (2020) describe this mechanism as central to NumPy's design philosophy of "vectorised" array operations.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three progressively challenging exercises, each building on the previous using the **Execute, Modify, Create** approach.
 
@@ -437,14 +438,14 @@ Experiment with line thickness and colours to match the official Union Jack desi
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/france_flag.py" label="france_flag.py — France flag (Execute)" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/germany_flag.py" label="germany_flag.py — Germany flag (Modify solution)" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/switzerland_flag.py" label="switzerland_flag.py — Switzerland flag (Create solution)" />
 <Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/switzerland_starter.py" label="switzerland_starter.py — Switzerland starter code" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 In 15-20 minutes, two core concepts: array slicing syntax and multi-dimensional slicing.
 
@@ -469,7 +470,7 @@ The rectangular slicing you practised here is the foundation for:
 - **Module 3**: image transformations and masking (selecting regions for effects).
 - **Module 7**: image segmentation (dividing images into regions for analysis).
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

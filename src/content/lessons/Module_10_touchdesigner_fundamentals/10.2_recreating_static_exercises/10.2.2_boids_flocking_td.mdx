@@ -5,6 +5,7 @@ title: "Boids in TouchDesigner — Physics in CHOPs, Rendering in Instances"
 objective: "Port the NumPy boids simulation from Module 5.2.1 to a TouchDesigner network that runs 5,000 agents at 60 fps. The physics lives in a Script CHOP; the rendering lives in a Geometry COMP with GPU instancing."
 framework: "conceptual"
 duration: "32–38 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 conceptual pieces"
 prereqs: "5.2.1 (Boids), 10.1.1, 10.1.2"
@@ -157,7 +158,7 @@ Take the NumPy boids from lesson 5.2.1, drop the physics function into a Script 
 - **GLSL Compute physics**: move the Script CHOP body into a GLSL Compute TOP. Now physics runs on the GPU and you can do 50,000 agents.
 - **Predator agent**: one special agent that all boids flee from; the predator chases the centroid of the flock. Classic stability test for any flocking implementation.
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -173,7 +174,7 @@ Porting boids to TouchDesigner separates physics from rendering. Physics goes in
 - Boids forces computed in a Python loop instead of vectorised NumPy. The `O(N²)` cost compounds; vectorise like 5.2.1.
 - Wiring CHOP channels in wrong order to instancing parameters. Channel order matters; double-check `tx, ty, tz` and `rx, ry, rz` mapping.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

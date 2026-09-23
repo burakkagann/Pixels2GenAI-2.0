@@ -1,4 +1,5 @@
 ---
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
 interface Props {
   /** Exercise number — rendered as a roman numeral. */
   n: number;
@@ -45,7 +46,7 @@ const roman = (num: number): string => {
       {kicker && <span class="num" data-stage={stage}>{kicker}</span>}
       {roman(n)}.
     </div>
-    <h3 class="ex-title">{title}</h3>
+    <h3 class="ex-title" set:html={inlineMarkdownHtml(title)} />
   </header>
   <div class="ex-body">
     <slot />

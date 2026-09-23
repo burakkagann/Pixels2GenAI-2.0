@@ -5,6 +5,7 @@ title: "Creating Star Fields"
 objective: "Place individual pixels with integer array indexing instead of geometric primitives, then swap the random distribution (uniform → Gaussian) to turn a scatter into a star cluster — the indexing pattern behind every particle system."
 framework: "hands-on"
 duration: "15–20 min"
+published: 2025-12-01
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.1.3 (boolean masks), basic NumPy random"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 Filled shapes work pixel-by-pixel through a *condition* — boolean masks for circles, edge tests for triangles. Particle systems work pixel-by-pixel through a *coordinate list*: you say *exactly where* each pixel goes. The mechanic NumPy uses for this is **integer array indexing**, and it is one line: `canvas[y_coords, x_coords] = brightness`. Change the distribution that generated those coordinates — uniform vs. Gaussian — and the same line draws either an evenly-scattered starfield or a clustered galaxy core [1]. In this lesson you will scatter 150 pixels, swap the distribution to draw a cluster, then layer multiple clusters into a galaxy.
 
@@ -67,7 +68,7 @@ Image.fromarray(canvas, mode='L').save('simple_star.png')
 The whole star field is one assignment: `canvas[y_coords, x_coords] = 255`. NumPy walks the parallel coordinate arrays and writes each pixel in turn. No Python loop, no per-pixel function call.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Integer array indexing
 
@@ -152,7 +153,7 @@ def add_cluster(canvas, cx, cy, num_stars, spread):
 ```
 </CodeBlock>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: scatter uniform stars, swap to Gaussian and add a second cluster, then build a multi-cluster galaxy.
 
@@ -349,13 +350,13 @@ Image.fromarray(canvas, mode='L').save('multi_cluster.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars/simple_star.py" label="simple_star.py — uniform scatter" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars/gaussian_cluster.py" label="gaussian_cluster.py — single cluster" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars/multi_cluster_solution.py" label="multi_cluster_solution.py — galaxy reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -370,7 +371,7 @@ Integer array indexing is the third indexing technique in your NumPy vocabulary,
 - Skipping `.astype(int)` after clipping — array indices must be integer; floats throw `TypeError`.
 - Reusing a random seed across calls and wondering why two "different" clusters look identical — set the seed once at the top, or not at all.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -5,6 +5,7 @@ title: "DDPM Basics"
 objective: "Train a Denoising Diffusion Probabilistic Model on African fabric patterns by learning to reverse a 1,000-step noise corruption process; understand the forward schedule, the U-Net's noise-prediction objective, and the iterative reverse-process sampler."
 framework: "conceptual"
 duration: "40–50 min"
+published: 2026-01-20
 level: "advanced"
 load: "4 core concepts"
 prereqs: "Lesson 12.1.2 (DCGAN), 12.2.1 (VAEs); PyTorch; GPU for training (CPU works for inference)"
@@ -27,7 +28,7 @@ backLink:
   role="output"
 />
 
-## Overview <a id="overview"></a>
+## Overview
 
 By 2020, GANs had dominated generative image modelling for six years. Then Ho, Jain and Abbeel published "Denoising Diffusion Probabilistic Models" [1], achieved competitive image quality without adversarial training, and within two years diffusion-based architectures had displaced GANs as the dominant approach. Stable Diffusion [2], DALL-E 2 [3], Imagen, and Midjourney all use variants of the same core mechanism.
 
@@ -84,7 +85,7 @@ That's four fabric patterns generated from pure noise via 250 DDIM steps. Each s
   role="output"
 />
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why a reversed corruption process beats adversarial training
 
@@ -200,7 +201,7 @@ DDIM is what makes diffusion practical for interactive use. The newer Flow Match
 A common bug when porting between DDPM implementations: confusing training timesteps with sampling timesteps. `timesteps=1000` defines the forward-process schedule the model was trained on; `sampling_timesteps=250` is the inference-time choice of how many of those steps to actually execute. Changing the training value retrains the model differently; changing the sampling value just trades quality for speed at inference.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Generate 16 fabric patterns from the pre-trained checkpoint">
 
@@ -339,7 +340,7 @@ After getting either option working, try sampling at different `truncation`-styl
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 DDPM trains a neural network to reverse a fixed Gaussian noise-corruption process by predicting the noise component at every timestep, with MSE loss and no adversarial dynamics. The forward process has a closed-form jump from `x_0` to `x_t` that makes training efficient; the reverse process is iterated 250–1,000 times at inference to turn pure noise into a coherent sample, with DDIM acceleration making the sample-time cost negotiable. The architecture is a U-Net with timestep conditioning, self-attention, and group normalisation — the same backbone that, with text conditioning added, powers Stable Diffusion and DALL-E 2. The trade-off versus GANs is structural: stable training and full mode coverage in exchange for slow sampling. Most current state-of-the-art generative image models are descendants of this framework, with Flow Matching ([Lesson 12.7.1](/lessons/12.7.1)) as the most successful recent refinement.
@@ -353,7 +354,7 @@ DDPM trains a neural network to reverse a fixed Gaussian noise-corruption proces
 - Trying to interpret the trained model's outputs as "average of training images." It's not — it's samples from the learned distribution, which is structurally different from the empirical training distribution.
 - Comparing FID scores between DDPM, DCGAN, and StyleGAN runs at different image resolutions or with different image-preprocessing pipelines. The numbers are only comparable under matched conditions.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

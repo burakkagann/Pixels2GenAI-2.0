@@ -5,6 +5,7 @@ title: "VQ-VAE & VQ-GAN"
 objective: "Replace the VAE's continuous Gaussian bottleneck with a discrete codebook (VQ-VAE), then layer a GAN-style discriminator on top to sharpen reconstructions (VQ-GAN) — the architectural pattern that turns images into token sequences for transformer-based generation."
 framework: "conceptual"
 duration: "30–40 min"
+published: 2026-06-22
 level: "advanced"
 load: "3 core concepts"
 prereqs: "Lessons 12.2.1 (VAEs), 12.1.1 (GANs); PyTorch"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The VAE family ([Lesson 12.2.1](/lessons/12.2.1)) compresses images into *continuous* latent vectors — points in a 16- or 64-dimensional real-valued space. That works well for the operations you'd want to do directly on the latent (interpolation, sampling), but it also locks you out of an entire family of downstream models: anything that wants to *predict the next element* in a sequence, like a transformer language model. Language models work on discrete tokens because their training objective is "predict the next token from a vocabulary." Continuous latents have no vocabulary.
 
@@ -51,7 +52,7 @@ python vqvae_demo.py
 
 Expected output: three lines of training loss, then a final report of how many codebook entries the model is actually using (typically 30–50 of the 64 available — the rest are "dead").
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Why discrete? Because transformers expect tokens
 
@@ -143,7 +144,7 @@ The architectural shape is identical to VQ-VAE — same encoder, same codebook, 
 VQ-GAN isn't itself a generative model — it's an autoencoder with a discrete bottleneck and a sharper reconstruction. To *generate* novel images, you need a second-stage model that learns the distribution over the discrete token sequences VQ-GAN produces. The Taming Transformers paper [2] paired VQ-GAN with a GPT-style transformer; OpenAI's DALL-E 1 used a different transformer; Google's Muse uses a masked-language-model-style transformer with parallel decoding. The tokeniser and the generator are separate components, often trained separately.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 <Exercise n={1} kicker="EXECUTE" title="Train the demo VQ-VAE on MNIST and inspect codebook usage">
 
@@ -281,7 +282,7 @@ Swap MNIST for CIFAR-10 by changing the dataset constructor and the in_channels 
 
 </Exercise>
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 VQ-VAE replaces the continuous VAE bottleneck with a *discrete* codebook of learned reference vectors; each encoder output is snapped to its nearest codebook entry before going into the decoder, turning every image into a grid of integer codebook indices. The straight-through estimator handles backpropagation through the non-differentiable nearest-neighbour lookup by pretending quantisation is the identity in the backward pass. Three losses (reconstruction, codebook, commitment) keep the encoder, codebook, and decoder updating in compatible directions. VQ-GAN adds a perceptual loss and a PatchGAN discriminator to sharpen reconstructions. The discrete-bottleneck output sequence is what makes transformer-based image generation possible — Taming Transformers ([Lesson 12.6.1](/lessons/12.6.1)), DALL-E 1, Parti, and Muse all share this two-stage template: train a VQ-GAN tokeniser, then train a transformer on the token sequences it produces.
@@ -295,7 +296,7 @@ VQ-VAE replaces the continuous VAE bottleneck with a *discrete* codebook of lear
 - Treating VQ-VAE as a generative model on its own. It's a *tokeniser*; you need a second-stage model (transformer, diffusion-over-tokens, etc.) to actually generate novel sequences.
 - Using a too-small commitment cost (`< 0.1`). The encoder drifts away from the codebook and reconstruction quality degrades over training rather than improving.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

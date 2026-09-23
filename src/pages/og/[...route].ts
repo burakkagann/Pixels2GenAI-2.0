@@ -10,6 +10,7 @@
  */
 
 import { getCollection } from 'astro:content';
+import { inlineMarkdownText } from '@/lib/inlineMarkdown';
 import { OGImageRoute } from 'astro-og-canvas';
 
 const lessons = await getCollection('lessons');
@@ -28,7 +29,7 @@ for (const lesson of lessons) {
   const slug = lesson.id;
   pages[`lessons/${slug}`] = {
     title: `${slug} · ${lesson.data.title}`,
-    description: lesson.data.objective,
+    description: inlineMarkdownText(lesson.data.objective),
   };
 }
 

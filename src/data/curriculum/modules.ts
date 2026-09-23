@@ -21,6 +21,9 @@ export interface ModuleEntry {
   /** Slug of the lesson the card should link to. Undefined → "Coming soon". */
   firstLesson?: string;
   capstone?: boolean;
+  /** Full module name where "title em" doesn't read as one (breadcrumbs,
+   *  structured data). Falls back to `${title} ${em}`. */
+  name?: string;
 }
 
 export const MODULES: ModuleEntry[] = [
@@ -30,12 +33,12 @@ export const MODULES: ModuleEntry[] = [
   { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I',   firstLesson: '3.1.1' },
   { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1' },
   { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I',   firstLesson: '5.1.1' },
-  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II',  firstLesson: '6.1.1' },
+  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II',  firstLesson: '6.1.1', name: 'Noise & Procedural Generation' },
   { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II' },
-  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II' },
+  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II',  firstLesson: '8.1.1' },
   { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II',  firstLesson: '9.1.1' },
-  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II' },
-  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II' },
+  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II',  firstLesson: '10.1.1', name: 'TouchDesigner' },
+  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II',  firstLesson: '11.1.1' },
   { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.1' },
   { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III' },
   { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III' },

@@ -5,6 +5,7 @@ title: "Plant Generation (L-Systems)"
 objective: "Lindenmayer systems — a string-rewriting grammar interpreted as turtle commands. One axiom, one rule, four iterations: a fractal plant. Same paradigm spans algae, ferns, and entire forests."
 framework: "hybrid"
 duration: "22–28 min"
+published: 2026-02-06
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "4.1.2 (turtle graphics interpreter), 4.2.1 (fractal trees / branching)"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 In 1968, biologist Aristid Lindenmayer needed a formalism to describe how multicellular organisms develop, cell by cell, from a single founding cell [1]. The result — **Lindenmayer systems**, or **L-systems** — is a parallel string-rewriting grammar in which every symbol is rewritten simultaneously according to a fixed set of production rules. Iterate the rules; the string grows. Interpret each symbol as a turtle command; the string draws.
 
@@ -85,7 +86,7 @@ img.save("plant_basic.png")
 The instruction string after 4 iterations has 1,561 symbols. By iteration 6 it has 39,061. **String length grows exponentially**, so stop at the smallest iteration count that gives the silhouette you want. Five iterations is usually visually saturated.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Parallel string rewriting
 
@@ -181,7 +182,7 @@ The **branching angle** ANGLE is the second design parameter. With the same rule
 **L-systems are an iterated function system encoded as a grammar.** Each production rule is a contraction (the children are smaller copies of the parent), the alphabet plus the brackets form a state machine for orchestrating which contractions to apply, and the iteration is the fixpoint of the rewriting operation. This is the conceptual hinge of 4.3: the next two lessons (4.3.2 Koch snowflake, 4.3.3 Penrose tiling) use the same machinery with different rules to produce snowflakes and aperiodic tilings.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the simple plant, sweep angles and rules, then design a fern from scratch.
 
@@ -365,11 +366,11 @@ draw_lsystem(s, ANGLE, STEP, (800, 600)).save("my_fern.png")
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/plant_lsystem.py" label="plant_lsystem.py — reference implementation" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -384,7 +385,7 @@ L-systems are parallel string-rewriting grammars: an axiom, a set of production 
 - **Too many iterations.** Every iteration multiplies string length by roughly the rule's expansion factor. 6 iterations of an "F → FF[+F][-F]F" rule produces ~16,000-character strings; 7 produces ~80,000; 8 a million. The plant doesn't get visibly more detailed past 5–6 iterations on a 800×600 canvas — stop before things slow down.
 - **Step size and canvas mismatch.** Long iterations need shorter step sizes. If the plant extends off-canvas, halve `STEP` instead of cropping.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

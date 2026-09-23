@@ -334,7 +334,9 @@
 }
 
 .signup-form .opt {
-  color: var(--fg-4);
+  /* Real information, not decoration: secondary text colour, not the
+     inactive --fg-4 tier (which was 1.75:1 in dark mode). */
+  color: var(--fg-3);
   letter-spacing: 0.06em;
   text-transform: none;
 }
@@ -365,6 +367,13 @@
 .signup-form textarea:focus {
   outline: none;
   border-color: var(--studio-ink);
+}
+
+/* Keyboard focus needs more than a border-colour shift on a 1px border. */
+.signup-form input:focus-visible,
+.signup-form textarea:focus-visible {
+  outline: 2px solid var(--studio-ink);
+  outline-offset: 2px;
 }
 
 /* Validation state — amber token; the browser supplies the message. */

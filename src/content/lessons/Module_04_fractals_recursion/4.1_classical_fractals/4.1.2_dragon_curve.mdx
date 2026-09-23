@@ -5,6 +5,7 @@ title: "Dragon Curve"
 objective: "Generate the Heighway dragon — a recursive L/R fold sequence rendered with turtle graphics. One self-similar rule, 2,047 turns, an unmistakable silhouette."
 framework: "hybrid"
 duration: "20–25 min"
+published: 2026-02-06
 level: "beginner-intermediate"
 load: "3 core concepts"
 prereqs: "4.1.1 (recursion basics), Python string manipulation"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 The Heighway dragon curve is what you get when you fold a paper strip in half repeatedly, always in the same direction, then unfold each crease to exactly 90°. NASA physicist John Heighway first investigated it in 1966, and Martin Gardner popularised it in his *Scientific American* column the next year [1]. What makes it irresistible: the entire curve, no matter how complex, is encoded as a string of `L`s and `R`s built by one short recursive rule. Render the string with turtle graphics — move forward, turn left or right — and a self-similar dragon emerges that never crosses itself and tiles the plane.
 
@@ -71,7 +72,7 @@ print(f"Sequence length: {len(sequence)}")
 The 2,047 number is not a coincidence. Each iteration of the rule doubles the previous sequence length and adds one new fold in the middle. The recurrence is "new length equals two times previous length, plus one". Solving it gives 2 to the power n+1, minus 1, segments at depth n. At depth 10 that comes out to 2,048 minus 1 = 2,047 turn instructions.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Paper-folding as recursion
 
@@ -172,7 +173,7 @@ def draw_dragon(canvas, sequence, start, step, direction, color):
 The **generation** step (build the `L`/`R` string) and the **interpretation** step (walk the turtle) are independent. Swap the turtle for a Pillow `ImageDraw.line` call and the same sequence produces a smooth vector drawing. Swap the recursive rule for a different one and the same turtle draws Koch curves or fern leaves. This split is the architectural move behind every L-system in 4.3.
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the depth-10 dragon, sweep parameters, then re-implement the recursive sequence generator from scratch.
 
@@ -339,13 +340,13 @@ assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLRLLL'
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon_curve.py" label="dragon_curve.py — Exercise 1 reference" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/exercise3_solution.py" label="exercise3_solution.py — Exercise 3 reference" />
 <Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon.py" label="dragon.py — minimal alternative implementation" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -360,7 +361,7 @@ The dragon curve is a single recursive rule — append the previous sequence, th
 - **Off-canvas drawing.** Depth 12 at `step_size = 3` exceeds an 800-pixel canvas. Either reduce `step_size`, increase the canvas, or tune `start_position`.
 - **Confusing axis conventions.** `move_forward` uses `(x, y)` but NumPy indexes `canvas[y, x]`. Mixing these up swaps your dragon's orientation.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

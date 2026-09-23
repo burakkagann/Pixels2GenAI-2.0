@@ -88,7 +88,10 @@ for (const m of view) {
 //    pre-restructure asset path and fails the build.
 const ASSET_RE = /(?:src|href)\s*=\s*["'](\/lesson-media\/[^"']+)["']/g;
 const LEGACY_ASSET_RE = /["'](\/lessons\/[^"']+\/[^"']+)["']/g;
-const LESSON_LINK_RE = /(?:src|href)\s*=\s*["']\/lessons\/([^/"']+)\/?["']/g;
+// Lesson page links in both forms: attribute (href="/lessons/x.y.z") and
+// Markdown ([text](/lessons/x.y.z) or …#anchor). The Markdown form used to
+// go unchecked, which let a link to unshipped 5.4.4 ship as a live 404.
+const LESSON_LINK_RE = /(?:(?:src|href)\s*=\s*["']|\]\()\/lessons\/([\d.]*\d)\/?(?:#[^"')\s]*)?["')]/g;
 
 // Extract the prev/next neighbor slugs from a lesson's YAML frontmatter.
 // Handles all three forms in use:  `prev: null`,  inline `next: { slug: "x" }`,
@@ -124,6 +127,10 @@ for (const slug of wiredSlugs) {
     const abs = publicAssetPath(ref);
     if (!fs.existsSync(abs)) {
       errors.push(`Lesson "${slug}" references missing asset: ${ref}`);
+    } else if (/\.gif$/i.test(ref) && !fs.existsSync(abs.replace(/\.gif$/i, '.still.png'))) {
+      // <Figure> shows <name>.still.png to reduce-motion visitors; without it
+      // the GIF loops for them too.
+      warnings.push(`Lesson "${slug}" GIF has no reduced-motion still: ${ref} (run npm run gif-stills).`);
     }
   }
 
@@ -133,8 +140,11 @@ for (const slug of wiredSlugs) {
 
   for (const match of content.matchAll(LESSON_LINK_RE)) {
     const target = match[1];
-    if (!wiredSlugs.has(target) && !lessonFilePath(target)) {
-      warnings.push(`Lesson "${slug}" links to /lessons/${target} which is not a shipped lesson.`);
+    // No MDX at all means no page is built: a guaranteed 404, so fail.
+    if (!lessonFilePath(target)) {
+      errors.push(`Lesson "${slug}" links to /lessons/${target}, which has no lesson page (404). Unlink it until that lesson ships.`);
+    } else if (!wiredSlugs.has(target)) {
+      warnings.push(`Lesson "${slug}" links to /lessons/${target}, whose MDX exists but is not wired into subtopics.ts.`);
     }
   }
 
@@ -144,6 +154,17 @@ for (const slug of wiredSlugs) {
   // a curriculum leaf at all (a typo that no future port will resolve).
   const fmEnd = content.indexOf('\n---', 4);
   const frontmatter = fmEnd > 0 ? content.slice(0, fmEnd) : content;
+
+  // A hand-written search snippet should fit Google's ~160-character limit.
+  const desc = frontmatter.match(/^description:\s*["'](.*)["']\s*$/m);
+  if (desc && desc[1].length > 160) {
+    warnings.push(`Lesson "${slug}" description is ${desc[1].length} characters; keep it at 160 or fewer.`);
+  }
+  // Feeds RSS pubDate and JSON-LD datePublished; set it when shipping.
+  if (!/^published:\s*\d{4}-\d{2}-\d{2}/m.test(frontmatter)) {
+    warnings.push(`Lesson "${slug}" has no published: YYYY-MM-DD date in its frontmatter.`);
+  }
+
   for (const { dir, slug: target } of neighborSlugs(frontmatter)) {
     if (!leafIds.has(target)) {
       warnings.push(`Lesson "${slug}" has ${dir} -> "${target}", which is not a leaf id in subtopics.ts (typo in the frontmatter?).`);

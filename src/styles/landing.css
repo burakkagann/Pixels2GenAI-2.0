@@ -131,6 +131,100 @@
   .cover-actions .btn { justify-content: center; }
 }
 
+/* Narrow phones: "See the curriculum" wrapped to two lines in its half-width
+   cell at 360px. Trim the side padding and tracking so each label fits on
+   one line. */
+@media (max-width: 400px) {
+  .cover-actions .btn {
+    padding-left: 10px;
+    padding-right: 10px;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ---------- Cover: fit the first screen (desktop, >960px) ----------
+   Goal: headline, both CTAs, the cube and its sliders all visible on
+   arrival. Two halves, sized differently on purpose:
+   - Right column (.cube-plate) gets an explicit height from the viewport
+     and becomes a flex column; the cube takes whatever the caption and
+     controls leave (see .cube-slot in cube.module.css). No pixel budget
+     for the controls lives here, so adding a slider cannot silently
+     break the fit, only shrink the cube.
+   - Left column is never given a height. Type and spacing scale with
+     viewport height (svh), and .cover only has a min-height, so if the
+     text ever outgrows the screen the section grows and the page scrolls
+     instead of overlapping § 1.
+   --plate-min is the agreed floor: below ~740px of viewport height the
+   plate stops shrinking and the page scrolls, so the cube never gets too
+   small to read. The ceiling keeps tall/4K screens from a vast empty hero.
+   Scoped to >960px because the plate's size container needs a definite
+   height; in the stacked layout it would collapse to zero. vh lines are
+   fallbacks for browsers without svh. */
+@media (min-width: 961px) {
+  .cover {
+    --cover-pad-y: clamp(20px, 3.5vh, 56px);
+    --cover-pad-y: clamp(20px, 3.5svh, 56px);
+    --plate-min: 630px;
+    --plate-max: 880px;
+    padding-top: var(--cover-pad-y);
+    padding-bottom: var(--cover-pad-y);
+    min-height: calc(100vh - var(--frame-h));
+    min-height: calc(100svh - var(--frame-h));
+    gap: clamp(40px, 4vw, 64px);
+  }
+
+  .cover .eyebrow { margin-bottom: clamp(14px, 2.4svh, 28px); }
+
+  .cover-title {
+    font-size: clamp(46px, min(7vw, 9vh), 96px);
+    font-size: clamp(46px, min(7vw, 9svh), 96px);
+    margin-bottom: clamp(14px, 2.4svh, 28px);
+  }
+
+  .cover-lead {
+    font-size: clamp(17px, 2.2svh, 21px);
+    margin-bottom: clamp(18px, 3.4svh, 40px);
+  }
+
+  .cover-meta { margin-bottom: clamp(16px, 3svh, 36px); }
+  .cover-meta > div { padding: clamp(8px, 1.2svh, 12px) 14px; }
+
+  .cube-plate {
+    height: clamp(var(--plate-min), calc(100vh - var(--frame-h) - 2 * var(--cover-pad-y)), var(--plate-max));
+    height: clamp(var(--plate-min), calc(100svh - var(--frame-h) - 2 * var(--cover-pad-y)), var(--plate-max));
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(14px, 2svh, 24px);
+    padding-bottom: clamp(14px, 2svh, 22px);
+  }
+
+  .cube-caption { margin-bottom: clamp(10px, 1.6svh, 22px); }
+}
+
+/* ---------- Cover: phones and tablets (≤960px, stacked) ----------
+   Fitting text + cube + controls on one phone screen would shrink the cube
+   to a thumbnail, so the target here is narrower: headline, lead and both
+   CTAs on the first screen, the cube as the second. The CTAs move above
+   the stat grid (visual order only; DOM and tab order are unchanged, which
+   is fine because the grid holds no interactive content). */
+@media (max-width: 960px) {
+  .cover > div:first-child {
+    display: flex;
+    flex-direction: column;
+  }
+  .cover-actions {
+    order: 1;
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    order: 2;
+    margin-bottom: 0;
+  }
+}
+
+/* Phone type/spacing for the cover lives in the "Phone rhythm" block
+   further down (≤640px), which comes later in the cascade. */
+
 .btn {
   font-family: var(--mono);
   font-size: 11px;
@@ -567,12 +661,14 @@
 }
 
 .card-top b {
-  color: var(--cycle, var(--accent));
+  /* Small text on a tinted surface: nudged toward --fg so it holds WCAG AA (4.5:1) in both themes. */
+  color: color-mix(in srgb, var(--cycle, var(--accent)) 85%, var(--fg));
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
-.mod-card h4 {
+.mod-card .card-title {
+  display: block;
   margin: 4px 0 0;
   font-family: var(--serif);
   font-size: 18px;
@@ -582,7 +678,7 @@
   text-wrap: balance;
 }
 
-.mod-card h4 em {
+.mod-card .card-title em {
   color: var(--fg-2);
   font-style: italic;
   font-weight: 400;
@@ -701,6 +797,18 @@
   color: var(--cycle, var(--accent));
 }
 
+/* Shipped leaf = <div.leaf> holding the link and the completion toggle as
+   siblings (a button nested in a link is invalid). The link carries the
+   number + title row and inherits the leaf's colour and hover. */
+.panel-subs .sub .leaf-link {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
 .panel-subs .sub .leaf .lnum {
   font-family: var(--mono);
   font-size: 10px;
@@ -762,7 +870,9 @@
    changes. */
 @media (max-width: 540px) {
   .station-cards {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): a bare 1fr track would not shrink below the widest
+       card's min-content and pushed the page to 326px on a 320px phone. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
     border: 1px solid var(--line);
     background: var(--bg-2);
@@ -793,14 +903,14 @@
   .card-top { flex: none; }
   .card-top .card-fw { display: none; }
 
-  .mod-card h4 {
+  .mod-card .card-title {
     margin: 0;
     flex: 1;
     min-width: 0;
     font-size: 15px;
   }
-  .mod-card h4 br { display: none; }
-  .mod-card h4 em { display: none; }
+  .mod-card .card-title br { display: none; }
+  .mod-card .card-title em { display: none; }
 
   .card-meta {
     margin: 0;
@@ -808,6 +918,17 @@
     border: 0;
     white-space: nowrap;
   }
+
+  /* Safety net: a single long title word may break rather than run into
+     the lesson count beside it. */
+  .mod-card .card-title { overflow-wrap: anywhere; }
+}
+
+/* Narrow phones: "3 sub · 17 lessons" left "Transformations" ~70px and the
+   word ran into the count. Keep the lesson count only; the sub-topic
+   breakdown is in the panel the card opens. */
+@media (max-width: 400px) {
+  .card-meta .cm-subs { display: none; }
 
   /* Accordion panel relocated under its card by the script — make it read as
      the card's dropdown (flush, tinted, same left accent as the active card)
@@ -856,7 +977,7 @@
 .rq .tag {
   font-family: var(--mono);
   font-size: 10px;
-  color: var(--studio);
+  color: var(--studio-text);
   letter-spacing: 0.14em;
   margin-bottom: 10px;
 }
@@ -887,12 +1008,18 @@
     padding-bottom: 48px;
     gap: 36px;
   }
-  .cover-title { margin-bottom: 20px; }
+  .cover .eyebrow { margin-bottom: 18px; }
+  .cover-title { margin-bottom: 18px; }
+  /* 17px (not 18) plus the CTA reorder above keeps both buttons on the
+     first screen down to a 360×640 phone. */
   .cover-lead {
-    font-size: 18px;
-    margin-bottom: 28px;
+    font-size: 17px;
+    margin-bottom: 24px;
   }
-  .cover-meta { margin-bottom: 28px; }
+  .cover-actions { margin-bottom: 28px; }
+  /* The stat grid is the cover's last item on phones (see the ≤960px
+     reorder), so it carries no bottom margin. */
+  .cover-meta { margin-bottom: 0; }
 
   .section {
     padding-top: 48px;
@@ -1305,6 +1432,11 @@
     padding: 0 calc(var(--pad-x) - 12px);
     border-top: 1px solid var(--line);
     overflow-x: auto;
+    /* A grid item's default min-width:auto is its content width, so the
+       row of links forced both grid columns (and the page) to ~348px on a
+       320px screen and overflow-x never engaged. min-width:0 lets it
+       shrink to the viewport and scroll inside itself instead. */
+    min-width: 0;
   }
   .nav-mid a {
     /* 44px-tall touch targets: 13 + ~18 line + 13. */
@@ -1328,6 +1460,17 @@
    container inset that aligns the edges) so all four sit on one line; the
    overflow-x: auto from the ≤920px rule stays as the ultimate fallback. The
    13px vertical padding keeps the 44px touch height. */
+/* ≤380px: wordmark + "GitHub ★ 4 ↗" + theme toggle need ~308px but a
+   320px screen leaves 280px inside the padding, so the first header row
+   pushed the page sideways. Collapse the GitHub link to its star + count:
+   font-size 0 hides the "GitHub" word and the arrow (bare text), the SVG
+   keeps its explicit size, and the count gets its size back. The link's
+   aria-label still names it "Pixels2GenAI on GitHub — N stars". */
+@media (max-width: 380px) {
+  .nav-r a.gh-link { font-size: 0; gap: 4px; }
+  .nav-r a.gh-link .gh-count { font-size: 11px; }
+}
+
 @media (max-width: 420px) {
   .nav-mid { padding: 0 calc(var(--pad-x) - 8px); }
   .nav-mid a {
@@ -1482,6 +1625,12 @@
   border-color: var(--accent, var(--c2));
 }
 
+/* The input itself has no outline; show a ring on the box for keyboard focus. */
+.curriculum-search:has(input:focus-visible) {
+  outline: 2px solid var(--accent, var(--c2));
+  outline-offset: 2px;
+}
+
 .curriculum-search .search-ic {
   width: 18px;
   height: 18px;
@@ -1574,6 +1723,24 @@
   border-color: var(--line);
 }
 
+/* Shipped result = <div.result> with two siblings, the lesson link and the
+   completion toggle (a button nested in a link is invalid and garbled the
+   link's name). The link takes over the id / title / module columns. The
+   "soon" rows stay a single <span> on the 4-column grid above. */
+.curriculum-results div.result {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.curriculum-results .result-link {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
 .curriculum-results .result .r-id {
   font-family: var(--mono);
   font-size: 10px;
@@ -1615,6 +1782,7 @@
 /* Phone widths: drop the module column so id + title + toggle breathe. */
 @media (max-width: 480px) {
   .curriculum-results .result { grid-template-columns: 44px 1fr auto; }
+  .curriculum-results .result-link { grid-template-columns: 44px 1fr; }
   .curriculum-results .result .r-mod { display: none; }
 }
 

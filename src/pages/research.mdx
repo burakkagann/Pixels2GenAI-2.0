@@ -25,7 +25,7 @@ analysis: 'Mixed-methods'
 # Article schema metadata (edit freely — author name and dates feed JSON-LD).
 author: 'Burak Kağan'
 datePublished: '2026-03-01'
-dateModified: '2026-06-17'
+dateModified: '2026-09-23'
 ---
 
 import SlopeChart from '@/components/research/SlopeChart.astro';
@@ -37,15 +37,15 @@ import Dropdown from '@/components/lesson/mdx/Dropdown.astro';
 
 ## I · Overview <a id="overview"></a>
 
-The study tested whether six foundation-tier modules of the Pixels2GenAI curriculum could produce measurable conceptual change in a single one-day cohort, and whether the cognitive load of doing so stayed within tolerable bounds for novices. Five research questions framed the work; four are addressed empirically, the fifth — touchpoints with real-time systems — is addressed theoretically because the relevant content did not ship in this iteration of the curriculum. The headline finding is large in magnitude and hedged in interpretation: every participant who completed both tests gained ground, and the correlation between prior experience and reported cognitive load was strongly negative.
+The study tested whether six lessons of the Pixels2GenAI curriculum, drawn from Modules 1, 3, 4, 9 and 12, could produce measurable conceptual change in a single one-day cohort, and whether the cognitive load of doing so stayed within tolerable bounds for novices. Five research questions framed the work; four are addressed empirically, the fifth — touchpoints with real-time systems — is addressed theoretically because the relevant content did not ship in this iteration of the curriculum. The headline finding is large in magnitude and hedged in interpretation: every participant who completed both tests gained ground, and the correlation between prior experience and reported cognitive load was strongly negative.
 
 ## II · Method <a id="method"></a>
 
-Design-Based Research (Cycle ii of three) shaped both the curriculum and its evaluation. Nine participants — recruited via the author's professional network, demographics ranging from 18 to 44 years and from high-school to master's-level education — completed a structured one-day workshop covering six lessons drawn from Module 0 (Foundations) and Module 1 (Pixel Fundamentals). A 24-item conceptual instrument was administered before and after the workshop, organised into four six-item sections covering NumPy mechanics (A), image data and colour (B), transformations (C), and generative-AI vocabulary (D). The NASA Task Load Index was administered after every module to sample cognitive load on six dimensions; an exit ticket at close-of-day collected open-form reflection on five prompts. One participant did not complete both test administrations, so the pre/post analysis is reported on n = 8 while NASA-TLX, exit-ticket, and demographic analyses use the full n = 9.
+Design-Based Research (Cycle ii of three) shaped both the curriculum and its evaluation. Nine participants — recruited via the author's professional network, demographics ranging from 18 to 44 years and from high-school to master's-level education — completed a structured one-day workshop covering six lessons drawn from Modules 1, 3, 4, 9 and 12 (Pixel Fundamentals, Transformations, Fractals, Neural Networks and Generative AI). A 24-item conceptual instrument was administered before and after the workshop, organised into four six-item sections covering NumPy mechanics (A), image data and colour (B), transformations (C), and generative-AI vocabulary (D). The NASA Task Load Index was administered after every module to sample cognitive load on six dimensions; an exit ticket at close-of-day collected open-form reflection on five prompts. One participant did not complete both test administrations, so the pre/post analysis is reported on n = 8 while NASA-TLX, exit-ticket, and demographic analyses use the full n = 9.
 
 <div class="stat-row">
   <StatCallout eyebrow="Sample" value="9" label="Participants in the DBR pilot (n = 8 for paired pre/post)." />
-  <StatCallout eyebrow="Modules" value="6" label="Drawn from Modules 0 and 1 (Foundations · Pixel Fundamentals)." />
+  <StatCallout eyebrow="Lessons" value="6" label="Drawn from Modules 1, 3, 4, 9 and 12 (Pixel Fundamentals to Generative AI)." />
   <StatCallout eyebrow="Instruments" value="3" label="Conceptual pre/post · NASA-TLX × 6 modules · five-prompt exit ticket." />
 </div>
 
@@ -70,7 +70,7 @@ The NASA-TLX trajectory across the six pilot modules shows an inverted-U with pe
 <ResearchFigure
   src="/research/figures/tlx-trajectory.png"
   alt="NASA Task Load Index average ratings across the six pilot modules, showing an inverted-U trajectory peaking at the transformations lesson."
-  num="Fig. 2"
+  num="Fig. 1"
   title="NASA-TLX trajectory across six modules."
   caption="Module-by-module mean ratings on the six TLX dimensions, aggregated across n = 9 participants. The peak at the transformations lesson localises to mental demand and effort, not temporal pressure."
   source="Phase 4 · figure 3 · workshop_data_processing/output"
@@ -88,7 +88,7 @@ The more consequential finding sits sideways across this trajectory. A Spearman 
 <ResearchFigure
   src="/research/figures/correlation-heatmap.png"
   alt="Heat map of pairwise correlations between prior experience composites, knowledge gains, and NASA-TLX load measures across participants."
-  num="Fig. 3"
+  num="Fig. 2"
   title="Correlation heat map · experience, gain, load."
   caption="Pairwise Spearman correlations across the load-bearing measures. The experience × load cell (top-right cluster) is the dark band in the map."
   source="Phase 4 · figure 8 · workshop_data_processing/output"
@@ -101,7 +101,7 @@ The qualitative coding triangulates the same finding from the other direction: l
 
 > **RQ 3 ·** What strategies effectively integrate real-time systems with progressive AI learning, and at what points in the curriculum should these integrations occur?
 
-The pilot did not ship TouchDesigner content — Modules 10 and 11, where real-time integration would have been evaluated, are not yet released. RQ 3 is therefore addressed theoretically: the curriculum reserves the integration question for Cycle iii and stages a hypothetical placement against three constraints (the learner's grasp of arrays as data structures, exposure to neural inference, and the conceptual cost of a second runtime). The theoretical argument and proposed empirical follow-up are developed in the thesis. The relevant disclosure here is that this research question, unlike the other four, lacks empirical receipts in cycle ii.
+The pilot did not include TouchDesigner content — Modules 10 and 11, where real-time integration would have been evaluated, had not been released at the time of the workshop. RQ 3 is therefore addressed theoretically: the curriculum reserves the integration question for Cycle iii and stages a hypothetical placement against three constraints (the learner's grasp of arrays as data structures, exposure to neural inference, and the conceptual cost of a second runtime). The theoretical argument and proposed empirical follow-up are developed in the thesis. The relevant disclosure here is that this research question, unlike the other four, lacks empirical receipts in cycle ii.
 
 ## VI · Assessment and gain <a id="rq4"></a>
 
@@ -109,9 +109,9 @@ The pilot did not ship TouchDesigner content — Modules 10 and 11, where real-t
 
 Across the 24-item conceptual instrument, every participant who completed both administrations improved. The mean score rose from <em class="lit">M = 3.6</em> to <em class="lit">M = 12.1</em> out of 24 — a Cohen's <em class="lit">d</em> of 1.615. The Wilcoxon signed-rank test on paired pre/post scores returned a significant positive shift at the standard threshold; the normalised gain (Hake's g) averaged 0.43, classifying the cohort as a "medium" gainer in physics-education-research terminology. In a sample of this size these numbers are signals, not certainties — but the unanimity of the direction (no participant regressed; no participant gained zero) is the part that warrants the headline.
 
-<SlopeChart />
+<SlopeChart num="Fig. 3" />
 
-Per-section movement tells a sharper story than the aggregate. Section A (NumPy syntax) reached near-ceiling for several participants by the post-test, suggesting the curriculum's mechanical scaffolding is doing what it intends. Section D (generative-AI vocabulary) moved from near-zero on the pre-test to roughly half on the post-test, suggesting that two days of foundation-tier content is enough to begin acquiring the receiving vocabulary for later cycles. Sections B and C moved more modestly.
+Per-section movement tells a sharper story than the aggregate. Section A (NumPy syntax) reached near-ceiling for several participants by the post-test, suggesting the curriculum's mechanical scaffolding is doing what it intends. Section D (generative-AI vocabulary) moved from near-zero on the pre-test to roughly half on the post-test, suggesting that a single day of workshop content is enough to begin acquiring the receiving vocabulary for later cycles. Sections B and C moved more modestly.
 
 <Dropdown summary="Disclose · Per-section gain and item-level movement">
 Mean per-section gains (out of 6 items each, n = 8):

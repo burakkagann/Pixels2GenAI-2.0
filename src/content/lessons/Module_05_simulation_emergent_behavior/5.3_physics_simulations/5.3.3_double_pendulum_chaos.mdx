@@ -5,6 +5,7 @@ title: "Double Pendulum Chaos"
 objective: "Simulate two coupled pendulums with Runge-Kutta integration, then watch deterministic physics produce motion that never repeats and never can be predicted long-term."
 framework: "hands-on"
 duration: "22–28 min"
+published: 2025-12-18
 level: "intermediate"
 load: "3 core concepts"
 prereqs: "5.1.1 (Euler integration), basic trigonometry"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A single pendulum is the textbook example of predictable physics — it swings back and forth on a sinusoid forever. Hang a second pendulum from its end and the system becomes one of the simplest known examples of **deterministic chaos**: the equations of motion are fully written down, the simulation is exact, and yet two near-identical starting positions produce wildly different trajectories within seconds. Edward Lorenz discovered this property in atmospheric models in 1963 and named the popular shorthand the "butterfly effect" [1]. In this lesson you will derive the equations from coupling, integrate them with the Runge-Kutta 4th-order (RK4) method, animate the swinging arm, and visually demonstrate sensitivity to initial conditions by running two simulations whose starting angles differ by 0.06 degrees.
 
@@ -54,7 +55,7 @@ python double_pendulum.py
 Watch the second pendulum bob carefully. Despite following the same equations every frame, its behaviour appears random and never exactly repeats. That is what *chaos* means — not noise, just unpredictability from inside a deterministic system.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Coupled physics, simple in shape
 
@@ -145,7 +146,7 @@ def rk4_step(theta1, omega1, theta2, omega2, dt):
 Even RK4 is not perfect — over a very long simulation, accumulated floating-point error eventually behaves like its own tiny perturbation, and the chaotic system amplifies it. The lesson is not "use better integrators" — it is that long-term prediction of chaotic systems is *impossible in principle*, not just in practice [3].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the canonical chaos demo, retune physics parameters, then implement the integrator from scratch.
 
@@ -257,12 +258,12 @@ The chaotic behaviour persists, but the system loses energy and eventually relax
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum.py" label="double_pendulum.py — full reference implementation" />
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum_starter.py" label="double_pendulum_starter.py — Exercise 3 scaffold" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -278,7 +279,7 @@ The double pendulum is the cheapest demonstration that *deterministic does not m
 - Plotting only one trajectory. Chaos is invisible from a single run; you need a pair to *see* it.
 - Forgetting units. Lengths in metres, time in seconds, `g = 9.81`. Mixing pixels with metres will not crash but it will lie about the physics.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>

@@ -1,4 +1,5 @@
 ---
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
 interface Props {
   slug: string;
   module: string;
@@ -33,7 +34,7 @@ const frameworkLabel: Record<Props['framework'], string> = {
     <span class="num">{slug}</span>
     {title}
   </h1>
-  <p class="objective">{objective}</p>
+  <p class="objective" set:html={inlineMarkdownHtml(objective)} />
   <div class="meta-strip">
     <div><b>Duration</b><span>{duration}</span></div>
     <div><b>Level</b><span>{level}</span></div>

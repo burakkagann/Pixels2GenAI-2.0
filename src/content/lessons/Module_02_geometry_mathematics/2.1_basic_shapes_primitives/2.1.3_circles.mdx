@@ -5,6 +5,7 @@ title: "Drawing Circles"
 objective: "Render a circle as the set of pixels whose squared distance from a centre is below a threshold, using np.ogrid for memory-efficient coordinate grids — then stack circles into a bull's-eye and a radial gradient."
 framework: "hands-on"
 duration: "18–22 min"
+published: 2025-12-01
 level: "beginner"
 load: "3 core concepts"
 prereqs: "2.1.2 (triangles), NumPy broadcasting"
@@ -19,7 +20,7 @@ backLink:
   label: "Back to Curriculum"
 ---
 
-## Overview <a id="overview"></a>
+## Overview
 
 A circle is defined by one number: how far you stand from a fixed point. Move along the boundary and the radius does not change. Translated into pixel arithmetic, that single fact becomes a one-line image — compare each pixel's squared distance from a centre to the squared radius, and the boundary falls out as a boolean mask [1]. In this lesson you will build that mask with `np.ogrid`, swap the colour with one assignment, then iterate the same pattern into bull's-eyes and gradient rings.
 
@@ -72,7 +73,7 @@ Image.fromarray(canvas, mode='RGB').save('circle.png')
 You have just used the Pythagorean theorem on 262,144 pixels at once. `np.ogrid` and broadcasting handle the parallelism; the geometry is two squared differences and a threshold.
 </Admonition>
 
-## Core concepts <a id="core-concepts"></a>
+## Core concepts
 
 ### Concept 1 — Distance is enough
 
@@ -139,7 +140,7 @@ This is **boolean indexing** (sometimes called fancy indexing). The mask broadca
 Boolean masks generalise to far more than circles. Edge detectors, photo-editor magic-wand tools, and the attention maps inside transformer image models are all just thresholded scalar fields — exactly the same idea, with the distance function replaced by something more complex [5].
 </Admonition>
 
-## Exercises <a id="exercises"></a>
+## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the basic circle, vary its parameters, then build a bull's-eye from scratch.
 
@@ -345,13 +346,13 @@ Image.fromarray(canvas, mode='RGB').save('concentric_circles.png')
 
 </Exercise>
 
-## Downloads <a id="downloads"></a>
+## Downloads
 
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles/circle.py" label="circle.py — quick-start script" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles/circle_variations.py" label="circle_variations.py — modification reference" />
 <Download href="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles/concentric_circles_solution.py" label="concentric_circles_solution.py — bull's-eye reference" />
 
-## Summary <a id="summary"></a>
+## Summary
 
 <Admonition title="Key takeaways">
 
@@ -366,7 +367,7 @@ A circle is "all pixels closer than `r` to a centre point". Translate that sente
 - Using `np.meshgrid` reflexively — works fine, but uses more memory than `np.ogrid` when you only need broadcasting.
 - Integer overflow on very large canvases — `(X - cx)**2` in `int32` can wrap around for `cx, X` near the edges of a multi-thousand-pixel canvas; cast to `int64` or `float64` for safety.
 
-## References <a id="references"></a>
+## References
 
 <section class="refs">
   <ol>
