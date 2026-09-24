@@ -92,7 +92,7 @@ pull its media from the v1 archive with `npm run copy-assets` (see below).
 │   │   └── site/             research.ts, exhibitions.ts, workshops.ts
 │   ├── lib/                  cube color pipeline + GitHub star badge
 │   └── styles/               global CSS (tokens, base, typography, prose)
-└── CLAUDE.md                 contributor + automation guide
+└── netlify/functions/        serverless GitHub star-count proxy
 ```
 
 ### Site map
@@ -136,10 +136,6 @@ Source prose and Python come from the **v1 archive** (`numpy-to-genAI`), which i
 3. **Validate** — `npm run check` (and `npm run build`) must pass.
 4. **Wire it up** — add the `lessonSlug` (and `firstLesson` if first).
 
-If you use Claude Code, the repo ships skills that automate this pipeline:
-`lesson-port` → `exercise-testing` → `ai-revision` (see
-[`.claude/skills/`](.claude/skills/)).
-
 ## Quality bar
 
 These are non-negotiable; details live in
@@ -157,7 +153,7 @@ These are non-negotiable; details live in
   scripts.
 - **Code** — runs on Python 3.11; clarity over cleverness; humanized variable
   names; comments explain *why*. Author downloadable scripts as
-  **"Pixels2GenAI Project"** — never "Claude".
+  **"Pixels2GenAI Project"**.
 
 ## Before you open a PR
 

@@ -17,6 +17,7 @@ npm-debug.log*
 # environment variables
 .env
 .env.production
+.env.example
 
 # macOS
 .DS_Store
@@ -43,3 +44,8 @@ google_console
 
 # private job-search notes for the tutor project
 ai-tutor-planning/
+
+# local AI-assistant config and browser-automation scratch output
+.claude/
+CLAUDE.md
+.playwright-mcp/
