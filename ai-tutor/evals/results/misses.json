@@ -1,0 +1,441 @@
+[
+  {
+    "set": "Q dev",
+    "id": "Q05",
+    "asked_on": "1.3.1",
+    "kind": "on_page",
+    "question": "why does 0:150 stop at 149 and not at 150?",
+    "gold": [
+      "1.3.1#concept-1--array-slicing-syntax",
+      "1.3.1#quick-start"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "1.3.1#exercises/exercise-1",
+      "1.3.2#concept-1--algorithmic-position-calculation",
+      "1.3.1#summary"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q06",
+    "asked_on": "3.2.1",
+    "kind": "on_page",
+    "question": "how do I paint one rectangle of the picture in a single colour?",
+    "gold": [
+      "1.3.1#concept-1--array-slicing-syntax",
+      "1.3.1#concept-2--multi-dimensional-slicing",
+      "3.2.1#concept-2--applying-a-mask-with-fancy-indexing"
+    ],
+    "gold_rank": null,
+    "got_top3": [
+      "3.2.2#exercises/exercise-3",
+      "3.1.1#exercises/exercise-3",
+      "3.2.2#exercises/exercise-2"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q09",
+    "asked_on": "1.1.1",
+    "kind": "on_page",
+    "question": "why does my picture come out sideways when I swap x and y?",
+    "gold": [
+      "2.1.4#exercises/exercise-1",
+      "2.1.4#concept-1--integer-array-indexing",
+      "1.1.1#concept-1--grayscale-the-foundation",
+      "1.1.1#concept-2--understanding-digital-images"
+    ],
+    "gold_rank": null,
+    "got_top3": [
+      "3.1.3#exercises/exercise-1",
+      "2.2.3#exercises/exercise-2",
+      "2.1.1#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q23",
+    "asked_on": "3.4.2",
+    "kind": "on_page",
+    "question": "how do I get only the up-and-down lines in the picture?",
+    "gold": [
+      "3.4.2#exercises/exercise-2",
+      "3.4.2#concept-1--the-two-sobel-kernels"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "3.4.3#summary",
+      "2.1.1#exercises/exercise-2",
+      "3.1.3#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q29",
+    "asked_on": "4.3.1",
+    "kind": "on_page",
+    "question": "what do the square brackets do in the rule?",
+    "gold": [
+      "4.3.1#concept-2--turtle-interpretation-with-a-stack"
+    ],
+    "gold_rank": 6,
+    "got_top3": [
+      "4.3.1#exercises/exercise-1",
+      "4.3.1#summary",
+      "4.3.1#concept-3--designing-rules"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q40",
+    "asked_on": "8.3.1",
+    "kind": "on_page",
+    "question": "why does my animation leave holes and gaps in the letters?",
+    "gold": [
+      "8.3.1#concept-2--inverse-sampling-beats-forward-projection",
+      "8.3.1#summary"
+    ],
+    "gold_rank": 7,
+    "got_top3": [
+      "8.3.2#overview",
+      "3.4.4#exercises/exercise-3",
+      "8.1.1#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q54",
+    "asked_on": "12.4.1",
+    "kind": "on_page",
+    "question": "my result looks nothing like my photo, it's just paint everywhere",
+    "gold": [
+      "12.4.1#exercises/exercise-2",
+      "12.4.1#concept-3--optimisation-in-pixel-space-not-weight-space"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "3.2.3#concept-2--the-silhouette-layer",
+      "3.2.3#concept-4--selective-composite",
+      "3.2.3#quick-start"
+    ]
+  },
+  {
+    "set": "Q dev",
+    "id": "Q67",
+    "asked_on": "5.2.1",
+    "kind": "on_page",
+    "question": "how far away can each bird see the others?",
+    "gold": [
+      "5.2.1#concept-1--emergence-from-local-rules",
+      "5.2.1#concept-3--rule-weights-as-flock-personality"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "5.2.1#overview",
+      "5.2.1#summary",
+      "5.2.1#concept-2--the-three-rules"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q12",
+    "asked_on": "2.1.3",
+    "kind": "off_page",
+    "question": "how can I make the edge of my circle soft and blurry instead of sharp?",
+    "gold": [
+      "2.2.4#concept-1--distance-field-vs-boolean-mask",
+      "8.1.1#exercises/exercise-3"
+    ],
+    "gold_rank": null,
+    "got_top3": [
+      "2.1.3#exercises/exercise-3",
+      "2.1.3#summary",
+      "3.4.2#exercises/exercise-2"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q33",
+    "asked_on": "5.3.3",
+    "kind": "on_page",
+    "question": "if the physics is exact, why can't I predict where it ends up?",
+    "gold": [
+      "5.3.3#concept-2--chaos-is-determinism-plus-sensitivity"
+    ],
+    "gold_rank": 10,
+    "got_top3": [
+      "5.3.3#summary",
+      "5.3.3#overview",
+      "5.3.3#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q47",
+    "asked_on": "10.1.2",
+    "kind": "on_page",
+    "question": "how do I change a slider on a node from python?",
+    "gold": [
+      "10.1.2#part-3"
+    ],
+    "gold_rank": 9,
+    "got_top3": [
+      "10.1.1#synthesis/exercise-1",
+      "10.1.2#big-question",
+      "10.1.1#part-1"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q48",
+    "asked_on": "10.1.2",
+    "kind": "on_page",
+    "question": "which kind of python node should I use in touchdesigner?",
+    "gold": [
+      "10.1.2#part-1"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "10.1.2#big-question",
+      "10.1.2#summary",
+      "10.1.1#big-question"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q64",
+    "asked_on": "4.1.3",
+    "kind": "off_page",
+    "question": "how many iterations do I need if I zoom in 500 times?",
+    "gold": [
+      "8.4.3#concept-2--iteration-depth-scales-with-zoom"
+    ],
+    "gold_rank": 5,
+    "got_top3": [
+      "4.1.3#exercises/exercise-3",
+      "4.1.3#exercises/exercise-2",
+      "4.1.3#summary"
+    ]
+  },
+  {
+    "set": "Q test",
+    "id": "Q72",
+    "asked_on": "12.4.1",
+    "kind": "on_page",
+    "question": "how long should this take on my laptop without a graphics card?",
+    "gold": [
+      "12.4.1#quick-start"
+    ],
+    "gold_rank": 6,
+    "got_top3": [
+      "8.3.2#overview",
+      "12.1.3#exercises/exercise-3",
+      "8.3.2#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R03",
+    "asked_on": "1.1.1",
+    "kind": "on_page",
+    "question": "How do I split my pixel in more than 1 color?",
+    "gold": [
+      "1.1.1#concept-3--the-rgb-colour-model",
+      "1.1.1#concept-2--understanding-digital-images"
+    ],
+    "gold_rank": 7,
+    "got_top3": [
+      "1.2.1#exercises/exercise-1",
+      "1.1.1#exercises/exercise-3",
+      "1.1.1#exercises/exercise-2"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R10",
+    "asked_on": "3.4.1",
+    "kind": "on_page",
+    "question": "How do I write the loop if I am a beginner?",
+    "gold": [
+      "3.4.1#quick-start",
+      "3.4.1#concept-3--padding-to-keep-output-size",
+      "3.4.1#exercises/exercise-3"
+    ],
+    "gold_rank": null,
+    "got_top3": [
+      "4.3.1#exercises/exercise-1",
+      "1.3.2#exercises/exercise-3",
+      "1.3.2#summary"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R11",
+    "asked_on": "3.4.1",
+    "kind": "on_page",
+    "question": "How do I do Task 3 in 'Make it your own'?",
+    "gold": [
+      "3.4.1#exercises/exercise-3",
+      "3.4.1#concept-2--four-canonical-33-kernels"
+    ],
+    "gold_rank": null,
+    "got_top3": [
+      "3.3.1#exercises/exercise-3",
+      "12.5.1#exercises/exercise-3",
+      "8.2.1#exercises/exercise-3"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R17",
+    "asked_on": "4.1.1",
+    "kind": "on_page",
+    "question": "I still don't understand how to make different patterns.",
+    "gold": [
+      "4.1.1#exercises/exercise-2",
+      "4.1.1#exercises/exercise-3"
+    ],
+    "gold_rank": 5,
+    "got_top3": [
+      "4.1.1#overview",
+      "1.3.2#overview",
+      "1.2.1#overview"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R18",
+    "asked_on": "9.1.1",
+    "kind": "on_page",
+    "question": "Why does the input go into calculating the new weights?",
+    "gold": [
+      "9.1.1#part-3"
+    ],
+    "gold_rank": 7,
+    "got_top3": [
+      "9.1.1#part-1",
+      "9.1.1#synthesis/exercise-1",
+      "9.1.2#synthesis/exercise-1"
+    ]
+  },
+  {
+    "set": "R",
+    "id": "R19",
+    "asked_on": "9.1.1",
+    "kind": "on_page",
+    "question": "The math functions are very unfamiliar to me. Can you explain them?",
+    "gold": [
+      "9.1.1#part-1",
+      "9.1.1#part-2",
+      "9.1.1#part-3"
+    ],
+    "gold_rank": 5,
+    "got_top3": [
+      "2.1.3#concept-2--npogrid-is-the-cheap-coordinate-grid",
+      "2.2.1#summary",
+      "4.1.1#summary"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T07",
+    "asked_on": "2.2.2",
+    "kind": "off_page",
+    "question": "how do I choose how many petals my flower shape gets?",
+    "gold": [
+      "2.3.2#concept-2--the-parity-rule-for-petal-counts"
+    ],
+    "gold_rank": 9,
+    "got_top3": [
+      "2.3.2#exercises/exercise-2",
+      "2.3.2#exercises/exercise-1",
+      "2.3.2#exercises/exercise-3"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T12",
+    "asked_on": "3.3.1",
+    "kind": "on_page",
+    "question": "how does swapping the colour order give me those crazy pop art colours?",
+    "gold": [
+      "3.3.1#concept-1--channel-permutation"
+    ],
+    "gold_rank": 4,
+    "got_top3": [
+      "3.3.1#summary",
+      "3.3.1#overview",
+      "3.3.1#exercises/exercise-1"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T15",
+    "asked_on": "5.3.1",
+    "kind": "on_page",
+    "question": "my ball goes through the floor sometimes, how do I make it bounce properly?",
+    "gold": [
+      "5.3.1#concept-2--collision--clamp--reflect"
+    ],
+    "gold_rank": 8,
+    "got_top3": [
+      "5.3.1#exercises/exercise-3",
+      "5.3.1#exercises/exercise-2",
+      "5.3.1#quick-start"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T16",
+    "asked_on": "5.1.1",
+    "kind": "off_page",
+    "question": "how do I make a group of dots move together like birds without crashing into each other?",
+    "gold": [
+      "5.2.1#concept-2--the-three-rules",
+      "5.2.1#concept-1--emergence-from-local-rules"
+    ],
+    "gold_rank": 8,
+    "got_top3": [
+      "5.2.1#overview",
+      "5.2.1#exercises/exercise-1",
+      "5.2.1#exercises/exercise-2"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T17",
+    "asked_on": "6.1.1",
+    "kind": "on_page",
+    "question": "my random texture looks like harsh blocks, how do I make it smooth like clouds?",
+    "gold": [
+      "6.1.1#concept-2--smoothstep-interpolation",
+      "6.1.1#concept-1--random-vs-coherent",
+      "6.1.1#concept-3--fractional-brownian-motion-fbm"
+    ],
+    "gold_rank": 7,
+    "got_top3": [
+      "6.1.1#overview",
+      "6.1.1#exercises/exercise-2",
+      "6.1.1#exercises/exercise-3"
+    ]
+  },
+  {
+    "set": "T",
+    "id": "T20",
+    "asked_on": "12.3.1",
+    "kind": "on_page",
+    "question": "is there a way to get similar pictures with far fewer steps than removing noise a thousand times?",
+    "gold": [
+      "12.3.1#concept-4--ddim-turning-1000-steps-into-250-or-50",
+      "12.7.1#overview",
+      "12.7.1#concept-1--straight-paths-instead-of-stochastic-curves"
+    ],
+    "gold_rank": 5,
+    "got_top3": [
+      "12.3.1#exercises/exercise-2",
+      "12.3.1#exercises/exercise-3",
+      "6.1.1#exercises/exercise-2"
+    ]
+  }
+]

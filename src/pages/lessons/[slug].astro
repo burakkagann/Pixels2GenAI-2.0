@@ -21,8 +21,14 @@ export async function getStaticPaths() {
 const { lesson } = Astro.props;
 const slug = lesson.id;
 const { Content, headings } = await render(lesson);
+
+// The lesson's asset folder mirrors its MDX path (see CLAUDE.md "Lesson Layout"):
+// src/content/lessons/Module_03_…/3.2_…/3.2.1_mask.mdx -> /lesson-media/Module_03_…/3.2_…/3.2.1_mask/
+// The in-browser Python runner fetches input files (photos, text) from here.
+const lessonPath = (lesson.filePath ?? '').replace(/\\/g, '/').split('src/content/lessons/')[1];
+const mediaBase = lessonPath ? `/lesson-media/${lessonPath.replace(/\.mdx$/, '')}/` : undefined;
 ---
 
-<Lesson slug={slug} frontmatter={lesson.data} headings={headings}>
+<Lesson slug={slug} frontmatter={lesson.data} headings={headings} mediaBase={mediaBase}>
   <Content components={{ Admonition, Figure, CodeBlock, Dropdown, Exercise, Download }} />
 </Lesson>

@@ -21,7 +21,7 @@ const { lang = 'python', file } = Astro.props;
 const label = file ? `${lang} · ${file}` : lang;
 ---
 
-<div class="code">
+<div class="code" data-file={file}>
   <div class="chrome">
     <span class="lang">{label}</span>
     <button type="button" class="copy" data-copy-btn>Copy</button>
@@ -109,7 +109,7 @@ const label = file ? `${lang} · ${file}` : lang;
     return worker;
   }
 
-  function runPython(code: string, assetBase: string): Promise<RunResult> {
+  function runPython(code: string, assetBase: string, fileName?: string): Promise<RunResult> {
     const id = nextRunId++;
     return new Promise((resolve) => {
       const timer = window.setTimeout(() => {
@@ -123,7 +123,7 @@ const label = file ? `${lang} · ${file}` : lang;
           error: `Stopped after ${RUN_TIMEOUT_MS / 1000} seconds.` });
       }, RUN_TIMEOUT_MS);
       pending.set(id, (result) => { window.clearTimeout(timer); resolve(result); });
-      getWorker().postMessage({ id, code, assetBase });
+      getWorker().postMessage({ id, code, assetBase, fileName });
     });
   }
 
@@ -191,7 +191,7 @@ const label = file ? `${lang} · ${file}` : lang;
           ? 'Running…'
           : 'Loading Python into your browser from cdn.jsdelivr.net (first run only; this can take up to a minute)…';
         output.append(status);
-        const result = await runPython(pre.innerText, assetBase);
+        const result = await runPython(pre.innerText, assetBase, block.dataset.file);
         pythonLoaded = pythonLoaded || result.ok || Boolean(result.timings.loadMs);
         showResult(output, result);
         button.disabled = false;

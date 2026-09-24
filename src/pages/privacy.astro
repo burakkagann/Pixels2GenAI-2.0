@@ -1,6 +1,7 @@
 ---
 // Data-protection notice (GDPR Art. 13) for the announcements form —
-// the only place on the site that collects personal data. Linked from
+// the only place on the site that collects personal data — plus the
+// third-party request made by the optional in-browser Python runner. Linked from
 // the form's consent line and the footer. Visual register mirrors
 // /imprint (violet site accent, not studio pink — a legal page, not a
 // workshops/exhibitions brand moment).
@@ -122,6 +123,38 @@ import Footer from '@/components/chrome/Footer.astro';
       </section>
 
       <section>
+        <h2>Running lesson code in your browser</h2>
+        <p>
+          Some lessons offer a <em>Run</em> button on their Python examples. The
+          code then runs entirely inside your own browser, using
+          <a href="https://pyodide.org/" target="_blank" rel="noopener">
+            Pyodide <span class="arr">↗</span>
+          </a>
+          (Python compiled for the web). Your code, its output and any images it
+          makes are never sent to us or to anyone else.
+        </p>
+        <p>
+          To run Python, your browser has to download Pyodide and the Python
+          packages the example needs. These files are loaded from the public
+          open-source file network
+          <a href="https://www.jsdelivr.com/terms/privacy-policy" target="_blank" rel="noopener">
+            jsDelivr <span class="arr">↗</span>
+          </a>
+          (cdn.jsdelivr.net, operated by Volentio JSD Limited, England and
+          Wales). This happens <em>only after you click Run</em>, never on page
+          load. Like any web server, jsDelivr receives your IP address, browser
+          type and the address of the page making the request, and states that
+          it uses these for analytics and security and does not link them to
+          individual users; its traffic is served by third-party network
+          providers, which may be located outside the EU. Our legal basis is
+          our legitimate interest in offering the in-browser exercise you
+          asked for (Art. 6(1)(f) GDPR). If you prefer not to contact
+          jsDelivr, don't click Run: every example can also be copied (or
+          downloaded, where offered) and run on your own computer.
+        </p>
+      </section>
+
+      <section>
         <h2>Browser storage</h2>
         <p>
           The rest of the site is static and stores a few small values in your
@@ -133,6 +166,7 @@ import Footer from '@/components/chrome/Footer.astro';
           <li><code>p2g-progress</code> (localStorage) — the lessons you mark as complete, so your progress persists.</li>
           <li><code>p2g-stars</code> (sessionStorage) — a cached copy of the repository star count; cleared when you close the tab.</li>
           <li><code>p2g-octo-greeted</code> (sessionStorage) — a one-time flag so the header animation plays once per visit; cleared when you close the tab.</li>
+          <li><code>p2g-runner</code> (localStorage) — set only if you open a lesson with <code>?runner=1</code>, to switch on the in-browser Run button while it is being tested.</li>
         </ul>
         <p>
           The repository star count shown in the header and footer is fetched
@@ -140,12 +174,13 @@ import Footer from '@/components/chrome/Footer.astro';
           directly, so no request or IP is sent to GitHub on your behalf. All
           fonts and assets are served from this domain. No advertising, no
           cross-site tracking, and no embedded third-party content beyond the
-          analytics described above.
+          analytics and the optional, click-to-load Python runner described
+          above.
         </p>
       </section>
 
       <p class="privacy-foot">
-        Last revised June 2026 · Pixels2GenAI · Pressmark P2GA-r
+        Last revised September 2026 · Pixels2GenAI · Pressmark P2GA-r
       </p>
     </article>
   </main>
