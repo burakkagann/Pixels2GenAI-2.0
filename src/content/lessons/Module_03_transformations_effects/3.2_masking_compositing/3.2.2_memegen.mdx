@@ -52,6 +52,10 @@ img.save('bridge_meme.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to caption the photo in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.2_memegen/bridge_meme.png"
   alt="A photo of a red metal bridge at sunset with two lines of white caption near the bottom that read 'All your dreams are on their way' and 'Simon and Garfunkel'"
@@ -59,6 +63,8 @@ img.save('bridge_meme.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The `Draw` object is bound to the image's underlying pixel buffer. Every `draw.text(...)` call mutates `img` in place, so the final `img.save(...)` writes the captioned result without an explicit composite step.

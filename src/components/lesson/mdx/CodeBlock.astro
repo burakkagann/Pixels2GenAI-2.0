@@ -92,11 +92,29 @@ const label = file ? `${lang} · ${file}` : lang;
   }
 
   // Only complete scripts get a Run button: fragments (no imports, no output) would fail.
+  // Starter code with TODO gaps is left out: learners can't edit code on the page, so
+  // running an unfinished starter would only show a confusing error (runner audit M4-8).
   function isRunnable(code: string): boolean {
     const hasImport = /^\s*(import|from)\s+\w+/m.test(code);
     const hasOutput = /(\.save\(|savefig\(|print\(|imwrite\(|mimsave\()/.test(code);
-    return hasImport && hasOutput;
+    const isStarter = /\bTODO\b/.test(code);
+    return hasImport && hasOutput && !isStarter;
   }
+
+  // Where Run appears (author's rule, 2026-09-25): only the Quick start script and the
+  // EXECUTE exercise, the two places where learners run code as written. MODIFY and
+  // CREATE code has to be completed first, and code inside dropdowns (hints, solution
+  // snippets) is meant to be pasted into the learner's own script, so neither gets Run.
+  function isRunPlace(block: HTMLElement): boolean {
+    if (block.closest('details')) return false;
+    const exercise = block.closest('article.ex');
+    if (exercise) return exercise.querySelector('.num')?.getAttribute('data-stage') === 'execute';
+    const heading = block.closest('section.lesson-section')?.querySelector('h2');
+    return /^\s*quick start/i.test(heading?.textContent ?? '');
+  }
+
+  // textContent reads the code the same way whether or not it is on screen.
+  const codeOf = (pre: HTMLElement) => pre.textContent ?? '';
 
   function getWorker(): Worker {
     if (!worker) {
@@ -109,22 +127,48 @@ const label = file ? `${lang} · ${file}` : lang;
     return worker;
   }
 
-  function runPython(code: string, assetBase: string, fileName?: string): Promise<RunResult> {
+  // Runs go through a queue, one at a time: the worker has one Python interpreter and one
+  // output capture, so two overlapping runs mixed their printed output (edge-case M1).
+  let queue: Promise<unknown> = Promise.resolve();
+  let running = false;
+
+  function runPython(code: string, assetBase: string, fileName?: string, onStart?: () => void): Promise<RunResult> {
+    const run = queue.then(() => {
+      onStart?.();
+      return startRun(code, assetBase, fileName);
+    });
+    queue = run.catch(() => undefined);
+    return run;
+  }
+
+  // Ends the script that is running now (the Stop button, or the timeout). A running
+  // Python loop can only be interrupted by killing the worker; the next run starts a
+  // fresh one, which reloads Python from the browser cache in a few seconds.
+  let stopCurrentRun: ((message: string) => void) | null = null;
+
+  function startRun(code: string, assetBase: string, fileName?: string): Promise<RunResult> {
     const id = nextRunId++;
-    return new Promise((resolve) => {
-      const timer = window.setTimeout(() => {
-        // A runaway script (e.g. an endless loop) can only be stopped by killing the worker;
-        // the next run starts a fresh one (and reloads Python from the browser cache).
+    running = true;
+    return new Promise<RunResult>((resolve) => {
+      const finish = (result: RunResult) => {
+        window.clearTimeout(timer);
+        pending.delete(id);
+        stopCurrentRun = null;
+        resolve(result);
+      };
+      stopCurrentRun = (message: string) => {
         worker?.terminate();
         worker = null;
         pythonLoaded = false;
-        pending.delete(id);
-        resolve({ id, ok: false, stdout: '', stderr: '', images: [], timings: {},
-          error: `Stopped after ${RUN_TIMEOUT_MS / 1000} seconds.` });
-      }, RUN_TIMEOUT_MS);
-      pending.set(id, (result) => { window.clearTimeout(timer); resolve(result); });
+        finish({ id, ok: false, stdout: '', stderr: '', images: [], timings: {}, error: message });
+      };
+      // The clock starts only when this run starts, not while it waits in the queue,
+      // so a waiting run can't be reported as timed out (edge-case M2).
+      const timer = window.setTimeout(
+        () => stopCurrentRun?.(`Stopped after ${RUN_TIMEOUT_MS / 1000} seconds.`), RUN_TIMEOUT_MS);
+      pending.set(id, finish);
       getWorker().postMessage({ id, code, assetBase, fileName });
-    });
+    }).finally(() => { running = false; });
   }
 
   function showResult(output: HTMLElement, result: RunResult) {
@@ -133,20 +177,35 @@ const label = file ? `${lang} · ${file}` : lang;
     const status = document.createElement('p');
     status.className = 'code-output-status';
     const seconds = ((result.timings.runMs ?? 0) / 1000).toFixed(1);
-    status.textContent = result.ok ? `Ran in ${seconds} s in your browser.` : 'The script stopped with an error.';
+    // A Stop click or the timeout is not an error in the learner's code.
+    const stopped = !result.ok && (result.error ?? '').startsWith('Stopped');
+    status.textContent = result.ok
+      ? `Ran in ${seconds} s in your browser.`
+      : stopped ? result.error! : 'The script stopped with an error.';
     output.append(status);
 
     // textContent everywhere: program output is shown as text, never as HTML.
-    const text = [result.stdout, result.ok ? '' : (result.error ?? result.stderr)].filter(Boolean).join('\n');
-    if (text) {
+    // On failure the error comes first, so long printed output can't push it out of
+    // sight (edge-case M9); the printed output follows, shortened if very long.
+    if (!result.ok && !stopped) {
+      const error = document.createElement('pre');
+      error.className = 'code-output-error';
+      error.textContent = result.error ?? result.stderr ?? 'Unknown error.';
+      output.append(error);
+    }
+    if (result.stdout) {
       const pre = document.createElement('pre');
-      pre.textContent = text.length > 8000 ? `${text.slice(0, 8000)}\n…(output shortened)` : text;
+      pre.textContent = result.stdout.length > 8000
+        ? `${result.stdout.slice(0, 8000)}\n…(output shortened)`
+        : result.stdout;
       output.append(pre);
     }
     for (const image of result.images) {
       const figure = document.createElement('figure');
       const img = document.createElement('img');
-      img.src = URL.createObjectURL(new Blob([image.bytes], { type: image.mime }));
+      // Copy into a plain ArrayBuffer-backed array: Blob doesn't accept views that
+      // could sit on a SharedArrayBuffer (TypeScript 5.7+ checks this).
+      img.src = URL.createObjectURL(new Blob([new Uint8Array(image.bytes)], { type: image.mime }));
       img.alt = `Output of the script: ${image.name}`;
       const caption = document.createElement('figcaption');
       caption.textContent = image.name;
@@ -165,7 +224,7 @@ const label = file ? `${lang} · ${file}` : lang;
       block.dataset.runWired = 'true';
       const pre = block.querySelector('pre');
       const label = block.querySelector('.chrome .lang')?.textContent ?? '';
-      if (!pre || !label.toLowerCase().startsWith('python') || !isRunnable(pre.innerText)) return;
+      if (!pre || !label.toLowerCase().startsWith('python') || !isRunPlace(block) || !isRunnable(codeOf(pre))) return;
 
       const button = document.createElement('button');
       button.type = 'button';
@@ -180,22 +239,41 @@ const label = file ? `${lang} · ${file}` : lang;
       output.hidden = true;
       block.after(output);
 
+      // One button, three states: Run -> Stop (while this block's script runs; disabled
+      // while it waits for another block) -> Run again. No separate Stop button.
+      let state: 'idle' | 'waiting' | 'running' = 'idle';
+
       button.addEventListener('click', async () => {
-        button.disabled = true;
-        button.textContent = 'Running…';
+        if (state === 'running') {
+          stopCurrentRun?.('Stopped.');
+          return;
+        }
+        if (state === 'waiting') return;
+        state = running ? 'waiting' : 'running';
+        button.disabled = state === 'waiting';
+        button.textContent = state === 'waiting' ? 'Waiting…' : 'Stop';
+        button.title = 'Stop this script';
         output.hidden = false;
         output.replaceChildren();
         const status = document.createElement('p');
         status.className = 'code-output-status';
-        status.textContent = pythonLoaded
+        const startMessage = () => (pythonLoaded
           ? 'Running…'
-          : 'Loading Python into your browser from cdn.jsdelivr.net (first run only; this can take up to a minute)…';
+          : 'Loading Python into your browser from cdn.jsdelivr.net (first run only; this can take up to a minute)…');
+        status.textContent = running ? 'Waiting for the other script on this page to finish…' : startMessage();
         output.append(status);
-        const result = await runPython(pre.innerText, assetBase, block.dataset.file);
+        const result = await runPython(codeOf(pre), assetBase, block.dataset.file, () => {
+          state = 'running';
+          button.disabled = false;
+          button.textContent = 'Stop';
+          status.textContent = startMessage();
+        });
         pythonLoaded = pythonLoaded || result.ok || Boolean(result.timings.loadMs);
         showResult(output, result);
+        state = 'idle';
         button.disabled = false;
         button.textContent = 'Run again';
+        button.title = 'Run this code in your browser';
       });
     });
   }

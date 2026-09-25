@@ -95,6 +95,10 @@ Image.fromarray(img, 'L').save('value_clouds.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the noise clouds in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_06_noise_procedural_generation/6.1_noise_functions/6.1.1_perlin_noise/value_clouds.png"
   alt="A grayscale image of smooth flowing cloud-like patterns. Lighter and darker regions transition gradually with no sharp edges."
@@ -102,6 +106,8 @@ Image.fromarray(img, 'L').save('value_clouds.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 **Value noise** uses random values at the grid corners; **Perlin noise** uses random *gradient vectors* and computes dot products. Both share the same smoothstep + bilinear-interp scaffold; Perlin gives slightly cleaner edges, but value noise is the one-screen version that fits in this lesson [3].

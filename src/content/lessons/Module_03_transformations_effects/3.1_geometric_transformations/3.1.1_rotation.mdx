@@ -58,6 +58,10 @@ Image.fromarray(comparison).save('simple_rotation.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to rotate the rectangle in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.1_rotation/simple_rotation.png"
   alt="A horizontal cyan rectangle on the left half of the canvas, and the same rectangle rotated 45 degrees on the right half, both on a black background"
@@ -65,6 +69,8 @@ Image.fromarray(comparison).save('simple_rotation.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 `scipy.ndimage.rotate` is one of those one-line library calls that hides a lot of machinery — a rotation matrix, a coordinate inversion, and bilinear interpolation. The next sections unpack each piece.

@@ -59,6 +59,10 @@ img.save('fractal_tree.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to grow the fractal tree in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_basic.png"
   alt="A symmetric fractal tree with brown branches on a white background, depth eight, branch angle twenty five degrees, length ratio zero point seven"
@@ -66,6 +70,8 @@ img.save('fractal_tree.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The recursion calls itself **twice** per branch — once for the left child, once for the right. Branch count doubles per level: depth 8 means $2^9 - 1 = 511$ branch segments drawn. Track this when you increase depth: every extra level doubles the runtime.

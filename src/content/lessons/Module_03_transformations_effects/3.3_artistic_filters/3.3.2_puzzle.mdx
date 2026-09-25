@@ -52,6 +52,10 @@ Image.fromarray(row).save('quick_start_output.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to join the two puzzle pieces in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.2_puzzle/quick_start_output.png"
   alt="Two coloured gradient strips fused side by side, height 133 pixels and combined width 600 pixels"
@@ -59,6 +63,8 @@ Image.fromarray(row).save('quick_start_output.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 Both functions take a **list** of arrays: `np.hstack([a, b])` not `np.hstack(a, b)`. Skipping the brackets is the most common typo and produces a misleading error about "missing argument."

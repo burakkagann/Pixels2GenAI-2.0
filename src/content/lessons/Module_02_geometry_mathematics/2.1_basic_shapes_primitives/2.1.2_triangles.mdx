@@ -65,6 +65,10 @@ Image.fromarray(canvas).save('simple_triangle.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to draw the triangle in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.2_triangles/simple_triangle.png"
   alt="A white filled triangle pointing upward on a black 400 by 400 canvas"
@@ -72,6 +76,8 @@ Image.fromarray(canvas).save('simple_triangle.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The triangle is *never drawn*. Three independent edge tests label every pixel as inside or outside; the triangle is what survives an `&` of those three masks. Same logic, no rasterizer loop.

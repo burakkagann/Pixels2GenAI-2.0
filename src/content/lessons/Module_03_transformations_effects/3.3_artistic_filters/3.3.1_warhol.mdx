@@ -63,6 +63,10 @@ Image.fromarray(canvas).save('simple_warhol.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the four palette variants in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.1_warhol/simple_warhol.png"
   alt="A two by two grid of identical concentric ring patterns rendered in four different colour palettes: the original cool palette, a green-magenta variant, a magenta-cyan variant, and a swapped warm variant"
@@ -70,6 +74,8 @@ Image.fromarray(canvas).save('simple_warhol.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The four quadrants share *identical pixel values*. The only thing that differs between them is the order in which those three values are interpreted as red, green, and blue. The visual variety comes from human perception, not from any computation.

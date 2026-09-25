@@ -61,6 +61,10 @@ Image.fromarray(canvas, mode='RGB').save('circle.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to draw the circle in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.3_circles/circle.png"
   alt="A solid orange disc, 150-pixel radius, centred on a black 512 by 512 canvas"
@@ -68,6 +72,8 @@ Image.fromarray(canvas, mode='RGB').save('circle.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 You have just used the Pythagorean theorem on 262,144 pixels at once. `np.ogrid` and broadcasting handle the parallelism; the geometry is two squared differences and a threshold.

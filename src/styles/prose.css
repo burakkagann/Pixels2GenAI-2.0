@@ -513,12 +513,15 @@
   overflow-y: auto;
 }
 
+/* Output images are centred, like the lesson's own figures. */
 .code-output figure {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
+  text-align: center;
 }
 
 .code-output img {
   display: block;
+  margin: 0 auto;
   max-width: 100%;
   height: auto;
   border: 1px solid var(--line-2);
@@ -526,9 +529,16 @@
 }
 
 .code-output figcaption {
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--fg-3);
   font-size: calc(11px * var(--t-scale));
+}
+
+/* The error of a failed run, shown before any printed output. */
+.code-output pre.code-output-error {
+  padding-left: 10px;
+  border-left: 2px solid var(--warn);
+  color: var(--fg);
 }
 
 /* Touch: grow the Copy hit area; negative margin keeps the bar height. */

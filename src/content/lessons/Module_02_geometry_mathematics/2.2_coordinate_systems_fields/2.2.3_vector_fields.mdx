@@ -67,6 +67,10 @@ Image.fromarray(rgb, mode='RGB').save('simple_vector_field.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to render the vector field in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.3_vector_fields/simple_vector_field.png"
   alt="A colour wheel pattern where colour at each pixel indicates the direction toward the centre of the image, with the full rainbow visible around the centre"
@@ -74,6 +78,8 @@ Image.fromarray(rgb, mode='RGB').save('simple_vector_field.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 Each pixel carries an arrow you cannot see directly. The colour wheel makes the arrows visible by giving every direction its own hue — the same trick used in scientific flow visualisation [2].

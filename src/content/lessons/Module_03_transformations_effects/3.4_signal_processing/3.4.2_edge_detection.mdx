@@ -68,6 +68,10 @@ Image.fromarray(mag, 'L').save('edge_detection_output.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to detect the edges in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.2_edge_detection/edge_detection_output.png"
   alt="A black background showing the white outlines of a rectangle and a circle, both produced by Sobel edge detection. The edges are 1-pixel wide and clearly delineate the original shapes."
@@ -75,6 +79,8 @@ Image.fromarray(mag, 'L').save('edge_detection_output.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The shapes' *interiors* are exactly zero because the gradient there is zero. Sobel only "sees" change, not absolute brightness — that is what makes it an edge detector rather than a filter.

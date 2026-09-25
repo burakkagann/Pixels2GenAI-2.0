@@ -69,6 +69,10 @@ img.save('simple_affine.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to apply the affine transformation in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/simple_affine.png"
   alt="A small blue square on the left and a larger orange square on the right, both on a dark grey background, showing scale and translation"
@@ -76,6 +80,8 @@ img.save('simple_affine.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 Stacking the `1` onto each point is what lets a single matrix mix translation (which is *not* linear) with scale/rotate/shear (which are). The cost of that trick is one extra column in your point array; the win is everything composes.

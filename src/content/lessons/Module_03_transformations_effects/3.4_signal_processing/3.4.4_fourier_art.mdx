@@ -62,6 +62,10 @@ Image.fromarray(combo, 'L').save('simple_fft_output.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to compute the Fourier spectrum in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/simple_fft_output.png"
   alt="A side-by-side picture. Left: a black-and-white checkerboard with 16-pixel squares. Right: the FFT magnitude spectrum, mostly dark with a bright central cross and a regular lattice of bright dots radiating out, corresponding to the checkerboard's harmonics."
@@ -69,6 +73,8 @@ Image.fromarray(combo, 'L').save('simple_fft_output.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The spectrum is *symmetric* around its centre because the input is real-valued. The bright cross through the centre comes from the DC component (mean brightness) and its low-order spatial harmonics; the off-centre dots are the higher-frequency content carrying the checkerboard's regular pattern.

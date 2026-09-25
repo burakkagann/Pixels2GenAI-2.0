@@ -65,6 +65,10 @@ result.save('france_flag.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to draw the French flag in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/france_flag.png"
   alt="Flag of France with blue, white, and red vertical stripes"
@@ -72,6 +76,8 @@ result.save('france_flag.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 **What you just did**: You used NumPy array slicing to select vertical columns. The notation `[:, 0:150]` means "all rows, columns 0 to 149". The colon `:` selects all rows, while `0:150` specifies which columns to modify.
 

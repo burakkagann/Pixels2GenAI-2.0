@@ -58,6 +58,10 @@ Image.fromarray(contour, 'L').save('simple_contour.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the contour rings in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/simple_contour.png"
   alt="A grayscale image of concentric rings centred on the middle of the canvas. The centre is bright; the rings step down to dark at the edges, with sharp boundaries between each level."
@@ -65,6 +69,8 @@ Image.fromarray(contour, 'L').save('simple_contour.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The quantisation is `(normalised * 8).astype(np.uint8) * 32`. Multiply by 8 to spread the values into the range `[0, 8]`, cast to int (floor), multiply by 32 to spread back into `[0, 256)`. The cast is what creates the steps — float-to-int loses information, deliberately.

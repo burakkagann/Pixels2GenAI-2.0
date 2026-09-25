@@ -60,6 +60,10 @@ Image.fromarray(image).save('mask.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to create the circular vignette in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.1_mask/mask.png"
   alt="A photograph of the Brandenburg Gate at dusk, with everything outside a central circle blacked out, leaving a circular vignette"
@@ -67,6 +71,8 @@ Image.fromarray(image).save('mask.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The whole effect is the single line `image[outside] = 0`. NumPy's fancy indexing treats the boolean array as a selector — only the pixels where `outside` is `True` are touched. There is no per-pixel Python loop anywhere in the pipeline.

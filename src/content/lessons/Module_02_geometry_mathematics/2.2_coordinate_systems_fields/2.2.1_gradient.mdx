@@ -52,6 +52,10 @@ Image.fromarray(gradient_image, mode='L').save('simple_gradient.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the gradient in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.1_gradient/simple_gradient.png"
   alt="A horizontal grayscale gradient transitioning smoothly from black on the left to white on the right"
@@ -59,6 +63,8 @@ Image.fromarray(gradient_image, mode='L').save('simple_gradient.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The gradient has no per-pixel loop. `linspace` gives you the row in one call, and `tile` clones it into a 2D image. Both operations run in C inside NumPy, so the whole image is built in microseconds.

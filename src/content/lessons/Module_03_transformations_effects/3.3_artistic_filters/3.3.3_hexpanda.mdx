@@ -62,6 +62,10 @@ plt.savefig('hexpanda.png', bbox_inches='tight', dpi=120)
 ```
 </CodeBlock>
 
+Click **Run** on the code above to render the hexagonal mosaic in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/hexpanda.png"
   alt="A panda's portrait rendered as a hexagonal grayscale mosaic. The outline of the face and ears is clearly recognisable but the fine details are abstracted into hexagonal cells of varying darkness."
@@ -69,6 +73,8 @@ plt.savefig('hexpanda.png', bbox_inches='tight', dpi=120)
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The whole filter is *data*-mediated. You convert the image into points, then plot the points with hexbin. NumPy is not in the rendering pipeline at all — matplotlib does the actual hexagons.

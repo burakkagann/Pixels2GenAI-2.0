@@ -82,6 +82,10 @@ Image.fromarray(canvas).save("quickstart_fractal.png")
 ```
 </CodeBlock>
 
+Click **Run** on the code above to render the fractal in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/fractal_square.png"
   alt="Fractal square pattern showing nested green squares with increasing brightness at intersections"
@@ -89,6 +93,8 @@ Image.fromarray(canvas).save("quickstart_fractal.png")
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 The pattern emerges by applying a simple rule repeatedly. Divide a region into nine parts, fill the center, then repeat on the four corners. Each iteration adds more detail, creating the characteristic self-similar structure.
 

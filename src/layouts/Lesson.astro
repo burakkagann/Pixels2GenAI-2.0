@@ -55,10 +55,20 @@ const { slug, frontmatter, headings, mediaBase } = Astro.props;
 // In-browser Python runner (AI tutor Milestone 1b), behind a flag:
 // always on in `npm run dev`; in production only when PUBLIC_PYTHON_RUNNER=true is set
 // in Netlify, or for one visitor who opens a lesson with ?runner=1 (for live testing).
-// Scope: Modules 1-3, whose scripts are verified to run in Pyodide.
-const RUNNER_MODULES = new Set(['1', '2', '3']);
+// Scope: Modules 1-8 (2026-09-25). Modules 9-12 need PyTorch or TouchDesigner, which
+// can't run in the browser. Script-level results: ai-tutor-planning/launch-readiness/.
+const RUNNER_MODULES = new Set(['1', '2', '3', '4', '5', '6', '7', '8']);
 const runnerInScope = RUNNER_MODULES.has(slug.split('.')[0]) && Boolean(mediaBase);
 const runnerDefault = import.meta.env.DEV || import.meta.env.PUBLIC_PYTHON_RUNNER === 'true';
+
+// AI tutor chat (Milestone 3): DEV ONLY, and not tracked in git until the tutor launches.
+// import.meta.glob returns {} when the file doesn't exist (e.g. in Netlify's checkout),
+// so the build never fails on the missing folder; and only DEV looks at all, so
+// production builds contain no panel code (see src/components/tutor/TutorDev.astro).
+const tutorLoaders = import.meta.env.DEV ? import.meta.glob('../components/tutor/TutorDev.astro') : {};
+const loadTutor = Object.values(tutorLoaders)[0];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TutorDev = loadTutor ? ((await loadTutor()) as { default: any }).default : null;
 const f = frontmatter;
 // Plain-text objective (no `code` / *em* markers) for meta, og and JSON-LD.
 const plainObjective = inlineMarkdownText(f.objective);
@@ -188,4 +198,5 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
       <ContinueInModule slug={slug} currentModule={f.module} />
     </aside>
   </main>
+  {TutorDev && <TutorDev lessonId={slug} lessonTitle={f.title} />}
 </Base>

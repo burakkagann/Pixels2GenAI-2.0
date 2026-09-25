@@ -59,6 +59,10 @@ Image.fromarray(canvas).save('simple_line.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to draw the line in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.1_lines/simple_line.png"
   alt="A white diagonal line on a black 400 by 400 background, running from upper-left to lower-right"
@@ -66,6 +70,8 @@ Image.fromarray(canvas).save('simple_line.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The line is **not drawn** in any continuous sense. It is sampled — `linspace` produces 301 evenly-spaced (x, y) pairs, and each pair lights one pixel. Choosing the sample count so it equals the longer axis length is what keeps the line gap-free.

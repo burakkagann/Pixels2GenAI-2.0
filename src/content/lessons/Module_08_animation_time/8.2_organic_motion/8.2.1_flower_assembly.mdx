@@ -72,6 +72,10 @@ frames[0].save('flower_assembly.gif', save_all=True,
 ```
 </CodeBlock>
 
+Click **Run** on the code above to create the flower animation in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower_assembly.gif"
   alt="An animation of small coloured tiles flying inward from off-screen and gradually assembling into a six-petalled pink rose curve flower with a yellow centre — by the end of the loop the full flower image is reconstructed"
@@ -79,6 +83,8 @@ frames[0].save('flower_assembly.gif', save_all=True,
   num={1}
   role="gif"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The animation has **no explicit physics** — no velocities, no accelerations. Each tile linearly interpolates between two known positions, modulated by an easing curve. That is the entire algorithm. Every "explosion reversed" animation you've ever seen on screen uses some variation of this pattern.

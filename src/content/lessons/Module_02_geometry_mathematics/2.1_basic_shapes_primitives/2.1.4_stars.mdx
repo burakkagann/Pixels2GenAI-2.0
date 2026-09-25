@@ -56,6 +56,10 @@ Image.fromarray(canvas, mode='L').save('simple_star.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the star field in your browser, then compare your result with the expected output (your stars will land in different places, because the positions are random).
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.1_basic_shapes_primitives/2.1.4_stars/simple_star.png"
   alt="150 white dots scattered evenly across a black 400 by 400 canvas, like a flat star field"
@@ -63,6 +67,8 @@ Image.fromarray(canvas, mode='L').save('simple_star.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The whole star field is one assignment: `canvas[y_coords, x_coords] = 255`. NumPy walks the parallel coordinate arrays and writes each pixel in turn. No Python loop, no per-pixel function call.

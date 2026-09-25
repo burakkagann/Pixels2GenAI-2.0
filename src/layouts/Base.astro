@@ -122,8 +122,10 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
     <script type="application/ld+json" set:html={JSON.stringify(block)} />
   ))}
 
+  {/* data-domains: count visits only on the real site, so local `npm run dev`
+      previews, Playwright tests and Netlify deploy previews don't inflate the stats. */}
   {UMAMI_WEBSITE_ID && (
-    <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id={UMAMI_WEBSITE_ID}></script>
+    <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id={UMAMI_WEBSITE_ID} data-domains="pixels2genai.art"></script>
   )}
 
 </head>

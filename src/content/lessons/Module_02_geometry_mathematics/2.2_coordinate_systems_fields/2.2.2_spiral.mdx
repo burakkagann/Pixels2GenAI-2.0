@@ -70,6 +70,10 @@ Image.fromarray(canvas, mode='RGB').save('simple_spiral.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to draw the spiral in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.2_spiral/simple_spiral.png"
   alt="A white Archimedean spiral on a black 512 by 512 canvas, expanding from the centre outward with roughly eight visible turns"
@@ -77,6 +81,8 @@ Image.fromarray(canvas, mode='RGB').save('simple_spiral.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The spiral lives in polar space. The conversion `(r·cos θ, r·sin θ)` is the only place where Cartesian pixels enter. Change the polar equation and the same scaffold draws any polar curve.

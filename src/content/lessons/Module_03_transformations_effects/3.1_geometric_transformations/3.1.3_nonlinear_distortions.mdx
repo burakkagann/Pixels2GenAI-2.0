@@ -63,6 +63,10 @@ Image.fromarray(distorted).save('wave_distortion.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to apply the wave distortion in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.3_nonlinear_distortions/wave_distortion_output.png"
   alt="A colorful checkerboard with vertical edges turned into sine waves; horizontal edges remain perfectly straight"
@@ -70,6 +74,8 @@ Image.fromarray(distorted).save('wave_distortion.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 Notice that the loop reads `image[y, source_x]` — it does *not* write to a new position. The whole technique hinges on going **backwards**: pick an output pixel, ask "which input pixel should I copy here?", and copy it.

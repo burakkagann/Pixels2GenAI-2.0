@@ -55,6 +55,10 @@ Image.fromarray(normalized, mode='L').save('simple_distance_field.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to render the distance field in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/simple_distance_field.png"
   alt="A radial grayscale gradient on a 512 by 512 canvas — dark at the centre, gradually brighter toward the corners"
@@ -62,6 +66,8 @@ Image.fromarray(normalized, mode='L').save('simple_distance_field.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The gradient appears circular even though the canvas is square. Euclidean distance is rotation-symmetric — every level set of the distance field is a circle.

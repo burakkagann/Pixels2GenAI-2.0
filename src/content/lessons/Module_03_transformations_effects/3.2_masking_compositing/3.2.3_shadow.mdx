@@ -59,6 +59,10 @@ Image.fromarray(photo, 'RGB').save('shadow.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to cast the shadow in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.2_masking_compositing/3.2.3_shadow/shadow.png"
   alt="A photograph of the Brandenburg Gate at dusk with the sky replaced by a near-uniform near-white field, except for a soft grey echo of the gate's silhouette cast down-and-right onto the sky"
@@ -66,6 +70,8 @@ Image.fromarray(photo, 'RGB').save('shadow.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The shadow is white-on-grey, not black-on-white. We are painting *light* into the sky, not blocking it — the perception of "shadow" comes from the white sky against the grey echo, exactly the same way as a real cast shadow on a bright surface.
