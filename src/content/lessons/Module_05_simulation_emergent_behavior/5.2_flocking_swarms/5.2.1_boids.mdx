@@ -22,7 +22,7 @@ backLink:
 
 ## Overview
 
-A starling murmuration looks like one organism, but each bird is following three rules and looking at maybe seven neighbours. Craig Reynolds published that observation in 1987 as the **boids algorithm** — short for *bird-oid objects* — and it became the canonical demonstration of **emergent behaviour**, the way that complex global patterns arise from agents that share no global view [1]. In this lesson you will implement separation, alignment, and cohesion, render 30 boids into a 400×400 GIF, and feel the moment when the system tips from random drift into coordinated motion. The same three-rule recipe ran the bat swarm in *Batman Returns* (1992) and the wildebeest stampede in *The Lion King* (1994); it has not aged a day.
+A starling murmuration looks like one organism, but each bird is following three rules and looking at maybe seven neighbours. Craig Reynolds published that observation in 1987 as the **boids algorithm** — short for *bird-oid objects* — and it became the canonical demonstration of **emergent behaviour**, the way that complex global patterns arise from agents that share no global view [1]. In this lesson you will implement separation, alignment, and cohesion, render 50 boids into a 512×512 GIF, and feel the moment when the system tips from random drift into coordinated motion. The same three-rule recipe ran the bat swarm in *Batman Returns* (1992) and the wildebeest stampede in *The Lion King* (1994); it has not aged a day.
 
 ### Learning objectives
 
@@ -65,7 +65,7 @@ imageio.mimsave('simple_flock.gif', frames, fps=20)
 <Figure
   src="/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/boids_simulation.gif"
   alt="Animated flock of cyan dots drifting and coalescing on a dark blue background"
-  caption="The full simulation — 50 boids, all three rules, 150 frames. Watch the moment around frame 40 when isolated agents start moving in synchronised streams."
+  caption="The full simulation — 50 boids, all three rules, 180 frames."
   num={1}
   role="output"
 />
@@ -176,7 +176,7 @@ Three exercises in **Execute → Modify → Create** order: run the canonical si
 
 <Exercise n={1} kicker="EXECUTE" title="Run the canonical flock">
 
-Download `boids.py` and run it. It produces `boids_simulation.gif`: 50 boids over 200 frames, all three rules at default weights.
+Download `boids.py` and run it. It produces `boids_simulation.gif`: 50 boids over 180 frames, all three rules at default weights.
 
 <Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.2_flocking_swarms/5.2.1_boids/boids.py" label="boids.py — complete reference implementation" />
 

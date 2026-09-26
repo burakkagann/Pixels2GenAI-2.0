@@ -80,17 +80,24 @@ for _ in range(100):
 
 # 3. Map iteration counts to a grayscale image
 gray = (iterations / 100 * 255).astype(np.uint8)
+gray[iterations == 100] = 0   # never escaped: inside the set, painted black
 Image.fromarray(gray).save('mandelbrot_basic.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to generate the set in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.3_mandelbrot/mandelbrot_basic.png"
-  alt="The Mandelbrot set rendered with a blue gradient — black region in the cardioid and bulbs, blue fringe at the boundary"
-  caption="The classic Mandelbrot viewport. Black = points whose orbits stayed bounded for 100 iterations; brighter blue = orbits that escaped quickly."
+  alt="The Mandelbrot set in grayscale: a black cardioid and bulbs, edged by a bright grey fringe that fades to near-black away from the set"
+  caption="The classic Mandelbrot viewport. Black = points whose orbits stayed bounded for 100 iterations; brighter grey = orbits that took longer to escape, the near misses along the boundary."
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The whole picture is **one quadratic map applied in parallel to every pixel**. NumPy's broadcasting and boolean masking let you iterate 262,144 points (a 512×512 grid) without a single Python loop over individual coordinates. Vectorisation is what makes this run in under a second instead of several minutes.
@@ -208,7 +215,7 @@ Run `mandelbrot_set.py` as written and look at the output. The script renders th
 
 <Dropdown summary="Answers">
 
-**Darkest non-black** — the dark fringe immediately outside the black region. Those points took many iterations to escape, meaning their orbits *almost* stayed bounded. They are the "near misses."
+**Darkest non-black** — the outer region, far from the black set. Those points escaped within the first one or two iterations: their orbits blew up almost at once. The opposite end is the bright fringe hugging the set's edge, where points took many iterations to escape and their orbits *almost* stayed bounded. Those are the "near misses."
 
 **The boundary is the interesting part** — the inside is mathematically just "stayed bounded." The boundary is where the set is fractal: an infinite-perimeter, finite-area curve. Every zoom reveals miniature Mandelbrot copies, swirls, "seahorses," and "lightning." Self-similarity (almost) — there are tiny rotated/distorted copies, but the boundary is not strictly self-similar.
 

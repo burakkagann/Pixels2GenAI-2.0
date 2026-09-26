@@ -35,33 +35,41 @@ A **Delaunay triangulation** connects a point cloud into triangles such that *no
 
 ## Quick start — triangulate 50 points <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="simple_delaunay.py">
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 
-rng = np.random.default_rng(42)
-points = rng.random((50, 2)) * 400
+np.random.seed(42)                    # fixed seed: the same 50 points every run
+points = np.random.rand(50, 2) * 400
 
 tri = Delaunay(points)
 
-fig, ax = plt.subplots(figsize=(7, 7))
-ax.triplot(points[:, 0], points[:, 1], tri.simplices,
-           color='steelblue', linewidth=0.8)
-ax.plot(points[:, 0], points[:, 1], 'o', color='coral', markersize=6)
-ax.set_aspect('equal'); ax.axis('off')
-plt.savefig('simple_delaunay.png', dpi=150, bbox_inches='tight')
+plt.figure(figsize=(8, 8))
+plt.triplot(points[:, 0], points[:, 1], tri.simplices,
+            color='steelblue', linewidth=0.8)
+plt.plot(points[:, 0], points[:, 1], 'o', color='coral', markersize=6)
+plt.title(f'Delaunay Triangulation (50 points, {len(tri.simplices)} triangles)')
+plt.axis('equal'); plt.axis('off')
+plt.tight_layout()
+plt.savefig('simple_delaunay.png', dpi=150, bbox_inches='tight', facecolor='white')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to triangulate the points in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.5_delaunay_triangulation/simple_delaunay.png"
-  alt="A wireframe mesh of about 87 triangles connecting 50 random coral-coloured points on a white background. The triangles are visibly well-shaped, none of them long and thin."
+  alt="A wireframe mesh of 87 triangles connecting 50 random coral-coloured points on a white background, under the title 'Delaunay Triangulation (50 points, 87 triangles)'. The triangles are visibly well-shaped, none of them long and thin."
   caption="The Delaunay triangulation of 50 random points produces 87 triangles. Every triangle's circumcircle is empty of other points — the algorithm's defining property."
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The output of `Delaunay(points)` is an *index* into your original point array. `tri.simplices` has shape `(num_triangles, 3)`, and each row is `[i, j, k]` — the indices of the three points making up one triangle. The points themselves never move; only the connectivity is computed.
@@ -142,7 +150,7 @@ Three exercises in **Execute → Modify → Create** order: run the wireframe, t
 
 <Exercise n={1} kicker="EXECUTE" title="Run the wireframe triangulation">
 
-Run `simple_delaunay.py` from the downloads. Look at the output.
+Run `simple_delaunay.py`, the quick-start script above. Look at the output.
 
 **Reflection questions**
 
@@ -152,7 +160,7 @@ Run `simple_delaunay.py` from the downloads. Look at the output.
 
 <Dropdown summary="Answers">
 
-**87 triangles from 50 points** — for points in *general position* on the plane, the Delaunay triangulation has approximately `2N - 2 - K` triangles, where `K` is the number of points on the convex hull. With 50 points and a hull of size ~11, that comes out near 87. The formula `2N - K - 2` is exact when there are no degeneracies [1].
+**87 triangles from 50 points** — for points in *general position* on the plane, the Delaunay triangulation has approximately `2N - 2 - K` triangles, where `K` is the number of points on the convex hull. With 50 points and 11 of them on the hull, that gives 2 × 50 − 2 − 11 = 87. The formula `2N - K - 2` is exact when there are no degeneracies [1].
 
 **No slivers** — Delaunay's optimality criterion specifically maximises the smallest angle. Any triangulation with a sliver triangle could be improved by an edge flip, so the algorithm flips until no improvement is possible.
 

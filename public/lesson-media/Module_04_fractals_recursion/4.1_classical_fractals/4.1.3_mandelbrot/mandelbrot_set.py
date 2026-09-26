@@ -66,18 +66,18 @@ for i in range(max_iterations):
 # =============================================================================
 # STEP 4: Map iteration counts to colors
 # =============================================================================
-# Points that escaped early (low iteration count) = bright colors
-# Points that escaped late (high iteration count) = dark colors
+# Points that escaped early (low iteration count) = dark colors
+# Points that escaped late (high iteration count) = bright colors (the near misses)
 # Points that never escaped (iteration_count = max_iterations) = black (in the set)
 
 # Normalize iteration counts to 0-255 range for grayscale
 normalized = (iteration_count / max_iterations * 255).astype(np.uint8)
 
-# Create RGB image (we'll use a blue-to-white gradient)
+# Create RGB image (we'll use a dark-to-bright blue gradient)
 # Points inside the Mandelbrot set will be black
 image_array = np.zeros((height, width, 3), dtype=np.uint8)
 
-# Color mapping: darker blue for low iterations, white for high iterations
+# Color mapping: dark blue for low iterations, bright blue for high iterations
 # Points in the set (max iterations) will be black
 mask_in_set = iteration_count == max_iterations
 mask_outside = ~mask_in_set

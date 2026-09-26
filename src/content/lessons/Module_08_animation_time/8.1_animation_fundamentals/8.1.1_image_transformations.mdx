@@ -55,9 +55,11 @@ Image.fromarray(g).save('purple.png')
 ```
 </CodeBlock>
 
+Run saves three of these tiles (dim, flip and no-green); the other nine are built in the core concepts below.
+
 <Figure
   src="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_grid.png"
-  alt="A four-by-three grid of the Python logo under twelve different image transformations — dim, flip, no-green, channel-rolled, noise overlay, quadrant masking, distance map, circular mask, donut mask, donut-cropped"
+  alt="A four-by-three grid of the Python logo under twelve image operations — identity, dim, flip, no-green, rolled channels, noise, spaced noise, quadrant masking, distance map, circle mask, donut mask, donut-cropped"
   caption="The full operator family rendered as a 3×4 contact sheet. Top row: identity, dim, flip, green-killed. Middle: rolled channels, noise, spaced noise, quadrant masking. Bottom: distance map, circle-masked, donut mask, donut-cropped."
   num={1}
   role="output"
@@ -75,7 +77,7 @@ Three of the cheapest, most expressive transformations are pure slicing:
 
 - **Brightness** — `a // 2` halves every value. Multiplication scales each pixel's intensity uniformly.
 - **Flip** — `a[:, ::-1]` reverses the column axis. `::-1` is NumPy's "every row/column, but in reverse" slice. Free; no allocation, just a view.
-- **Channel kill** — `g[:, :, 1] = 0` zeroes the green channel in-place. RGB minus green is roughly the magenta-purple range you see in the second tile of the grid above.
+- **Channel kill** — `g[:, :, 1] = 0` zeroes the green channel in-place. RGB minus green is roughly the magenta-purple range you see in the fourth tile of the grid above.
 
 These three operators share a property: the operator commutes with broadcasting. You can apply `a // 2` to a single image, a batch of images, an animation frame, or a video tensor — the code is identical. That broadcast-friendliness is what makes NumPy operations the natural building blocks of animation.
 
