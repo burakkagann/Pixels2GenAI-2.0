@@ -215,7 +215,6 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
     ]},
     { id: '8.3', title: 'Cinematic Effects', leaves: [
       { id: '8.3.1', title: 'Star Wars Titles', lessonSlug: '8.3.1' },
-      { id: '8.3.2', title: 'Thank You', lessonSlug: '8.3.2' },
       { id: '8.3.3', title: 'Particle Text Reveals' },
       { id: '8.3.4', title: 'Morphing Transitions' },
     ]},

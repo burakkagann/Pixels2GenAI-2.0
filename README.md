@@ -89,7 +89,7 @@ at a time.
 | **II · Machine Learning** | Noise & Procedural Generation · Classical ML on Images · Animation & Time · Neural Networks · TouchDesigner · Interactive Systems | Images become data; data trains a model. |
 | **III · Generative AI** | Generative AI Models · AI + TouchDesigner · Data as Material · **Capstone Project** | Models become creative collaborators — then you make your own piece. |
 
-There are **193 hands-on exercises** across these modules. Lessons are published
+There are **192 hands-on exercises** across these modules. Lessons are published
 module by module as they're polished — **72 are live as of June 2026**, with the
 rest arriving steadily. The live site always shows what's ready right now; run
 `npm run status` for the current count.

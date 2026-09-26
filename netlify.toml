@@ -25,6 +25,13 @@
   to = "/announce/thanks"
   status = 301
 
+# Lesson 8.3.2 "Thank You" was removed from the curriculum (2026-09-26).
+# Its URL was public, so send visitors to the neighbouring cinematic lesson.
+[[redirects]]
+  from = "/lessons/8.3.2"
+  to = "/lessons/8.3.1"
+  status = 301
+
 # Security headers applied site-wide. CSP is intentionally deferred until
 # fonts are self-hosted and inline-script hashes can be enumerated.
 [[headers]]
