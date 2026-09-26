@@ -35,7 +35,7 @@ Hexagonal binning is a tool from statistical graphics: every data point gets dro
 
 ## Quick start — the hexpanda <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="hexpanda.py">
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -147,13 +147,13 @@ Three exercises in **Execute → Modify → Create** order: run the hexpanda, sw
 
 <Exercise n={1} kicker="EXECUTE" title="Run the hexpanda">
 
-Run `hexpanda.py` from the downloads. Inspect the saved PNG.
+Run `hexpanda.py`, the quick-start script above. Inspect the saved PNG.
 
 **Reflection questions**
 
 - Why are the panda's eyes — sharp features in the original — almost invisible in the hexbin output?
 - The darkest hexes lie where the *darkest* pixels live in the original. Why does inverting the image *before* the pipeline produce that mapping?
-- Try setting `sample_fraction = 1` (no sampling). What changes in the output, and what stays the same?
+- Try sampling every pixel: replace `len(df) // 4` with `len(df)`. What changes in the output, and what stays the same?
 
 <Dropdown summary="Answers">
 
