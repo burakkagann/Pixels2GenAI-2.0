@@ -93,11 +93,6 @@ if __name__ == '__main__':
     # Generate the diagram
     diagram = create_rgb_additive_mixing_diagram(size=600)
 
-    # Save to the images directory
-    output_path = '../../../../../images/rgb_additive_mixing.png'
-    diagram.save(output_path)
-    print(f"RGB additive mixing diagram saved to {output_path}")
-
-    # Also save a local copy for reference
+    # Save next to the script (the lesson's Figure 1 uses this file name)
     diagram.save('rgb_additive_mixing_local.png')
-    print("Local copy saved to rgb_additive_mixing_local.png")
+    print("Diagram saved to rgb_additive_mixing_local.png")

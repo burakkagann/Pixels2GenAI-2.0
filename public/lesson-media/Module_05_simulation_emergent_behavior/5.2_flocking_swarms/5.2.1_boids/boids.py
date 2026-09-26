@@ -249,8 +249,26 @@ def run_simulation():
 
     frames = []
 
-    # Save animation
+    print(f"Generating {NUM_FRAMES} frames...")
+    for frame_num in range(NUM_FRAMES):
+        # Render current state
+        frame = render_frame(positions, velocities)
+        frames.append(frame)
 
+        # Save first interesting frame (after some movement)
+        if frame_num == 20:
+            frame_path = os.path.join(SCRIPT_DIR, 'boids_frame.png')
+            Image.fromarray(frame).save(frame_path)
+            print("Saved boids_frame.png")
+
+        # Update boids
+        positions, velocities = update_boids(positions, velocities)
+
+        if (frame_num + 1) % 10 == 0:
+            print(f"  Frame {frame_num + 1}/{NUM_FRAMES}")
+
+    # Save animation
+    print("Saving animation...")
     gif_path = os.path.join(SCRIPT_DIR, 'boids_simulation.gif')
     imageio.mimsave(gif_path, frames, fps=FPS, loop=0)
     print("Saved boids_simulation.gif")
