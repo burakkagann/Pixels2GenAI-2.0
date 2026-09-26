@@ -186,16 +186,16 @@
   margin: 0;
 
   /* Re-shadow the tokens the inline SVG inside .figure-plate consumes. */
-  --bg-2:        #17131E;
-  --line:        #2B2536;
-  --line-2:      #3B344A;
-  --fg:          #F0E7D8;
-  --fg-2:        #ABA294;
-  --fg-3:        #8A8273;
-  --accent:      #B585E8;
-  --accent-soft: #966AC8;
-  --accent-dim:  #5C3F82;
-  --highlight:   #F0C26B;
+  --bg-2:        #19191C;
+  --line:        #2A2A2F;
+  --line-2:      #3C3C43;
+  --fg:          #F2EEE6;
+  --fg-2:        #ACA8A0;
+  --fg-3:        #8C8880;
+  --accent:      #7C9BF0;
+  --accent-soft: #6385E0;
+  --accent-dim:  #2E4478;
+  --highlight:   #F2D14B;
 }
 
 .research-figure .figure-plate.plate-img {

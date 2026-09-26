@@ -18,7 +18,8 @@ export type PaletteName =
   | 'iridescent'
   | 'aurora'
   | 'twilight'
-  | 'mono';
+  | 'mono'
+  | 'greyscale';
 
 export type ColorMode = 'steady' | 'cycle' | 'drift' | 'chromatic';
 
@@ -183,13 +184,30 @@ export const PALETTES: Record<PaletteName, PaletteDef> = {
       [0.18, 0.040, 290],  // loop-close for journey-palette crossfade
     ],
   },
+  // Neutral cool greyscale: Module 1 is raw arrays, so the journey starts
+  // without colour (unlike 'mono', which is warm-tinted).
+  greyscale: {
+    label: 'Greyscale',
+    stops: [
+      [0.05, 0.003, 250],
+      [0.40, 0.005, 250],
+      [0.75, 0.005, 250],
+      [0.96, 0.005, 250],
+    ],
+  },
 };
 
 // Order matters: journey-palette modifier crossfades PALETTE_ORDER[i] → PALETTE_ORDER[i+1].
 export const PALETTE_ORDER: PaletteName[] = [
   'riso', 'aurum', 'dusk', 'magma', 'inferno', 'viridis',
-  'plasma', 'iridescent', 'aurora', 'twilight', 'mono',
+  'plasma', 'iridescent', 'aurora', 'twilight', 'mono', 'greyscale',
 ];
+
+// The landing cube's colour journey across the curriculum slider (j = 0..1):
+// greyscale at Module 1 (raw arrays), viridis through the middle modules,
+// inferno at generative AI — the matplotlib colour maps learners meet in the
+// lessons. Adjacent palettes cross-fade; see JourneyCube.tsx.
+export const JOURNEY_PALETTES: PaletteName[] = ['greyscale', 'viridis', 'inferno'];
 
 // ------------------------------------------------------------
 // 512-entry sRGB LUT per palette, computed once.

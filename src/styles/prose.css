@@ -719,7 +719,7 @@
 }
 
 .fig-lightbox::backdrop {
-  background: rgba(8, 6, 12, 0.82);
+  background: rgba(10, 10, 12, 0.82);
   backdrop-filter: blur(3px);
 }
 
@@ -740,7 +740,7 @@
   font-style: italic;
   font-size: 14px;
   line-height: 1.45;
-  color: #F0E7D8;
+  color: #F2EEE6;
   text-align: center;
 }
 
@@ -751,9 +751,9 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(240, 231, 216, 0.4);
-  background: #1C1824;
-  color: #F0E7D8;
+  border: 1px solid rgba(242, 238, 230, 0.4);
+  background: #1B1B1F;
+  color: #F2EEE6;
   font-size: 20px;
   line-height: 1;
   cursor: pointer;

@@ -1,74 +1,77 @@
 /* ============================================================
-   PIXELS2GENAI · DESIGN TOKENS · TWO-INK PALETTE
+   PIXELS2GENAI · DESIGN TOKENS · RISO PRESS PALETTE
    Single source of truth for design tokens. No hex values
    should appear outside this file.
 
-   :root holds the dark palette (canonical identity).
-   [data-theme="light"] (below) is an additive override layer
-   for the light theme. The data-theme attribute is set on
-   <html> by the no-flash script in Base.astro before first
-   paint, reading either localStorage['p2g-theme'] or
-   prefers-color-scheme.
+   Risograph inks: teal (Path I), federal blue (Path II and the
+   primary action), fluoro pink (Path III and the brand octopus),
+   yellow (editorial highlight) on neutral ink-black / warm paper.
+
+   :root holds the dark palette; [data-theme="light"] (below) is an
+   override layer. LIGHT IS THE DEFAULT: <html> ships with
+   data-theme="light", and the no-flash script in Base.astro only
+   switches to dark when the visitor chose it with the toggle
+   (localStorage['p2g-theme']). The OS preference is not followed.
    ============================================================ */
 
 :root {
-  /* ---------- Base — violet-tinted near-black ---------- */
-  --bg:    #110D16;
-  --bg-2:  #17131E;
-  --bg-3:  #1E1928;
-  --bg-4:  #251F30;
-  --bg-deep: #0C0913;
+  /* ---------- Base — neutral ink-black ---------- */
+  --bg:    #121214;
+  --bg-2:  #19191C;
+  --bg-3:  #202024;
+  --bg-4:  #28282D;
+  --bg-deep: #0C0C0E;
 
   /* ---------- Warm pockets (paper-cream tints — .ad.dyk, .ex bg, code chrome) ---------- */
-  --bg-warm-1: #1E1A14;
-  --bg-warm-2: #271F18;
-  --bg-warm-3: #322823;
+  --bg-warm-1: #1C1A17;
+  --bg-warm-2: #24211D;
+  --bg-warm-3: #2E2A25;
 
   /* ---------- Code-block surface (bare ``` fences + <CodeBlock>, both themes) ----------
      One surface for every code block so bare and wrapped render identically.
      Dark: warm plate sits only 1.1:1 above the page, so --code-border carries
      the block's edge/elevation. Token text comes from Shiki; the surface never
      does (see prose.css ".astro-code"). */
-  --code-surface: #1E1A14;
-  --code-border:  #3C3329;
+  --code-surface: #1C1A17;
+  --code-border:  #3A3530;
 
   /* ---------- Cool / archival pockets (.ad.note, left rail, refs) ---------- */
-  --bg-cool-1: #17131E;
-  --bg-cool-2: #1E1928;
-  --bg-cool-3: #0C0913;
+  --bg-cool-1: #19191C;
+  --bg-cool-2: #202024;
+  --bg-cool-3: #0C0C0E;
 
   /* ---------- Foreground — warm paper ---------- */
-  --fg:   #F0E7D8;
-  --fg-2: #ABA294;
-  --fg-3: #8A8273;
-  --fg-4: #66625C; /* was #443F38 (1.75:1): inactive/decorative tier, now 3:1 on --bg-2 */
+  --fg:   #F2EEE6;
+  --fg-2: #ACA8A0;
+  --fg-3: #8C8880;
+  --fg-4: #686661;
 
   /* ---------- Lines ---------- */
-  --line:        #2B2536;
-  --line-2:      #3B344A;
-  --line-warm:   #2A241F;
-  --line-warm-2: #3C3329;
+  --line:        #2A2A2F;
+  --line-2:      #3C3C43;
+  --line-warm:   #2A2723;
+  --line-warm-2: #3C3731;
 
-  /* ---------- Foundations — Lichen Green (pixels pole) ---------- */
-  --c1:      #9AC07A;
-  --c1-soft: #7AA45F;
-  --c1-dim:  #4D6B3B;
-  --c1-tint: rgba(154, 192, 122, 0.10);
-  --c1-wash: rgba(154, 192, 122, 0.04);
+  /* ---------- Path I · Foundations — Riso teal ---------- */
+  --c1:      #3FBFAE;
+  --c1-soft: #33A596;
+  --c1-dim:  #1F5E56;
+  --c1-tint: rgba(63, 191, 174, 0.10);
+  --c1-wash: rgba(63, 191, 174, 0.04);
 
-  /* ---------- Machine Learning — Electric Blue (mid pole) ---------- */
-  --c2:      #66B8FF;
-  --c2-soft: #4A95D8;
-  --c2-dim:  #2A5F8E;
-  --c2-tint: rgba(102, 184, 255, 0.10);
-  --c2-wash: rgba(102, 184, 255, 0.04);
+  /* ---------- Path II · Machine Learning — Riso federal blue ---------- */
+  --c2:      #7C9BF0;
+  --c2-soft: #6385E0;
+  --c2-dim:  #2E4478;
+  --c2-tint: rgba(124, 155, 240, 0.10);
+  --c2-wash: rgba(124, 155, 240, 0.04);
 
-  /* ---------- Generative AI — Violet (genai pole) ---------- */
-  --c3:      #B585E8;
-  --c3-soft: #966AC8;
-  --c3-dim:  #5C3F82;
-  --c3-tint: rgba(181, 133, 232, 0.10);
-  --c3-wash: rgba(181, 133, 232, 0.04);
+  /* ---------- Path III · Generative AI — Riso fluoro pink ---------- */
+  --c3:      #F4669A;
+  --c3-soft: #E0558A;
+  --c3-dim:  #7E2E4C;
+  --c3-tint: rgba(244, 102, 154, 0.10);
+  --c3-wash: rgba(244, 102, 154, 0.04);
 
   /* ---------- Studio Ink — Fluoro Pink (brand identity: wordmark, exhibition, workshops) ---------- */
   --studio:      #F4669A;
@@ -80,26 +83,26 @@
      on dark; the light theme darkens it, because #F4669A is 2.6:1 on cream. */
   --studio-text: var(--studio);
 
-  /* ---------- Highlight — Warm Yellow (editorial only — eyebrows, drop caps) ---------- */
-  --highlight: #F0C26B;
+  /* ---------- Highlight — Riso yellow (editorial only — eyebrows, drop caps) ---------- */
+  --highlight: #F2D14B;
 
   /* ---------- Exercise stage accents (Execute → Modify → Create) ----------
      A per-stage colour ramp keyed off the exercise kicker, ORTHOGONAL to the
      per-module --cycle colour. cool → warm → bold mirrors rising learner
      agency (run it → change it → make it). Used by .ex .num in prose.css.
      TRAIN maps to the Create family (Exercise.astro). */
-  --stage-execute: #66B8FF;   /* = --c2 electric blue — calm: run it */
-  --stage-modify:  #F0C26B;   /* = --highlight amber — active: change it */
-  --stage-create:  #B585E8;   /* = --c3 violet — bold: make it */
+  --stage-execute: #3FBFAE;   /* = --c1 teal — calm: run it */
+  --stage-modify:  #F2D14B;   /* = --highlight yellow — active: change it */
+  --stage-create:  #F4669A;   /* = --c3 pink — bold: make it */
 
   /* ---------- Semantic aliases ---------- */
-  --accent:      var(--c3);          /* primary action = violet */
-  --accent-soft: var(--c3-soft);
-  --accent-dim:  var(--c3-dim);
-  --accent-tint: var(--c3-tint);
-  --accent-glow: rgba(181, 133, 232, 0.45);
+  --accent:      var(--c2);          /* primary action = federal blue */
+  --accent-soft: var(--c2-soft);
+  --accent-dim:  var(--c2-dim);
+  --accent-tint: var(--c2-tint);
+  --accent-glow: rgba(124, 155, 240, 0.45);
   --link:        var(--c2);          /* explicit electric blue — NOT --c1 (cascade trap) */
-  --link-hover:  #8FC8FF;
+  --link-hover:  #A3BAF5;
   --warn:        #E0A674;            /* amber — shifted from dusty pink to avoid --studio collision */
 
   /* ---------- Admonition · note (promoted from prose.css hardcodes) ---------- */
@@ -112,11 +115,11 @@
 
   /* ---------- Figure frame ----------
      A light-touch plate behind lesson outputs / research PNGs. Dark theme:
-     a soft violet plate slightly LIFTED off the page (not a black void).
+     a neutral plate slightly LIFTED off the page (not a black void).
      Light theme overrides these to a warm paper inset (see [data-theme]). */
-  --figure-frame-bg:   #1C1824;
-  --figure-frame-line: #2B2536;
-  --figure-frame-fg:   #F0E7D8;
+  --figure-frame-bg:   #1B1B1F;
+  --figure-frame-line: #2A2A2F;
+  --figure-frame-fg:   #F2EEE6;
 
   /* ---------- Typography ---------- */
   --serif: "Literata Variable", "Literata", "Iowan Old Style", Georgia, serif;
@@ -162,82 +165,81 @@
    ============================================================ */
 
 [data-theme="light"] {
-  /* ---------- Base — warm paper-cream ---------- */
-  --bg:      #F5F1E8;
-  --bg-2:    #ECE6D8;
-  --bg-3:    #E3DCC9;
-  --bg-4:    #D6CEB8;
-  --bg-deep: #FFFCF3;
+  /* ---------- Base — warm paper (the default theme) ---------- */
+  --bg:      #F6F3EC;
+  --bg-2:    #ECE8DE;
+  --bg-3:    #E2DDD0;
+  --bg-4:    #D5CFBF;
+  --bg-deep: #FFFDF8;
 
   /* ---------- Warm pockets (.ad.dyk, .ex bg, code chrome) — peachy cream ---------- */
-  --bg-warm-1: #F1E7D4;
-  --bg-warm-2: #ECDFC4;
-  --bg-warm-3: #E5D3B0;
+  --bg-warm-1: #F2EAD9;
+  --bg-warm-2: #ECE0C8;
+  --bg-warm-3: #E4D4B4;
 
   /* ---------- Code-block surface — WARM CREAM (not white), a touch lighter
      than the page (#F5F1E8) so it reads as a raised paper card while staying
      in the warm family. github-light-high-contrast tokens hold WCAG AA on
      this surface (verified against the emitted palette). ---------- */
-  --code-surface: #FAF4E6;
-  --code-border:  #D9CCB2;
+  --code-surface: #FBF7EE;
+  --code-border:  #D8CDB6;
 
   /* ---------- Cool / archival pockets (.ad.note, left rail, refs) — pale archival ---------- */
-  --bg-cool-1: #ECEAE3;
-  --bg-cool-2: #E3E1DA;
-  --bg-cool-3: #F8F5EE;
+  --bg-cool-1: #ECEBE6;
+  --bg-cool-2: #E3E2DC;
+  --bg-cool-3: #F9F7F2;
 
-  /* ---------- Foreground — deep violet-ink ---------- */
-  --fg:   #15101C;
-  --fg-2: #3A3340;
-  --fg-3: #5C5564;
-  --fg-4: #86818E; /* 3:1 on --bg-2 (inactive/decorative tier only; body copy uses --fg-3 or darker) */
+  /* ---------- Foreground — ink ---------- */
+  --fg:   #141418;
+  --fg-2: #3B3B42;
+  --fg-3: #5B5B63;
+  --fg-4: #85848B;
 
   /* ---------- Lines — warm-gray hairlines ---------- */
-  --line:        #CFC7B5;
-  --line-2:      #B8B19E;
-  --line-warm:   #D9CCB2;
-  --line-warm-2: #C2B596;
+  --line:        #D3CFC4;
+  --line-2:      #BDB9AE;
+  --line-warm:   #D8CDB6;
+  --line-warm-2: #C1B597;
 
-  /* ---------- Foundations — deeper lichen green ---------- */
-  /* --c1 / --c1-soft / --c2 / --c2-soft / --c3-soft / --warn are used as small
-     text: each is the smallest darkening of its hue that holds WCAG AA 4.5:1 on
-     both --bg and --bg-2 (previously 2.9-4.5:1). */
-  --c1:      #48712C; /* was #4D7A2F */
-  --c1-soft: #4A7131; /* was #5E8F3E */
-  --c1-dim:  #2F5018;
-  --c1-tint: rgba(77, 122, 47, 0.14);
-  --c1-wash: rgba(77, 122, 47, 0.06);
+  /* ---------- Path I — deep teal ---------- */
+  /* Every --cN / --cN-soft below is used as small text: each holds WCAG AA
+     4.5:1 on --bg, --bg-2 and --bg-3 (checked when the palette was set). */
+  --c1:      #0A6E63;
+  --c1-soft: #0F6E64;
+  --c1-dim:  #07544C;
+  --c1-tint: rgba(10, 110, 99, 0.14);
+  --c1-wash: rgba(10, 110, 99, 0.06);
 
-  /* ---------- Machine Learning — deep electric blue ---------- */
-  --c2:      #1C69B5; /* was #1E6FBF */
-  --c2-soft: #256AAA; /* was #2E83D2 */
-  --c2-dim:  #134A82;
-  --c2-tint: rgba(30, 111, 191, 0.14);
-  --c2-wash: rgba(30, 111, 191, 0.06);
+  /* ---------- Path II — deep federal blue (also the primary action) ---------- */
+  --c2:      #2D52A8;
+  --c2-soft: #3558AE;
+  --c2-dim:  #1E3A7A;
+  --c2-tint: rgba(45, 82, 168, 0.14);
+  --c2-wash: rgba(45, 82, 168, 0.06);
 
-  /* ---------- Generative AI — deep violet ---------- */
-  --c3:      #6B3FAA;
-  --c3-soft: #7C50BC; /* was #7F52C0 */
-  --c3-dim:  #482675;
-  --c3-tint: rgba(107, 63, 170, 0.14);
-  --c3-wash: rgba(107, 63, 170, 0.06);
+  /* ---------- Path III — deep fluoro pink ---------- */
+  --c3:      #B02E64;
+  --c3-soft: #A93361;
+  --c3-dim:  #7A1E44;
+  --c3-tint: rgba(176, 46, 100, 0.14);
+  --c3-wash: rgba(176, 46, 100, 0.06);
 
   /* ---------- Studio Ink — brand pink invariant. Alpha variants bumped for cream. ---------- */
   --studio-tint: rgba(244, 102, 154, 0.16);
   --studio-glow: rgba(244, 102, 154, 0.55);
   --studio-text: #A8466A; /* AA 4.5:1 on cream; --studio stays the brand pink for fills */
 
-  /* ---------- Highlight — deep amber (drop caps, eyebrows) ---------- */
-  --highlight: #B57B17;
+  /* ---------- Highlight — deep riso yellow (drop caps, eyebrows) ---------- */
+  --highlight: #826400;
 
   /* ---------- Exercise stage accents — darkened to hold AA on cream (--bg-warm-1) ---------- */
-  --stage-execute: #134A82;   /* = --c2-dim */
-  --stage-modify:  #8A5A0C;   /* deep amber (--highlight #B57B17 is too light on cream) */
-  --stage-create:  #482675;   /* = --c3-dim */
+  --stage-execute: #0A6E63;
+  --stage-modify:  #7A6000;
+  --stage-create:  #B02E64;
 
   /* ---------- Semantic aliases — accent-glow needs explicit re-derivation ---------- */
-  --accent-glow: rgba(107, 63, 170, 0.45);
-  --link-hover: #155299;
+  --accent-glow: rgba(45, 82, 168, 0.45);
+  --link-hover: #1E3A7A;
   --warn:       #99561C; /* was #A85F1F */
 
   /* ---------- Admonition note ---------- */

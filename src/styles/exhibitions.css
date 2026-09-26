@@ -407,7 +407,7 @@
 /* The works are all on black, so tiles carry a theme-invariant near-black mat
    and the image is shown in full (contain) — landscape prints and the printed
    code captions are never cropped, and the mat reads as a frame in both themes. */
-.exhibition-plate-strip-grid .exhibition-plate { background: #0C0913; }
+.exhibition-plate-strip-grid .exhibition-plate { background: #0C0C0E; }
 
 .exhibition-plate img {
   width: 100%;
@@ -945,7 +945,7 @@
   overflow: hidden;
   /* Theme-invariant near-black mat — the prints are all on black, so the
      contained image below sits in a frame rather than a visible letterbox. */
-  background: #0C0913;
+  background: #0C0C0E;
 }
 
 .exhibition-plate .plate-frame img {

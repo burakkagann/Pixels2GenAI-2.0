@@ -88,6 +88,14 @@ const ALL_LEAVES = MODULES.flatMap(m =>
     }))
   )
 );
+
+// The same leaves grouped by module, in curriculum order, for the grouped
+// search results. The script reorders groups and rows by relevance.
+const RESULT_GROUPS = MODULES.map((m) => ({
+  idx: m.idx,
+  name: m.name ?? `${m.title} ${m.em}`.trim(),
+  leaves: ALL_LEAVES.filter((l) => l.mIdx === m.idx),
+})).filter((g) => g.leaves.length > 0);
 ---
 
 <Base
@@ -99,7 +107,10 @@ const ALL_LEAVES = MODULES.flatMap(m =>
   <!-- ========== COVER ========== -->
   <header class="cover">
     <div>
-      <div class="eyebrow"><span><b>MA Thesis</b> · Design-Based Research · Cycle ii</span></div>
+      {/* Author and affiliation, like a paper's title page: the name in the
+          serif (Kağan, the name the author goes by, set bold), the thesis
+          context below in the mono label style. */}
+      <div class="eyebrow"><span><span class="eb-name"><span class="given">Burak</span> <span class="called">Kağan</span> <span class="family">Yılmazer</span></span><span class="eb-aff">MA Thesis · Design-Based Research · Cycle ii</span></span></div>
       <h1 class="cover-title">
         <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
         one continuous journey.
@@ -114,8 +125,10 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         <div><b>License</b><span>Open source · MIT + CC-BY</span></div>
       </div>
       <div class="cover-actions">
-        <a class="btn btn-pri" href="/lessons/1.1.1">Start learning</a>
-        <a class="btn btn-sec" href="#curriculum">See the curriculum</a>
+        {/* Curriculum first and in colour: visitors see what they would learn
+            before being asked to start. */}
+        <a class="btn btn-pri" href="#curriculum">See the curriculum</a>
+        <a class="btn btn-sec" href="/lessons/1.1.1">Start learning</a>
       </div>
     </div>
 
@@ -157,34 +170,56 @@ const ALL_LEAVES = MODULES.flatMap(m =>
         <button type="button" class="search-clear" data-search-clear hidden aria-label="Clear search">Clear</button>
       </div>
       <span class="search-summary" data-search-summary hidden aria-live="polite"></span>
+      <label class="search-include" data-include-wrap hidden>
+        <input type="checkbox" id="curriculum-search-include" data-include />
+        Include coming soon
+      </label>
     </div>
 
-    <div class="curriculum-results" id="curriculum-results" data-results hidden role="list">
-      {ALL_LEAVES.map(leaf => {
-        // m06 and m6 / "module 6" all match: people rarely type the zero pad.
-        const haystack = `${leaf.id} ${leaf.title} m${leaf.mIdx} m${Number(leaf.mIdx)} module ${Number(leaf.mIdx)} ${leaf.mLabel} ${leaf.subTitle}`.toLowerCase();
-        const inner = (
-          <>
-            <span class="r-id">{leaf.id}</span>
-            <span class="r-title">{leaf.title}</span>
-            <span class="r-mod">M {leaf.mIdx} · {leaf.subTitle}</span>
-          </>
-        );
-        return leaf.slug
-          ? <div class="result" role="listitem" data-search={haystack} data-leaf-slug={leaf.slug} hidden>
-              {/* Link and toggle are siblings: a <button> inside an <a> is
-                  invalid nesting and garbled the link's accessible name. */}
-              <a class="result-link" href={`/lessons/${leaf.slug}`}>{inner}</a>
-              <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${leaf.id} complete`} title="Mark complete">
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
+    {/* Search results: grouped by module, ranked by the script (lesson id,
+        then title, then module / subtopic), published lessons first, capped
+        at a few rows with "Show all". Coming-soon lessons are collapsed into
+        a count per module unless "Include coming soon" is on. */}
+    <div class="curriculum-results" id="curriculum-results" data-results hidden>
+      <div class="results-groups" data-groups>
+        {RESULT_GROUPS.map((g) => (
+          <section class="r-group" data-group hidden aria-labelledby={`rg-${g.idx}`}>
+            <h3 class="r-group-head" id={`rg-${g.idx}`}><span class="r-group-code">M {g.idx}</span> {g.name}</h3>
+            <div class="r-list" role="list" data-list>
+              {g.leaves.map((leaf) => {
+                // m06 and m6 / "module 6" all match: people rarely type the zero pad.
+                const haystack = `${leaf.id} ${leaf.title} m${leaf.mIdx} m${Number(leaf.mIdx)} module ${Number(leaf.mIdx)} ${leaf.mLabel} ${leaf.subTitle}`.toLowerCase();
+                const inner = (
+                  <>
+                    <span class="r-id">{leaf.id}</span>
+                    <span class="r-title">{leaf.title}</span>
+                    <span class="r-mod">{leaf.subTitle}</span>
+                  </>
+                );
+                return leaf.slug
+                  ? <div class="result" role="listitem" data-search={haystack} data-id={leaf.id} data-title={leaf.title} data-leaf-slug={leaf.slug} hidden>
+                      {/* Link and toggle are siblings: a <button> inside an <a> is
+                          invalid nesting and garbled the link's accessible name. */}
+                      <a class="result-link" href={`/lessons/${leaf.slug}`}>{inner}</a>
+                      <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${leaf.id} complete`} title="Mark complete">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                    </div>
+                  : <span class="result soon" role="listitem" data-search={haystack} data-id={leaf.id} data-title={leaf.title} hidden>
+                      {inner}
+                      <span class="r-soon">soon</span>
+                    </span>;
+              })}
             </div>
-          : <span class="result soon" role="listitem" data-search={haystack} hidden>
-              {inner}
-              <span class="r-soon">soon</span>
-            </span>;
-      })}
-      <p class="results-empty" data-results-empty hidden>No lessons match that search.</p>
+            <p class="r-soon-note" data-soon-note hidden></p>
+          </section>
+        ))}
+      </div>
+      <button type="button" class="r-more" data-more hidden></button>
+      <div class="results-empty" data-results-empty hidden>
+        <p data-empty-text></p>
+        <button type="button" class="r-more" data-empty-action></button>
+      </div>
     </div>
 
     <div class="stations" data-stations>
@@ -423,8 +458,11 @@ const ALL_LEAVES = MODULES.flatMap(m =>
   </script>
 
   <script is:inline>
-    // Curriculum search — filters the server-rendered flat result list and
-    // swaps it in for the accordion while a query is present.
+    // Curriculum search — ranks the server-rendered result rows, groups them
+    // by module and swaps them in for the accordion while a query is present.
+    // Published lessons come first; coming-soon ones are counted per module
+    // unless "Include coming soon" is on. Only the top CAP rows show until
+    // "Show all" is pressed, so a one-letter query can't dump the catalog.
     (() => {
       const input = document.getElementById('curriculum-search');
       const results = document.querySelector('[data-results]');
@@ -432,45 +470,203 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       const summary = document.querySelector('[data-search-summary]');
       const empty = document.querySelector('[data-results-empty]');
       const clearBtn = document.querySelector('[data-search-clear]');
-      if (!input || !results || !stations) return;
+      const groupsBox = document.querySelector('[data-groups]');
+      const moreBtn = document.querySelector('[data-more]');
+      const includeBox = document.querySelector('[data-include]');
+      const includeWrap = document.querySelector('[data-include-wrap]');
+      const emptyText = document.querySelector('[data-empty-text]');
+      const emptyAction = document.querySelector('[data-empty-action]');
+      if (!input || !results || !stations || !groupsBox) return;
 
-      const rows = Array.from(results.querySelectorAll('.result'));
+      const MIN = 2;
+      const CAP = 8;
+      const MODULE_TERM = /^m\d+$/;
 
+      // Everything the ranking needs, read once from the markup.
+      const rows = Array.from(results.querySelectorAll('.result')).map((el, order) => {
+        const hay = el.getAttribute('data-search') || '';
+        const title = el.getAttribute('data-title') || '';
+        return {
+          el,
+          order,
+          group: el.closest('[data-group]'),
+          soon: el.classList.contains('soon'),
+          id: (el.getAttribute('data-id') || '').toLowerCase(),
+          title,
+          titleLower: title.toLowerCase(),
+          words: title.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean),
+          hay,
+          tokens: hay.split(/\s+/),
+          idEl: el.querySelector('.r-id'),
+          titleEl: el.querySelector('.r-title'),
+        };
+      });
+      const groups = Array.from(groupsBox.querySelectorAll('[data-group]'));
+
+      let showAll = false;
+      let lastQuery = '';
       let currentMatches = 0;
+
+      // Higher is better; 0 means the term does not match this row.
+      const termScore = (row, t) => {
+        if (MODULE_TERM.test(t)) return row.tokens.includes(t) ? 10 : 0;
+        if (row.id === t) return 100;
+        if (row.id.startsWith(t)) return 80;
+        if (row.titleLower.startsWith(t)) return 60;
+        if (row.words.some((w) => w.startsWith(t))) return 45;
+        if (row.titleLower.includes(t)) return 25;
+        if (row.hay.includes(t)) return 8;
+        return 0;
+      };
+
+      const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      // Wrap each matched term in <mark>; the text is escaped piece by piece.
+      const highlight = (text, re) => {
+        if (!re) return escapeHtml(text);
+        return text.split(re).map((part, i) => (i % 2 ? `<mark>${escapeHtml(part)}</mark>` : escapeHtml(part))).join('');
+      };
+
+      const resetRows = () => {
+        rows.forEach((r) => {
+          r.el.hidden = true;
+          r.titleEl.textContent = r.title;
+          r.idEl.textContent = r.el.getAttribute('data-id');
+        });
+        groups.forEach((g) => { g.hidden = true; });
+      };
+
+      const showAccordion = (hint) => {
+        resetRows();
+        results.hidden = true;
+        stations.hidden = false;
+        includeWrap.hidden = true;
+        clearBtn.hidden = !hint;
+        summary.hidden = !hint;
+        summary.textContent = hint || '';
+        currentMatches = 0;
+      };
 
       const run = (raw) => {
         const q = raw.trim().toLowerCase();
-        if (!q) {
-          results.hidden = true;
-          stations.hidden = false;
-          summary.hidden = true;
-          clearBtn.hidden = true;
-          currentMatches = 0;
-          return;
-        }
+        if (q !== lastQuery) { showAll = false; lastQuery = q; }
+        if (!q) return showAccordion('');
+        if (q.length < MIN) return showAccordion('Keep typing…');
+
         // "module 6" / "m 6" -> "m6". A module term (m6, m06) must match a
         // whole token: as a substring "m1" also hit m10-m15, and the bare "6"
         // of "module 6" hit any lesson id containing a 6.
-        const terms = q.replace(/\b(?:module|m)\s+(\d+)\b/g, 'm$1').split(/\s+/);
-        const MODULE_TERM = /^m\d+$/;
-        let matches = 0;
-        let soon = 0;
+        const terms = q.replace(/\b(?:module|m)\s+(\d+)\b/g, 'm$1').split(/\s+/).filter(Boolean);
+        const textTerms = terms.filter((t) => !MODULE_TERM.test(t));
+
+        const scored = [];
         rows.forEach((row) => {
-          const hay = row.getAttribute('data-search') || '';
-          const tokens = hay.split(/\s+/);
-          const hit = terms.every((t) => (MODULE_TERM.test(t) ? tokens.includes(t) : hay.includes(t)));
-          row.hidden = !hit;
-          if (hit) { matches++; if (row.classList.contains('soon')) soon++; }
+          let score = 0;
+          for (const t of terms) {
+            const s = termScore(row, t);
+            if (!s) return; // every term has to match
+            score += s;
+          }
+          // A multi-word query that appears verbatim in the title beats
+          // rows that only match its words separately.
+          if (terms.length > 1 && row.titleLower.includes(q)) score += 30;
+          scored.push({ row, score });
         });
-        currentMatches = matches;
+        const byRank = (a, b) => b.score - a.score || a.row.order - b.row.order;
+        const avail = scored.filter((s) => !s.row.soon).sort(byRank);
+        const soon = scored.filter((s) => s.row.soon).sort(byRank);
+        const include = includeBox.checked;
+        const ranked = include ? avail.concat(soon) : avail;
+        const shown = showAll ? ranked : ranked.slice(0, CAP);
+        currentMatches = scored.length;
+
+        const re = textTerms.length
+          ? new RegExp(`(${textTerms.slice().sort((a, b) => b.length - a.length).map(escapeRe).join('|')})`, 'gi')
+          : null;
+
+        resetRows();
+        // Groups follow their best row; rows are appended in rank order, so
+        // appendChild both moves and sorts them.
+        const groupOrder = [];
+        shown.forEach(({ row }) => {
+          if (!groupOrder.includes(row.group)) groupOrder.push(row.group);
+          row.el.hidden = false;
+          row.titleEl.innerHTML = highlight(row.title, re);
+          row.idEl.innerHTML = highlight(row.el.getAttribute('data-id'), re);
+          row.group.querySelector('[data-list]').appendChild(row.el);
+        });
+        groupOrder.forEach((g) => {
+          g.hidden = false;
+          groupsBox.appendChild(g);
+          const note = g.querySelector('[data-soon-note]');
+          const hiddenSoon = include ? 0 : soon.filter((s) => s.row.group === g).length;
+          note.hidden = hiddenSoon === 0;
+          note.textContent = hiddenSoon ? `+${hiddenSoon} coming soon in this module` : '';
+        });
+
+        if (ranked.length > CAP) {
+          moreBtn.hidden = false;
+          moreBtn.textContent = showAll ? 'Show fewer' : `Show all ${ranked.length} results`;
+        } else {
+          moreBtn.hidden = true;
+        }
+
+        empty.hidden = ranked.length !== 0;
+        if (!ranked.length) {
+          if (soon.length && !include) {
+            emptyText.textContent = `No published lesson matches “${raw.trim()}” yet. ${soon.length} coming-soon ${soon.length === 1 ? 'lesson matches' : 'lessons match'}.`;
+            emptyAction.textContent = 'Show coming soon';
+            emptyAction.dataset.action = 'include';
+          } else {
+            emptyText.textContent = `No lessons match “${raw.trim()}”. Try a lesson number such as 4.1, a module such as m9, or a topic such as noise.`;
+            emptyAction.textContent = 'Clear search';
+            emptyAction.dataset.action = 'clear';
+          }
+        }
+
         results.hidden = false;
         stations.hidden = true;
         clearBtn.hidden = false;
-        empty.hidden = matches !== 0;
+        includeWrap.hidden = false;
         summary.hidden = false;
         // Say how many are not yet published, so the count isn't a promise.
-        summary.textContent = `${matches} ${matches === 1 ? 'lesson' : 'lessons'}` + (soon ? ` · ${soon} coming soon` : '');
+        summary.textContent = `${avail.length} ${avail.length === 1 ? 'lesson' : 'lessons'}` + (soon.length ? ` · ${soon.length} coming soon` : '');
       };
+
+      const clear = () => { input.value = ''; run(''); input.focus(); };
+      const visibleLinks = () => Array.from(results.querySelectorAll('.result:not([hidden]) .result-link'));
+
+      moreBtn.addEventListener('click', () => { showAll = !showAll; run(input.value); });
+      includeBox.addEventListener('change', () => run(input.value));
+      emptyAction.addEventListener('click', () => {
+        if (emptyAction.dataset.action === 'include') { includeBox.checked = true; run(input.value); }
+        else clear();
+      });
+
+      // Arrow keys walk the visible result links; Up from the first returns
+      // to the input. Enter in the input opens the top result. Esc clears.
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { input.value = ''; run(''); }
+        else if (e.key === 'ArrowDown') {
+          const first = visibleLinks()[0];
+          if (first && !results.hidden) { e.preventDefault(); first.focus(); }
+        } else if (e.key === 'Enter') {
+          const first = visibleLinks()[0];
+          if (first && !results.hidden) { e.preventDefault(); first.click(); }
+        }
+      });
+      results.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); clear(); return; }
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        const links = visibleLinks();
+        const i = links.indexOf(document.activeElement);
+        if (i === -1) return;
+        e.preventDefault();
+        if (e.key === 'ArrowDown') (links[i + 1] || links[i]).focus();
+        else if (i === 0) input.focus();
+        else links[i - 1].focus();
+      });
 
       // Privacy-friendly DBR signal: record settled searches (not keystrokes)
       // and whether they returned anything, so curriculum gaps surface. Anonymous,
@@ -489,10 +685,7 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       };
 
       input.addEventListener('input', () => { run(input.value); trackSearch(input.value); });
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') { input.value = ''; run(''); }
-      });
-      clearBtn.addEventListener('click', () => { input.value = ''; run(''); input.focus(); });
+      clearBtn.addEventListener('click', clear);
     })();
   </script>
 
@@ -549,6 +742,29 @@ const ALL_LEAVES = MODULES.flatMap(m =>
       });
     }
   </script>
+
+  <!-- ========== ABOUT THE AUTHOR ==========
+       Between the exhibition and the research on purpose: the reader has just
+       seen the prints, meets the person behind them, and §4 Research then
+       opens the thesis the note mentions. Links match the Person entity's
+       url / sameAs in the JSON-LD above. -->
+  <aside class="author-note" id="author" aria-labelledby="author-note-title">
+    <h2 class="author-note-label" id="author-note-title">About the author</h2>
+    <div class="author-note-body">
+      <p>
+        <strong>Burak Kağan Yılmazer</strong> is an ML and creative technologist with a background in data and AI engineering. Pixels2GenAI began as the practical part of an MA thesis and is growing into a broader platform for creative AI education.
+      </p>
+      <p>
+        Away from the terminal, Kağan paints, builds real-time visuals in TouchDesigner, and exhibits installations that bring evolutionary algorithms and generative models to live audiences.
+      </p>
+      <ul class="author-note-links" aria-label="Burak Kağan Yılmazer online">
+        <li><a href="https://burakkagan.dev" target="_blank" rel="me noopener">burakkagan.dev <span aria-hidden="true">↗</span></a></li>
+        <li><a href="https://github.com/burakkagann" target="_blank" rel="me noopener">GitHub <span aria-hidden="true">↗</span></a></li>
+        <li><a href="https://orcid.org/0009-0000-9918-824X" target="_blank" rel="me noopener">ORCID <span aria-hidden="true">↗</span></a></li>
+        <li><a href="https://www.linkedin.com/in/burakkagan/" target="_blank" rel="me noopener">LinkedIn <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </div>
+  </aside>
 
   <!-- ========== RESEARCH ========== -->
   <section class="section" id="research">

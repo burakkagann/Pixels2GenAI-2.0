@@ -70,24 +70,21 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  {/* No-flash theme: runs before stylesheets paint. Reads localStorage
-      ['p2g-theme'] (explicit 'light' | 'dark') or falls back to
-      prefers-color-scheme; defaults to dark. */}
+  {/* No-flash theme: runs before stylesheets paint. Light is the default
+      (also for visitors without JavaScript, via the attribute above); dark
+      applies only when the visitor chose it with the toggle, stored in
+      localStorage['p2g-theme']. The OS colour-scheme is not followed. */}
   <script is:inline>
     (() => {
       try {
-        const stored = localStorage.getItem('p2g-theme');
-        const theme = stored
-          ? stored
-          : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
+        if (localStorage.getItem('p2g-theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch {}
     })();
   </script>
   <title>{fullTitle}</title>
@@ -100,7 +97,7 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="alternate" type="application/rss+xml" title="Pixels2GenAI — Lessons" href="/feed.xml" />
-  <meta name="theme-color" content="#110D16" />
+  <meta name="theme-color" content="#F6F3EC" />
 
   <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={description} />
@@ -160,19 +157,8 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
       el.focus({ preventScroll: true });
     });
 
-    // When no explicit theme choice is stored, track OS preference live.
-    // The no-flash <script is:inline> in <head> handles first paint; this
-    // handles changes while a tab is open.
-    const mq = matchMedia('(prefers-color-scheme: light)');
-    const applySystem = (e: MediaQueryListEvent | MediaQueryList) => {
-      try { if (localStorage.getItem('p2g-theme')) return; } catch {}
-      const theme = e.matches ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', theme);
-      // Same event the toggle fires, so the toggle's aria state and the
-      // header octopus colours follow an OS switch too.
-      document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
-    };
-    mq.addEventListener('change', applySystem);
+    // Light is the default and the OS colour-scheme is deliberately not
+    // followed; dark mode is an explicit choice made with the header toggle.
   </script>
 </body>
 </html>

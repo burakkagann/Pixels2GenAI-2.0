@@ -37,7 +37,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, var(--cube-tone, var(--fg-3)) 18%, transparent) 0%, transparent 60%);
   pointer-events: none;
   filter: blur(20px);
 }
@@ -75,9 +75,12 @@
      this only shows before the first paint (no-JS / mid-hydration) — a cube
      instead of a flat panel. */
   background:
-    radial-gradient(ellipse at 30% 25%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(ellipse at 30% 25%, color-mix(in srgb, var(--cube-tone, var(--fg-3)) 14%, transparent), transparent 70%),
     var(--bg-2);
-  border: 1px solid var(--accent-soft);
+  /* Edge = a deep tone of the cube's current palette (JourneyCube sets
+     --cube-edge per journey position), so it belongs to every transition
+     instead of a fixed site blue. Fallback matches greyscale at M 01. */
+  border: 1px solid var(--cube-edge, rgb(47 48 51));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -100,7 +103,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(ellipse at 30% 25%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 30% 25%, color-mix(in srgb, var(--cube-tone, var(--fg-3)) 6%, transparent) 0%, transparent 70%);
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -158,7 +161,7 @@
   position: absolute;
   width: 10px;
   height: 10px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--cube-tone, rgb(128 129 132));
   z-index: 2;
 }
 
@@ -301,8 +304,8 @@
   margin-bottom: 8px;
 }
 
-.journey-endpoints .ep-l { color: var(--c1); }
-.journey-endpoints .ep-r { color: var(--accent); }
+.journey-endpoints .ep-l,
+.journey-endpoints .ep-r { color: var(--fg-2); }
 .journey-endpoints .ep-l::before { content: "← "; opacity: 0.5; }
 .journey-endpoints .ep-r::after  { content: " →"; opacity: 0.8; }
 
@@ -322,11 +325,9 @@
   top: 50%;
   height: 5px;
   margin-top: -2.5px;
-  background: linear-gradient(90deg,
-    color-mix(in srgb, var(--c1) 30%, var(--bg-3)) 0%,
-    var(--c1) 18%,
-    var(--c2) 55%,
-    var(--c3) 92%);
+  /* The cube's own journey (greyscale → viridis → inferno), sampled by
+     JourneyCube into --journey-track, so the track previews the cube. */
+  background: var(--journey-track, linear-gradient(90deg, #8a8b8e, #21918c 50%, #f1711f));
   border-radius: 3px;
   border: 1px solid var(--line-2);
 }
@@ -350,26 +351,26 @@
   appearance: none;
   width: 20px;
   height: 20px;
-  background: var(--journey-accent, var(--accent));
+  background: var(--fg);
   border-radius: 50%;
   cursor: inherit;
   border: 4px solid var(--bg);
   box-shadow:
-    0 0 0 1px var(--journey-accent, var(--accent)),
-    0 0 14px 2px color-mix(in srgb, var(--journey-accent, var(--accent)) 65%, transparent);
+    0 0 0 1px var(--fg),
+    0 1px 5px rgba(0, 0, 0, 0.25);
   transition: background .25s, box-shadow .25s;
 }
 
 .journey-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: var(--journey-accent, var(--accent));
+  background: var(--fg);
   border-radius: 50%;
   cursor: inherit;
   border: 4px solid var(--bg);
   box-shadow:
-    0 0 0 1px var(--journey-accent, var(--accent)),
-    0 0 14px 2px color-mix(in srgb, var(--journey-accent, var(--accent)) 65%, transparent);
+    0 0 0 1px var(--fg),
+    0 1px 5px rgba(0, 0, 0, 0.25);
   transition: background .25s, box-shadow .25s;
 }
 
@@ -440,10 +441,10 @@
 
 .journey-ticks .tick.near { color: var(--fg-2); }
 .journey-ticks .tick.near b { color: var(--fg); }
-.journey-ticks .tick.active { color: var(--journey-accent, var(--accent)); }
-.journey-ticks .tick.active b { color: var(--journey-accent, var(--accent)); }
+.journey-ticks .tick.active { color: var(--fg); }
+.journey-ticks .tick.active b { color: var(--fg); font-weight: 600; }
 .journey-ticks .tick.active::before {
-  background: var(--journey-accent, var(--accent));
+  background: var(--fg);
   height: 8px;
   top: -2px;
 }

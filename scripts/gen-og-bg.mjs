@@ -32,7 +32,7 @@ const scrim = Buffer.from(
          <stop offset="1" stop-color="#000" stop-opacity="0"/>
        </linearGradient>
      </defs>
-     <rect width="${W}" height="${H}" fill="#0c0913" fill-opacity="0.26"/>
+     <rect width="${W}" height="${H}" fill="#0c0c0e" fill-opacity="0.26"/>
      <rect width="${W}" height="${H}" fill="url(#lr)"/>
      <rect width="${W}" height="${H}" fill="url(#bt)"/>
    </svg>`,

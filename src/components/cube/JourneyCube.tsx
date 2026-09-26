@@ -6,15 +6,16 @@
  * island; the rest of the landing page stays static HTML.
  *
  * Color settings (mode/palette/per-face/journey-palette crossfade) are locked
- * to the design defaults — steady · aurora · per-face on · journey-palette on
- * — and are not exposed in the UI.
+ * to the design defaults — steady · per-face on · journey-palette on, which
+ * runs greyscale → viridis → inferno along the curriculum slider
+ * (JOURNEY_PALETTES in src/lib/cubeColor.ts) — and are not exposed in the UI.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  JOURNEY_PALETTES,
   LUTS,
   LUT_MAX,
-  PALETTE_ORDER,
   slowNoise,
   type ColorMode,
   type PaletteName,
@@ -83,13 +84,36 @@ const DEFAULTS: MutableState = {
   speed: 1.0,
   contrast: 1.0,
   mode: 'steady',
-  palette: 'riso',
+  palette: 'greyscale',
   cycle: 0.46,
   bands: 0,
   perFace: true,
   journeyPal: true,
   paused: false,
 };
+
+/**
+ * The cube's colour at journey position j (0..1) and palette position pos
+ * (0 = darkest, 1 = lightest): the same adjacent-palette cross-fade the face
+ * painter uses, returned as a CSS colour. Pure and deterministic, so the
+ * server render and the hydrated island agree.
+ */
+function journeyColor(j: number, pos: number): string {
+  const last = JOURNEY_PALETTES.length - 1;
+  const seg = Math.min(last, Math.max(0, j * last));
+  const i = Math.min(last - 1, Math.floor(seg));
+  const f = seg - i;
+  const a = LUTS[JOURNEY_PALETTES[i]];
+  const b = LUTS[JOURNEY_PALETTES[i + 1]];
+  const k = Math.round(pos * LUT_MAX) * 3;
+  const ch = (c: number) => Math.round(a[k + c] * (1 - f) + b[k + c] * f);
+  return `rgb(${ch(0)} ${ch(1)} ${ch(2)})`;
+}
+
+// Slider track: the journey itself, sampled at a mid-bright palette position
+// so it reads grey → viridis green → inferno orange (a preview of the cube).
+const JOURNEY_TRACK = `linear-gradient(90deg, ${Array.from({ length: 13 }, (_, n) =>
+  `${journeyColor(n / 12, 0.62)} ${Math.round((n / 12) * 100)}%`).join(', ')})`;
 
 export default function JourneyCube() {
   // ---- React state: drives only the UI display (slider numbers, active tick).
@@ -199,14 +223,25 @@ export default function JourneyCube() {
       const applyCon = con !== 1; // pow(n, 1) is a no-op; skip it at the default contrast
 
       const mode = state.mode;
-      const lutA = LUTS[state.palette];
-      const idxPal = PALETTE_ORDER.indexOf(state.palette);
-      // #7 — at the resting position (j=0) the crossfade collapses to a no-op
-      // but still costs 3 mul-adds/pixel; skip the second LUT entirely.
-      const lutB = state.journeyPal && state.j > 0
-        ? LUTS[PALETTE_ORDER[(idxPal + 1) % PALETTE_ORDER.length]]
-        : null;
-      const jBlend = lutB ? state.j : 0;
+      // Journey palette: the slider position picks two adjacent palettes of
+      // JOURNEY_PALETTES (greyscale → viridis → inferno) and cross-fades them.
+      // #7 — exactly on a palette (e.g. j=0) the blend is a no-op that still
+      // costs 3 mul-adds/pixel, so the second LUT is skipped entirely.
+      let lutA = LUTS[state.palette];
+      let lutB: Uint8Array | null = null;
+      let jBlend = 0;
+      if (state.journeyPal) {
+        const last = JOURNEY_PALETTES.length - 1;
+        const seg = Math.min(last, Math.max(0, state.j * last));
+        const i = Math.min(last - 1, Math.floor(seg));
+        lutA = LUTS[JOURNEY_PALETTES[i]];
+        jBlend = seg - i;
+        if (jBlend > 0) lutB = LUTS[JOURNEY_PALETTES[i + 1]];
+      }
+      // The journey palettes are not cyclic (dark end ≠ light end), so the
+      // per-face offset folds back (ping-pong) instead of wrapping, which
+      // would put a hard dark/light seam through the pattern.
+      const pingPong = state.journeyPal;
       const cycleOffset = mode === 'cycle' ? t * state.cycle * 0.12 : 0;
       const driftAmt = mode === 'drift' ? 0.15 + state.cycle * 0.85 : 0;
       const bands = state.bands | 0;
@@ -300,7 +335,12 @@ export default function JourneyCube() {
               u = n + (slowNoise(nx, ny, t) - 0.5) * driftAmt;
             }
             u += faceShift;
-            u = u - Math.floor(u);
+            if (pingPong) {
+              u = u - 2 * Math.floor(u / 2);
+              if (u > 1) u = 2 - u;
+            } else {
+              u = u - Math.floor(u);
+            }
             if (useBands) u = Math.floor(u * bands) / (bands - 1 || 1);
             if (u < 0) u = 0; else if (u > 1) u = 1;
 
@@ -400,6 +440,12 @@ export default function JourneyCube() {
   const nearest = blend < 0.5 ? lower : upper;
   const currentStage = STAGES[nearest];
   const progressPct = Math.round(ui.j * 100);
+  // Cube edges follow the cube: a deep tone of the current palette for the
+  // face borders, a mid tone for the corner brackets and the glow beneath.
+  const cubeTones = {
+    '--cube-edge': journeyColor(ui.j, 0.2),
+    '--cube-tone': journeyColor(ui.j, 0.55),
+  } as React.CSSProperties;
 
   // ---- Slider change handler — writes both UI state and mutable ref.
   const updateSlider = <K extends 'j' | 'freq' | 'centers' | 'speed' | 'contrast'>(
@@ -490,7 +536,7 @@ export default function JourneyCube() {
       {/* Slot: on desktop the flexible, height-fitting cell the stage is
           sized inside (see .cube-slot); a plain block elsewhere. */}
       <div className={styles['cube-slot']}>
-        <div ref={stageElRef} className={styles['cube-stage']} id="cubeStage">
+        <div ref={stageElRef} className={styles['cube-stage']} id="cubeStage" style={cubeTones}>
           <div
             ref={cubeElRef}
             className={`${styles.cube}${ui.paused ? ' ' + styles.paused : ''}`}
@@ -521,7 +567,6 @@ export default function JourneyCube() {
 
       <div
         className={styles['cube-controls']}
-        style={{ '--journey-accent': `var(--${currentStage.cycle})` } as React.CSSProperties}
       >
         <div className={styles['ctrl-head']}>
           <b>Pixels → GenAI</b>
@@ -533,7 +578,7 @@ export default function JourneyCube() {
             <span className={styles['ep-l']}>PIXELS · M 01</span>
             <span className={styles['ep-r']}>GENAI · M 12</span>
           </div>
-          <div className={styles['journey-track']}>
+          <div className={styles['journey-track']} style={{ '--journey-track': JOURNEY_TRACK } as React.CSSProperties}>
             <input
               type="range"
               className={styles['journey-slider']}
