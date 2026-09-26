@@ -59,9 +59,18 @@ for y in range(out_size):
         region = canvas[y:y + K, x:x + K]
         out[y, x] = np.sum(region * blur)
 
-Image.fromarray(out.astype(np.uint8), 'L').save('simple_convolution.png')
+# Side by side: the original (cropped to the same size) | grey gap | the blur
+half = K // 2
+original = canvas[half:-half, half:-half]
+gap = np.full((out_size, 10), 128.0)
+side_by_side = np.hstack([original, gap, out])
+Image.fromarray(side_by_side.astype(np.uint8), 'L').save('simple_convolution.png')
 ```
 </CodeBlock>
+
+Click **Run** on the code above to blur the checkerboard in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.1_convolution/visuals/simple_convolution.png"
@@ -70,6 +79,8 @@ Image.fromarray(out.astype(np.uint8), 'L').save('simple_convolution.png')
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The whole transformation lives in the line `out[y, x] = np.sum(region * blur)` — multiply pixel values by kernel weights, sum to one number. Change the kernel and the picture changes; the loop stays identical.

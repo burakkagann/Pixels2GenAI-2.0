@@ -59,26 +59,33 @@ frames = []
 for f in range(60):
     progress = f / 59
     width = 3.0 * (500 ** (-progress))
-    img = mandelbrot_frame(400, 400,
+    img = mandelbrot_frame(200, 200,
                             cx - width / 2, cx + width / 2,
                             cy - width / 2, cy + width / 2,
                             150)
     rgb = np.stack([img / 150 * 255,
                     (img / 150 * 128).astype(np.uint8),
                     (255 - img / 150 * 200).astype(np.uint8)], axis=-1)
+    rgb[img == 149] = 0   # still bounded after every iteration: inside the set, black
     frames.append(Image.fromarray(rgb.astype(np.uint8)))
 
 frames[0].save('zoom.gif', save_all=True, append_images=frames[1:], duration=33, loop=0)
 ```
 </CodeBlock>
 
+Click **Run** on the code above to render the zoom in your browser (it takes about ten seconds), then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
-  src="/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals/animated_fractal.gif"
-  alt="An animated GIF showing a continuous zoom into the Mandelbrot set's Seahorse Valley region. The view begins with the full cardioid-and-bulbs silhouette in blue and purple, then zooms continuously inward over 60 frames, revealing increasingly detailed spiral structures that emerge from the fractal boundary"
+  src="/lesson-media/Module_08_animation_time/8.4_generative_animation/8.4.3_animated_fractals/zoom.gif"
+  alt="An animated GIF showing a continuous zoom into the Mandelbrot set's Seahorse Valley region. The view begins with the full cardioid-and-bulbs silhouette, black on a blue background, then zooms continuously inward over 60 frames, revealing increasingly detailed spiral structures that emerge from the fractal boundary"
   caption="60 frames, 500× zoom on Seahorse Valley at (-0.7436, 0.1318). The exponential zoom curve makes the dive feel constant-speed."
   num={1}
   role="gif"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 Exponential zoom is the entire secret. Linear zoom — width = 3 × (1 - progress) — feels mechanical (very fast at the start, very slow at the end). Exponential zoom — `width = 3 * 500 ** (-progress)` — keeps the *visible window shrinking by a constant percentage per frame*, which the eye reads as constant speed.

@@ -58,11 +58,12 @@ sample = df.sample(len(df) // 4, random_state=0)
 fig, ax = plt.subplots(figsize=(8, 8))
 sample.plot.hexbin(x='x', y='y', gridsize=30, cmap='Greys', ax=ax)
 ax.set_aspect('equal'); ax.axis('off')
-plt.savefig('hexpanda.png', bbox_inches='tight', dpi=120)
+plt.tight_layout()
+plt.savefig('hexpanda.png', dpi=150, bbox_inches='tight', facecolor='white')
 ```
 </CodeBlock>
 
-Click **Run** on the code above to render the hexagonal mosaic in your browser, then compare your result with the expected output.
+Click **Run** on the code above to render the hexagonal mosaic in your browser, then compare your result with the expected output (the figure was drawn from a different random 25% sample, so the cells differ slightly in detail).
 
 <Dropdown summary="Expected output">
 

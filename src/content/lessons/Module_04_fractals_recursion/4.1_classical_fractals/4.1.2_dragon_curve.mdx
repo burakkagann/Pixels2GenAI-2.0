@@ -57,8 +57,28 @@ def generate_dragon_sequence(initial_turn, depth):
 # Depth 10 → 2047 turn instructions
 sequence = generate_dragon_sequence('R', 10)
 print(f"Sequence length: {len(sequence)}")
+
+# Walk the turtle: draw a 3-pixel step, then turn ('F' = one final step)
+canvas = np.zeros((600, 800, 3), dtype=np.uint8)
+STEPS = {LEFT: (-3, 0), UP: (0, -3), RIGHT: (3, 0), DOWN: (0, 3)}
+x, y, direction = 550, 180, UP
+for turn in sequence + 'F':
+    dx, dy = STEPS[direction]
+    new_x, new_y = x + dx, y + dy
+    if dx:   # horizontal step
+        canvas[y, min(x, new_x):max(x, new_x)] = (100, 180, 255)
+    else:    # vertical step
+        canvas[min(y, new_y):max(y, new_y), x] = (100, 180, 255)
+    x, y = new_x, new_y
+    direction = turn_right(direction) if turn == 'R' else turn_left(direction)
+
+Image.fromarray(canvas).save('dragon_curve.png')
 ```
 </CodeBlock>
+
+Click **Run** on the code above to draw the dragon in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
 
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon_curve.png"
@@ -67,6 +87,8 @@ print(f"Sequence length: {len(sequence)}")
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The 2,047 number is not a coincidence. Each iteration of the rule doubles the previous sequence length and adds one new fold in the middle. The recurrence is "new length equals two times previous length, plus one". Solving it gives 2 to the power n+1, minus 1, segments at depth n. At depth 10 that comes out to 2,048 minus 1 = 2,047 turn instructions.

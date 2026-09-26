@@ -35,7 +35,7 @@ A kaleidoscope turns one wedge of pattern into a full circle through two mathema
 
 ## Quick start — a 6-fold kaleidoscope <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="simple_kaleidoscope.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -73,13 +73,19 @@ Image.fromarray(out).save('simple_kaleidoscope.png')
 ```
 </CodeBlock>
 
+Click **Run** on the code above to fold the pattern in your browser, then compare your result with the expected output.
+
+<Dropdown summary="Expected output">
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/simple_kaleidoscope.png"
-  alt="A 6-fold kaleidoscope pattern with magenta, cyan, and yellow gradients folded into a circular composition"
-  caption="A 6-fold kaleidoscope. Six wedges of 60° each, alternately reflected, sampling colour from a procedural pattern."
+  alt="A 6-fold kaleidoscope in a black-framed circle: concentric bands of pink, green, cyan and orange around a dark blue centre with a pale six-pointed star"
+  caption="A 6-fold kaleidoscope. Six wedges of 60° each, alternately reflected; the colour is computed from the folded angle and the radius."
   num={1}
   role="output"
 />
+
+</Dropdown>
 
 <Admonition type="tip">
 The kaleidoscope is built entirely from polar coordinates and integer arithmetic on angles — no rotations, no `scipy.ndimage`. The colour function never sees `(x, y)`; it sees `(angle_mirrored, radius)`.
@@ -152,7 +158,7 @@ Three exercises in **Execute → Modify → Create** order: run the 6-fold quick
 
 <Exercise n={1} kicker="EXECUTE" title="Run the 6-fold kaleidoscope">
 
-Run `simple_kaleidoscope.py` from the downloads. The output is the picture in Figure 1.
+Run `simple_kaleidoscope.py`, the quick-start script above. The output is the picture in Figure 1.
 
 **Reflection questions**
 
