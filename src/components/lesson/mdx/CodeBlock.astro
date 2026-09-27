@@ -65,7 +65,11 @@ const label = file ? `${lang} · ${file}` : lang;
   // in a Web Worker with Pyodide (public/runner/python-worker.mjs), never on a server.
   // ---------------------------------------------------------------------------
   const RUN_TIMEOUT_MS = 120_000;   // includes the first-time Pyodide download
-  const STORAGE_KEY = 'p2g-runner';
+
+  // The ?runner=1 test mode stored 'p2g-runner' in localStorage; it is gone (follow-up
+  // #22), so clear the leftover key for visitors who tried it. The privacy page no
+  // longer lists it.
+  try { localStorage.removeItem('p2g-runner'); } catch { /* storage blocked */ }
 
   type RunResult = {
     id: number; ok: boolean; stdout: string; stderr: string; error?: string;
@@ -79,18 +83,7 @@ const label = file ? `${lang} · ${file}` : lang;
   const pending = new Map<number, (result: RunResult) => void>();
 
   function runnerEnabled(article: HTMLElement | null): boolean {
-    const mode = article?.dataset.runner;
-    if (mode === 'on') return true;
-    if (mode !== 'flag') return false;
-    // Production is off by default; ?runner=1 turns it on for this browser, ?runner=0 off.
-    const param = new URLSearchParams(window.location.search).get('runner');
-    try {
-      if (param === '1') localStorage.setItem(STORAGE_KEY, '1');
-      if (param === '0') localStorage.removeItem(STORAGE_KEY);
-      return localStorage.getItem(STORAGE_KEY) === '1';
-    } catch {
-      return param === '1';   // storage blocked: honour the URL only
-    }
+    return article?.dataset.runner === 'on';
   }
 
   // Only complete scripts get a Run button: fragments (no imports, no output) would fail.

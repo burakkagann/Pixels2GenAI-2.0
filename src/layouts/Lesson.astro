@@ -52,14 +52,14 @@ interface Props {
 
 const { slug, frontmatter, headings, mediaBase } = Astro.props;
 
-// In-browser Python runner (AI tutor Milestone 1b), behind a flag:
-// always on in `npm run dev`; in production only when PUBLIC_PYTHON_RUNNER=true is set
-// in Netlify, or for one visitor who opens a lesson with ?runner=1 (for live testing).
+// In-browser Python runner (AI tutor Milestone 1b), live for everyone since 2026-09-27.
+// PUBLIC_PYTHON_RUNNER=false in Netlify is the emergency off switch; any other value
+// (or none) leaves it on. The ?runner=1 test mode was removed (follow-up #22).
 // Scope: Modules 1-8 (2026-09-25). Modules 9-12 need PyTorch or TouchDesigner, which
 // can't run in the browser. Script-level results: ai-tutor-planning/launch-readiness/.
 const RUNNER_MODULES = new Set(['1', '2', '3', '4', '5', '6', '7', '8']);
-const runnerInScope = RUNNER_MODULES.has(slug.split('.')[0]) && Boolean(mediaBase);
-const runnerDefault = import.meta.env.DEV || import.meta.env.PUBLIC_PYTHON_RUNNER === 'true';
+const runnerOn = import.meta.env.PUBLIC_PYTHON_RUNNER !== 'false'
+  && RUNNER_MODULES.has(slug.split('.')[0]) && Boolean(mediaBase);
 
 // AI tutor chat (Milestone 3): DEV ONLY, and not tracked in git until the tutor launches.
 // import.meta.glob returns {} when the file doesn't exist (e.g. in Netlify's checkout),
@@ -175,8 +175,8 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
   <main id="main-content" class="page" data-cycle={f.cycle}>
     <article
       class="col-main lesson"
-      data-runner={runnerInScope ? (runnerDefault ? 'on' : 'flag') : undefined}
-      data-lesson-media={runnerInScope ? mediaBase : undefined}
+      data-runner={runnerOn ? 'on' : undefined}
+      data-lesson-media={runnerOn ? mediaBase : undefined}
     >
       <LessonHead
         slug={slug}
