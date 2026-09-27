@@ -6,9 +6,12 @@ interface Props {
 }
 
 const { summary } = Astro.props;
+// "Expected output" dropdowns hold the figure a learner compares with their Run
+// result; prose.css sizes those figures with the shared output rule (lib/outputSize.ts).
+const expectedOutput = /^\s*expected output/i.test(summary);
 ---
 
-<details class="dropdown">
+<details class:list={['dropdown', expectedOutput && 'expected-output']}>
   <summary set:html={inlineMarkdownHtml(summary)} />
   <div class="dropdown-body">
     <slot />

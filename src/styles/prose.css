@@ -528,6 +528,26 @@
   image-rendering: pixelated;    /* lesson outputs are pixel art; keep edges crisp */
 }
 
+/* ---------- Shared output size rule ----------
+   The Run output and the "Expected output" figure it is compared with use one
+   rule (src/lib/outputSize.ts sets --out-w, --out-ar, --out-tall): at most
+   480 px wide, wide outputs up to their own width, small pixel art enlarged up
+   to 2x, never taller than --out-tall, never wider than the column. */
+.code-output img.out-sized {
+  width: min(var(--out-w), calc(var(--out-tall) * var(--out-ar)), 100%);
+}
+
+/* The figure frame adds 6 px padding + 1 px border per side (14 px in total),
+   so the image inside ends up the same width as the Run output image. The
+   !important beats the figure's inline intrinsic-width cap and the 360 px
+   dropdown rule, both of which would stop a small output from being enlarged. */
+.expected-output .fig.out-sized {
+  width: min(calc(var(--out-w) + 14px), calc(var(--out-tall) * var(--out-ar) + 14px), 100%);
+  max-width: 100% !important;
+}
+.expected-output .fig.out-sized img { max-height: none; }
+.expected-output .fig.out-upscaled img { image-rendering: pixelated; }
+
 .code-output figcaption {
   margin-top: 6px;
   color: var(--fg-3);

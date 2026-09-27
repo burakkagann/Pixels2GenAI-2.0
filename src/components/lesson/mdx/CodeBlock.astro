@@ -30,6 +30,8 @@ const label = file ? `${lang} · ${file}` : lang;
 </div>
 
 <script>
+  import { outputSize, outputSizeStyle } from '@/lib/outputSize';
+
   // Wire the Copy button on every code block. Safe to re-run on view transitions.
   function setupCopyButtons() {
     document.querySelectorAll<HTMLButtonElement>('[data-copy-btn]').forEach((btn) => {
@@ -207,6 +209,13 @@ const label = file ? `${lang} · ${file}` : lang;
       // could sit on a SharedArrayBuffer (TypeScript 5.7+ checks this).
       img.src = URL.createObjectURL(new Blob([new Uint8Array(image.bytes)], { type: image.mime }));
       img.alt = `Output of the script: ${image.name}`;
+      // Same display size as the "Expected output" figure (lib/outputSize.ts),
+      // known only once the browser has decoded the image.
+      img.addEventListener('load', () => {
+        const size = outputSize(img.naturalWidth, img.naturalHeight);
+        img.setAttribute('style', outputSizeStyle(size));
+        img.classList.add('out-sized');
+      }, { once: true });
       const caption = document.createElement('figcaption');
       caption.textContent = image.name;
       figure.append(img, caption);

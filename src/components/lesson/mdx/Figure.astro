@@ -2,6 +2,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
+import { outputSize, outputSizeStyle } from '@/lib/outputSize';
 
 /**
  * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical),
@@ -116,7 +117,12 @@ if (effectiveSize !== 'bleed' && dims?.w) {
     ? Math.min(tierMax ?? Infinity, dims.w * 4)
     : Math.min(tierMax ?? dims.w, dims.w);
 }
-const figStyle = capPx ? `max-width:${capPx}px` : undefined;
+// Inside an "Expected output" dropdown the figure follows the same size rule as
+// the learner's Run output (lib/outputSize.ts); prose.css only applies these
+// variables in that context, so other figures keep their tier sizing.
+const outSize = dims ? outputSize(dims.w, dims.h) : null;
+const figStyle = [capPx ? `max-width:${capPx}px` : null, outSize ? outputSizeStyle(outSize) : null]
+  .filter(Boolean).join(';') || undefined;
 
 // Animated GIF: a sibling `<name>.still.png` (scripts/gen-gif-stills.mjs) is
 // served instead under prefers-reduced-motion. No still on disk: GIF as before.
@@ -129,7 +135,10 @@ const attrW = dims?.w ?? width;
 const attrH = dims?.h;
 ---
 
-<figure class:list={['fig', sizeClass, role && `role-${role}`, pixelated && 'pixelated']} style={figStyle}>
+<figure
+  class:list={['fig', sizeClass, role && `role-${role}`, pixelated && 'pixelated', outSize && 'out-sized', outSize?.upscaled && 'out-upscaled']}
+  style={figStyle}
+>
   <button
     class="frame fig-zoom"
     type="button"
