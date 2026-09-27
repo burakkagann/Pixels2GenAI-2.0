@@ -50,7 +50,7 @@ Inspired by classical fractal-geometry references:
 
 Run this code: a pattern of nested green squares appears. Zoom into any corner and the same structure recurs.
 
-<CodeBlock lang="python" file="fractal_square.py">
+<CodeBlock lang="python" file="4.1.1_fractal_square.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -81,6 +81,8 @@ draw_fractal_square(canvas, 0, 800, 0, 800, 3)
 Image.fromarray(canvas).save("quickstart_fractal.png")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/4.1.1_fractal_square.py" label="4.1.1_fractal_square.py — this quick-start script" />
 
 Click **Run** on the code above to render the fractal in your browser, then compare your result with the expected output.
 
@@ -213,13 +215,13 @@ The corner regions overlap with the centre. This overlap is intentional — it p
 
 <Exercise n={1} kicker="EXECUTE" title="Run and observe">
 
-Run the complete script (`fractal_square.py`, downloadable below) and answer:
+Run the complete script (`4.1.1_fractal_square.py`, downloadable below) and answer:
 
 1. How many distinct brightness levels can you observe in the image?
 2. What is the relationship between recursion depth and the number of visible squares?
 3. Why do some areas appear brighter than others?
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/fractal_square.py" label="fractal_square.py" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/4.1.1_fractal_square.py" label="4.1.1_fractal_square.py — fractal_square.py" />
 
 <Dropdown summary="Answers & explanation">
 
@@ -323,7 +325,7 @@ Complete the starter code below. The core structure is provided — fill in the 
 - Each corner covers a 2/3 × 2/3 region of the parent.
 - The corners must overlap with the centre square.
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/square.py" label="square.py — starter code" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/4.1.1_square.py" label="4.1.1_square.py — starter code" />
 
 <CodeBlock lang="python" file="square.py (starter)">
 ```python
@@ -352,9 +354,9 @@ Image.fromarray(canvas).save("exercise3_fractal.png")
 
 <Dropdown summary="Complete solution">
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/square_solution.py" label="square_solution.py" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/4.1.1_square_solution.py" label="4.1.1_square_solution.py — square_solution.py" />
 
-<CodeBlock lang="python" file="square_solution.py">
+<CodeBlock lang="python" file="4.1.1_square_solution.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -379,6 +381,8 @@ square(canvas, 0, 800, 0, 800, 3)
 Image.fromarray(canvas).save("exercise3_fractal.png")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.1_fractal_square/4.1.1_square_solution.py" label="4.1.1_square_solution.py — this solution" />
 
 </Dropdown>
 

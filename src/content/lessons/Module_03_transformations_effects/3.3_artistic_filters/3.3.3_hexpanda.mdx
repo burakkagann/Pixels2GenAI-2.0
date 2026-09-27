@@ -35,7 +35,7 @@ Hexagonal binning is a tool from statistical graphics: every data point gets dro
 
 ## Quick start — the hexpanda <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="hexpanda.py">
+<CodeBlock lang="python" file="3.3.3_hexpanda.py">
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -62,6 +62,8 @@ plt.tight_layout()
 plt.savefig('hexpanda.png', dpi=150, bbox_inches='tight', facecolor='white')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_hexpanda.py" label="3.3.3_hexpanda.py — quick-start script" />
 
 Running it on your own machine? Download the input image and keep it in the same folder as the script.
 
@@ -137,6 +139,8 @@ A `gridsize=30` hexbin lays down 30 hexagons across the x-axis. Smaller values g
   role="output"
 />
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_hexbin_comparison.py" label="3.3.3_hexbin_comparison.py — gridsize grid" />
+
 <Admonition type="dyk" title="Technical note · why hexagons?">
 Honeybees build hexagonal cells because hexagons are the most perimeter-efficient tiling of the plane — proven mathematically by Thomas Hales in 2001 [5]. The same efficiency is why hexagonal binning has less directional bias than square binning: each hexagon has exactly six equidistant neighbours, while a square has four near and four far.
 </Admonition>
@@ -147,7 +151,9 @@ Three exercises in **Execute → Modify → Create** order: run the hexpanda, sw
 
 <Exercise n={1} kicker="EXECUTE" title="Run the hexpanda">
 
-Run `hexpanda.py`, the quick-start script above. Inspect the saved PNG.
+Run `3.3.3_hexpanda.py`, the quick-start script above. Inspect the saved PNG.
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_hexpanda.py" label="3.3.3_hexpanda.py — quick-start script" />
 
 **Reflection questions**
 
@@ -169,7 +175,11 @@ Run `hexpanda.py`, the quick-start script above. Inspect the saved PNG.
 
 <Exercise n={2} kicker="MODIFY" title="Three artistic edits">
 
-Edit `hexpanda.py` to produce three pictures.
+Edit `3.3.3_hexpanda.py` to produce three pictures.
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_colormap_variations.py" label="3.3.3_colormap_variations.py — cmap variations" />
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_hexpanda.py" label="3.3.3_hexpanda.py — quick-start script" />
 
 **Goals**
 
@@ -213,7 +223,7 @@ Same density data, completely different palette — dark purple for low-density 
 
 Replace the panda with a *procedurally generated* gradient image. Run the same pipeline and plot the result with `gridsize=25` and `cmap='viridis'`.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="3.3.3_exercise3_starter.py">
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -231,6 +241,8 @@ H, W = 200, 200
 plt.savefig('gradient_hexbin.png', bbox_inches='tight', dpi=120)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_exercise3_starter.py" label="3.3.3_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — diagonal gradient">
 
@@ -259,7 +271,7 @@ You can drop the `[df > 0]` filter because every pixel of the gradient is non-ze
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="3.3.3_exercise3_solution.py">
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -283,6 +295,8 @@ plt.savefig('gradient_hexbin.png', bbox_inches='tight', dpi=120)
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/3.3.3_exercise3_solution.py" label="3.3.3_exercise3_solution.py — this solution" />
+
 **How it works:**
 
 - `np.indices((H, W))` returns two `(H, W)` arrays — row index and column index — so `row + col` is a 2D diagonal ramp.
@@ -298,13 +312,6 @@ plt.savefig('gradient_hexbin.png', bbox_inches='tight', dpi=120)
 - Pipe a *photo* (not the panda) through the same pipeline. The colour photographs need `Image.open(...).convert('L')` to flatten to one channel first.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/hexpanda.py" label="hexpanda.py — quick-start script" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/hexbin_comparison.py" label="hexbin_comparison.py — gridsize grid" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/colormap_variations.py" label="colormap_variations.py — cmap variations" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.3_artistic_filters/3.3.3_hexpanda/panda.png" label="panda.png — input photo" />
 
 ## Summary
 

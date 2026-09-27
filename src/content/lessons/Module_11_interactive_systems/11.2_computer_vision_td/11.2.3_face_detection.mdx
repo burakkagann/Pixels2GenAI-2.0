@@ -36,7 +36,7 @@ This lesson takes those 478 landmarks and feeds them into the **Delaunay triangu
 
 ## Quick start — low-poly face <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="11.2.3_quick_start.py">
 ```python
 import cv2
 import numpy as np
@@ -72,6 +72,8 @@ for simplex in tri.simplices:
 cv2.imwrite('lowpoly.png', cv2.cvtColor(output, cv2.COLOR_RGB2BGR))
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_quick_start.py" label="11.2.3_quick_start.py — this quick-start script" />
 
 Download the sample face photo and keep it in the same folder as the script.
 
@@ -120,6 +122,10 @@ The 478 points are organised into named regions: 27 around each eye, 80 around t
 Snapchat Lenses launched in 2015 with face-tracking-driven AR filters — sunglasses pasted onto your eyes, dog ears on your head, face swaps. The underlying technology was an Israeli company (Looksery) that Snapchat acquired in 2015 for \$150M [4]. Their detection model used a similar landmark architecture to MediaPipe's. By 2024, every major social platform (Instagram, TikTok, BeReal, Threads) has integrated face filters built on the same primitive: detect landmarks, render geometry anchored to them.
 </Admonition>
 
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_face_landmarks.py" label="11.2.3_face_landmarks.py — landmark detection only" />
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_face_detection_basic.py" label="11.2.3_face_detection_basic.py — bounding-box detection" />
+
 ### Concept 3 — Landmark Delaunay + colour fill
 
 With 478 landmark points, `scipy.spatial.Delaunay(landmarks)` computes a Delaunay triangulation in milliseconds. The output `tri.simplices` is an `(N, 3)` array of vertex indices into your landmarks array, one row per triangle.
@@ -162,9 +168,9 @@ Three exercises in **Execute → Modify → Create** order: render the demo, swe
 
 <Exercise n={1} kicker="EXECUTE" title="Run the low-poly face">
 
-Run `lowpoly_face.py` on the bundled `sample_face.jpg`. The script writes `lowpoly_face_output.png`.
+Run `11.2.3_lowpoly_face.py` on the bundled `sample_face.jpg`. The script writes `lowpoly_face_output.png`.
 
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/lowpoly_face.py" label="lowpoly_face.py — full reference implementation" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_lowpoly_face.py" label="11.2.3_lowpoly_face.py — full reference implementation" />
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/sample_face.jpg" label="sample_face.jpg — CC0 sample portrait" />
 
 **Reflection questions**
@@ -217,10 +223,10 @@ Each face's landmarks triangulate independently. Use this for group portraits or
 
 Build a real-time version that triangulates the face from a live webcam feed. Use MediaPipe's `LIVE_STREAM` running mode.
 
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/realtime_lowpoly.py" label="realtime_lowpoly.py — webcam version reference" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/lowpoly_starter.py" label="lowpoly_starter.py — exercise skeleton" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_realtime_lowpoly.py" label="11.2.3_realtime_lowpoly.py — webcam version reference" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_lowpoly_starter.py" label="11.2.3_lowpoly_starter.py — exercise skeleton" />
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="11.2.3_exercise3_starter.py">
 ```python
 import cv2
 import numpy as np
@@ -237,6 +243,8 @@ from mediapipe.tasks.python import vision
 #         detect, triangulate, render, imshow
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_exercise3_starter.py" label="11.2.3_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hints">
 
@@ -266,7 +274,7 @@ The `IMAGE` running mode processes one frame at a time synchronously — good en
 
 <Dropdown summary="Complete solution">
 
-`realtime_lowpoly.py` in the lesson assets is a full implementation. Run it with a webcam attached and watch your face become a moving low-poly portrait. The same pipeline drives countless Instagram and Snapchat filters.
+`11.2.3_realtime_lowpoly.py` in the lesson assets is a full implementation. Run it with a webcam attached and watch your face become a moving low-poly portrait. The same pipeline drives countless Instagram and Snapchat filters.
 
 </Dropdown>
 
@@ -277,14 +285,6 @@ The `IMAGE` running mode processes one frame at a time synchronously — good en
 - **Face swap.** Detect landmarks on two faces; warp the source's triangle colours onto the destination's triangulation. Same primitive, more sophisticated mapping.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/lowpoly_face.py" label="lowpoly_face.py — still-image reference" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/realtime_lowpoly.py" label="realtime_lowpoly.py — webcam version" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/face_landmarks.py" label="face_landmarks.py — landmark detection only" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/face_detection_basic.py" label="face_detection_basic.py — bounding-box detection" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/sample_face.jpg" label="sample_face.jpg — CC0 sample portrait" />
 
 ## Summary
 

@@ -47,7 +47,7 @@ The difference is a single extra term in the loss function. Kingma and Welling [
 
 Before training, look at what a fresh VAE does. With random weights, the encoder produces meaningless distribution parameters and the decoder produces meaningless reconstructions — but the shapes line up, and that is the contract you'll be training against.
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.2.1_quick_start.py">
 ```python
 import torch
 import torch.nn as nn
@@ -80,6 +80,8 @@ recon, mu, logvar = vae(x)
 print(f"Input  {tuple(x.shape)} -> Latent mu {tuple(mu.shape)} -> Recon {tuple(recon.shape)}")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/12.2.1_quick_start.py" label="12.2.1_quick_start.py — this quick-start script" />
 
 The output reports `Input (4, 256) -> Latent mu (4, 8) -> Recon (4, 256)`. The full training script in Exercise 1 turns that random pipeline into the trained model behind the opening figure.
 
@@ -181,12 +183,12 @@ VAE reconstructions look slightly blurry compared to GAN outputs from [Lesson 12
 
 Run the full training script. It generates 1,000 patterns (250 of each type: diagonal, horizontal, vertical, cross), trains the VAE for 200 epochs, and produces five PNG outputs.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/latent_space_exploration.py" label="latent_space_exploration.py — full training + visualisation pipeline" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/12.2.1_latent_space_exploration.py" label="12.2.1_latent_space_exploration.py — full training + visualisation pipeline" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/vae_model.py" label="vae_model.py — VAE architecture (imported by the training script)" />
 
 <CodeBlock lang="bash">
 ```bash
-python latent_space_exploration.py
+python 12.2.1_latent_space_exploration.py
 ```
 </CodeBlock>
 
@@ -223,7 +225,10 @@ The script prints loss values every 50 epochs and saves five PNGs to the working
 
 <Exercise n={2} kicker="MODIFY" title="Move three knobs and see what gives">
 
-Edit `vae_model.py` and `latent_space_exploration.py` one knob at a time. Re-run after each change; keep the previous PNGs around to compare against.
+Edit `vae_model.py` and `12.2.1_latent_space_exploration.py` one knob at a time. Re-run after each change; keep the previous PNGs around to compare against.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/vae_model.py" label="vae_model.py — used in this exercise" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/12.2.1_latent_space_exploration.py" label="12.2.1_latent_space_exploration.py — used in this exercise" />
 
 **Goal 1 — Latent dimension.** Change `LATENT_DIM` at the top of `vae_model.py`:
 
@@ -262,7 +267,7 @@ Shallower encoders train faster but can underfit; the four clusters in the laten
 
 The starter file gives you a stripped-down `SimpleVAE` class with the layers wired up but the three key methods left as TODOs. Fill them in.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/latent_starter.py" label="latent_starter.py — three TODOs" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/12.2.1_latent_starter.py" label="12.2.1_latent_starter.py — three TODOs" />
 
 ```python
 # In SimpleVAE:
@@ -322,7 +327,9 @@ def interpolate(vae, pattern_a, pattern_b, num_steps=8):
     return frames
 ```
 
-Running `python latent_starter.py` with these in place produces `my_interpolation.png`. With random (untrained) weights the output is noise — to see real interpolations you'd save and load the trained `vae_model.py` weights from Exercise 1 instead.
+Running `python 12.2.1_latent_starter.py` with these in place produces `my_interpolation.png`. With random (untrained) weights the output is noise — to see real interpolations you'd save and load the trained `vae_model.py` weights from Exercise 1 instead.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.1_latent_space_exploration/vae_model.py" label="vae_model.py — used in this exercise" />
 
 </Dropdown>
 

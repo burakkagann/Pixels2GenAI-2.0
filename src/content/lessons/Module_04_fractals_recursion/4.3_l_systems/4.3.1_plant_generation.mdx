@@ -37,7 +37,7 @@ The architecture is the same separation we have seen since the dragon curve (4.1
 
 ## Quick start — a weed in four iterations <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="4.3.1_quick_start.py">
 ```python
 import math
 from PIL import Image, ImageDraw
@@ -73,6 +73,8 @@ for symbol in s:
 img.save("plant_basic.png")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/4.3.1_quick_start.py" label="4.3.1_quick_start.py — this quick-start script" />
 
 Click **Run** on the code above to generate the L-system plant in your browser, then compare your result with the expected output.
 
@@ -194,9 +196,9 @@ Three exercises in **Execute → Modify → Create** order: run the simple plant
 
 <Exercise n={1} kicker="EXECUTE" title="Grow the basic plant">
 
-Run `plant_lsystem.py` to render `F[+F]F[-F]F` at iteration 4.
+Run `4.3.1_plant_lsystem.py` to render `F[+F]F[-F]F` at iteration 4.
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/plant_lsystem.py" label="plant_lsystem.py — reference implementation" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/4.3.1_plant_lsystem.py" label="4.3.1_plant_lsystem.py — reference implementation" />
 
 **Reflection questions**
 
@@ -218,7 +220,9 @@ Run `plant_lsystem.py` to render `F[+F]F[-F]F` at iteration 4.
 
 <Exercise n={2} kicker="MODIFY" title="Sweep angle and rule">
 
-Edit `plant_lsystem.py` to produce three plant variants. Keep iterations = 4 throughout for fair comparison.
+Edit `4.3.1_plant_lsystem.py` to produce three plant variants. Keep iterations = 4 throughout for fair comparison.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/4.3.1_plant_lsystem.py" label="4.3.1_plant_lsystem.py — reference implementation" />
 
 **Goals**
 
@@ -257,7 +261,7 @@ F → FF
 
 `X` is invisible to the turtle — the interpreter just skips it. But because every `X` expands to a long string containing more `X`s, the structure of the fern is encoded in `X`'s rule. Meanwhile, `F → FF` doubles every drawn segment each iteration, so the stems grow proportionally as the structure refines.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="4.3.1_exercise3_starter.py">
 ```python
 import math
 from PIL import Image, ImageDraw
@@ -292,6 +296,8 @@ draw_lsystem(s, ANGLE, STEP, (800, 600)).save("my_fern.png")
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/4.3.1_exercise3_starter.py" label="4.3.1_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hint 1 — the two-symbol rules">
 
 ```python
@@ -324,7 +330,7 @@ for c in s:
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="4.3.1_exercise3_solution.py">
 ```python
 import math
 from PIL import Image, ImageDraw
@@ -362,6 +368,8 @@ draw_lsystem(s, ANGLE, STEP, (800, 600)).save("my_fern.png")
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/4.3.1_exercise3_solution.py" label="4.3.1_exercise3_solution.py — this solution" />
+
 </Dropdown>
 
 #### Make it your own
@@ -371,10 +379,6 @@ draw_lsystem(s, ANGLE, STEP, (800, 600)).save("my_fern.png")
 - **Animate growth.** Render each iteration's instruction string separately, save them as a sequence, and compose into a GIF. The plant visibly grows from a seed to a fern over 5–6 frames.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_04_fractals_recursion/4.3_l_systems/4.3.1_plant_generation/plant_lsystem.py" label="plant_lsystem.py — reference implementation" />
 
 ## Summary
 

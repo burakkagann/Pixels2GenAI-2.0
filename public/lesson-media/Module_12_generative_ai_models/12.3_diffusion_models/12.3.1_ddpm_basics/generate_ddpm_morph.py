@@ -362,7 +362,7 @@ def generate_morph_animation():
     checkpoint_path = find_latest_checkpoint()
     if not os.path.exists(checkpoint_path):
         print(f"\nError: No checkpoint found at '{checkpoint_path}'")
-        print("Please ensure training has completed (exercise3_train.py)")
+        print("Please ensure training has completed (12.3.1_exercise3_train.py)")
         return
 
     # Load model

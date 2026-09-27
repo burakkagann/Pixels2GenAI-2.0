@@ -52,7 +52,7 @@ Pull the pre-trained LoRA from the GitHub Release, layer it on top of Stable Dif
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_model.safetensors" label="adapter_model.safetensors — pre-trained LoRA (~3 MB, GitHub Release)" />
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_config.json" label="adapter_config.json — PEFT config (required alongside the safetensors)" />
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.5.1_quick_start.py">
 ```python
 import torch
 from diffusers import StableDiffusionPipeline
@@ -68,6 +68,8 @@ image = pipe(prompt, guidance_scale=7.5).images[0]
 image.save("personalized_fabric.png")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/12.5.1_quick_start.py" label="12.5.1_quick_start.py — this quick-start script" />
 
 The same prompt *without* the `sks` token returns a generic African-fabric dress — pleasant, but not the specific pattern. The token does the steering.
 
@@ -180,14 +182,14 @@ Classifier-free guidance [6] is the third lever and the one users tune most ofte
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_model.safetensors" label="adapter_model.safetensors — 3 MB pre-trained LoRA" />
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-dreambooth-lora/adapter_config.json" label="adapter_config.json — PEFT configuration" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise1_generate.py" label="exercise1_generate.py — nine-context generation grid" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/12.5.1_exercise1_generate.py" label="12.5.1_exercise1_generate.py — nine-context generation grid" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/dreambooth_utils.py" label="dreambooth_utils.py — shared pipeline helpers" />
 
 Drop both downloaded LoRA files into `models/fabric_lora/`, then run:
 
 <CodeBlock lang="bash">
 ```bash
-python exercise1_generate.py
+python 12.5.1_exercise1_generate.py
 ```
 </CodeBlock>
 
@@ -213,11 +215,11 @@ The script renders the `sks` token in nine different contexts (dress, wallpaper,
 
 <Exercise n={2} kicker="MODIFY" title="Three explorations: guidance, style mix, seed variation">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise2_explore.py" label="exercise2_explore.py — three explorations in one script" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/12.5.1_exercise2_explore.py" label="12.5.1_exercise2_explore.py — three explorations in one script" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise2_explore.py
+python 12.5.1_exercise2_explore.py
 ```
 </CodeBlock>
 
@@ -269,8 +271,8 @@ Composition changes substantially across seeds: the dress is cut differently, th
 
 This is the full training pipeline. Two scripts cover the two training approaches; LoRA is the recommended starting point.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise3b_train_lora.py" label="exercise3b_train_lora.py — LoRA fine-tuning (recommended)" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/exercise3a_train_textual_inversion.py" label="exercise3a_train_textual_inversion.py — Textual Inversion (smaller output, longer training)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/12.5.1_exercise3b_train_lora.py" label="12.5.1_exercise3b_train_lora.py — LoRA fine-tuning (recommended)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.5_personalization_efficiency/12.5.1_dreambooth_personalization/12.5.1_exercise3a_train_textual_inversion.py" label="12.5.1_exercise3a_train_textual_inversion.py — Textual Inversion (smaller output, longer training)" />
 
 **Step 1 — Reference images.** Place 5–10 images of your subject in `training_images/`. Quality and variety matter more than quantity: include different lighting, angles, and (for fabrics) folds. All resized to 512×512.
 
@@ -290,7 +292,7 @@ This is the full training pipeline. Two scripts cover the two training approache
 
 <CodeBlock lang="bash">
 ```bash
-python exercise3b_train_lora.py
+python 12.5.1_exercise3b_train_lora.py
 ```
 </CodeBlock>
 

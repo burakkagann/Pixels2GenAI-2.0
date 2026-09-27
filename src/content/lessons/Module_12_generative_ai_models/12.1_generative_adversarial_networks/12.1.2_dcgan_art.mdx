@@ -48,7 +48,7 @@ In this exercise you will generate abstract art with a pre-trained DCGAN, explor
 
 Load the pre-trained generator and produce four random art pieces.
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.1.2_quick_start.py">
 ```python
 import torch
 from dcgan_model import Generator, LATENT_DIM
@@ -74,6 +74,8 @@ plt.savefig('quick_start_output.png', dpi=150)
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_quick_start.py" label="12.1.2_quick_start.py — this quick-start script" />
+
 <Figure
   src="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/quick_start_output.png"
   alt="Four DCGAN-generated abstract art patterns"
@@ -83,7 +85,7 @@ plt.savefig('quick_start_output.png', dpi=150)
 />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/dcgan_model.py" label="dcgan_model.py — the Generator class the script imports" />
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/quick-start.py" label="quick-start.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_quick_start.py" label="12.1.2_quick_start.py — quick-start.py" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/exercise3_generator.pth" label="exercise3_generator.pth — pre-trained weights (14 MB)" />
 
 The generator transforms 100-dimensional random noise vectors into 64×64 pixel RGB images. The patterns exhibit smooth gradients, geometric shapes, and colour harmonies learned from training data.
@@ -204,11 +206,11 @@ Latent spaces are fundamental to many generative models, not just GANs. Variatio
 
 Run the pre-trained generator to see how DCGANs create abstract art from random noise vectors. The script produces a 4×4 grid of unique patterns.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/exercise1_observe.py" label="exercise1_observe.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_exercise1_observe.py" label="12.1.2_exercise1_observe.py — exercise1_observe.py" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise1_observe.py
+python 12.1.2_exercise1_observe.py
 ```
 </CodeBlock>
 
@@ -239,7 +241,7 @@ python exercise1_observe.py
 
 Experiment with generation parameters: larger grids, more interpolation steps, and different random seeds.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/exercise2_explore.py" label="exercise2_explore.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_exercise2_explore.py" label="12.1.2_exercise2_explore.py — exercise2_explore.py" />
 
 The script demonstrates two explorations:
 
@@ -297,9 +299,9 @@ Use the African Fabric dataset from Kaggle (~1,059 images, vibrant textile patte
 
 **Step 1 — Download**: visit <a href="https://www.kaggle.com/datasets/mikuns/african-fabric" target="_blank" rel="noopener">kaggle.com/datasets/mikuns/african-fabric</a>, download, and extract to `african_fabric_dataset/` inside the lesson directory.
 
-**Step 2 — Preprocess** — run `preprocess_african_fabric.py` to resize to 64×64, convert to RGB, and save to `african_fabric_processed/`.
+**Step 2 — Preprocess** — run `12.1.2_preprocess_african_fabric.py` to resize to 64×64, convert to RGB, and save to `african_fabric_processed/`.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/preprocess_african_fabric.py" label="preprocess_african_fabric.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_preprocess_african_fabric.py" label="12.1.2_preprocess_african_fabric.py — preprocess_african_fabric.py" />
 
 </Dropdown>
 
@@ -314,11 +316,11 @@ Hyperparameters:
 - Loss: Binary Cross-Entropy (BCE)
 - Dataset: 1,059 fabric patterns (64×64 RGB)
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/exercise3_train.py" label="exercise3_train.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/12.1.2_exercise3_train.py" label="12.1.2_exercise3_train.py — exercise3_train.py" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise3_train.py
+python 12.1.2_exercise3_train.py
 ```
 </CodeBlock>
 
@@ -329,6 +331,8 @@ The script will:
 3. Train for 100 epochs with per-epoch progress updates.
 4. Save checkpoints at epochs 10, 30, 50, 70, and 100.
 5. Save the final trained model as `exercise3_generator.pth`.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.2_dcgan_art/exercise3_generator.pth" label="exercise3_generator.pth — used in this exercise" />
 
 **What to observe during training**
 

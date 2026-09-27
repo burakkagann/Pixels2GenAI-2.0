@@ -35,7 +35,7 @@ Rotation was one library call. The full set of geometric transformations that pr
 
 ## Quick start — scale and translate one square <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="simple_affine.py">
+<CodeBlock lang="python" file="3.1.2_simple_affine.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -68,6 +68,8 @@ draw.polygon([tuple(p) for p in right], fill=(230, 150, 50))
 img.save('simple_affine.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/3.1.2_simple_affine.py" label="3.1.2_simple_affine.py — quick-start scale + translate" />
 
 Click **Run** on the code above to apply the affine transformation in your browser, then compare your result with the expected output.
 
@@ -153,6 +155,8 @@ def shear(kx, ky=0):
   role="diagram"
 />
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/3.1.2_transformation_comparison.py" label="3.1.2_transformation_comparison.py — four-primitive grid" />
+
 <Admonition type="dyk" title="Technical note · scale around a non-origin point">
 Every primitive operates around the origin by default. To scale or rotate around a different pivot `(px, py)`: `translate(px, py) @ scale(s) @ translate(-px, -py)`. Move the pivot to the origin, do the operation, move back. This is one of the most-used composition recipes in computer graphics [3].
 </Admonition>
@@ -185,7 +189,9 @@ Three exercises in **Execute → Modify → Create** order: run a simple compari
 
 <Exercise n={1} kicker="EXECUTE" title="Run the simple scale demo">
 
-Run `simple_affine.py`, the quick-start script above. It draws the blue/orange pair from Figure 1 — same square, scaled and translated.
+Run `3.1.2_simple_affine.py`, the quick-start script above. It draws the blue/orange pair from Figure 1 — same square, scaled and translated.
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/3.1.2_simple_affine.py" label="3.1.2_simple_affine.py — quick-start scale + translate" />
 
 **Reflection questions**
 
@@ -261,7 +267,7 @@ Standard rotation matrix. The square becomes a diamond (still a square — affin
 
 Build a spiral of 24 squares. Each square should be (a) rotated slightly more than the last, (b) scaled slightly smaller, and (c) translated to a point along an outward-spiralling polar trajectory.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="3.1.2_exercise3_starter.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -303,6 +309,8 @@ img.save('spiral.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/3.1.2_exercise3_starter.py" label="3.1.2_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hint 1 — the spiral parameters">
 
 A simple linear progression works:
@@ -342,7 +350,7 @@ color = (int(70 + 180 * t), int(130 - 50 * t), int(200 - 150 * t))
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="3.1.2_combined_transform_solution.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -384,6 +392,8 @@ img.save('spiral.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/3.1.2_combined_transform_solution.py" label="3.1.2_combined_transform_solution.py — Exercise 3 reference" />
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/combined_transform_output.png"
   alt="A spiral of 24 colored squares winding outward from the centre of a dark canvas, each progressively smaller and rotated, the colour fading from blue to orange"
@@ -407,12 +417,6 @@ img.save('spiral.png')
 - Reverse the multiplication order: `rotate(angle) @ scale(shrink) @ translate(tx, ty)`. The first square stays in place; subsequent squares orbit the origin instead of spiralling out.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/simple_affine.py" label="simple_affine.py — quick-start scale + translate" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/transformation_comparison.py" label="transformation_comparison.py — four-primitive grid" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.2_affine_transformations/combined_transform_solution.py" label="combined_transform_solution.py — Exercise 3 reference" />
 
 ## Summary
 

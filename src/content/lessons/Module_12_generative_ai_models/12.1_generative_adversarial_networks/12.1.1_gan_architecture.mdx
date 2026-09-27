@@ -47,7 +47,7 @@ That is the entire idea behind a Generative Adversarial Network. Ian Goodfellow 
 
 Before training anything, look at what a fresh Generator produces. The point is to see how far the starting state is from the target.
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.1.1_quick_start.py">
 ```python
 import torch
 import torch.nn as nn
@@ -75,6 +75,8 @@ print(f"Generated {len(output)} numbers")
 print(f"Mean: {output.mean():.2f}, Std: {output.std():.2f}")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/12.1.1_quick_start.py" label="12.1.1_quick_start.py — this quick-start script" />
 
 A typical run prints something like `Mean: 0.01, Std: 0.02` — random weights, random output, nowhere near `N(4.0, 1.25)`. The full training script in Exercise 1 closes this gap by pairing the Generator with a Discriminator that supplies the feedback signal.
 
@@ -151,11 +153,11 @@ If your GAN diverges, the first thing to check is almost never the architecture.
 
 Run the full training script. It pairs the 3-layer Generator from the Quick Start with a small Discriminator that compares the statistical moments (mean, standard deviation, skew, kurtosis) of a batch of generated numbers against the moments of a real batch from `N(4.0, 1.25)`.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_architecture.py" label="gan_architecture.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/12.1.1_gan_architecture.py" label="12.1.1_gan_architecture.py — gan_architecture.py" />
 
 <CodeBlock lang="bash">
 ```bash
-python gan_architecture.py
+python 12.1.1_gan_architecture.py
 ```
 </CodeBlock>
 
@@ -191,7 +193,9 @@ python gan_architecture.py
 
 <Exercise n={2} kicker="MODIFY" title="Push the training balance until it breaks">
 
-Open `gan_architecture.py` and change one parameter at a time. The goal is to develop intuition for *which* knobs matter and *how much*.
+Open `12.1.1_gan_architecture.py` and change one parameter at a time. The goal is to develop intuition for *which* knobs matter and *how much*.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/12.1.1_gan_architecture.py" label="12.1.1_gan_architecture.py — used in this exercise" />
 
 **Goal 1 — Move the target distribution.** Change `DATA_MEAN` and `DATA_STDDEV` near the top of the file. Try a centred Gaussian (`DATA_MEAN = 0.0`) and a much wider one (`DATA_STDDEV = 3.0`). Does the GAN still converge? Does it take longer?
 
@@ -217,11 +221,11 @@ Discriminator-dominated (`30/10`): the Discriminator quickly becomes near-perfec
 
 The same adversarial loop you just trained on scalars works on images — the only thing that changes is the shape of the Generator's output and the Discriminator's input. To make that concrete, the bridge script trains a slightly larger fully-connected GAN to produce simple `8 × 8` line patterns.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/gan_patterns.py" label="gan_patterns.py" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.1_gan_architecture/12.1.1_gan_patterns.py" label="12.1.1_gan_patterns.py — gan_patterns.py" />
 
 <CodeBlock lang="bash">
 ```bash
-python gan_patterns.py
+python 12.1.1_gan_patterns.py
 ```
 </CodeBlock>
 
@@ -249,7 +253,7 @@ Fully-connected layers treat each output pixel as independent. The network can't
 
 <Admonition type="note">
 
-The number-distribution GAN in `gan_architecture.py` is adapted from Dev Nag's well-known "GANs in 50 lines of code" [9], rewritten with longer variable names and additional comments for teaching. The pattern-GAN bridge script is original to this lesson.
+The number-distribution GAN in `12.1.1_gan_architecture.py` is adapted from Dev Nag's well-known "GANs in 50 lines of code" [9], rewritten with longer variable names and additional comments for teaching. The pattern-GAN bridge script is original to this lesson.
 
 - Original source: <a href="https://github.com/devnag/pytorch-generative-adversarial-networks" target="_blank" rel="noopener">github.com/devnag/pytorch-generative-adversarial-networks</a>
 - License: MIT

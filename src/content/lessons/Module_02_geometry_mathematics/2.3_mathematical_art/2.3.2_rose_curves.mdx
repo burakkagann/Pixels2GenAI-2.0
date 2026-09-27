@@ -41,7 +41,7 @@ A controls the petal length; k controls everything else. The most surprising res
 
 ## Quick start — a 5-petal rose <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="2.3.2_quick_start.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -68,6 +68,8 @@ draw.line(points, fill=(255, 100, 150), width=2)
 image.save('simple_rose.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_quick_start.py" label="2.3.2_quick_start.py — this quick-start script" />
 
 Click **Run** on the code above to draw the rose curve in your browser, then compare your result with the expected output.
 
@@ -143,6 +145,8 @@ Why? Look at what `cos(k·θ)` does as `θ` sweeps `[0, 2π]`. The argument `k·
   role="output"
 />
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_rose_variations.py" label="2.3.2_rose_variations.py — parity-rule panel" />
+
 <Admonition type="dyk" title="Technical note · Grandi and the rhodonea">
 Guido Grandi published his rhodonea work in 1723, calling them *flowers* (*Flores geometrici*) because of their resemblance to roses [1]. He studied them as mechanical curves traceable by a compass-like instrument, decades before Newton and Bernoulli had even formalised polar coordinates.
 </Admonition>
@@ -179,9 +183,11 @@ Three exercises in **Execute → Modify → Create** order: run a 5-petal rose, 
 
 <Exercise n={1} kicker="EXECUTE" title="Run the basic rose">
 
-Run `simple_rose.py` and inspect the output.
+Run `2.3.2_simple_rose.py` and inspect the output.
 
-<CodeBlock lang="python" file="exercise1_execute.py">
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_simple_rose.py" label="2.3.2_simple_rose.py — 5-petal quick start" />
+
+<CodeBlock lang="python" file="2.3.2_exercise1_execute.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -206,6 +212,8 @@ draw.line(points, fill=(255, 100, 150), width=2)
 image.save('simple_rose.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_exercise1_execute.py" label="2.3.2_exercise1_execute.py — this script" />
 
 **Reflection questions**
 
@@ -259,7 +267,7 @@ Try `AMPLITUDE = 220`. The petals are longer; just stay below `CANVAS_SIZE // 2`
 
 Render a 5-petal rose with each petal in a different colour. Use a 5-entry palette and the angle-to-index helper from Concept 3.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="2.3.2_exercise3_starter.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -297,6 +305,8 @@ image.save('colored_rose.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_exercise3_starter.py" label="2.3.2_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hint 1 — angle to petal index">
 
 ```python
@@ -323,7 +333,7 @@ Per-segment drawing is the cost of per-segment colour — one Pillow call per pa
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="2.3.2_colored_rose_solution.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -358,6 +368,8 @@ image.save('colored_rose.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/2.3.2_colored_rose_solution.py" label="2.3.2_colored_rose_solution.py — per-petal colour reference" />
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/colored_rose.png"
   alt="A rose curve with five petals, each petal drawn in a distinct colour from a rainbow palette: red, orange, yellow, green, and blue"
@@ -381,12 +393,6 @@ image.save('colored_rose.png')
 - **Rose garden.** Place 5 roses at scattered positions, each with a different k. The page reads as a small algorithmic floral arrangement.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/simple_rose.py" label="simple_rose.py — 5-petal quick start" />
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/rose_variations.py" label="rose_variations.py — parity-rule panel" />
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.3_mathematical_art/2.3.2_rose_curves/colored_rose_solution.py" label="colored_rose_solution.py — per-petal colour reference" />
 
 ## Summary
 

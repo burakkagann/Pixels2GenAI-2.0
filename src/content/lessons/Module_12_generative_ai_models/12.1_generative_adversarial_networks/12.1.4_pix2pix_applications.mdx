@@ -53,7 +53,7 @@ The pre-trained `facades_label2photo` weights are on the GitHub Release. Place u
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-pix2pix-weights/discriminator_weights.pth" label="discriminator_weights.pth — PatchGAN discriminator (~11 MB)" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/facades_generator.py" label="facades_generator.py — helper the script imports to build the generator" />
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.1.4_quick_start.py">
 ```python
 import torch
 from facades_generator import create_facades_generator
@@ -77,6 +77,8 @@ facade = ((facade.squeeze().permute(1, 2, 0).numpy() + 1) / 2).clip(0, 1)
 plt.imsave('quick_start_output.png', facade)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/12.1.4_quick_start.py" label="12.1.4_quick_start.py — this quick-start script" />
 
 The input is a coloured segmentation label (different colours = walls, windows, doors, sky). The output is a photorealistic building photo that follows the label's structure but fills it with realistic textures.
 
@@ -209,14 +211,14 @@ The `λ = 100` default is calibrated for the original paper's tasks (facades, ed
 <Exercise n={1} kicker="EXECUTE" title="Run the pre-trained facades model on sample labels">
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-pix2pix-weights/generator_weights.pth" label="generator_weights.pth — 208 MB U-Net generator" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise1_observe.py" label="exercise1_observe.py — multi-facade comparison" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/12.1.4_exercise1_observe.py" label="12.1.4_exercise1_observe.py — multi-facade comparison" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/facades_generator.py" label="facades_generator.py — generator loader helper" />
 
 Place the generator checkpoint at `checkpoints/facades_generator.pth`, then:
 
 <CodeBlock lang="bash">
 ```bash
-python exercise1_observe.py
+python 12.1.4_exercise1_observe.py
 ```
 </CodeBlock>
 
@@ -253,11 +255,11 @@ Output: `exercise1_output.png` — a grid showing several facade segmentation la
 
 <Exercise n={2} kicker="MODIFY" title="Modify labels and see how output changes">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise2_explore.py" label="exercise2_explore.py — label-modification explorations" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/12.1.4_exercise2_explore.py" label="12.1.4_exercise2_explore.py — label-modification explorations" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise2_explore.py
+python 12.1.4_exercise2_explore.py
 ```
 </CodeBlock>
 
@@ -311,15 +313,15 @@ Where labels are absent, the model produces output that approximates the *averag
 
 This exercise trains a full Pix2Pix from scratch on the [Anime Sketch Colorization Pair dataset from Kaggle](https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair) [2] — ~17,000 paired sketch/colour images.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/exercise3_train.py" label="exercise3_train.py — full Pix2Pix training (100 epochs, GPU)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/12.1.4_exercise3_train.py" label="12.1.4_exercise3_train.py — full Pix2Pix training (100 epochs, GPU)" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/pix2pix_model.py" label="pix2pix_model.py — U-Net generator + PatchGAN discriminator" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/preprocess_anime_sketches.py" label="preprocess_anime_sketches.py — Kaggle dataset preprocessor" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.4_pix2pix_applications/12.1.4_preprocess_anime_sketches.py" label="12.1.4_preprocess_anime_sketches.py — Kaggle dataset preprocessor" />
 
 **Step 1 — Get the dataset.** Visit [kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair](https://www.kaggle.com/datasets/ktaebum/anime-sketch-colorization-pair), download (~14 GB compressed; free Kaggle account required), extract to `anime_sketch_dataset/`, then run:
 
 <CodeBlock lang="bash">
 ```bash
-python preprocess_anime_sketches.py
+python 12.1.4_preprocess_anime_sketches.py
 ```
 </CodeBlock>
 
@@ -329,7 +331,7 @@ This splits paired images into `anime_processed/sketches/` and `anime_processed/
 
 <CodeBlock lang="bash">
 ```bash
-python exercise3_train.py
+python 12.1.4_exercise3_train.py
 ```
 </CodeBlock>
 

@@ -41,12 +41,12 @@ VQ-GAN, introduced by Esser, Rombach and Ommer in 2020 [2], improved the reconst
 
 60-second training run, 64-entry codebook, MNIST. After 3 epochs you'll see most digits cleanly reconstructed through a discrete bottleneck.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/vqvae_demo.py" label="vqvae_demo.py — minimal VQ-VAE on MNIST" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/12.4.2_vqvae_demo.py" label="12.4.2_vqvae_demo.py — minimal VQ-VAE on MNIST" />
 
 <CodeBlock lang="bash">
 ```bash
 pip install torch torchvision
-python vqvae_demo.py
+python 12.4.2_vqvae_demo.py
 ```
 </CodeBlock>
 
@@ -148,11 +148,11 @@ VQ-GAN isn't itself a generative model — it's an autoencoder with a discrete b
 
 <Exercise n={1} kicker="EXECUTE" title="Train the demo VQ-VAE on MNIST and inspect codebook usage">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/vqvae_demo.py" label="vqvae_demo.py — 3-epoch MNIST run" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/12.4.2_vqvae_demo.py" label="12.4.2_vqvae_demo.py — 3-epoch MNIST run" />
 
 <CodeBlock lang="bash">
 ```bash
-python vqvae_demo.py
+python 12.4.2_vqvae_demo.py
 ```
 </CodeBlock>
 
@@ -181,7 +181,9 @@ The script trains for 3 epochs (~60 seconds on a CPU, ~10 seconds on a GPU), the
 
 <Exercise n={2} kicker="MODIFY" title="Codebook size, commitment cost, codebook collapse">
 
-Open `vqvae_demo.py` and try each change.
+Open `12.4.2_vqvae_demo.py` and try each change.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/12.4.2_vqvae_demo.py" label="12.4.2_vqvae_demo.py — used in this exercise" />
 
 **Goal 1 — Codebook size.** Try `CODEBOOK_SIZE ∈ {16, 64, 512, 4096}`. Lower means coarser reconstructions; higher gives the model more capacity but often increases codebook collapse (more dead entries).
 
@@ -207,7 +209,7 @@ With a per-epoch reset on dead entries, codebook usage often goes from 30-50% to
 
 Write the core `VectorQuantizer` module yourself. Skeleton:
 
-<CodeBlock lang="python" file="quantizer_starter.py">
+<CodeBlock lang="python" file="12.4.2_quantizer_starter.py">
 ```python
 import torch
 import torch.nn as nn
@@ -244,6 +246,8 @@ class VectorQuantizer(nn.Module):
         pass
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.2_vqvae_vqgan/12.4.2_quantizer_starter.py" label="12.4.2_quantizer_starter.py — this starter" />
 
 <Dropdown summary="Complete solution">
 

@@ -37,11 +37,11 @@ A single pendulum is the textbook example of predictable physics — it swings b
 
 Download the script and run it from a terminal. It writes three files: a GIF of the swinging arm, a still frame, and a comparison plot of two near-identical pendulums diverging.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum.py" label="double_pendulum.py — complete reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/5.3.3_double_pendulum.py" label="5.3.3_double_pendulum.py — complete reference implementation" />
 
 <CodeBlock lang="bash" file="terminal">
 ```bash
-python double_pendulum.py
+python 5.3.3_double_pendulum.py
 ```
 </CodeBlock>
 
@@ -154,9 +154,9 @@ Three exercises in **Execute → Modify → Create** order: run the canonical ch
 
 <Exercise n={1} kicker="EXECUTE" title="Run the canonical demo">
 
-Download `double_pendulum.py` and run it. It produces `double_pendulum.gif`, `double_pendulum_frame.png`, and `chaos_comparison.png`.
+Download `5.3.3_double_pendulum.py` and run it. It produces `double_pendulum.gif`, `double_pendulum_frame.png`, and `chaos_comparison.png`.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum.py" label="double_pendulum.py — complete reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/5.3.3_double_pendulum.py" label="5.3.3_double_pendulum.py — complete reference implementation" />
 
 **Reflection questions**
 
@@ -181,7 +181,9 @@ Download `double_pendulum.py` and run it. It produces `double_pendulum.gif`, `do
 
 <Exercise n={2} kicker="MODIFY" title="Retune the physics">
 
-Edit the constants at the top of `double_pendulum.py` and re-render. Each goal isolates one physical parameter.
+Edit the constants at the top of `5.3.3_double_pendulum.py` and re-render. Each goal isolates one physical parameter.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/5.3.3_double_pendulum.py" label="5.3.3_double_pendulum.py — full reference implementation" />
 
 **Goals**
 
@@ -211,9 +213,9 @@ A heavier first mass means its motion is less affected by the second. The first 
 
 <Exercise n={3} kicker="CREATE" title="Implement RK4 from scratch">
 
-Use `double_pendulum_starter.py`, which provides the simulation loop, animation rendering, and figure helpers. Two functions are stubbed out with TODOs — implement them and the script will work.
+Use `5.3.3_double_pendulum_starter.py`, which provides the simulation loop, animation rendering, and figure helpers. Two functions are stubbed out with TODOs — implement them and the script will work.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum_starter.py" label="double_pendulum_starter.py — Exercise 3 scaffold" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/5.3.3_double_pendulum_starter.py" label="5.3.3_double_pendulum_starter.py — Exercise 3 scaffold" />
 
 **Implement**
 
@@ -259,11 +261,6 @@ The chaotic behaviour persists, but the system loses energy and eventually relax
 - **Many pendulums, slightly different starts** — render 50 pendulums starting from angles spaced 0.0001 radians apart. The first few seconds look like one pendulum; then the bundle frays into a cloud.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum.py" label="double_pendulum.py — full reference implementation" />
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.3_double_pendulum_chaos/double_pendulum_starter.py" label="double_pendulum_starter.py — Exercise 3 scaffold" />
 
 ## Summary
 

@@ -39,14 +39,14 @@ This is the foundation of nearly every "art filter" app you've used since 2016 (
 
 ## Quick start — run NST on any photo and painting <a id="quick-start"></a>
 
-The full implementation is in `neural_style_transfer.py`. It uses VGG-19 (auto-downloaded by torchvision the first time), L-BFGS as the optimiser, and a content image as the starting point.
+The full implementation is in `12.4.1_neural_style_transfer.py`. It uses VGG-19 (auto-downloaded by torchvision the first time), L-BFGS as the optimiser, and a content image as the starting point.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/neural_style_transfer.py" label="neural_style_transfer.py — optimisation-based NST (Gatys et al.)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/12.4.1_neural_style_transfer.py" label="12.4.1_neural_style_transfer.py — optimisation-based NST (Gatys et al.)" />
 
 <CodeBlock lang="bash">
 ```bash
 pip install torch torchvision pillow
-python neural_style_transfer.py \
+python 12.4.1_neural_style_transfer.py \
     --content my_photo.jpg \
     --style starry_night.jpg \
     --output styled.jpg \
@@ -125,11 +125,11 @@ The optimisation is slow because it's per-image and per-style-pair. Every new (c
 
 Pick a content image (any photograph — a landscape, a portrait, a city scene). Pick a style image (a painting works best — Van Gogh's *Starry Night*, Hokusai's *Great Wave*, Picasso's *Guernica*, or a Monet for impressionism). Both can be JPG or PNG.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/neural_style_transfer.py" label="neural_style_transfer.py — full pipeline" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/12.4.1_neural_style_transfer.py" label="12.4.1_neural_style_transfer.py — full pipeline" />
 
 <CodeBlock lang="bash">
 ```bash
-python neural_style_transfer.py \
+python 12.4.1_neural_style_transfer.py \
     --content path/to/landscape.jpg \
     --style   path/to/starry_night.jpg \
     --output  landscape_starry.jpg \
@@ -162,7 +162,9 @@ The script auto-downloads VGG-19 the first time (~550 MB; cached on subsequent r
 
 <Exercise n={2} kicker="MODIFY" title="Tune the content/style balance and starting point">
 
-Open `neural_style_transfer.py` and try each change in isolation, comparing outputs.
+Open `12.4.1_neural_style_transfer.py` and try each change in isolation, comparing outputs.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/12.4.1_neural_style_transfer.py" label="12.4.1_neural_style_transfer.py — used in this exercise" />
 
 **Goal 1 — Style weight sweep.** Run with `--style-weight 1e4`, `1e6`, `1e8`. Lower values preserve more of the content image; higher values let the style dominate to the point of unrecognisability.
 
@@ -188,7 +190,7 @@ Slower convergence — you may need 500+ steps. The result is more abstract and 
 
 Two functions to write yourself. The skeleton:
 
-<CodeBlock lang="python" file="nst_starter.py">
+<CodeBlock lang="python" file="12.4.1_nst_starter.py">
 ```python
 import torch
 import torch.nn.functional as F
@@ -233,6 +235,8 @@ if __name__ == "__main__":
     print(f"style_loss test value: {loss.item():.4f}")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.4_bridging_paradigms/12.4.1_neural_style_transfer/12.4.1_nst_starter.py" label="12.4.1_nst_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — Gram matrix">
 The formula is `G = (F @ F.T) / N` where `F` is the flattened feature map of shape `(C, H*W)` and `N = batch * channels * h * w`. The reshape is `features.view(batch * channels, h * w)`. The matrix product uses `@` or `torch.mm`.

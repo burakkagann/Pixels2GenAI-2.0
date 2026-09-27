@@ -37,7 +37,7 @@ This lesson sits at the conceptual end of Module 04. Where 4.1.1 used recursion 
 
 ## Quick start — see the dragon emerge <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="4.1.2_quick_start.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -76,6 +76,8 @@ Image.fromarray(canvas).save('dragon_curve.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_quick_start.py" label="4.1.2_quick_start.py — this quick-start script" />
+
 Click **Run** on the code above to draw the dragon in your browser, then compare your result with the expected output.
 
 <Dropdown summary="Expected output">
@@ -93,6 +95,8 @@ Click **Run** on the code above to draw the dragon in your browser, then compare
 <Admonition type="tip">
 The 2,047 number is not a coincidence. Each iteration of the rule doubles the previous sequence length and adds one new fold in the middle. The recurrence is "new length equals two times previous length, plus one". Solving it gives 2 to the power n+1, minus 1, segments at depth n. At depth 10 that comes out to 2,048 minus 1 = 2,047 turn instructions.
 </Admonition>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_dragon.py" label="4.1.2_dragon.py — minimal alternative implementation" />
 
 ## Core concepts
 
@@ -201,9 +205,9 @@ Three exercises in **Execute → Modify → Create** order: run the depth-10 dra
 
 <Exercise n={1} kicker="EXECUTE" title="Run the dragon">
 
-Download and run `dragon_curve.py`. The full script generates the depth-10 sequence and walks the turtle across an 800×600 canvas.
+Download and run `4.1.2_dragon_curve.py`. The full script generates the depth-10 sequence and walks the turtle across an 800×600 canvas.
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon_curve.py" label="dragon_curve.py — full reference implementation" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_dragon_curve.py" label="4.1.2_dragon_curve.py — full reference implementation" />
 
 **Reflection questions**
 
@@ -225,7 +229,9 @@ Download and run `dragon_curve.py`. The full script generates the depth-10 seque
 
 <Exercise n={2} kicker="MODIFY" title="Sweep depth, colour, and direction">
 
-Edit your copy of `dragon_curve.py` to produce three variants. Only change the marked parameters.
+Edit your copy of `4.1.2_dragon_curve.py` to produce three variants. Only change the marked parameters.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_dragon_curve.py" label="4.1.2_dragon_curve.py — Exercise 1 reference" />
 
 **Goals**
 
@@ -265,7 +271,7 @@ The entire dragon rotates 90° clockwise. Starting direction is a global rotatio
 
 Implement the dragon sequence generator from scratch. The turtle/render code is provided; you fill in the recursion.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="4.1.2_exercise3_starter.py">
 ```python
 def invert_sequence(sequence):
     """Swap all L's and R's."""
@@ -291,6 +297,8 @@ print("All good — depth 3 sequence matches the expected dragon string.")
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_exercise3_starter.py" label="4.1.2_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hint 1 — invert_sequence">
 
 ```python
@@ -310,7 +318,7 @@ A list comprehension that walks the string character by character, swapping each
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="4.1.2_exercise3_solution.py">
 ```python
 def invert_sequence(sequence):
     return ''.join('L' if c == 'R' else 'R' for c in sequence)
@@ -325,6 +333,8 @@ def generate_dragon_sequence(initial_turn, depth):
 assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLRLLL'
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/4.1.2_exercise3_solution.py" label="4.1.2_exercise3_solution.py — Exercise 3 reference" />
 
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/exercise3_expected_output.gif"
@@ -361,12 +371,6 @@ assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLRLLL'
 - **Vector output.** Replace `move_forward` with a Pillow `ImageDraw.line()` call (or SVG output) for a smooth, resolution-independent dragon you can print or laser-cut.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon_curve.py" label="dragon_curve.py — Exercise 1 reference" />
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/exercise3_solution.py" label="exercise3_solution.py — Exercise 3 reference" />
-<Download href="/lesson-media/Module_04_fractals_recursion/4.1_classical_fractals/4.1.2_dragon_curve/dragon.py" label="dragon.py — minimal alternative implementation" />
 
 ## Summary
 

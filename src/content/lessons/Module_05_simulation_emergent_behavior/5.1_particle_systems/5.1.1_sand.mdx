@@ -37,7 +37,7 @@ Watch sand blow across a desert and what looks like one shifting carpet is actua
 
 The minimum viable particle system: 500 grains, eighty frames, exactly one acceleration rule.
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="5.1.1_quick_start.py">
 ```python
 import random
 import numpy as np
@@ -75,6 +75,8 @@ imageio.mimsave('quick_sand.gif', frames, fps=24)
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/5.1.1_quick_start.py" label="5.1.1_quick_start.py — this quick-start script" />
+
 <Figure
   src="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_animation.gif"
   alt="Animated GIF of beige sand grains drifting from left to right against a dark background"
@@ -86,6 +88,8 @@ imageio.mimsave('quick_sand.gif', frames, fps=24)
 <Admonition type="tip">
 The grains start dark and motionless, then turn beige and accelerate as they begin moving. That two-tone trick — colour as a proxy for state — is what makes the wind look like wind and not a uniform translation.
 </Admonition>
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/5.1.1_sand.py" label="5.1.1_sand.py — interactive desktop version: opens a window, press q to stop and save the GIF" />
 
 ## Core concepts
 
@@ -175,9 +179,9 @@ Three exercises in **Execute → Modify → Create** order: run the desert as it
 
 <Exercise n={1} kicker="EXECUTE" title="Run the desert">
 
-Download `sand_simulation.py` and run it. It will print progress and write `sand_animation.gif` to the current folder.
+Download `5.1.1_sand_simulation.py` and run it. It will print progress and write `sand_animation.gif` to the current folder.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation.py" label="sand_simulation.py — complete reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/5.1.1_sand_simulation.py" label="5.1.1_sand_simulation.py — complete reference implementation" />
 
 **Reflection questions**
 
@@ -199,7 +203,9 @@ Download `sand_simulation.py` and run it. It will print progress and write `sand
 
 <Exercise n={2} kicker="MODIFY" title="Retune the wind">
 
-Open your copy of `sand_simulation.py` and change one variable at a time. Re-render the GIF and confirm each modification produces the expected effect.
+Open your copy of `5.1.1_sand_simulation.py` and change one variable at a time. Re-render the GIF and confirm each modification produces the expected effect.
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/5.1.1_sand_simulation.py" label="5.1.1_sand_simulation.py — full reference implementation" />
 
 **Goals**
 
@@ -255,9 +261,9 @@ The desert now reads as Mars — same physics, different palette. Colour is the 
 
 <Exercise n={3} kicker="CREATE" title="Build your own particle effect">
 
-Use `sand_simulation_starter.py` as a base and implement **one** of these three effects from scratch. The engine — the per-frame loop, the rendering, the GIF save — stays the same; you change the `Particle` class and the spawning logic.
+Use `5.1.1_sand_simulation_starter.py` as a base and implement **one** of these three effects from scratch. The engine — the per-frame loop, the rendering, the GIF save — stays the same; you change the `Particle` class and the spawning logic.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation_starter.py" label="sand_simulation_starter.py — starter with TODOs" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/5.1.1_sand_simulation_starter.py" label="5.1.1_sand_simulation_starter.py — starter with TODOs" />
 
 **Choose one**
 
@@ -367,12 +373,6 @@ Spawning all particles at the centre with uniformly-random angles produces a cle
 - Render onto a slowly-darkening background so trails persist for a few frames. Cheap motion-blur for free.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand.py" label="sand.py — interactive desktop version: opens a window, press q to stop and save the GIF" />
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation.py" label="sand_simulation.py — full reference implementation" />
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.1_particle_systems/5.1.1_sand/sand_simulation_starter.py" label="sand_simulation_starter.py — Exercise 3 scaffold" />
 
 ## Summary
 

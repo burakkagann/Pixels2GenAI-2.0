@@ -36,7 +36,7 @@ Mechanically the trick is to keep objects in **polar coordinates** — angle and
 
 ## Quick start — the infinite blossom <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="infinite_blossom.py">
+<CodeBlock lang="python" file="8.2.2_infinite_blossom.py">
 ```python
 import math
 import numpy as np
@@ -90,6 +90,8 @@ frames[0].save('infinite_blossom.gif', save_all=True, append_images=frames[1:],
                duration=50, loop=0, optimize=True)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/8.2.2_infinite_blossom.py" label="8.2.2_infinite_blossom.py — reference implementation" />
 
 Click **Run** on the code above to grow the blossom in your browser (it takes about ten seconds), then compare your result with the expected output.
 
@@ -173,9 +175,9 @@ Three exercises in **Execute → Modify → Create** order: render the loop, swe
 
 <Exercise n={1} kicker="EXECUTE" title="Run the infinite blossom">
 
-Run `infinite_blossom.py`, the quick-start script above. It generates a 180-frame loop with ~50 petals on screen at any moment.
+Run `8.2.2_infinite_blossom.py`, the quick-start script above. It generates a 180-frame loop with ~50 petals on screen at any moment.
 
-<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/infinite_blossom.py" label="infinite_blossom.py — reference implementation" />
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/8.2.2_infinite_blossom.py" label="8.2.2_infinite_blossom.py — reference implementation" />
 
 **Reflection questions**
 
@@ -229,7 +231,7 @@ The reverse animation: petals emerge from the centre and grow outward, exiting t
 
 Extend the system to support multiple object shapes — circles, squares, and the existing triangles — chosen randomly at spawn time.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="8.2.2_exercise3_starter.py">
 ```python
 import math, numpy as np
 from PIL import Image, ImageDraw
@@ -253,6 +255,8 @@ class Particle:
 # and a random colour for each new particle.
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/8.2.2_exercise3_starter.py" label="8.2.2_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — dispatch on shape">
 
@@ -309,10 +313,6 @@ The combined system supports any number of shapes — extend with stars, lines, 
 - **Audio-reactive spawn rate.** Sample a microphone (`pyaudio`) and spawn petals proportional to loudness. The blossom becomes a music visualiser.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.2_infinite_blossom/infinite_blossom.py" label="infinite_blossom.py — reference implementation" />
 
 ## Summary
 

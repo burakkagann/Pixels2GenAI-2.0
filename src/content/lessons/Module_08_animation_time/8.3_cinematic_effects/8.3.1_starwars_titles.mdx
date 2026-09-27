@@ -58,9 +58,9 @@ def prepare_perspective(c=PERSPECTIVE_C):
 ```
 </CodeBlock>
 
-This is the setup step from `starwars.py`, so it has no Run button. Download the full script and its text file, keep them in the same folder, and run `python starwars.py` to render the crawl yourself (Exercise 1 walks through it).
+This is the setup step from `8.3.1_starwars.py`, so it has no Run button. Download the full script and its text file, keep them in the same folder, and run `python 8.3.1_starwars.py` to render the crawl yourself (Exercise 1 walks through it).
 
-<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/starwars.py" label="starwars.py — perspective crawl" />
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/8.3.1_starwars.py" label="8.3.1_starwars.py — perspective crawl" />
 <Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/message.txt" label="message.txt — Zen of Python text" />
 
 <Figure
@@ -137,9 +137,9 @@ Three exercises in **Execute → Modify → Create** order: run the scroll, swee
 
 <Exercise n={1} kicker="EXECUTE" title="Render the perspective crawl">
 
-Run `starwars.py`. The script generates the yellow text bitmap, computes the perspective indices, and renders 120 frames.
+Run `8.3.1_starwars.py`. The script generates the yellow text bitmap, computes the perspective indices, and renders 120 frames.
 
-<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/starwars.py" label="starwars.py — perspective crawl" />
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/8.3.1_starwars.py" label="8.3.1_starwars.py — perspective crawl" />
 <Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/message.txt" label="message.txt — Zen of Python text" />
 
 **Reflection questions**
@@ -169,6 +169,8 @@ Two variants of the crawl.
 1. **Steeper trapezoid.** Reduce `c` from 220 to 80. The trapezoid will be sharper.
 2. **Different text.** Replace `message.txt` with your own paragraph. Try a quote or song lyric. Re-render.
 
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/message.txt" label="message.txt — Zen of Python text" />
+
 <Dropdown summary="Goal 1 — what to expect">
 
 The text disappears very quickly into the vanishing point. Useful for opening crawls that feel more "abyss-like" (sci-fi horror) than the classic Star Wars trapezoid.
@@ -187,7 +189,7 @@ The crawl works with any text. Custom text is the canonical way to use this effe
 
 The starfield is static. Add per-frame brightness variation so individual stars *twinkle* — a tiny detail that adds enormous atmosphere.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="8.3.1_exercise3_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -207,6 +209,8 @@ def make_twinkling_starfield(seed, frame, n_stars=180, xsize=720, ysize=480):
     return field
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/8.3.1_exercise3_starter.py" label="8.3.1_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — fixed positions, varying brightness">
 
@@ -246,11 +250,6 @@ The full solution swaps `make_starfield()` for `make_twinkling_starfield(seed, f
 - **Sound effect.** Play a low brass sting or fanfare alongside the GIF — the audio context dramatically amplifies the perception of recession.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/starwars.py" label="starwars.py — perspective crawl renderer" />
-<Download href="/lesson-media/Module_08_animation_time/8.3_cinematic_effects/8.3.1_starwars_titles/message.txt" label="message.txt — Zen of Python text" />
 
 ## Summary
 

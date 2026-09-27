@@ -66,10 +66,10 @@ cv2.destroyAllWindows()
 />
 
 <Admonition type="tip">
-**No webcam? No problem.** The pipeline works on any `(H, W, 3)` array source. Pass a video filename to `VideoCapture('clip.mp4')`, generate frames synthetically as in `synthetic_webcam.py`, or read from an HTTP stream — the rest of the code doesn't change.
+**No webcam? No problem.** The pipeline works on any `(H, W, 3)` array source. Pass a video filename to `VideoCapture('clip.mp4')`, generate frames synthetically as in `11.1.1_synthetic_webcam.py`, or read from an HTTP stream — the rest of the code doesn't change.
 </Admonition>
 
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — frame source for machines without a webcam" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_synthetic_webcam.py" label="11.1.1_synthetic_webcam.py — frame source for machines without a webcam" />
 
 ## Core concepts
 
@@ -146,10 +146,10 @@ Three exercises in **Execute → Modify → Create** order: run the capture loop
 
 <Exercise n={1} kicker="EXECUTE" title="Run the capture loop">
 
-Run `webcam_capture.py`. Press `s` to save a frame; `q` to quit. If you don't have a webcam, run `synthetic_webcam.py` instead, which simulates the same pipeline on a synthetic scene.
+Run `11.1.1_webcam_capture.py`. Press `s` to save a frame; `q` to quit. If you don't have a webcam, run `11.1.1_synthetic_webcam.py` instead, which simulates the same pipeline on a synthetic scene.
 
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_capture.py" label="webcam_capture.py — minimal OpenCV capture" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — no-camera demo" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_webcam_capture.py" label="11.1.1_webcam_capture.py — minimal OpenCV capture" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_synthetic_webcam.py" label="11.1.1_synthetic_webcam.py — no-camera demo" />
 
 **Reflection questions**
 
@@ -171,7 +171,9 @@ Run `webcam_capture.py`. Press `s` to save a frame; `q` to quit. If you don't ha
 
 <Exercise n={2} kicker="MODIFY" title="Add three filters">
 
-Modify `webcam_effects.py` (or the synthetic version) to apply three real-time effects.
+Modify `11.1.1_webcam_effects.py` (or the synthetic version) to apply three real-time effects.
+
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_webcam_effects.py" label="11.1.1_webcam_effects.py — real-time filters" />
 
 **Goals**
 
@@ -221,9 +223,9 @@ Mirroring is what video-call apps do so the user sees a "right-side-up" reflecti
 
 Implement the frame-differencing motion detector from scratch using the starter template. The current and previous frames are converted to grayscale, blurred, differenced, and thresholded.
 
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_starter.py" label="webcam_starter.py — frame differencing skeleton" />
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_webcam_starter.py" label="11.1.1_webcam_starter.py — frame differencing skeleton" />
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="11.1.1_exercise3_starter.py">
 ```python
 import cv2
 import numpy as np
@@ -252,6 +254,8 @@ cv2.destroyAllWindows()
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_exercise3_starter.py" label="11.1.1_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hints">
 
 ```python
@@ -271,14 +275,9 @@ out[motion > 0] = [0, 255, 0]
 - **Audio trigger.** Sum the motion mask each frame; if it exceeds a threshold, play a sound via `pygame.mixer`. The webcam becomes an "activity-aware" instrument.
 - **Background subtraction.** Replace consecutive-frame differencing with `cv2.createBackgroundSubtractorMOG2()`. Static cameras get vastly more robust motion segmentation.
 
+<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/11.1.1_background_subtraction.py" label="11.1.1_background_subtraction.py — motion detection" />
+
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_capture.py" label="webcam_capture.py — minimal capture loop" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/webcam_effects.py" label="webcam_effects.py — real-time filters" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/background_subtraction.py" label="background_subtraction.py — motion detection" />
-<Download href="/lesson-media/Module_11_interactive_systems/11.1_input_devices/11.1.1_webcam_processing/synthetic_webcam.py" label="synthetic_webcam.py — no-camera demo" />
 
 ## Summary
 

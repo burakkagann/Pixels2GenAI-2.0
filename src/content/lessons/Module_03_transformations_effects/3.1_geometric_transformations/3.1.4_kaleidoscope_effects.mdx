@@ -35,7 +35,7 @@ A kaleidoscope turns one wedge of pattern into a full circle through two mathema
 
 ## Quick start — a 6-fold kaleidoscope <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="simple_kaleidoscope.py">
+<CodeBlock lang="python" file="3.1.4_simple_kaleidoscope.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -72,6 +72,8 @@ out[mask, 0] = r_ch[mask]; out[mask, 1] = g_ch[mask]; out[mask, 2] = b_ch[mask]
 Image.fromarray(out).save('simple_kaleidoscope.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_simple_kaleidoscope.py" label="3.1.4_simple_kaleidoscope.py — 6-fold quick start" />
 
 Click **Run** on the code above to fold the pattern in your browser, then compare your result with the expected output.
 
@@ -152,13 +154,17 @@ A physical kaleidoscope with mirror angle `θ` produces `2π/(2θ)` reflected we
   role="output"
 />
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_kaleidoscope_variations.py" label="3.1.4_kaleidoscope_variations.py — fold-count comparison" />
+
 ## Exercises
 
 Three exercises in **Execute → Modify → Create** order: run the 6-fold quick start, tune fold counts and palette, then assemble a multi-ring mandala.
 
 <Exercise n={1} kicker="EXECUTE" title="Run the 6-fold kaleidoscope">
 
-Run `simple_kaleidoscope.py`, the quick-start script above. The output is the picture in Figure 1.
+Run `3.1.4_simple_kaleidoscope.py`, the quick-start script above. The output is the picture in Figure 1.
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_simple_kaleidoscope.py" label="3.1.4_simple_kaleidoscope.py — 6-fold quick start" />
 
 **Reflection questions**
 
@@ -180,7 +186,9 @@ Run `simple_kaleidoscope.py`, the quick-start script above. The output is the pi
 
 <Exercise n={2} kicker="MODIFY" title="Three kaleidoscope variations">
 
-Edit `simple_kaleidoscope.py` to produce these three pictures.
+Edit `3.1.4_simple_kaleidoscope.py` to produce these three pictures.
+
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_simple_kaleidoscope.py" label="3.1.4_simple_kaleidoscope.py — 6-fold quick start" />
 
 **Goals**
 
@@ -226,7 +234,7 @@ Twelve narrow wedges of 30° each, plus a 100-pixel black border around the disc
 
 Build a mandala from **three concentric rings**, each with a different fold count. Inner ring with the highest fold count, middle with medium, outer with the lowest. Each ring keeps the same wedge-fold-mirror algorithm; the only thing that changes between rings is `num_folds` and the inner/outer `radius` range.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="3.1.4_mandala_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -276,6 +284,8 @@ Image.fromarray(canvas).save('mandala.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_mandala_starter.py" label="3.1.4_mandala_starter.py — Exercise 3 starter" />
+
 <Dropdown summary="Hint 1 — ring specs">
 
 Three contrasting rings, fold count decreasing outward, distinct palettes:
@@ -308,7 +318,7 @@ If you wanted soft edges between rings you would use alpha blending, but the dis
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="3.1.4_mandala_solution.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -357,6 +367,8 @@ Image.fromarray(canvas).save('mandala.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/3.1.4_mandala_solution.py" label="3.1.4_mandala_solution.py — Exercise 3 reference" />
+
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/mandala_pattern.png"
   alt="A multi-ring mandala with a tight twelve-fold centre, a medium six-fold middle ring, and a bolder four-fold outer ring, in pink-blue-coral palette"
@@ -380,13 +392,6 @@ Image.fromarray(canvas).save('mandala.png')
 - Pipe the kaleidoscope through the swirl distortion from 3.1.3 for a folded, twirling pattern.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/simple_kaleidoscope.py" label="simple_kaleidoscope.py — 6-fold quick start" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/kaleidoscope_variations.py" label="kaleidoscope_variations.py — fold-count comparison" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/mandala_starter.py" label="mandala_starter.py — Exercise 3 starter" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.1_geometric_transformations/3.1.4_kaleidoscope_effects/mandala_solution.py" label="mandala_solution.py — Exercise 3 reference" />
 
 ## Summary
 

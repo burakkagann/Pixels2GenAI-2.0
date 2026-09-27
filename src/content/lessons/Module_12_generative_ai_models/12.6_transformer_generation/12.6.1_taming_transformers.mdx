@@ -41,12 +41,12 @@ This architectural template — discrete tokeniser + autoregressive transformer 
 
 A minimal GPT-style transformer that learns to predict the next integer in a 49-long sequence (a 7×7 token grid). For this demo the training data is *synthetic* random integers; in a real setup the training sequences come from running a trained VQ-VAE/VQ-GAN encoder over an image dataset.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/transformer_image_demo.py" label="transformer_image_demo.py — minimal autoregressive transformer" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/12.6.1_transformer_image_demo.py" label="12.6.1_transformer_image_demo.py — minimal autoregressive transformer" />
 
 <CodeBlock lang="bash">
 ```bash
 pip install torch
-python transformer_image_demo.py
+python 12.6.1_transformer_image_demo.py
 ```
 </CodeBlock>
 
@@ -128,11 +128,11 @@ Sampling temperature is one of the most under-tuned parameters in this architect
 
 <Exercise n={1} kicker="EXECUTE" title="Train the demo transformer on synthetic sequences and sample">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/transformer_image_demo.py" label="transformer_image_demo.py — 5-epoch demo" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/12.6.1_transformer_image_demo.py" label="12.6.1_transformer_image_demo.py — 5-epoch demo" />
 
 <CodeBlock lang="bash">
 ```bash
-python transformer_image_demo.py
+python 12.6.1_transformer_image_demo.py
 ```
 </CodeBlock>
 
@@ -161,7 +161,9 @@ Output: per-epoch cross-entropy loss (will stay near `ln(64) ≈ 4.16` because t
 
 <Exercise n={2} kicker="MODIFY" title="Sampling temperature and model size">
 
-Open `transformer_image_demo.py` and try each change.
+Open `12.6.1_transformer_image_demo.py` and try each change.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/12.6.1_transformer_image_demo.py" label="12.6.1_transformer_image_demo.py — used in this exercise" />
 
 **Goal 1 — Sampling temperature.** In `generate()`, try `temperature ∈ {0.5, 1.0, 1.5}`. With the synthetic-data setup you won't see qualitative differences in the sampled integers (they were random anyway), but you'll see the relative entropy of the sampled distributions change measurably.
 
@@ -187,7 +189,7 @@ Per-epoch training time scales roughly as `O(seq_len²)` because each attention 
 
 Re-implement `CausalSelfAttention` without using `nn.MultiheadAttention`, using just `nn.Linear` projections and softmax. This is the canonical "build a transformer from scratch" exercise.
 
-<CodeBlock lang="python" file="causal_attention_starter.py">
+<CodeBlock lang="python" file="12.6.1_causal_attention_starter.py">
 ```python
 import math
 import torch
@@ -217,6 +219,8 @@ class CausalSelfAttention(nn.Module):
         pass
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.1_taming_transformers/12.6.1_causal_attention_starter.py" label="12.6.1_causal_attention_starter.py — this starter" />
 
 <Dropdown summary="Complete solution">
 

@@ -36,7 +36,7 @@ The technique is the cousin of every "logo reveal" animation in motion graphics,
 
 ## Quick start — a 16×16 flower assembly <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="8.2.1_quick_start.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -71,6 +71,8 @@ frames[0].save('flower_assembly.gif', save_all=True,
                append_images=frames[1:], duration=50, loop=0)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/8.2.1_quick_start.py" label="8.2.1_quick_start.py — this quick-start script" />
 
 Running it on your own machine? Download the input image and keep it in the same folder as the script.
 
@@ -137,9 +139,9 @@ Three exercises in **Execute → Modify → Create** order: render the default a
 
 <Exercise n={1} kicker="EXECUTE" title="Run the flower assembly">
 
-Run `flower_assembly.py`. The script generates a synthetic flower if no `flower.png` is found, then renders the 60-frame assembly.
+Run `8.2.1_flower_assembly.py`. The script generates a synthetic flower if no `flower.png` is found, then renders the 60-frame assembly.
 
-<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower_assembly.py" label="flower_assembly.py — full reference implementation" />
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/8.2.1_flower_assembly.py" label="8.2.1_flower_assembly.py — full reference implementation" />
 
 **Reflection questions**
 
@@ -193,7 +195,7 @@ The motion looks slower but the curve shape is unchanged. As with easings (8.1.2
 
 Each tile currently arrives flat. Add a rotation that starts at a random angle and rotates to 0° as the tile arrives. Use PIL's `Image.rotate` per tile.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="8.2.1_exercise3_starter.py">
 ```python
 # inside the frame loop, after computing progress and offsets:
 for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
@@ -212,6 +214,8 @@ for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
     # TODO 3: rotate the tile and paste into the canvas (canvas is now a PIL image)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/8.2.1_exercise3_starter.py" label="8.2.1_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — pre-compute random rotations">
 
@@ -253,11 +257,6 @@ Combining the above produces a "tile-twirl" assembly: each tile starts off-canva
 - **Wipe scatter.** Replace random angles with `angles[i] = π` (all left) and a cosine-of-row scatter — the assembly becomes a sliding curtain that pulls the image into focus from one side.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower_assembly.py" label="flower_assembly.py — full reference" />
-<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/flower.png" label="flower.png — synthetic input" />
 
 ## Summary
 

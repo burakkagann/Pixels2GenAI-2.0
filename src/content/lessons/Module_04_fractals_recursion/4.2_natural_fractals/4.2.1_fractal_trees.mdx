@@ -37,7 +37,7 @@ This lesson is the natural sibling of 4.1.5. The Sierpinski triangle was an iter
 
 ## Quick start — a single tree <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="4.2.1_quick_start.py">
 ```python
 import math
 from PIL import Image, ImageDraw
@@ -58,6 +58,8 @@ draw_branch(ImageDraw.Draw(img), 256, 462, 120, 0, 8)
 img.save('fractal_tree.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/4.2.1_quick_start.py" label="4.2.1_quick_start.py — this quick-start script" />
 
 Click **Run** on the code above to grow the fractal tree in your browser, then compare your result with the expected output.
 
@@ -166,9 +168,9 @@ Three exercises in **Execute → Modify → Create** order: run the default tree
 
 <Exercise n={1} kicker="EXECUTE" title="Run the default tree">
 
-Run `fractal_tree.py` and examine the output. The script renders the depth-8, 25°, 0.7-ratio tree above.
+Run `4.2.1_fractal_tree.py` and examine the output. The script renders the depth-8, 25°, 0.7-ratio tree above.
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree.py" label="fractal_tree.py — reference implementation" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/4.2.1_fractal_tree.py" label="4.2.1_fractal_tree.py — reference implementation" />
 
 **Reflection questions**
 
@@ -193,7 +195,9 @@ Run `fractal_tree.py` and examine the output. The script renders the depth-8, 25
 
 <Exercise n={2} kicker="MODIFY" title="Sweep parameters to make four trees">
 
-Edit `fractal_tree.py` to produce four named tree styles. Only `branch_angle`, `length_ratio`, `depth`, and `start_angle` should change.
+Edit `4.2.1_fractal_tree.py` to produce four named tree styles. Only `branch_angle`, `length_ratio`, `depth`, and `start_angle` should change.
+
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/4.2.1_fractal_tree.py" label="4.2.1_fractal_tree.py — deterministic reference" />
 
 **Goals**
 
@@ -232,7 +236,7 @@ A lopsided, spiralling tree. The left children always rotate by a small angle an
 
 Convert the deterministic tree into a stochastic one by jittering each recursion's angle and length ratio. Start from the deterministic version in the starter, then complete the TODOs.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="4.2.1_fractal_tree_starter.py">
 ```python
 import math
 import random
@@ -265,7 +269,7 @@ img.save('natural_tree.png')
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_starter.py" label="fractal_tree_starter.py — deterministic skeleton" />
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/4.2.1_fractal_tree_starter.py" label="4.2.1_fractal_tree_starter.py — Exercise 3 skeleton" />
 
 <Dropdown summary="Hint 1 — jitter the angle">
 
@@ -300,7 +304,7 @@ Insert this **before** drawing. 10% of branches are skipped, producing the chara
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="4.2.1_exercise3_solution.py">
 ```python
 import math, random
 from PIL import Image, ImageDraw
@@ -331,6 +335,8 @@ img.save('natural_tree.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/4.2.1_exercise3_solution.py" label="4.2.1_exercise3_solution.py — this solution" />
+
 <Figure
   src="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/natural_tree.png"
   alt="A fractal tree with irregular, organic branches — small asymmetries and gaps make it look like a real tree rather than a symmetric mathematical drawing"
@@ -348,11 +354,6 @@ img.save('natural_tree.png')
 - **Forest.** Run the tree 10 times at different `start_x` positions with different random seeds. Vary `length_ratio` and `branch_angle` per tree. Stack them at different starting `y` values for a depth-of-field forest.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree.py" label="fractal_tree.py — deterministic reference" />
-<Download href="/lesson-media/Module_04_fractals_recursion/4.2_natural_fractals/4.2.1_fractal_trees/fractal_tree_starter.py" label="fractal_tree_starter.py — Exercise 3 skeleton" />
 
 ## Summary
 

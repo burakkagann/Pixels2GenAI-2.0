@@ -163,13 +163,13 @@ The integer-vs-float-time difference between DDPM and Flow Matching catches peop
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-flow-matching-weights/flow_matching_fabrics_latest.pt" label="flow_matching_fabrics_latest.pt — pre-trained 54 MB checkpoint" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/flow_model.py" label="flow_model.py — SimpleFlowUNet architecture" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/exercise1_generate.py" label="exercise1_generate.py — 50-step Euler sampler" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/12.7.1_exercise1_generate.py" label="12.7.1_exercise1_generate.py — 50-step Euler sampler" />
 
 Place the `.pt` next to `flow_model.py`, then run the generator:
 
 <CodeBlock lang="bash">
 ```bash
-python exercise1_generate.py
+python 12.7.1_exercise1_generate.py
 ```
 </CodeBlock>
 
@@ -198,11 +198,11 @@ You should see `exercise1_output.png` — a 4×4 grid like Figure 1. Generation 
 
 <Exercise n={2} kicker="MODIFY" title="Three explorations: step count, trajectory visualisation, velocity field">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/exercise2_explore.py" label="exercise2_explore.py — three explorations in one script" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/12.7.1_exercise2_explore.py" label="12.7.1_exercise2_explore.py — three explorations in one script" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise2_explore.py
+python 12.7.1_exercise2_explore.py
 ```
 </CodeBlock>
 
@@ -244,7 +244,7 @@ Velocity magnitude is highest at early `t` and decreases monotonically. This is 
 
 <Exercise n={3} kicker="CREATE" title="Train Flow Matching from scratch (4-8 hours GPU)">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/exercise3_train.py" label="exercise3_train.py — full training script (100k steps, ~1.7h on RTX 5070Ti)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.7_modern_frontiers/12.7.1_flow_matching/12.7.1_exercise3_train.py" label="12.7.1_exercise3_train.py — full training script (100k steps, ~1.7h on RTX 5070Ti)" />
 
 This exercise reproduces the checkpoint behind the previous two. Configuration:
 
@@ -262,8 +262,8 @@ The training run is genuinely long but unattended — start it, leave it, come b
 
 <CodeBlock lang="bash">
 ```bash
-python exercise3_train.py --verify    # confirms 1,059 images found
-python exercise3_train.py --train     # starts the 100k-step run
+python 12.7.1_exercise3_train.py --verify    # confirms 1,059 images found
+python 12.7.1_exercise3_train.py --train     # starts the 100k-step run
 ```
 </CodeBlock>
 
@@ -278,7 +278,7 @@ python exercise3_train.py --train     # starts the 100k-step run
 
 **"Model file not found"** — the trained `.pt` doesn't exist. Either run training first or use the GitHub Release checkpoint.
 
-**"Dataset not found"** — the African fabric images are missing. Complete the dataset prep from Lesson 12.1.2 first, or update the path in `exercise3_train.py`.
+**"Dataset not found"** — the African fabric images are missing. Complete the dataset prep from Lesson 12.1.2 first, or update the path in `12.7.1_exercise3_train.py`.
 
 **Training too slow** — almost always CPU rather than GPU. `python -c "import torch; print(torch.cuda.is_available())"` should print `True`.
 

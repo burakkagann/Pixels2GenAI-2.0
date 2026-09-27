@@ -35,7 +35,7 @@ In 2.1.3 you drew a circle by *thresholding* a distance — `square_distance < r
 
 ## Quick start — a distance field from one centre <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="2.2.4_quick_start.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -54,6 +54,8 @@ normalized = (distance_field / distance_field.max() * 255).astype(np.uint8)
 Image.fromarray(normalized, mode='L').save('simple_distance_field.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_quick_start.py" label="2.2.4_quick_start.py — this quick-start script" />
 
 Click **Run** on the code above to render the distance field in your browser, then compare your result with the expected output.
 
@@ -165,6 +167,8 @@ subtraction  = np.maximum(circle1, -circle2)
   role="output"
 />
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_sdf_shapes.py" label="2.2.4_sdf_shapes.py — circle/rect/union/intersection" />
+
 The rectangle SDF is the same idea applied per axis: `np.maximum(np.abs(x) - half_w, np.abs(y) - half_h)`. The maximum of the two axis-aligned signed distances is itself a valid SDF, with the corner subtleties handled by the absolute value [2].
 
 ## Exercises
@@ -173,9 +177,11 @@ Three exercises in **Execute → Modify → Create** order: visualise a distance
 
 <Exercise n={1} kicker="EXECUTE" title="Run the distance field">
 
-Run `simple_distance_field.py` and inspect the output.
+Run `2.2.4_simple_distance_field.py` and inspect the output.
 
-<CodeBlock lang="python" file="exercise1_execute.py">
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_simple_distance_field.py" label="2.2.4_simple_distance_field.py — quick start" />
+
+<CodeBlock lang="python" file="2.2.4_exercise1_execute.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -193,6 +199,8 @@ print(f"Min distance: {distance_field.min():.1f}")
 print(f"Max distance: {distance_field.max():.1f}")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_exercise1_execute.py" label="2.2.4_exercise1_execute.py — this script" />
 
 **Reflection questions**
 
@@ -258,7 +266,7 @@ Brightest at the centre, darkest at the corners. Equivalent to mapping `1 - norm
 
 Build a composition with at least two SDFs and one boolean operation. Suggestion: a **ring** (outer circle minus inner circle) crossed by a **vertical bar** (a tall rectangle SDF), unioned together.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="2.2.4_exercise3_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -292,6 +300,8 @@ y = Y - CENTER
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_exercise3_starter.py" label="2.2.4_exercise3_starter.py — this starter" />
+
 <Dropdown summary="Hint 1 — building shape primitives">
 
 ```python
@@ -320,7 +330,7 @@ ring = np.maximum(outer_sdf, -inner_sdf)
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="2.2.4_sdf_combination_solution.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -346,6 +356,8 @@ Image.fromarray(normalized, mode='L').save('sdf_combination.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/2.2.4_sdf_combination_solution.py" label="2.2.4_sdf_combination_solution.py — Exercise 3 reference" />
+
 <Figure
   src="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/sdf_combination_solution.png"
   alt="A signed distance field visualisation showing a ring (annulus) unioned with a vertical bar, rendered as a smooth gray gradient"
@@ -370,12 +382,6 @@ Image.fromarray(normalized, mode='L').save('sdf_combination.png')
 - **Voronoi-style.** Take the minimum across multiple point SDFs: `np.minimum.reduce([sdf1, sdf2, sdf3])`. Each pixel's value is its distance to the *nearest* of several centres.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/simple_distance_field.py" label="simple_distance_field.py — quick start" />
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/sdf_shapes.py" label="sdf_shapes.py — circle/rect/union/intersection" />
-<Download href="/lesson-media/Module_02_geometry_mathematics/2.2_coordinate_systems_fields/2.2.4_distance_fields/sdf_combination_solution.py" label="sdf_combination_solution.py — Exercise 3 reference" />
 
 ## Summary
 

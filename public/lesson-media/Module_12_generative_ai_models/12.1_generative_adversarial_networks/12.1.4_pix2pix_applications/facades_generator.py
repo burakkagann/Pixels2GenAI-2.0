@@ -207,7 +207,7 @@ if __name__ == '__main__':
         generator = create_facades_generator(str(weights_path))
     else:
         print("Pre-trained weights not found.")
-        print("Run 'python download_pretrained.py' to download.")
+        print("Run 'python 12.1.4_download_pretrained.py' to download.")
 
     print()
     print("Architecture test passed!")

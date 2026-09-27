@@ -52,7 +52,7 @@ The pre-trained checkpoint is hosted on a GitHub Release. Place it under `models
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/stylegan-checkpoint/model_99.pt" label="model_99.pt — pre-trained StyleGAN2 checkpoint (~189 MB, GitHub Release)" />
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.1.3_quick_start.py">
 ```python
 from stylegan2_pytorch import ModelLoader
 import torch
@@ -69,6 +69,8 @@ for i, img in enumerate(images):
     img.save(f'fabric_{i}.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/12.1.3_quick_start.py" label="12.1.3_quick_start.py — this quick-start script" />
 
 Four random vectors → four distinct fabric patterns. The `trunc_psi=0.7` argument is the truncation trick at default strength; we'll unpack what it does in Concept 4.
 
@@ -192,14 +194,14 @@ Truncation only changes what's *sampled*, not what's *generated*. The decoder we
 <Exercise n={1} kicker="EXECUTE" title="Generate 16 fabric patterns and compare two random seeds">
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/stylegan-checkpoint/model_99.pt" label="model_99.pt — pre-trained StyleGAN2 checkpoint (189 MB)" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise1_generate.py" label="exercise1_generate.py — generates 4x4 grid at one seed" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/12.1.3_exercise1_generate.py" label="12.1.3_exercise1_generate.py — generates 4x4 grid at one seed" />
 
 Drop the checkpoint into `models/african_fabrics/model_99.pt`, then:
 
 <CodeBlock lang="bash">
 ```bash
 pip install stylegan2-pytorch torch torchvision
-python exercise1_generate.py
+python 12.1.3_exercise1_generate.py
 ```
 </CodeBlock>
 
@@ -233,11 +235,11 @@ This produces `generated_fabrics_seed42.png` — a 4×4 grid of patterns sampled
 
 <Exercise n={2} kicker="MODIFY" title="Truncation sweep and morphing animation">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise2_explore.py" label="exercise2_explore.py — truncation comparison + morphing animation" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/12.1.3_exercise2_explore.py" label="12.1.3_exercise2_explore.py — truncation comparison + morphing animation" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise2_explore.py
+python 12.1.3_exercise2_explore.py
 ```
 </CodeBlock>
 
@@ -285,15 +287,15 @@ Very distant seeds (e.g. 1 and 999999) sometimes produce morphs that pass throug
 
 Two options. Most learners should use Option A unless they specifically want to live through a long training run.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise3_generate.py" label="exercise3_generate.py — generate with pre-trained checkpoint" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/exercise3_train.py" label="exercise3_train.py — train from scratch (10-12 hours on GPU)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/12.1.3_exercise3_generate.py" label="12.1.3_exercise3_generate.py — generate with pre-trained checkpoint" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.1_generative_adversarial_networks/12.1.3_stylegan_exploration/12.1.3_exercise3_train.py" label="12.1.3_exercise3_train.py — train from scratch (10-12 hours on GPU)" />
 
 <Dropdown summary="Option A — Generate from pre-trained checkpoint (recommended)">
 
 Same checkpoint as the Quick Start. The script produces a 4×4 grid of generated patterns plus an interpolation animation between two patterns.
 
 ```bash
-python exercise3_generate.py
+python 12.1.3_exercise3_generate.py
 ```
 
 Saves `generated_fabrics.png` and `fabric_interpolation.png`.
@@ -313,7 +315,7 @@ Uses the lucidrains stylegan2-pytorch [8] implementation. Configuration:
 | Estimated time | 10–12 hours on RTX 3070/4070 class |
 
 ```bash
-python exercise3_train.py
+python 12.1.3_exercise3_train.py
 ```
 
 What you should observe across training:
@@ -330,7 +332,7 @@ The 100 epoch checkpoints accumulate to ~18 GB of disk. Plan accordingly.
 
 After getting either option working, explore:
 
-**Truncation variations.** Change `TRUNCATION` in `exercise3_generate.py`:
+**Truncation variations.** Change `TRUNCATION` in `12.1.3_exercise3_generate.py`:
 ```python
 TRUNCATION = 1.0     # max diversity
 TRUNCATION = 0.7     # balanced (default)

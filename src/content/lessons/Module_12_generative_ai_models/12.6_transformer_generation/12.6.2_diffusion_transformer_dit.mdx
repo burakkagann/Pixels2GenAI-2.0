@@ -39,12 +39,12 @@ The architectural innovation that makes DiT work is **adaptive layer norm** (ada
 
 The full demo defines `TinyDiT` — a 4-layer DiT with 256-dim embeddings, ~3.2M parameters — and runs one forward pass on a synthetic 32×32 noisy image. No training; this is a structural walkthrough.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/dit_block_demo.py" label="dit_block_demo.py — minimal DiT architecture demo" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/12.6.2_dit_block_demo.py" label="12.6.2_dit_block_demo.py — minimal DiT architecture demo" />
 
 <CodeBlock lang="bash">
 ```bash
 pip install torch
-python dit_block_demo.py
+python 12.6.2_dit_block_demo.py
 ```
 </CodeBlock>
 
@@ -140,11 +140,11 @@ The choice of patch size matters enormously. Smaller patches (`2×2`) give the m
 
 <Exercise n={1} kicker="EXECUTE" title="Forward-run TinyDiT and verify the patch pipeline">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/dit_block_demo.py" label="dit_block_demo.py — TinyDiT with adaLN" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/12.6.2_dit_block_demo.py" label="12.6.2_dit_block_demo.py — TinyDiT with adaLN" />
 
 <CodeBlock lang="bash">
 ```bash
-python dit_block_demo.py
+python 12.6.2_dit_block_demo.py
 ```
 </CodeBlock>
 
@@ -173,7 +173,9 @@ Output: parameter count (~3.2M) and shape verification. Input is `(4, 3, 32, 32)
 
 <Exercise n={2} kicker="MODIFY" title="Patch size, depth, head count">
 
-Edit constants at the top of `dit_block_demo.py` and re-run.
+Edit constants at the top of `12.6.2_dit_block_demo.py` and re-run.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/12.6.2_dit_block_demo.py" label="12.6.2_dit_block_demo.py — used in this exercise" />
 
 **Goal 1 — Patch size.** Try `PATCH_SIZE ∈ {2, 4, 8}`. Smaller patches give more tokens (`32 / 2 = 16` per side → 256 tokens; `32 / 8 = 4` per side → 16 tokens), trading detail for compute.
 
@@ -199,7 +201,7 @@ The number of heads affects the model's capacity to attend to different aspects 
 
 The `AdaLNModulation` module is the structural innovation of DiT. Implement it yourself:
 
-<CodeBlock lang="python" file="modulation_starter.py">
+<CodeBlock lang="python" file="12.6.2_modulation_starter.py">
 ```python
 import torch
 import torch.nn as nn
@@ -236,6 +238,8 @@ if __name__ == "__main__":
     print("AdaLNModulation test passed")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.6_transformer_generation/12.6.2_diffusion_transformer_dit/12.6.2_modulation_starter.py" label="12.6.2_modulation_starter.py — this starter" />
 
 <Dropdown summary="Hint — the chunk operation">
 After projecting `c` from `TIME_EMBED_DIM` to `6 * EMBED_DIM`, use `out.chunk(6, dim=-1)` to split the last dimension into 6 equal-sized tensors. This is the cleanest way to produce shift/scale/gate for both attention and MLP from a single linear projection.

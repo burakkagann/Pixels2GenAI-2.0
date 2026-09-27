@@ -116,7 +116,9 @@ Glorot's 2010 initialisation worked well for sigmoid/tanh networks. He's 2015 mo
 
 <Exercise n={1} kicker="EXECUTE" title="Train on the spiral dataset">
 
-Run `feedforward_network.py` from the downloads. It generates two interlocked spirals, trains a 2-8-8-1 MLP for 3000 epochs, and saves the decision-boundary plot.
+Run `9.2.1_feedforward_network.py` from the downloads. It generates two interlocked spirals, trains a 2-8-8-1 MLP for 3000 epochs, and saves the decision-boundary plot.
+
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/9.2.1_feedforward_network.py" label="9.2.1_feedforward_network.py — train + visualise" />
 
 **Reflection questions**
 
@@ -162,6 +164,8 @@ All three reach low loss given enough epochs, but with different training charac
 
 Generate a sequence of decision-boundary images at epochs 0, 100, 300, 1000, 3000, and assemble into a GIF showing the network's learning trajectory.
 
+<Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/9.2.1_feedforward_starter.py" label="9.2.1_feedforward_starter.py — Exercise starter" />
+
 <Figure
   src="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/decision_boundary_evolution.gif"
   alt="An animation showing the decision boundary of a feedforward network evolving over training: initially flat and useless, then gradually curving and refining until it cleanly separates the two spirals."
@@ -188,11 +192,6 @@ The fun of this exercise is *watching* the boundary morph. Networks don't go dir
 </Dropdown>
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/feedforward_network.py" label="feedforward_network.py — train + visualise" />
-<Download href="/lesson-media/Module_09_intro_neural_networks/9.2_network_architectures/9.2.1_feedforward_networks/feedforward_starter.py" label="feedforward_starter.py — Exercise starter" />
 
 ## References
 

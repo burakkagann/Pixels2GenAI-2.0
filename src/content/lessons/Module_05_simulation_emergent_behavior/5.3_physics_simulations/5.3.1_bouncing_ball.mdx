@@ -37,7 +37,7 @@ A bouncing ball is the smallest non-trivial physics simulation. It has one movin
 
 Three lines do the physics: two of integration, then one collision check. This version bounces off the floor only; the other three walls are yours to add in Exercise 3.
 
-<CodeBlock lang="python" file="bounce.py">
+<CodeBlock lang="python" file="5.3.1_bounce.py">
 ```python
 import numpy as np
 from PIL import Image, ImageDraw
@@ -74,6 +74,8 @@ for _ in range(200):
 imageio.mimsave('bounce.gif', frames, fps=30)
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/5.3.1_bounce.py" label="5.3.1_bounce.py — this quick-start script" />
 
 Click **Run** on the code above to drop the ball in your browser, then compare your result with the expected output.
 
@@ -162,9 +164,9 @@ Three exercises in **Execute → Modify → Create** order.
 
 <Exercise n={1} kicker="EXECUTE" title="Run the bouncer">
 
-Download `bouncing_ball.py` and run it. It writes `bouncing_ball.gif` and a still frame.
+Download `5.3.1_bouncing_ball.py` and run it. It writes `bouncing_ball.gif` and a still frame.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball.py" label="bouncing_ball.py — complete reference implementation" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/5.3.1_bouncing_ball.py" label="5.3.1_bouncing_ball.py — complete reference implementation" />
 
 <Dropdown summary="Expected output">
 
@@ -233,9 +235,9 @@ Lunar arcs. The ball rises high and floats sideways for a long time before comin
 
 <Exercise n={3} kicker="CREATE" title="Implement the physics from scratch">
 
-Use `bouncing_ball_starter.py`. The render loop is wired up. Three TODOs inside `Ball.step()` ask for gravity, integration, and the four wall collisions.
+Use `5.3.1_bouncing_ball_starter.py`. The render loop is wired up. Three TODOs inside `Ball.step()` ask for gravity, integration, and the four wall collisions.
 
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball_starter.py" label="bouncing_ball_starter.py — Exercise 3 scaffold" />
+<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/5.3.1_bouncing_ball_starter.py" label="5.3.1_bouncing_ball_starter.py — Exercise 3 scaffold" />
 
 **Implement**
 
@@ -273,11 +275,6 @@ The `elif` keeps both x-walls from triggering on a single frame; same for y.
 - **Drag in air**: `self.vx *= 0.998` and `self.vy *= 0.998` each frame. The ball slowly stops without any wall-bounce energy loss.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball.py" label="bouncing_ball.py — full reference implementation" />
-<Download href="/lesson-media/Module_05_simulation_emergent_behavior/5.3_physics_simulations/5.3.1_bouncing_ball/bouncing_ball_starter.py" label="bouncing_ball_starter.py — Exercise 3 scaffold" />
 
 ## Summary
 

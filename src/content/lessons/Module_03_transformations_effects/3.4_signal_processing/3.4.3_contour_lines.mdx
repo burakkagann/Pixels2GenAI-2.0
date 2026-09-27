@@ -35,7 +35,7 @@ A **contour map** turns a continuous 2D scalar field into a readable picture. To
 
 ## Quick start — one Gaussian hill <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="simple_contour.py">
+<CodeBlock lang="python" file="3.4.3_simple_contour.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -58,7 +58,7 @@ Image.fromarray(contour, 'L').save('simple_contour.png')
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/simple_contour.py" label="simple_contour.py — this quick-start script" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/3.4.3_simple_contour.py" label="3.4.3_simple_contour.py — this quick-start script" />
 
 Click **Run** on the code above to generate the contour rings in your browser, then compare your result with the expected output.
 
@@ -147,9 +147,9 @@ Three exercises in **Execute → Modify → Create** order: render both styles, 
 
 <Exercise n={1} kicker="EXECUTE" title="Render both styles">
 
-Run `contour.py` below. It builds a three-hill terrain (sum of three Gaussians) and saves both stepped contours and isolines as separate PNGs.
+Run `3.4.3_contour.py` below. It builds a three-hill terrain (sum of three Gaussians) and saves both stepped contours and isolines as separate PNGs.
 
-<CodeBlock lang="python" file="contour.py">
+<CodeBlock lang="python" file="3.4.3_contour.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -203,7 +203,7 @@ print("  - contour_isolines.png: Thin lines (like topographic map contours)")
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour.py" label="contour.py — this script, to run and edit on your machine" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/3.4.3_contour.py" label="3.4.3_contour.py — this script, to run and edit on your machine" />
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_steps.png"
@@ -241,9 +241,9 @@ print("  - contour_isolines.png: Thin lines (like topographic map contours)")
 
 <Exercise n={2} kicker="MODIFY" title="Three contour edits">
 
-Edit `contour.py` for each goal.
+Edit `3.4.3_contour.py` for each goal.
 
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour.py" label="contour.py — the Exercise 1 script you edit here" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/3.4.3_contour.py" label="3.4.3_contour.py — the Exercise 1 script you edit here" />
 
 **Goals**
 
@@ -287,7 +287,7 @@ Twice as many isolines. The picture reads as a denser topographic map.
 
 Build a terrain by summing **15 random Gaussian hills** with varied positions, amplitudes, and widths. Render both styles.
 
-<CodeBlock lang="python" file="contour_starter.py">
+<CodeBlock lang="python" file="3.4.3_contour_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -314,7 +314,7 @@ Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_starter.py" label="contour_starter.py — this starter" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/3.4.3_contour_starter.py" label="3.4.3_contour_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — sum random hills">
 
@@ -345,7 +345,7 @@ Both rendered styles take the same `znorm`; only the visualisation step differs.
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="contour_solution.py">
+<CodeBlock lang="python" file="3.4.3_contour_solution.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -375,7 +375,7 @@ Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_solution.py" label="contour_solution.py — this solution" />
+<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/3.4.3_contour_solution.py" label="3.4.3_contour_solution.py — this solution" />
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/random_terrain.png"
@@ -408,13 +408,6 @@ Image.fromarray(isolines, 'L').save('random_terrain_isolines.png')
 - Animate the field over time — make the hill amplitudes a function of `sin(2π·t/T)` and save a GIF. The contours pulse like a slow-motion lava lamp.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/simple_contour.py" label="simple_contour.py — quick-start single hill" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour.py" label="contour.py — three-hill stepped + isolines" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_starter.py" label="contour_starter.py — Exercise 3 starter" />
-<Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.3_contour_lines/contour_solution.py" label="contour_solution.py — Exercise 3 reference" />
 
 ## Summary
 

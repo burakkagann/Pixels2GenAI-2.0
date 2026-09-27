@@ -49,7 +49,7 @@ This lesson trains a CVAE on the MNIST handwritten-digit dataset [2] — the can
 
 Forty lines: encoder + decoder + a `generate(label)` method. The full training script in Exercise 1 wraps an MNIST DataLoader and an optimiser around the same class.
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.2.3_quick_start.py">
 ```python
 import torch
 import torch.nn as nn
@@ -91,6 +91,8 @@ m = CVAE()
 print(f"Generated a '7': shape {m.generate([7]).shape}")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.3_conditional_vaes/12.2.3_quick_start.py" label="12.2.3_quick_start.py — this quick-start script" />
 
 Run it with random (untrained) weights and you get noise — the architecture is there but the model knows nothing yet.
 
@@ -192,13 +194,13 @@ The CVAE only works if the encoder *uses* the label channel. The failure mode wh
 
 <Exercise n={1} kicker="EXECUTE" title="Train the CVAE on MNIST and inspect every visualisation">
 
-`conditional_vae.py` is the complete pipeline: download MNIST (~11 MB, automatic via torchvision), train for 50 epochs (~5 min CPU, ~2 min GPU), and produce four PNGs covering training history, generated samples, conditional generation, and a latent-space scatter.
+`12.2.3_conditional_vae.py` is the complete pipeline: download MNIST (~11 MB, automatic via torchvision), train for 50 epochs (~5 min CPU, ~2 min GPU), and produce four PNGs covering training history, generated samples, conditional generation, and a latent-space scatter.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.3_conditional_vaes/conditional_vae.py" label="conditional_vae.py — full training pipeline" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.3_conditional_vaes/12.2.3_conditional_vae.py" label="12.2.3_conditional_vae.py — full training pipeline" />
 
 <CodeBlock lang="bash">
 ```bash
-python conditional_vae.py
+python 12.2.3_conditional_vae.py
 ```
 </CodeBlock>
 
@@ -241,7 +243,9 @@ python conditional_vae.py
 
 <Exercise n={2} kicker="MODIFY" title="Three knobs: latent dim, label leakage, longer training">
 
-Modify `conditional_vae.py` one knob at a time and rerun. Save the PNG outputs between runs to compare.
+Modify `12.2.3_conditional_vae.py` one knob at a time and rerun. Save the PNG outputs between runs to compare.
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.3_conditional_vaes/12.2.3_conditional_vae.py" label="12.2.3_conditional_vae.py — used in this exercise" />
 
 **Goal 1 — Latent dimension.** Change `LATENT_DIM`:
 
@@ -277,7 +281,7 @@ Reconstruction loss continues to slowly decrease past epoch 50 but visibly plate
 
 The starter has the layer skeleton; you fill in the dimensions and the three core methods.
 
-<CodeBlock lang="python" file="cvae_starter.py">
+<CodeBlock lang="python" file="12.2.3_cvae_starter.py">
 ```python
 import torch
 import torch.nn as nn
@@ -321,6 +325,8 @@ def cvae_loss(recon, x, mu, logvar):
     pass
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.2_variational_autoencoders/12.2.3_conditional_vaes/12.2.3_cvae_starter.py" label="12.2.3_cvae_starter.py — this starter" />
 
 <Dropdown summary="Hint — layer dimensions">
 Encoder input: image flat-vector (784) plus one-hot label (10) → `nn.Linear(794, 256)`. Decoder input: latent vector (`latent_dim`) plus one-hot label (10) → `nn.Linear(latent_dim + 10, 128)`.

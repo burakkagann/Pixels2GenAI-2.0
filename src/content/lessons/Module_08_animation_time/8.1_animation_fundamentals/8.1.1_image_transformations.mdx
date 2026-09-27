@@ -36,7 +36,7 @@ This lesson is the toolbox tour. Twelve transformations run on the Python logo: 
 
 ## Quick start — twelve operators in a grid <a id="quick-start"></a>
 
-<CodeBlock lang="python" file="quick_start.py">
+<CodeBlock lang="python" file="8.1.1_quick_start.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -55,6 +55,8 @@ Image.fromarray(g).save('purple.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/8.1.1_quick_start.py" label="8.1.1_quick_start.py — this quick-start script" />
+
 Running it on your own machine? Download the input image and keep it in the same folder as the script.
 
 <Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/python_logo.png" label="python_logo.png — input image" />
@@ -68,6 +70,8 @@ Run saves three of these tiles (dim, flip and no-green); the other nine are buil
   num={1}
   role="output"
 />
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/8.1.1_transform_grid.py" label="8.1.1_transform_grid.py — composite 3×4 grid" />
 
 <Admonition type="tip">
 Each operator is **deterministic** and **per-pixel** — it sees only the current frame's pixels, no history. That is the same constraint a vertex shader works under, and the same constraint that lets every operator in this lesson be re-used unchanged inside an animation loop later.
@@ -139,9 +143,9 @@ Three exercises in **Execute → Modify → Create** order: run the full transfo
 
 <Exercise n={1} kicker="EXECUTE" title="Run the full transformation pipeline">
 
-Run `transform_logo.py` and look at the 10 PNG outputs it produces.
+Run `8.1.1_transform_logo.py` and look at the 10 PNG outputs it produces.
 
-<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_logo.py" label="transform_logo.py — twelve operators" />
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/8.1.1_transform_logo.py" label="8.1.1_transform_logo.py — twelve operators" />
 
 **Reflection questions**
 
@@ -195,7 +199,7 @@ A grainier, darker logo. Each pixel is now scaled by `noise / 5` instead of `noi
 
 Use the distance-field idea from Concept 3 to write a `vignette(image, strength)` function that darkens the corners of an image while keeping the centre untouched.
 
-<CodeBlock lang="python" file="exercise3_starter.py">
+<CodeBlock lang="python" file="8.1.1_exercise3_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -219,6 +223,8 @@ a = np.array(Image.open('python_logo.png').convert('RGB'))
 Image.fromarray(vignette(a, strength=0.85)).save('vignette.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/8.1.1_exercise3_starter.py" label="8.1.1_exercise3_starter.py — this starter" />
 
 <Dropdown summary="Hint 1 — distance field, normalised">
 
@@ -248,7 +254,7 @@ return out.clip(0, 255).astype(np.uint8)
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="exercise3_solution.py">
+<CodeBlock lang="python" file="8.1.1_exercise3_solution.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -269,6 +275,8 @@ Image.fromarray(vignette(a, strength=0.85)).save('vignette.png')
 ```
 </CodeBlock>
 
+<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/8.1.1_exercise3_solution.py" label="8.1.1_exercise3_solution.py — this solution" />
+
 </Dropdown>
 
 #### Make it your own
@@ -278,12 +286,6 @@ Image.fromarray(vignette(a, strength=0.85)).save('vignette.png')
 - **Inverted vignette.** Subtract 1 from `strength * norm` so the corners stay bright and the centre dims. Useful as a "spotlight in reverse" effect.
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_logo.py" label="transform_logo.py — twelve operators, ten PNGs" />
-<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/transform_grid.py" label="transform_grid.py — composite 3×4 grid" />
-<Download href="/lesson-media/Module_08_animation_time/8.1_animation_fundamentals/8.1.1_image_transformations/python_logo.png" label="python_logo.png — input image" />
 
 ## Summary
 

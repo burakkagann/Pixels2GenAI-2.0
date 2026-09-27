@@ -52,7 +52,7 @@ The pre-trained ControlNet checkpoint for the Fill50k dataset is on the GitHub R
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/controlnet_fill50k.pt" label="controlnet_fill50k.pt — pre-trained ControlNet (~1.38 GB, GitHub Release)" />
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/lora_african_fabrics.safetensors" label="lora_african_fabrics.safetensors — companion style LoRA (~3 MB)" />
 
-<CodeBlock lang="python" file="quick-start.py">
+<CodeBlock lang="python" file="12.3.2_quick_start.py">
 ```python
 import torch
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
@@ -79,6 +79,8 @@ result = pipe(
 result.save("controlnet_output.png")
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_quick_start.py" label="12.3.2_quick_start.py — this quick-start script" />
 
 The output respects the edge map's spatial structure (a circle, say) while filling in the colour and texture according to the prompt.
 
@@ -204,7 +206,7 @@ ControlNet checkpoints are trained against a specific base diffusion model. A Co
 <Exercise n={1} kicker="EXECUTE" title="Generate guided fabric patterns from Canny edge maps">
 
 <Download href="https://github.com/burakkagann/Pixels2GenAI-2.0/releases/download/v1.0.0-controlnet-weights/controlnet_fill50k.pt" label="controlnet_fill50k.pt — 1.38 GB ControlNet checkpoint" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise1_generate.py" label="exercise1_generate.py — Canny-edge-guided generation" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_exercise1_generate.py" label="12.3.2_exercise1_generate.py — Canny-edge-guided generation" />
 <Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/controlnet_utils.py" label="controlnet_utils.py — shared pipeline helpers" />
 
 Place the checkpoint at `models/controlnet_fill50k/`, then:
@@ -212,7 +214,7 @@ Place the checkpoint at `models/controlnet_fill50k/`, then:
 <CodeBlock lang="bash">
 ```bash
 pip install diffusers transformers accelerate xformers opencv-python
-python exercise1_generate.py
+python 12.3.2_exercise1_generate.py
 ```
 </CodeBlock>
 
@@ -249,11 +251,11 @@ First run downloads Stable Diffusion v1.5 (~4 GB) from Hugging Face; subsequent 
 
 <Exercise n={2} kicker="MODIFY" title="Three explorations: control strength, prompt variation, comparison">
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise2_explore.py" label="exercise2_explore.py — three explorations" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_exercise2_explore.py" label="12.3.2_exercise2_explore.py — three explorations" />
 
 <CodeBlock lang="bash">
 ```bash
-python exercise2_explore.py
+python 12.3.2_exercise2_explore.py
 ```
 </CodeBlock>
 
@@ -305,18 +307,18 @@ Canny preserves every edge, including ones you didn't intend to enforce. Line ar
 
 Three scripts cover the full pipeline. Most learners should focus on Option C (combined generation) since it demonstrates the architectural payoff; Options A and B are deep dives for those with multi-hour GPU time available.
 
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3a_train_controlnet.py" label="exercise3a_train_controlnet.py — train ControlNet from scratch (2-4h GPU)" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3b_train_lora.py" label="exercise3b_train_lora.py — train style LoRA on African fabrics (15-30 min)" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/exercise3c_combined_generation.py" label="exercise3c_combined_generation.py — ControlNet + LoRA combined" />
-<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/download_fill50k.py" label="download_fill50k.py — fetches Fill50k dataset from Hugging Face" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_exercise3a_train_controlnet.py" label="12.3.2_exercise3a_train_controlnet.py — train ControlNet from scratch (2-4h GPU)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_exercise3b_train_lora.py" label="12.3.2_exercise3b_train_lora.py — train style LoRA on African fabrics (15-30 min)" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_exercise3c_combined_generation.py" label="12.3.2_exercise3c_combined_generation.py — ControlNet + LoRA combined" />
+<Download href="/lesson-media/Module_12_generative_ai_models/12.3_diffusion_models/12.3.2_controlnet_guided_generation/12.3.2_download_fill50k.py" label="12.3.2_download_fill50k.py — fetches Fill50k dataset from Hugging Face" />
 
 <Dropdown summary="Option A — Train ControlNet on Fill50k (2-4 hours GPU)">
 
-Dataset: Fill50k from Hugging Face (50k circle-fill images, downloaded by `download_fill50k.py`). Architecture: the encoder of Stable Diffusion v1.5 cloned and trained with zero-convolution links.
+Dataset: Fill50k from Hugging Face (50k circle-fill images, downloaded by `12.3.2_download_fill50k.py`). Architecture: the encoder of Stable Diffusion v1.5 cloned and trained with zero-convolution links.
 
 ```bash
-python download_fill50k.py
-python exercise3a_train_controlnet.py
+python 12.3.2_download_fill50k.py
+python 12.3.2_exercise3a_train_controlnet.py
 ```
 
 Configuration: batch size 4, learning rate 1e-5, 50k training steps. Loss decreases monotonically (no adversarial dynamics). Checkpoints saved every 5k steps.
@@ -328,7 +330,7 @@ Configuration: batch size 4, learning rate 1e-5, 50k training steps. Loss decrea
 Same pattern as [Lesson 12.5.1's DreamBooth LoRA](/lessons/12.5.1), retrained for this lesson against the African fabric dataset to produce a *style* LoRA rather than a *subject* LoRA.
 
 ```bash
-python exercise3b_train_lora.py
+python 12.3.2_exercise3b_train_lora.py
 ```
 
 Output: `lora_african_fabrics.safetensors` (~3 MB) that can be loaded alongside any Stable Diffusion v1.5 pipeline to apply the African fabric style to whatever is being generated.
@@ -340,7 +342,7 @@ Output: `lora_african_fabrics.safetensors` (~3 MB) that can be loaded alongside 
 The architectural demonstration. Load both the Fill50k ControlNet and the African-fabric LoRA, then generate fabric-styled patterns that follow circle outlines.
 
 ```bash
-python exercise3c_combined_generation.py
+python 12.3.2_exercise3c_combined_generation.py
 ```
 
 The ControlNet enforces structure (circles), the LoRA enforces style (African fabric texture and colour palette), the text prompt provides the semantic anchor.

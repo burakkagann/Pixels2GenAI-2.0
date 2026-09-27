@@ -37,7 +37,7 @@ Flags are structured patterns made of rectangular colour blocks. Creating them t
 
 Let's create the flag of France using vertical colour bands. Run this code:
 
-<CodeBlock lang="python" file="france_flag.py">
+<CodeBlock lang="python" file="1.3.1_france_flag.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -64,6 +64,8 @@ result = Image.fromarray(flag, mode='RGB')
 result.save('france_flag.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/1.3.1_france_flag.py" label="1.3.1_france_flag.py — France flag (Execute)" />
 
 Click **Run** on the code above to draw the French flag in your browser, then compare your result with the expected output.
 
@@ -191,7 +193,7 @@ Three progressively challenging exercises, each building on the previous using t
 
 Run the France flag code from the Quick Start section and observe the output. Then answer the reflection questions below.
 
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/france_flag.py" label="france_flag.py — France flag script" />
+<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/1.3.1_france_flag.py" label="1.3.1_france_flag.py — France flag script" />
 
 **Reflection questions**
 
@@ -252,7 +254,7 @@ Each stripe gets a single colour assignment using broadcasting: `flag[0:100, :, 
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="germany_flag.py">
+<CodeBlock lang="python" file="1.3.1_germany_flag.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -275,6 +277,8 @@ result = Image.fromarray(flag, mode='RGB')
 result.save('germany_flag.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/1.3.1_germany_flag.py" label="1.3.1_germany_flag.py — Germany flag (Modify solution)" />
 
 </Dropdown>
 
@@ -307,7 +311,7 @@ Create the **flag of Switzerland** from scratch. This flag has a red field with 
 
 **Starter code**
 
-<CodeBlock lang="python" file="switzerland_starter.py">
+<CodeBlock lang="python" file="1.3.1_switzerland_starter.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -333,7 +337,7 @@ result.save('switzerland_flag.png')
 ```
 </CodeBlock>
 
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/switzerland_starter.py" label="switzerland_starter.py — starter code" />
+<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/1.3.1_switzerland_starter.py" label="1.3.1_switzerland_starter.py — starter code" />
 
 <Dropdown summary="Hint 1 — Red background">
 
@@ -373,7 +377,7 @@ The cross is formed by two overlapping rectangles. The vertical bar spans all ro
 
 <Dropdown summary="Complete solution">
 
-<CodeBlock lang="python" file="switzerland_flag.py">
+<CodeBlock lang="python" file="1.3.1_switzerland_flag.py">
 ```python
 import numpy as np
 from PIL import Image
@@ -402,6 +406,8 @@ result = Image.fromarray(flag, mode='RGB')
 result.save('switzerland_flag.png')
 ```
 </CodeBlock>
+
+<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/1.3.1_switzerland_flag.py" label="1.3.1_switzerland_flag.py — Switzerland flag (Create solution)" />
 
 **Key insight**: The cross is formed by two overlapping rectangles. Where they overlap, both set the same white colour, so the result is a perfect cross.
 
@@ -443,13 +449,6 @@ Experiment with line thickness and colours to match the official Union Jack desi
 </Dropdown>
 
 </Exercise>
-
-## Downloads
-
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/france_flag.py" label="france_flag.py — France flag (Execute)" />
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/germany_flag.py" label="germany_flag.py — Germany flag (Modify solution)" />
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/switzerland_flag.py" label="switzerland_flag.py — Switzerland flag (Create solution)" />
-<Download href="/lesson-media/Module_01_pixel_fundamentals/1.3_structured_compositions/1.3.1_flags/flags/switzerland_starter.py" label="switzerland_starter.py — Switzerland starter code" />
 
 ## Summary
 
