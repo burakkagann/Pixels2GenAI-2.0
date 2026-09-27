@@ -17,5 +17,5 @@ def generate_dragon_sequence(initial_turn, depth):
 
 # Self-test
 test = generate_dragon_sequence('R', 3)
-assert test == 'RRLRRLLRRRLRLLL', f"Got {test!r}"
+assert test == 'RRLRRLLRRRLLRLL', f"Got {test!r}"
 print("All good — depth 3 sequence matches the expected dragon string.")

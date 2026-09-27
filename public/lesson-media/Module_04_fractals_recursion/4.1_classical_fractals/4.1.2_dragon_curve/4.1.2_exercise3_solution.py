@@ -8,4 +8,4 @@ def generate_dragon_sequence(initial_turn, depth):
     second_half = invert_sequence(previous[::-1])
     return previous + 'R' + second_half
 
-assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLRLLL'
+assert generate_dragon_sequence('R', 3) == 'RRLRRLLRRRLLRLL'

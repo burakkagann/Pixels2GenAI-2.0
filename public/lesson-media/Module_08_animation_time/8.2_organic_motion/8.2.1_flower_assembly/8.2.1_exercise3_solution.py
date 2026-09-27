@@ -23,9 +23,8 @@ radii = rng.uniform(SCATTER_RADIUS * 0.5, SCATTER_RADIUS, len(home_yx))
 start_offsets = np.stack([(radii * np.sin(angles)).astype(int),
                           (radii * np.cos(angles)).astype(int)], axis=1)
 
-# TODO 1: give every tile a random start rotation, uniform in [-180, 180] degrees.
-#         Compute it here, once, so a tile keeps the same start angle in every frame.
-start_rotations = np.zeros(len(home_yx))
+# One random start rotation per tile, computed once so it stays the same in every frame
+start_rotations = rng.uniform(-180, 180, len(home_yx))
 
 frames = []
 for f in range(N_FRAMES):
@@ -38,13 +37,15 @@ for f in range(N_FRAMES):
             continue                                        # still off the canvas
         tile_img = Image.fromarray(flower[cy:cy + th, cx:cx + tw])
 
-        # TODO 2: the current rotation shrinks to 0 as the tile arrives:
-        #         start rotation * (1 - progress)
-        angle = 0
+        # The rotation shrinks to 0 as the tile arrives, in step with the translation
+        angle = start_rotations[i] * (1 - progress)
 
-        # TODO 3: rotate the tile with tile_img.rotate(angle, expand=True) and paste it
-        #         centred on the spot where the unrotated tile would sit
-        canvas_image.paste(tile_img, (x, y))
+        # expand=True grows the image so the rotated corners are kept; pasting at
+        # (centre - rotated size / 2) keeps the tile centred on its destination
+        rotated = tile_img.rotate(angle, expand=True, resample=Image.BILINEAR)
+        rw, rh = rotated.size
+        ry, rx = y + th // 2, x + tw // 2
+        canvas_image.paste(rotated, (rx - rw // 2, ry - rh // 2))
     frames.append(canvas_image)
 
 frames[0].save('flower_twirl.gif', save_all=True, append_images=frames[1:], duration=50, loop=0)

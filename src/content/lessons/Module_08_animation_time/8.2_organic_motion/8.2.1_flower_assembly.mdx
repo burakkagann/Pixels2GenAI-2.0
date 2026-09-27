@@ -193,25 +193,61 @@ The motion looks slower but the curve shape is unchanged. As with easings (8.1.2
 
 <Exercise n={3} kicker="CREATE" title="Add per-tile rotation">
 
-Each tile currently arrives flat. Add a rotation that starts at a random angle and rotates to 0° as the tile arrives. Use PIL's `Image.rotate` per tile.
+Each tile currently arrives flat. Add a rotation that starts at a random angle and rotates to 0° as the tile arrives. Use PIL's `Image.rotate` per tile. The starter below already runs and plays the flat assembly; the three TODOs add the rotation.
 
 <CodeBlock lang="python" file="8.2.1_exercise3_starter.py">
 ```python
-# inside the frame loop, after computing progress and offsets:
-for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
-    y, x = cy + dy, cx + dx
-    if not (0 <= y <= H - th and 0 <= x <= W - tw):
-        continue
+import numpy as np
+from PIL import Image
 
-    tile_arr = flower[cy:cy+th, cx:cx+tw]
-    tile_img = Image.fromarray(tile_arr)
+N_TILES = 16            # the image is cut into N_TILES x N_TILES tiles
+N_FRAMES = 60
+SCATTER_RADIUS = 250    # smaller than Exercise 1, so the spinning tiles stay on the canvas
+SEED = 7
 
-    # TODO 1: pick a per-tile random start_rotation (e.g., uniform in [-180, 180])
-    #         (store these outside the frame loop, computed once)
 
-    # TODO 2: current rotation = start_rotation * (1 - progress)
+def ease_out_cubic(t):
+    return 1 - (1 - t) ** 3
 
-    # TODO 3: rotate the tile and paste into the canvas (canvas is now a PIL image)
+
+flower = np.array(Image.open('flower.png').convert('RGB'))
+H, W, _ = flower.shape
+th, tw = H // N_TILES, W // N_TILES
+home_yx = [(r * th, c * tw) for r in range(N_TILES) for c in range(N_TILES)]   # each tile's home corner
+
+# Random scatter: every tile starts up to SCATTER_RADIUS away from home
+rng = np.random.default_rng(SEED)
+angles = rng.uniform(0, 2 * np.pi, len(home_yx))
+radii = rng.uniform(SCATTER_RADIUS * 0.5, SCATTER_RADIUS, len(home_yx))
+start_offsets = np.stack([(radii * np.sin(angles)).astype(int),
+                          (radii * np.cos(angles)).astype(int)], axis=1)
+
+# TODO 1: give every tile a random start rotation, uniform in [-180, 180] degrees.
+#         Compute it here, once, so a tile keeps the same start angle in every frame.
+start_rotations = np.zeros(len(home_yx))
+
+frames = []
+for f in range(N_FRAMES):
+    progress = ease_out_cubic(f / (N_FRAMES - 1))
+    offsets = (start_offsets * (1 - progress)).astype(int)
+    canvas_image = Image.new('RGB', (W, H), (12, 12, 12))   # a fresh canvas every frame
+    for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
+        y, x = cy + dy, cx + dx
+        if not (0 <= y <= H - th and 0 <= x <= W - tw):
+            continue                                        # still off the canvas
+        tile_img = Image.fromarray(flower[cy:cy + th, cx:cx + tw])
+
+        # TODO 2: the current rotation shrinks to 0 as the tile arrives:
+        #         start rotation * (1 - progress)
+        angle = 0
+
+        # TODO 3: rotate the tile with tile_img.rotate(angle, expand=True) and paste it
+        #         centred on the spot where the unrotated tile would sit
+        canvas_image.paste(tile_img, (x, y))
+    frames.append(canvas_image)
+
+frames[0].save('flower_twirl.gif', save_all=True, append_images=frames[1:], duration=50, loop=0)
+print(f"Saved flower_twirl.gif: {N_FRAMES} frames, {len(home_yx)} tiles")
 ```
 </CodeBlock>
 
@@ -222,10 +258,9 @@ for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
 ```python
 # Before the frame loop:
 start_rotations = rng.uniform(-180, 180, len(home_yx))
-canvas_image = Image.new('RGB', (W, H), (12, 12, 12))
 ```
 
-Generate the rotations once outside the loop so each tile has a stable random start angle.
+Generate the rotations once outside the loop so each tile has a stable random start angle. The canvas is different: the starter creates a fresh `canvas_image` inside the loop, so each frame starts empty.
 
 </Dropdown>
 
@@ -246,7 +281,66 @@ canvas_image.paste(rotated, (rx - rw // 2, ry - rh // 2))
 
 <Dropdown summary="Complete solution">
 
-Combining the above produces a "tile-twirl" assembly: each tile starts off-canvas at a random rotation, both translates and rotates to its home position over the 60 frames. The visual is more chaotic on each individual frame but cleaner at the end. Use a slightly smaller `SCATTER_RADIUS` (~250) to keep the rotated tiles visible.
+<CodeBlock lang="python" file="8.2.1_exercise3_solution.py">
+```python
+import numpy as np
+from PIL import Image
+
+N_TILES = 16            # the image is cut into N_TILES x N_TILES tiles
+N_FRAMES = 60
+SCATTER_RADIUS = 250    # smaller than Exercise 1, so the spinning tiles stay on the canvas
+SEED = 7
+
+
+def ease_out_cubic(t):
+    return 1 - (1 - t) ** 3
+
+
+flower = np.array(Image.open('flower.png').convert('RGB'))
+H, W, _ = flower.shape
+th, tw = H // N_TILES, W // N_TILES
+home_yx = [(r * th, c * tw) for r in range(N_TILES) for c in range(N_TILES)]   # each tile's home corner
+
+# Random scatter: every tile starts up to SCATTER_RADIUS away from home
+rng = np.random.default_rng(SEED)
+angles = rng.uniform(0, 2 * np.pi, len(home_yx))
+radii = rng.uniform(SCATTER_RADIUS * 0.5, SCATTER_RADIUS, len(home_yx))
+start_offsets = np.stack([(radii * np.sin(angles)).astype(int),
+                          (radii * np.cos(angles)).astype(int)], axis=1)
+
+# One random start rotation per tile, computed once so it stays the same in every frame
+start_rotations = rng.uniform(-180, 180, len(home_yx))
+
+frames = []
+for f in range(N_FRAMES):
+    progress = ease_out_cubic(f / (N_FRAMES - 1))
+    offsets = (start_offsets * (1 - progress)).astype(int)
+    canvas_image = Image.new('RGB', (W, H), (12, 12, 12))   # a fresh canvas every frame
+    for i, ((cy, cx), (dy, dx)) in enumerate(zip(home_yx, offsets)):
+        y, x = cy + dy, cx + dx
+        if not (0 <= y <= H - th and 0 <= x <= W - tw):
+            continue                                        # still off the canvas
+        tile_img = Image.fromarray(flower[cy:cy + th, cx:cx + tw])
+
+        # The rotation shrinks to 0 as the tile arrives, in step with the translation
+        angle = start_rotations[i] * (1 - progress)
+
+        # expand=True grows the image so the rotated corners are kept; pasting at
+        # (centre - rotated size / 2) keeps the tile centred on its destination
+        rotated = tile_img.rotate(angle, expand=True, resample=Image.BILINEAR)
+        rw, rh = rotated.size
+        ry, rx = y + th // 2, x + tw // 2
+        canvas_image.paste(rotated, (rx - rw // 2, ry - rh // 2))
+    frames.append(canvas_image)
+
+frames[0].save('flower_twirl.gif', save_all=True, append_images=frames[1:], duration=50, loop=0)
+print(f"Saved flower_twirl.gif: {N_FRAMES} frames, {len(home_yx)} tiles")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_08_animation_time/8.2_organic_motion/8.2.1_flower_assembly/8.2.1_exercise3_solution.py" label="8.2.1_exercise3_solution.py — this solution" />
+
+Combining the two hints produces a "tile-twirl" assembly: each tile starts scattered at a random rotation, then both translates and rotates to its home position over the 60 frames. The visual is more chaotic on each individual frame but cleaner at the end. The starter already uses a slightly smaller `SCATTER_RADIUS` (250) so the rotated tiles stay visible.
 
 </Dropdown>
 
