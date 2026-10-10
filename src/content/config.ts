@@ -64,4 +64,39 @@ const lessons = defineCollection({
   }),
 });
 
-export const collections = { lessons };
+// Workshop-area lessons (lesson framework v2). A separate collection on
+// purpose: RSS, llms.txt, OG images, /lessons/[slug] and the lesson JSON-LD all
+// read getCollection('lessons') by name, so nothing here can leak into them.
+// Pages for it are only routed when PUBLIC_WORKSHOP_AREA=true (astro.config.mjs).
+// Layout: src/content/workshop-lessons/<workshop slug>/<lesson id>_<name>.mdx
+const workshopLessons = defineCollection({
+  loader: glob({
+    pattern: '*/*.mdx',
+    base: './src/content/workshop-lessons',
+    // "w1-see/3.4.1_convolution.mdx" → "w1-see/3.4.1": the URL path under
+    // /workshops. Its own rule, so it can never trip the lessons generateId.
+    generateId: ({ entry }) => {
+      const [workshop, file] = entry.split('/');
+      const match = file?.match(/^(\d+(?:\.\d+)*)/);
+      if (!/^w[1-6]-[a-z]+$/.test(workshop ?? '') || !match) {
+        throw new Error(`Workshop lesson must live at <w1-see>/<id>_<name>.mdx: ${entry}`);
+      }
+      return `${workshop}/${match[1]}`;
+    },
+  }),
+  // Minimal for now; the framework v2 fields arrive with the lesson port (BLD-02).
+  schema: z.object({
+    title: z.string(),
+    objective: z.string(),
+    duration: z.string(),
+    level: z.enum([
+      'beginner',
+      'beginner-intermediate',
+      'intermediate',
+      'intermediate-advanced',
+      'advanced',
+    ]),
+  }),
+});
+
+export const collections = { lessons, workshopLessons };

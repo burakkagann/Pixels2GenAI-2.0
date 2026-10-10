@@ -10,6 +10,9 @@
  *   - an asset referenced by a lesson (/lesson-media/…) missing from public/
  *   - a legacy "/lessons/<id>/<file>" asset reference (pre-restructure form)
  *   - the same slug wired to more than one leaf
+ *   - a workshop core id in src/data/workshops/series.ts that disagrees with
+ *     the catalog (a "new" id that already exists, a "live"/"leaf" id that
+ *     doesn't), or appears twice in the series
  *
  * WARNINGS (intentional in-progress states — never fail):
  *   - an MDX file that exists but is not yet wired into subtopics.ts
@@ -23,6 +26,7 @@ import fs from 'node:fs';
 import {
   buildModuleView,
   readLessonFiles,
+  readSeries,
   lessonFilePath,
   publicAssetPath,
 } from './lib/catalog.mjs';
@@ -183,6 +187,34 @@ for (const slug of files) {
   for (const { dir, slug: target } of neighborSlugs(frontmatter)) {
     if (!shippedSlugs.has(target)) {
       warnings.push(`Unwired lesson "${slug}" has ${dir} -> /lessons/${target}, which is not a shipped lesson (link auto-hidden until "${slug}" is wired into subtopics.ts).`);
+    }
+  }
+}
+
+// 6. Workshop series cores vs the catalog. The ids are placeholders until the
+//    module ids are redesigned, so the check guards against collisions: a "new"
+//    lesson must not reuse a catalog id, and a "live"/"leaf" one must point at it.
+const seenCoreIds = new Map();
+for (const workshop of readSeries()) {
+  if (!/^w[1-6]-[a-z]+$/.test(workshop.slug)) {
+    errors.push(`Workshop slug "${workshop.slug}" must look like "w1-see" (series.ts).`);
+  }
+  for (const core of workshop.cores) {
+    const where = `${workshop.slug} core ${core.id}`;
+    if (seenCoreIds.has(core.id)) {
+      errors.push(`Core id ${core.id} is used twice in series.ts (${seenCoreIds.get(core.id)} and ${workshop.slug}).`);
+    }
+    seenCoreIds.set(core.id, workshop.slug);
+    const inCatalog = leafIds.has(core.id);
+    const isLive = shippedSlugs.has(core.id);
+    if (core.source === 'new' && inCatalog) {
+      errors.push(`${where} is marked "new" but ${core.id} is already a catalog leaf; pick a free id or mark it "leaf".`);
+    } else if (core.source !== 'new' && !inCatalog) {
+      errors.push(`${where} is marked "${core.source}" but ${core.id} is not in subtopics.ts.`);
+    } else if (core.source === 'leaf' && isLive) {
+      warnings.push(`${where} is marked "leaf" but /lessons/${core.id} is now live; mark it "live" in series.ts.`);
+    } else if (core.source === 'live' && !isLive) {
+      errors.push(`${where} is marked "live" but /lessons/${core.id} is not a shipped lesson.`);
     }
   }
 }

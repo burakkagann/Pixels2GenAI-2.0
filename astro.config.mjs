@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import workshopArea, { isWorkshopAreaPath } from './src/integrations/workshop-area.mjs';
 
 // Wrap content from each h2 to the next h2 in a <section class="lesson-section">.
 // Drives the manuscript-margin-gloss side-rail (Option F) in prose.css —
@@ -89,8 +90,15 @@ export default defineConfig({
     sitemap({
       // The /og/*.png endpoints are social-card images, not crawlable pages.
       // /announce/thanks (form confirmation) and /404 are noindex pages.
-      filter: (page) => !page.includes('/og/') && !/\/(announce\/thanks|404)(\.html)?$/.test(page),
+      // Everything below /workshops is the participant area (noindex, gated);
+      // the workshopArea integration fails the build if one slips through.
+      filter: (page) =>
+        !page.includes('/og/') &&
+        !/\/(announce\/thanks|404)(\.html)?$/.test(page) &&
+        !isWorkshopAreaPath(new URL(page).pathname),
     }),
+    // After sitemap: its build:done leak check reads the finished sitemap.
+    workshopArea(),
   ],
   vite: {
     resolve: {

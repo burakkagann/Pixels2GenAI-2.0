@@ -71,6 +71,12 @@ export function readSubtopics() {
   return extractLiteral(src, 'SUBTOPICS');
 }
 
+/** The six-workshop series (src/data/workshops/series.ts). */
+export function readSeries() {
+  const src = fs.readFileSync(path.join(ROOT, 'src', 'data', 'workshops', 'series.ts'), 'utf8');
+  return extractLiteral(src, 'SERIES');
+}
+
 /**
  * Walk src/content/lessons/ (Module_xx/x.y_subtopic/x.y.z_leaf.mdx — the
  * tree mirrors v1's content/ hierarchy) and map each lesson's numeric id
