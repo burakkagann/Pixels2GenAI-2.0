@@ -45,6 +45,9 @@ google_console
 # private job-search notes for the tutor project
 ai-tutor-planning/
 
+# private workshop-series planning (author's decision, 2026-10-09)
+workshop-planning/
+
 # local AI-assistant config and browser-automation scratch output
 .claude/
 CLAUDE.md
