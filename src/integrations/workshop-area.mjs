@@ -21,6 +21,9 @@ const flag = (name) => (process.env[name] ?? env[name]) === 'true';
 /** The gated participant area (/workshops/w1-see, …). */
 export const WORKSHOP_AREA = flag('PUBLIC_WORKSHOP_AREA');
 
+/** The six-workshop series section on the public /workshops page (BLD-09). */
+export const WORKSHOP_SERIES = flag('PUBLIC_WORKSHOP_SERIES');
+
 /** Paths below /workshops are the participant area; /workshops itself is public. */
 export const isWorkshopAreaPath = (pathname) => /^\/workshops\/[^/]/.test(pathname);
 
@@ -28,12 +31,50 @@ const SITE = 'https://pixels2genai.art';
 // "/workshops/" followed by anything but a delimiter, inside text files.
 const AREA_PATH_IN_TEXT = /\/workshops\/[^\s/)"'<>]/;
 
+// Things that must never reach the built site, in any file. A match fails the
+// build: a key or dev address that slipped into browser code is a leak even if
+// no page links to it. (Real secrets live only in Cloud Run Secret Manager and
+// Netlify environment variables, never under a PUBLIC_ name.)
+const SECRET_PATTERNS = [
+  { name: 'Anthropic API key', re: /sk-ant-[A-Za-z0-9_-]{8,}/ },
+  { name: 'OpenAI-style API key', re: /\bsk-(?:proj-)?[A-Za-z0-9]{32,}/ },
+  { name: 'Google API key', re: /AIza[0-9A-Za-z_-]{35}/ },
+  { name: 'private key', re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
+  { name: 'tutor dev token', re: /TUTOR_DEV_TOKEN|dev-local/ },
+  { name: 'secret or pepper assignment', re: /\b[A-Z0-9_]*(?:SECRET|PEPPER)[A-Z0-9_]*["']?\s*[:=]\s*["'][^"']{6,}/ },
+  { name: 'localhost address', re: /\b(?:localhost|127\.0\.0\.1):\d{2,5}/ },
+];
+// Includes the downloadable lesson scripts (.py) and notebooks.
+const TEXT_FILE = /\.(html|js|mjs|css|json|txt|xml|webmanifest|svg|map|py|ipynb|md)$/i;
+
+// Area pages: no analytics (until the privacy review), and nothing a strict
+// Content-Security-Policy would have to allow with 'unsafe-inline' or
+// 'unsafe-hashes' (inline event handlers, javascript: URLs). SEC-15.
+const AREA_FORBIDDEN = [
+  { name: 'analytics script', re: /cloud\.umami\.is|umami\.track/ },
+  { name: 'inline event handler', re: /<[a-z][^>]*\son[a-z]+\s*=/i },
+  { name: 'javascript: URL', re: /(?:href|src|action)\s*=\s*["']?\s*javascript:/i },
+];
+
+/** Every file under dir, recursively. */
+function filesUnder(dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...filesUnder(p));
+    else out.push(p);
+  }
+  return out;
+}
+
 /**
  * Fails the build when:
  *   - a path below /workshops is in a sitemap, llms.txt or feed.xml;
  *   - the public /workshops page is missing from the sitemap;
  *   - the area flag is off but area pages were built anyway;
- *   - the area flag is on and an area page lacks noindex or carries JSON-LD.
+ *   - the area flag is on and an area page lacks noindex, carries JSON-LD,
+ *     loads analytics, or has inline event handlers / javascript: URLs;
+ *   - any text file in dist/ contains a secret pattern (SECRET_PATTERNS).
  */
 function checkForLeaks(distDir, logger) {
   const errors = [];
@@ -81,6 +122,34 @@ function checkForLeaks(distDir, logger) {
     const html = fs.readFileSync(page, 'utf8');
     if (!/<meta name="robots" content="noindex"/.test(html)) errors.push(`${rel} has no robots noindex meta.`);
     if (html.includes('application/ld+json')) errors.push(`${rel} carries JSON-LD.`);
+    for (const rule of AREA_FORBIDDEN) {
+      if (rule.re.test(html)) errors.push(`${rel} contains a forbidden ${rule.name}.`);
+    }
+  }
+
+  // The live Run buttons (python-worker.mjs) and the workshop code cells
+  // (cell-worker.mjs) must load the same Pyodide build: one Python for the site.
+  const pinned = (name) => {
+    const full = path.join(distDir, 'runner', name);
+    if (!fs.existsSync(full)) return null;
+    return (fs.readFileSync(full, 'utf8').match(/PYODIDE_VERSION = "([\d.]+)"/) ?? [])[1] ?? 'unreadable';
+  };
+  const liveVersion = pinned('python-worker.mjs');
+  const cellVersion = pinned('cell-worker.mjs');
+  if (liveVersion && cellVersion && liveVersion !== cellVersion) {
+    errors.push(`Pyodide versions differ: python-worker.mjs pins ${liveVersion}, cell-worker.mjs pins ${cellVersion}.`);
+  }
+
+  let scanned = 0;
+  for (const file of filesUnder(distDir)) {
+    if (!TEXT_FILE.test(file)) continue;
+    scanned += 1;
+    const text = fs.readFileSync(file, 'utf8');
+    for (const rule of SECRET_PATTERNS) {
+      const match = text.match(rule.re);
+      // Report where, never the matched value itself (the log may be public).
+      if (match) errors.push(`Possible ${rule.name} in ${path.relative(distDir, file).replace(/\\/g, '/')}.`);
+    }
   }
 
   if (errors.length) {
@@ -88,7 +157,7 @@ function checkForLeaks(distDir, logger) {
     throw new Error(`Workshop-area leak check failed with ${errors.length} error(s).`);
   }
   logger.info(
-    `Leak check OK: area ${WORKSHOP_AREA ? 'on' : 'off'}, ${areaPages.length} area page(s), ${locs.length} sitemap URL(s).`,
+    `Leak check OK: area ${WORKSHOP_AREA ? 'on' : 'off'}, ${areaPages.length} area page(s), ${locs.length} sitemap URL(s), ${scanned} file(s) scanned for secrets.`,
   );
 }
 
@@ -103,11 +172,38 @@ export default function workshopArea() {
   return {
     name: 'p2g-workshop-area',
     hooks: {
-      'astro:config:setup': ({ injectRoute }) => {
+      'astro:config:setup': ({ injectRoute, updateConfig }) => {
+        // Astro bundles a component's CSS even behind a runtime condition, so
+        // the /workshops parts are chosen here: the branded ones
+        // (components/workshops/brand/) or today's markup verbatim (classic/),
+        // which keeps /workshops byte-identical while the flag is off. Pages
+        // import them as 'p2g:workshop-brand/Hero.astro' and so on.
+        const brandDir = WORKSHOP_SERIES ? 'brand' : 'classic';
+        updateConfig({
+          vite: {
+            resolve: {
+              alias: [
+                {
+                  find: 'p2g:workshop-brand',
+                  replacement: fileURLToPath(new URL(`../components/workshops/${brandDir}`, import.meta.url)),
+                },
+              ],
+            },
+          },
+        });
+
         if (!WORKSHOP_AREA) return;
         injectRoute({
           pattern: '/workshops/[workshop]',
           entrypoint: './src/workshop-area/pages/arc.astro',
+        });
+        injectRoute({
+          pattern: '/workshops/my',
+          entrypoint: './src/workshop-area/pages/my.astro',
+        });
+        injectRoute({
+          pattern: '/workshops/[workshop]/[lesson]',
+          entrypoint: './src/workshop-area/pages/lesson.astro',
         });
       },
       'astro:build:done': ({ dir, logger }) => checkForLeaks(fileURLToPath(dir), logger),

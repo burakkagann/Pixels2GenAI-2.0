@@ -70,8 +70,13 @@ export async function GET(context: APIContext) {
     `- [Research and methodology](${site}/research): the thesis framing, research ` +
       'questions, and Design-Based Research methodology behind the curriculum.',
   );
+  // The series wording waits for the same flag as the /workshops series section.
   lines.push(
-    `- [Workshops](${site}/workshops): the full curriculum delivered as a one-day workshop.`,
+    import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true'
+      ? `- [Workshops](${site}/workshops): in-person workshops in Berlin; a series of six ` +
+          '(from pixels to generative AI, dates to be announced) and the February 2026 pilot ' +
+          'behind the research findings.'
+      : `- [Workshops](${site}/workshops): the full curriculum delivered as a one-day workshop.`,
   );
   lines.push(
     `- [Exhibition](${site}/exhibitions/2026-03): generative prints produced with the ` +

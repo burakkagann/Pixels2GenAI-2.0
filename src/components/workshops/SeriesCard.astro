@@ -1,0 +1,53 @@
+---
+/**
+ * One workshop card: a colour band (number, verb, band), the image of what
+ * you could make, the title and one "You make" line. Everything else (the
+ * idea, what it builds on, what you need, the three lessons) sits behind
+ * "Inside" (native <details>, no client JS). The id is the arc's anchor.
+ */
+import type { SeriesWorkshop } from '@/data/workshops/series';
+import { bandKey, longDate } from '@/components/workshops/seriesFormat';
+
+interface Props {
+  workshop: SeriesWorkshop;
+}
+
+const { workshop: w } = Astro.props;
+---
+
+<article class="ws-card series-card" id={w.slug} data-band={bandKey(w.band)} aria-labelledby={`${w.slug}-title`}>
+  <header class="sc-band">
+    <span class="ws-display sc-num">W{w.n}</span>
+    <span class="ws-display sc-verb">{w.verb}</span>
+    <span class="ws-label sc-bandname">{w.band}</span>
+  </header>
+
+  <figure class="sc-figure">
+    <img src={w.image.src} alt={w.image.alt} width="720" height="450" loading="lazy" decoding="async" />
+    <figcaption class="sc-credit">{w.image.credit}</figcaption>
+  </figure>
+
+  <div class="sc-body">
+    <h4 class="ws-display sc-title" id={`${w.slug}-title`}>{w.title}</h4>
+    <p class="sc-make"><span class="ws-label">You make</span> {w.make}</p>
+    {w.dateIso && <p class="ws-chip fill-yellow sc-date">{longDate(w.dateIso)}</p>}
+
+    <details class="sc-inside">
+      <summary class="ws-toggle">Inside</summary>
+      <div class="sc-inside-body">
+        <p class="sc-idea">{w.idea}</p>
+        {w.thread && <p class="sc-fact"><span class="ws-label">Builds on</span> {w.threadText}</p>}
+        {w.needs && <p class="sc-fact"><span class="ws-label">You need</span> {w.needs}</p>}
+        <ol class="sc-lessons" aria-label="The three lessons">
+          {w.cores.map((core) => (
+            <li>
+              <span class="sc-l-title">{core.title}</span>
+              <span class="sc-l-min">{core.minutes}′</span>
+              <span class="sc-l-sub">{core.sub}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </details>
+  </div>
+</article>

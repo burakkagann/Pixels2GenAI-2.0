@@ -1,0 +1,884 @@
+/* ============================================================
+   /workshops in the workshop brand: hero, series (BLD-09) and pilot.
+   Layout only; the brand primitives (.ws-card, .ws-btn, .ws-chip,
+   .ws-sticker, .ws-toggle, fills) live in workshop-brand.css.
+   Loaded only by the brand/ components, so the page's CSS is unchanged
+   while PUBLIC_WORKSHOP_SERIES is off. Tokens only, no hex.
+   ============================================================ */
+
+/* ---------- Hero ---------- */
+.series-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  padding-bottom: 64px;
+}
+
+.series-hero .hero-kicker {
+  margin: 0 0 24px;
+}
+
+.series-hero .hero-title {
+  font-size: clamp(42px, 7vw, 92px);
+  line-height: 1.04;
+  margin: 0 0 24px;
+  color: var(--fg);
+}
+
+/* "One piece" sits on a yellow block, like a riso highlight. */
+.series-hero .hero-mark {
+  background: var(--ws-yellow);
+  color: var(--ws-on-yellow);
+  padding: 0 0.12em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.series-hero .hero-sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(19px, 2vw, 24px);
+  line-height: 1.4;
+  color: var(--fg-2);
+  margin: 0 0 32px;
+}
+
+.series-hero .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 28px;
+}
+
+.series-hero .hero-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 2px;
+}
+
+.series-hero .hero-link:hover {
+  color: var(--fg);
+}
+
+/* Six tiles, slightly tilted, like prints pinned to a wall. */
+.hero-collage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hero-tile {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--ws-ink);
+  background: var(--bg-2);
+}
+
+.hero-tile:nth-child(1) { transform: rotate(-3deg); }
+.hero-tile:nth-child(2) { transform: rotate(2deg) translateY(10px); }
+.hero-tile:nth-child(3) { transform: rotate(-1.5deg); }
+.hero-tile:nth-child(4) { transform: rotate(2.5deg); }
+.hero-tile:nth-child(5) { transform: rotate(-2deg) translateY(-8px); }
+.hero-tile:nth-child(6) { transform: rotate(1.5deg); }
+
+@media (max-width: 900px) {
+  .series-hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+/* ---------- Section head ---------- */
+.series {
+  padding: 56px 0 72px;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.series-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 28px;
+  margin-bottom: 32px;
+}
+
+.series-title {
+  font-size: clamp(36px, 5vw, 60px);
+  margin: 0;
+}
+
+.series-deck {
+  margin: 0;
+  max-width: 44ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+/* ---------- Cards ---------- */
+.series-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px 28px;
+  align-items: stretch;
+}
+
+/* Once a card is opened, rows stop stretching, so its neighbours don't
+   grow empty space under them. */
+.series-grid:has(details[open]) {
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .series-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .series-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+
+.series-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Arrived from an arc sticker: Base.astro's anchor handler scrolls and
+   focuses the card; the shadow takes the band colour. (Not :target: that
+   handler updates the URL with replaceState, which leaves :target stale.)
+   `.ws` prefixes here and below outrank the brand's `.ws .ws-card`. */
+.ws .series-card:focus {
+  outline: none;
+  box-shadow: var(--ws-shadow) var(--ws-shadow) 0 var(--fill);
+}
+
+.sc-band {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border-bottom: var(--ws-border) solid var(--ws-ink);
+}
+
+.sc-num { font-size: 30px; }
+.sc-verb { font-size: 30px; }
+
+.sc-bandname {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+/* Phone: the band colour and the arc already say the band. */
+@media (max-width: 640px) {
+  .sc-bandname { display: none; }
+}
+
+.sc-figure {
+  position: relative;
+  margin: 0;
+  border-bottom: var(--ws-border) solid var(--ws-ink);
+}
+
+.sc-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: var(--bg-2);
+}
+
+.sc-credit {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 3px 7px;
+  background: var(--ws-paper);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+}
+
+.sc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 16px 18px;
+}
+
+/* Equal-height cards: the Inside toggle sits at the bottom of each. */
+.sc-inside {
+  margin-top: auto;
+  align-self: stretch;
+}
+
+.sc-title {
+  font-size: 21px;
+  line-height: 1.05;
+  margin: 0 0 10px;
+}
+
+.sc-make {
+  margin: 0 0 16px;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.sc-make .ws-label,
+.sc-fact .ws-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10px;
+  color: var(--fg-3);
+}
+
+.sc-date {
+  margin: 0 0 16px;
+}
+
+.sc-inside-body {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--line-2);
+}
+
+.sc-idea {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.sc-fact {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.sc-lessons {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: core;
+  display: grid;
+  gap: 10px;
+}
+
+.sc-lessons li {
+  counter-increment: core;
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  column-gap: 10px;
+  align-items: baseline;
+}
+
+/* Lesson numbers as tiny filled squares in the band colour. */
+.sc-lessons li::before {
+  content: counter(core);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sc-l-title {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--fg);
+}
+
+.sc-l-min {
+  grid-column: 3;
+  grid-row: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.sc-l-sub {
+  grid-column: 2 / -1;
+  grid-row: 2;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--fg-2);
+}
+
+/* ---------- W7 ---------- */
+.ws .series-showcase {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 32px;
+  padding: 18px 20px;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.showcase-sticker {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  font-size: 16px;
+}
+
+.showcase-title {
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+
+.showcase-text {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15.5px;
+  color: var(--fg-2);
+}
+
+/* ---------- A workshop day ----------
+   Calm on purpose: paper segments with a colour stripe on top, a ruler
+   in hours, and a legend that says what each block is. */
+.series-day {
+  margin-top: 64px;
+}
+
+.day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 18px;
+}
+
+.day-title {
+  font-size: clamp(28px, 3.5vw, 40px);
+  margin: 0;
+}
+
+.day-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--fg-2);
+}
+
+.day-total-num {
+  font-size: clamp(28px, 3.5vw, 40px);
+  color: var(--fg);
+}
+
+/* Stripe colours by kind. */
+[data-stripe="onramp"] { --stripe: var(--fg-3); }
+[data-stripe="c1"]     { --stripe: var(--c1); }
+[data-stripe="c2"]     { --stripe: var(--c2); }
+[data-stripe="c3"]     { --stripe: var(--c3); }
+[data-stripe="make"]   { --stripe: var(--ws-yellow); }
+[data-stripe="show"]   { --stripe: var(--studio); }
+[data-stripe="break"]  { --stripe: var(--line-2); }
+
+/* Ruler: ticks at 0, 1, 2, 3, 4 and 4½ hours of a 270-minute day. */
+.day-ruler {
+  display: flex;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.day-ruler li {
+  flex: 60 1 0;
+  padding-left: 5px;
+  border-left: 2px solid var(--ws-ink);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.day-ruler li:nth-child(5) { flex-grow: 30; }
+
+/* The end tick: label right-aligned against the bar's right edge. */
+.day-ruler li:last-child {
+  flex: 0 0 auto;
+  padding: 0 5px 0 0;
+  border-left: none;
+  border-right: 2px solid var(--ws-ink);
+  margin-left: -60px;
+  width: 60px;
+  text-align: right;
+}
+
+/* Proportional segments: width follows the minutes. */
+.day-bar {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: var(--ws-hard-shadow);
+  background: var(--ws-paper);
+}
+
+.day-seg {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 20px 10px 12px;
+  background: var(--ws-paper);
+  color: var(--fg);
+  border-right: 2px solid var(--ws-ink);
+}
+
+.day-seg::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  background: var(--stripe);
+  border-bottom: 2px solid var(--ws-ink);
+}
+
+.day-seg:last-child { border-right: none; }
+
+.day-seg[data-minutes="10"] { flex: 10 1 0; }
+.day-seg[data-minutes="15"] { flex: 15 1 0; }
+.day-seg[data-minutes="20"] { flex: 20 1 0; }
+.day-seg[data-minutes="30"] { flex: 30 1 0; }
+.day-seg[data-minutes="55"] { flex: 55 1 0; }
+
+.day-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-min {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+/* Desktop: descriptions live in the legend, not in the narrow segments. */
+.day-text { display: none; }
+.day-full { display: none; }
+
+/* Breaks: a hatched gap, no text inside (the legend explains it). */
+.day-break {
+  padding: 0;
+  background: repeating-linear-gradient(135deg, var(--line-2) 0 2px, transparent 2px 7px);
+}
+
+.day-break::before { display: none; }
+
+.day-break .day-label,
+.day-break .day-min {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.day-legend {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin: 22px 0 0;
+}
+
+.day-legend div {
+  padding-top: 10px;
+  border-top: 6px solid var(--stripe);
+}
+
+.day-legend div[data-stripe="break"] {
+  border-top-style: dotted;
+  border-top-color: var(--fg-3);
+}
+
+.day-legend dt {
+  font-size: 10.5px;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+
+.day-legend dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--fg-2);
+}
+
+@media (max-width: 900px) {
+  .day-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Phone: the day as a list; each row carries its own description. */
+@media (max-width: 640px) {
+  .day-ruler, .day-legend { display: none; }
+  .day-bar { flex-direction: column; }
+  .day-seg,
+  .day-seg[data-minutes] {
+    flex: none;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 10px;
+    padding: 12px 12px 12px 24px;
+    border-right: none;
+    border-bottom: 2px solid var(--ws-ink);
+  }
+  .day-seg::before {
+    inset: 0 auto 0 0;
+    width: 10px;
+    height: auto;
+    border-bottom: none;
+    border-right: 2px solid var(--ws-ink);
+  }
+  .day-seg:last-child { border-bottom: none; }
+  .day-text {
+    display: block;
+    grid-column: 1 / -1;
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--fg-2);
+  }
+  .day-short { display: none; }
+  .day-full { display: inline; }
+  .day-break { padding: 6px 12px 6px 24px; background: var(--bg-2); }
+  .day-break .day-label,
+  .day-break .day-min {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    font-size: 10px;
+    color: var(--fg-3);
+  }
+  .day-break .day-text { display: none; }
+}
+
+/* ---------- Sign-up ---------- */
+.ws .series-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 40px;
+  margin-top: 64px;
+  padding: 28px 32px;
+  background: var(--ws-yellow);
+  color: var(--ws-on-yellow);
+}
+
+.cta-title {
+  font-size: clamp(32px, 4.5vw, 52px);
+  margin: 0 0 8px;
+}
+
+.cta-text {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.series-access {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 28px 0 0;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  color: var(--fg-2);
+}
+
+/* ============================================================
+   The pilot (cycle i), in the brand
+   ============================================================ */
+.pilot {
+  padding: 64px 0 24px;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.pilot-head {
+  margin-bottom: 36px;
+}
+
+.pilot-kicker {
+  margin: 0 0 18px;
+}
+
+.pilot-title {
+  font-size: clamp(36px, 5vw, 60px);
+  margin: 0 0 12px;
+}
+
+.pilot-deck {
+  margin: 0;
+  max-width: 54ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.pilot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .pilot-grid { grid-template-columns: 1fr; gap: 36px; }
+}
+
+/* The poster, pinned slightly crooked like a print on a wall. */
+.pilot-poster {
+  position: relative;
+  display: block;
+  max-width: 340px;
+  transform: rotate(-2deg);
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: var(--ws-hard-shadow);
+  transition: transform .15s ease;
+}
+
+.pilot-poster:hover {
+  transform: rotate(0deg);
+}
+
+.pilot-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pilot-poster-tag {
+  position: absolute;
+  left: -10px;
+  bottom: 14px;
+  transform: rotate(-3deg);
+}
+
+.pilot-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 640px) {
+  .pilot-stats { grid-template-columns: 1fr; }
+}
+
+.ws .pilot-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-top: 12px solid var(--fill);
+}
+
+.pilot-num {
+  font-size: clamp(40px, 5vw, 56px);
+  line-height: 0.9;
+  color: var(--fg);
+}
+
+.pilot-stat-text {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+.pilot-fine {
+  margin: 14px 0 26px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--fg-3);
+}
+
+.pilot-lessons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+}
+
+.ws .pilot-lesson {
+  text-decoration: none;
+  box-shadow: 3px 3px 0 var(--ws-ink);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.ws .pilot-lesson:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ws-ink);
+}
+
+.pilot-lesson b {
+  color: var(--studio-ink, var(--studio));
+}
+
+/* Gallery: nine framed tiles in one row on desktop. */
+.pilot-gallery-wrap {
+  margin-top: 64px;
+}
+
+.pilot-gallery-title {
+  font-size: clamp(26px, 3.2vw, 36px);
+  margin: 0 0 8px;
+}
+
+.pilot-gallery-deck {
+  margin: 0 0 22px;
+  max-width: 60ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--fg-2);
+}
+
+.pilot-gallery {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .pilot-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.pilot-tile {
+  padding: 0;
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--ws-ink);
+  background: var(--bg-2);
+  cursor: zoom-in;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.pilot-tile:nth-child(odd) { transform: rotate(-1.5deg); }
+.pilot-tile:nth-child(even) { transform: rotate(1.5deg); }
+
+.pilot-tile:hover {
+  transform: rotate(0deg) translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ws-ink);
+}
+
+.pilot-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.pilot-modal {
+  padding: 0;
+  max-width: min(90vw, 640px);
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: var(--ws-hard-shadow);
+  background: var(--ws-paper);
+}
+
+.pilot-modal::backdrop {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.pilot-modal img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.ws .pilot-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 12px;
+  font-size: 18px;
+}
+
+.pilot-ack {
+  margin-top: 64px;
+  padding: 20px 22px;
+  max-width: 72ch;
+  border: 2px dashed var(--ws-ink);
+}
+
+.pilot-ack .ws-label {
+  margin: 0 0 8px;
+  color: var(--fg);
+}
+
+.pilot-ack p:last-child {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.pilot-ack a {
+  color: var(--link);
+  border-bottom: 1px solid currentColor;
+}

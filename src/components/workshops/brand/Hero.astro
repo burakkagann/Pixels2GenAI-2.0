@@ -1,0 +1,32 @@
+---
+/**
+ * The /workshops page hero in the workshop brand (05b): headline, one line,
+ * the sign-up button and a collage of the six card images. Rendered only when
+ * PUBLIC_WORKSHOP_SERIES=true (the workshopArea integration swaps in an empty
+ * stand-in from ../brand-off otherwise).
+ */
+import { SERIES } from '@/data/workshops/series';
+import '@/styles/workshop-brand.css';
+import '@/styles/workshops-page.css';
+---
+
+<header class="ws series-hero">
+  <div class="hero-copy">
+    <p class="ws-chip fill-yellow hero-kicker">Workshop series · Berlin · 2026–27</p>
+    <h1 class="ws-display hero-title">
+      Six workshops.{' '}<br />
+      Six ideas.{' '}<br />
+      <span class="hero-mark">One piece</span> each.
+    </h1>
+    <p class="hero-sub">From a single pixel to a model that paints.</p>
+    <div class="hero-actions">
+      <a class="ws-btn fill-studio" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
+      <a class="hero-link" href="#past">Where it started: the pilot ↓</a>
+    </div>
+  </div>
+  <div class="hero-collage" aria-hidden="true">
+    {SERIES.map((w) => (
+      <img class="hero-tile" data-band-index={w.n} src={w.image.src} alt="" width="720" height="450" decoding="async" />
+    ))}
+  </div>
+</header>

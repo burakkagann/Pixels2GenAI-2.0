@@ -1,0 +1,66 @@
+---
+/**
+ * "A workshop day": the shared timetable as a proportional timeline. A ruler
+ * marks the hours (0 to 4½ h); each block is a paper segment with a colour
+ * stripe (calm, not a wall of fills); a legend says what each kind of block
+ * is. On phones the timeline becomes a list with the description in each row.
+ * Data: DAY_PLAN and DAY_KINDS in src/data/workshops/series.ts.
+ */
+import { DAY_PLAN, DAY_KINDS } from '@/data/workshops/series';
+
+type Kind = keyof typeof DAY_KINDS;
+interface Segment { kind: Kind; label: string; full: string; minutes: number; stripe: string; }
+
+let coreCount = 0;
+const segments: Segment[] = DAY_PLAN.blocks.flatMap((block) => {
+  const out: Segment[] = [];
+  if (block.breakBefore > 0) out.push({ kind: 'break', label: 'Break', full: 'Break', minutes: block.breakBefore, stripe: '' });
+  if (block.kind === 'core') {
+    coreCount += 1;
+    out.push({ kind: 'core', label: `Core ${coreCount}`, full: `Core lesson ${coreCount}`, minutes: block.minutes, stripe: `c${coreCount}` });
+  } else {
+    const kind = block.kind as Kind;
+    out.push({ kind, label: DAY_KINDS[kind].short, full: DAY_KINDS[kind].label, minutes: block.minutes, stripe: kind });
+  }
+  return out;
+});
+
+const totalMinutes = segments.reduce((sum, s) => sum + s.minutes, 0);
+const hours = Math.floor(totalMinutes / 60);
+const rest = totalMinutes % 60;
+const totalLabel = rest === 30 ? `${hours}½ hours` : `${hours} h ${rest} min`;
+// Ruler ticks every full hour, plus the end.
+const ticks = [...Array(hours + 1).keys()].map((h) => `${h} h`).concat(rest ? [`${hours}½ h`] : []);
+const legend: Kind[] = ['onramp', 'core', 'break', 'make', 'show'];
+---
+
+<div class="series-day" aria-labelledby="day-title">
+  <div class="day-head">
+    <h3 class="ws-display day-title" id="day-title">A workshop day</h3>
+    <p class="day-total"><span class="ws-display day-total-num">{totalLabel}</span> <span class="ws-label">from start to finish, breaks included</span></p>
+  </div>
+
+  <div class="day-chart">
+    <ol class="day-ruler" aria-hidden="true">
+      {ticks.map((tick) => <li>{tick}</li>)}
+    </ol>
+    <ol class="day-bar" aria-label={`The day, ${totalLabel} in total`}>
+      {segments.map((segment) => (
+        <li class={`day-seg day-${segment.kind}`} data-stripe={segment.stripe} data-minutes={segment.minutes}>
+          <span class="day-label"><span class="day-short">{segment.label}</span><span class="day-full">{segment.full}</span></span>
+          <span class="day-min">{segment.minutes} min</span>
+          <span class="day-text">{DAY_KINDS[segment.kind].text}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <dl class="day-legend">
+    {legend.map((kind) => (
+      <div data-stripe={kind === 'core' ? 'c1' : kind}>
+        <dt class="ws-label">{kind === 'core' ? 'Core lessons ×3' : DAY_KINDS[kind].label}</dt>
+        <dd>{DAY_KINDS[kind].text}</dd>
+      </div>
+    ))}
+  </dl>
+</div>

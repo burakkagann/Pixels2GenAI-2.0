@@ -49,6 +49,7 @@ ai-tutor-planning/
 workshop-planning/
 
 # local AI-assistant config and browser-automation scratch output
+CLAUDE.local.md
 .claude/
 CLAUDE.md
 .playwright-mcp/

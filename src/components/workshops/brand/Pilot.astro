@@ -1,0 +1,112 @@
+---
+/**
+ * The February 2026 pilot (research cycle i) on the /workshops page, in the
+ * workshop brand (05b): the poster, three plain-language results, the six
+ * lessons it used (linked), the participants' fractals with a lightbox, and
+ * the Academis acknowledgement. Same facts as the pre-series page; figures
+ * come from src/data/site/workshops.ts and the /research findings.
+ * Rendered only when PUBLIC_WORKSHOP_SERIES=true.
+ */
+import { PAST_WORKSHOPS } from '@/data/site/workshops';
+import '@/styles/workshop-brand.css';
+import '@/styles/workshops-page.css';
+
+const past = PAST_WORKSHOPS[0];
+// Sentences don't start with a digit.
+const WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+const peopleWord = WORDS[past.participants ?? 0] ?? String(past.participants);
+---
+
+<section class="ws pilot" id="past" aria-labelledby="pilot-title">
+  <div class="pilot-head">
+    <p class="ws-chip pilot-kicker">Cycle i · The pilot · {past.date}</p>
+    <h2 class="ws-display pilot-title" id="pilot-title">Where it started</h2>
+    <p class="pilot-deck">
+      One day in {past.city}. {peopleWord} people with beginner-level Python went from a single
+      NumPy array to a small diffusion model.
+    </p>
+  </div>
+
+  <div class="pilot-grid">
+    {past.poster && (
+      <a class="pilot-poster" href={past.poster} target="_blank" rel="noopener">
+        <img src={past.poster} alt={`Printed poster announcing the ${past.date} workshop in ${past.city}.`} loading="lazy" decoding="async" />
+        <span class="ws-chip pilot-poster-tag">Poster · {past.date}</span>
+      </a>
+    )}
+
+    <div class="pilot-body">
+      <div class="pilot-stats">
+        <div class="ws-card pilot-stat" data-band="foundations">
+          <span class="ws-display pilot-num">×3</span>
+          <span class="pilot-stat-text">Test scores roughly tripled (3.6 → 12.1 of 24). Every participant improved.</span>
+        </div>
+        <div class="ws-card pilot-stat" data-band="ml">
+          <span class="ws-display pilot-num">{past.participants}</span>
+          <span class="pilot-stat-text">Participants, with laptops and beginner-level Python.</span>
+        </div>
+        <div class="ws-card pilot-stat" data-band="genai">
+          <span class="ws-display pilot-num">{past.modules.length}</span>
+          <span class="pilot-stat-text">Lessons in one day, from pixels to diffusion.</span>
+        </div>
+      </div>
+      <p class="pilot-fine">Cohen's d = 1.615 on the 24-item test · prior experience × load: Spearman's rho = −0.857, p = .007</p>
+
+      <ul class="pilot-lessons" aria-label="The lessons of the pilot">
+        {past.modules.map((m) => (
+          <li><a class="ws-chip pilot-lesson" href={`/lessons/${m.idx}`}><b>{m.idx}</b> {m.title}</a></li>
+        ))}
+      </ul>
+
+      {past.researchLink && <a class="ws-btn pilot-findings" href="/research">Read the findings →</a>}
+    </div>
+  </div>
+
+  {past.gallery && (
+    <div class="pilot-gallery-wrap">
+      <h3 class="ws-display pilot-gallery-title">Nine people, nine fractals</h3>
+      <p class="pilot-gallery-deck">Same recipe (lesson 4.1.1, Fractal Square), two free parameters, no two alike. Shown with consent; click to enlarge.</p>
+      <div class="pilot-gallery">
+        {past.gallery.map((src, i) => (
+          <button type="button" class="pilot-tile" data-src={src} aria-label={`Open participant artwork ${i + 1}`}>
+            <img src={src} alt={`Participant fractal output, sample ${i + 1}.`} loading="lazy" decoding="async" />
+          </button>
+        ))}
+      </div>
+      <dialog class="ws pilot-modal" aria-label="Participant artwork">
+        <button type="button" class="ws-btn pilot-close" aria-label="Close">×</button>
+        <img alt="" />
+      </dialog>
+    </div>
+  )}
+
+  <div class="pilot-ack">
+    <p class="ws-label">Co-organised with Academis</p>
+    <p>
+      The workshops are run with <a href={past.supervisorHref} target="_blank" rel="noopener">Kristian Rother</a> and
+      Academis, who bring the venue, the recruitment and the facilitation experience that makes a draft curriculum teachable. They are part of a Master's thesis;
+      anonymous session feedback is used for research with participants' consent.
+    </p>
+  </div>
+</section>
+
+<script>
+  // Lightbox for the participant fractals (same behaviour as the pre-series
+  // gallery). Closing on a click outside tests the event target, not the
+  // pointer position, so keyboard-made clicks don't close it by accident.
+  const dialog = document.querySelector('.pilot-modal') as HTMLDialogElement | null;
+  const dialogImg = dialog?.querySelector('img') as HTMLImageElement | null;
+  if (dialog && dialogImg) {
+    document.querySelectorAll<HTMLButtonElement>('.pilot-tile').forEach((tile) => {
+      tile.addEventListener('click', () => {
+        dialogImg.src = tile.dataset.src ?? '';
+        dialogImg.alt = tile.querySelector('img')?.alt ?? '';
+        dialog.showModal();
+      });
+    });
+    dialog.querySelector('.pilot-close')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+</script>

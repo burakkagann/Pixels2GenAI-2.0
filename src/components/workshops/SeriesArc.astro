@@ -1,0 +1,47 @@
+---
+/**
+ * The series as a path of stickers: W1–W6 in their band colours, then the
+ * W7 showcase. Each sticker links to its card further down. A thick ink line
+ * runs behind them. Static HTML, no client JS. Brand: workshop-brand.css.
+ *
+ * link="anchor" (public /workshops): stickers jump to the cards on the page.
+ * link="arc" (series map): stickers open each workshop's arc page, and carry
+ * data-slug so the map's script can mark them done or upcoming.
+ */
+import { SERIES, SHOWCASE } from '@/data/workshops/series';
+import { bandKey, shortDate } from '@/components/workshops/seriesFormat';
+
+interface Props {
+  link?: 'anchor' | 'arc';
+}
+
+const { link = 'anchor' } = Astro.props;
+const hrefFor = (slug: string) => (link === 'arc' ? `/workshops/${slug}` : `#${slug}`);
+---
+
+<nav class="series-arc" aria-label="The six workshops and the showcase">
+  <ol>
+    {SERIES.map((w) => (
+      <li data-band={bandKey(w.band)} data-slug={link === 'arc' ? w.slug : undefined}>
+        <a class="arc-node" href={hrefFor(w.slug)}>
+          <span class="ws-sticker arc-sticker">W{w.n}</span>
+          <span class="ws-label arc-verb">{w.verb}</span>
+          {w.dateIso && <span class="arc-date">{shortDate(w.dateIso)}</span>}
+        </a>
+      </li>
+    ))}
+    <li class="arc-showcase">
+      {link === 'arc' ? (
+        <span class="arc-node">
+          <span class="ws-sticker arc-sticker">W7</span>
+          <span class="ws-label arc-verb">{SHOWCASE.title}</span>
+        </span>
+      ) : (
+        <a class="arc-node" href="#showcase">
+          <span class="ws-sticker arc-sticker">W7</span>
+          <span class="ws-label arc-verb">{SHOWCASE.title}</span>
+        </a>
+      )}
+    </li>
+  </ol>
+</nav>

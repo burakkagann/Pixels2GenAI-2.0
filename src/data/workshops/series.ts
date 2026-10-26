@@ -50,6 +50,11 @@ export interface SeriesWorkshop {
   cores: [WorkshopCore, WorkshopCore, WorkshopCore];
   /** The make-your-piece brief. */
   make: string;
+  /** Equipment beyond a laptop with a browser (shown as "You need"). */
+  needs?: string;
+  /** Card image (public/workshops/series/, 720 × 450 WebP), always credited.
+   *  Work made with the series' techniques until the workshop has its own output. */
+  image: { src: string; alt: string; credit: string };
   warmup: string;
 }
 
@@ -67,6 +72,7 @@ export const SERIES: SeriesWorkshop[] = [
     ],
     make: 'A riso-style print or zine page of your own photo',
     warmup: '3 quick questions: what is a pixel, what is 255, what is a neighbour?',
+    image: { src: '/workshops/series/w1-see.webp', alt: 'A warm ember spiral of colour, drawn from a NumPy array of zeros with polar coordinates.', credit: 'Print · Array Zero, spiral bloom' },
   },
   {
     id: 'w2', slug: 'w2-grow', n: 2, verb: 'Grow', title: 'Emergence', band: 'Foundations',
@@ -82,6 +88,7 @@ export const SERIES: SeriesWorkshop[] = [
     ],
     make: 'A one-line, one-colour piece: print or animated',
     warmup: '3 questions on kernels and neighbours',
+    image: { src: '/workshops/series/w2-grow.webp', alt: 'A dense, colourful self-similar plaid made by a recursive function.', credit: 'Pilot participant · Fractal Square' },
   },
   {
     id: 'w3', slug: 'w3-sort', n: 3, verb: 'Sort', title: 'Patterns in data', band: 'Machine learning',
@@ -96,6 +103,7 @@ export const SERIES: SeriesWorkshop[] = [
     ],
     make: 'A stipple portrait or a sorted gallery poster',
     warmup: '3 questions on rules that repeat',
+    image: { src: '/workshops/series/w3-sort.webp', alt: 'A network of glowing amber cells on black, like a map of regions around points.', credit: 'Exhibition · Neural-Mycelium' },
   },
   {
     id: 'w4', slug: 'w4-learn', n: 4, verb: 'Learn', title: 'The neuron', band: 'Machine learning',
@@ -110,6 +118,7 @@ export const SERIES: SeriesWorkshop[] = [
     ],
     make: 'A training animation or feature-map print',
     warmup: '3 questions on distance and error',
+    image: { src: '/workshops/series/w4-learn.webp', alt: 'A green and brown terrain of ridges and basins shaped by the tanh activation function.', credit: 'Print · Tectonic Threshold, tanh' },
   },
   {
     id: 'w5', slug: 'w5-dream', n: 5, verb: 'Dream', title: 'From noise to image', band: 'Generative AI',
@@ -124,7 +133,9 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '12.3.2', title: 'A real model', sub: 'your sketch or style, turned into an image', minutes: 55, source: 'live' },
     ],
     make: 'Your sketch or your style turned into an image, labelled as AI-made',
+    needs: 'A laptop with a GPU, or a free Google Colab account',
     warmup: '3 questions on learning',
+    image: { src: '/workshops/series/w5-dream.webp', alt: 'Violet and amber smoke-like filaments traced by three strange attractors.', credit: 'Print · Orbit Sediment, trichrome' },
   },
   {
     id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Live', band: 'Generative AI',
@@ -138,18 +149,25 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '13.3.4', title: 'Real-time diffusion', sub: 'your W5 style on the live camera', minutes: 55, source: 'new' },
     ],
     make: 'A recording of you inside your piece, plus a one-page capstone plan',
+    needs: 'TouchDesigner installed (the free Non-Commercial edition is enough)',
     warmup: '3 questions on the whole series',
+    image: { src: '/workshops/series/w6-play.webp', alt: 'Streaks of iridescent flocking agents moving across a dark field.', credit: 'Exhibition · Selection Pressure' },
   },
 ];
 
 /** W7: capstone pieces shown together after W6 (DEC-16). */
-export const SHOWCASE = { title: 'Showcase', sub: 'W7 · capstone pieces, shown together', date: 'TBA' };
+export const SHOWCASE = {
+  title: 'Showcase',
+  sub: 'W7 · capstone pieces, shown together',
+  idea: 'After W6, the pieces made across the series are shown together. Date and format to come.',
+  date: 'TBA',
+};
 
 /**
- * The day's timetable, shared by every workshop (03b §1): on-ramp, three
- * cores, make your piece, show and tell. `breakBefore` is the pause before a
- * block, in minutes. From 11:00 this ends at 15:10; the prototype's
- * "11:00–15:30" slot leaves 20 minutes of slack.
+ * The day's timetable, shared by every workshop (03b §1, DEC-17): on-ramp,
+ * three cores, make your piece, show and tell. `breakBefore` is the pause
+ * before a block, in minutes (snacks throughout). Total 270 minutes = 4 h 30,
+ * the prototype's 11:00–15:30 slot.
  */
 export const DAY_PLAN = {
   start: '11:00',
@@ -157,10 +175,20 @@ export const DAY_PLAN = {
     { kind: 'onramp', minutes: 15, breakBefore: 0 },
     { kind: 'core', minutes: 55, breakBefore: 0 },
     { kind: 'core', minutes: 55, breakBefore: 10 },
-    { kind: 'core', minutes: 55, breakBefore: 15 },
-    { kind: 'make', minutes: 30, breakBefore: 0 },
+    { kind: 'core', minutes: 55, breakBefore: 20 },
+    { kind: 'make', minutes: 30, breakBefore: 15 },
     { kind: 'show', minutes: 15, breakBefore: 0 },
   ],
+};
+
+/** One line per kind of block, for the workshop-day graphic (`short` fits
+ *  inside the timeline; `label` is used in the legend and on phones). */
+export const DAY_KINDS = {
+  onramp: { label: 'On-ramp', short: 'On-ramp', text: 'A quick recap and a 3-question warm-up' },
+  core: { label: 'Core lesson', short: 'Core', text: 'Make it first, then understand it, step by step' },
+  break: { label: 'Break', short: 'Break', text: 'Snacks and a stretch' },
+  make: { label: 'Make your piece', short: 'Make', text: 'Your own work, from a short brief' },
+  show: { label: 'Show and tell', short: 'Show', text: 'Share your piece, then one exit question' },
 };
 
 export const workshopBySlug = (slug: string) => SERIES.find((w) => w.slug === slug);

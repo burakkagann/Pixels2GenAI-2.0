@@ -1,0 +1,53 @@
+---
+/**
+ * The six-workshop series on the public /workshops page (BLD-09), in the
+ * workshop brand (05b): the arc, the six cards, W7, a workshop day, the
+ * sign-up block and the participant-access note. Rendered only when
+ * PUBLIC_WORKSHOP_SERIES=true. Data: src/data/workshops/series.ts.
+ */
+import { SERIES, SHOWCASE } from '@/data/workshops/series';
+import SeriesArc from '@/components/workshops/SeriesArc.astro';
+import SeriesCard from '@/components/workshops/SeriesCard.astro';
+import WorkshopDay from '@/components/workshops/WorkshopDay.astro';
+import '@/styles/workshop-brand.css';
+import '@/styles/workshops-page.css';
+
+const datesPending = SERIES.some((w) => !w.dateIso);
+---
+
+<section class="ws series" id="series" aria-labelledby="series-title">
+  <div class="series-head">
+    <h2 class="ws-display series-title" id="series-title">The arc</h2>
+    <p class="series-deck">One idea per workshop. Each builds on the last, and each stands on its own.</p>
+  </div>
+
+  <SeriesArc />
+  {datesPending && <p class="ws-chip series-dates">Dates come one at a time · W1 first</p>}
+
+  <div class="series-grid">
+    {SERIES.map((w) => <SeriesCard workshop={w} />)}
+  </div>
+
+  <article class="ws-card series-showcase" id="showcase" aria-labelledby="showcase-title">
+    <span class="ws-sticker fill-yellow showcase-sticker">W7</span>
+    <div>
+      <h3 class="ws-display showcase-title" id="showcase-title">{SHOWCASE.title}</h3>
+      <p class="showcase-text">{SHOWCASE.idea}</p>
+    </div>
+  </article>
+
+  <WorkshopDay />
+
+  <div class="ws-card series-cta">
+    <div>
+      <h3 class="ws-display cta-title">Want in?</h3>
+      <p class="cta-text">Hear first when W1 gets a date. One email per workshop, no newsletter.</p>
+    </div>
+    <a class="ws-btn fill-studio" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
+  </div>
+
+  <p class="series-access">
+    <span class="ws-chip">Have a code?</span>
+    The participant area opens with W1. Your code comes with your ticket.
+  </p>
+</section>

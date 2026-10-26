@@ -1,0 +1,21 @@
+/* ============================================================
+   Workshop brand colour tokens (workshop-planning/05b-workshop-brand.md).
+
+   The companion of tokens.css for the workshop series only: loaded by
+   workshop-brand.css, so pages outside the workshop area never get it.
+   Same rules as tokens.css: hex values live only here, every token has a
+   light and a dark value, and each change is reviewed for contrast.
+   ============================================================ */
+
+:root {
+  /* Riso yellow for fills (highlight blocks, the sign-up panel, stamps).
+     The site's --highlight is a text colour and turns olive in light mode.
+     Text on it: near-black in both themes (12.5:1 dark, 12.3:1 light). */
+  --ws-yellow: #F2D14B;
+  --ws-on-yellow: var(--bg);
+}
+
+[data-theme="light"] {
+  --ws-yellow: #F2D14B;
+  --ws-on-yellow: var(--fg);
+}

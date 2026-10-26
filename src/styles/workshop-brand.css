@@ -1,0 +1,268 @@
+/* ============================================================
+   Workshop brand v1: the neobrutalist sub-brand of the workshop series
+   (workshop-planning/05b-workshop-brand.md, DEC-36).
+
+   Shared by every workshop page and component: the public series section,
+   the arc pages, the series map and the workshop lessons. Scope: `.ws`.
+   Colours come only from tokens.css; this file adds dimensions, not colours.
+
+   Rules: structure is loud (borders, hard shadows, fills on what you act on
+   or navigate by), reading text stays calm. Text on a colour fill is --bg
+   (AA in both themes), except --studio in light mode, which takes --fg.
+   ============================================================ */
+
+@import './tokens-workshop.css';
+
+.ws {
+  --ws-ink: var(--fg);
+  --ws-paper: var(--bg);
+  --ws-border: 3px;
+  --ws-shadow: 6px;
+  --ws-display: var(--sans);
+  --ws-hard-shadow: var(--ws-shadow) var(--ws-shadow) 0 var(--ws-ink);
+}
+
+@media (max-width: 640px) {
+  .ws {
+    --ws-border: 2px;
+    --ws-shadow: 4px;
+  }
+}
+
+/* Fill colours by meaning. Each sets --fill and the text colour on it. */
+.ws [data-band="foundations"], .ws .fill-c1 { --fill: var(--c1); --on-fill: var(--bg); }
+.ws [data-band="ml"],          .ws .fill-c2 { --fill: var(--c2); --on-fill: var(--bg); }
+.ws [data-band="genai"],       .ws .fill-c3 { --fill: var(--c3); --on-fill: var(--bg); }
+.ws .fill-yellow                            { --fill: var(--ws-yellow); --on-fill: var(--ws-on-yellow); }
+.ws .fill-warn                              { --fill: var(--warn); --on-fill: var(--bg); }
+.ws .fill-studio                            { --fill: var(--studio); --on-fill: var(--bg); }
+[data-theme="light"] .ws .fill-studio       { --on-fill: var(--fg); }
+
+/* ---------- Display type ---------- */
+.ws .ws-display {
+  font-family: var(--ws-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+.ws .ws-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ---------- Card: paper, ink border, hard shadow ---------- */
+.ws .ws-card {
+  background: var(--ws-paper);
+  border: var(--ws-border) solid var(--ws-ink);
+  box-shadow: var(--ws-hard-shadow);
+}
+
+/* The `hidden` attribute always wins over the display values set below
+   (page scripts show and hide parts with it). */
+.ws [hidden] {
+  display: none !important;
+}
+
+/* Chips and buttons are paper unless they carry an explicit fill-* class;
+   they must not pick up a band colour from the card or page around them.
+   (Stickers do inherit the band on purpose.) */
+.ws .ws-chip[class*="fill-"],
+.ws .ws-btn[class*="fill-"] {
+  background: var(--fill);
+  color: var(--on-fill);
+}
+
+/* ---------- Chip ---------- */
+.ws .ws-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--ws-ink);
+  background: var(--ws-paper);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* ---------- Sticker: round, filled, small shadow ---------- */
+.ws .ws-sticker {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: var(--ws-border) solid var(--ws-ink);
+  background: var(--fill, var(--ws-paper));
+  color: var(--on-fill, var(--fg));
+  box-shadow: 3px 3px 0 var(--ws-ink);
+  font-family: var(--ws-display);
+  font-weight: 800;
+}
+
+/* ---------- Button: the press effect is half the style ---------- */
+.ws .ws-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border: var(--ws-border) solid var(--ws-ink);
+  background: var(--ws-paper);
+  color: var(--fg);
+  box-shadow: var(--ws-hard-shadow);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.ws .ws-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: calc(var(--ws-shadow) + 2px) calc(var(--ws-shadow) + 2px) 0 var(--ws-ink);
+}
+
+.ws .ws-btn:active {
+  transform: translate(var(--ws-shadow), var(--ws-shadow));
+  box-shadow: 0 0 0 var(--ws-ink);
+}
+
+/* ---------- Toggle: a <summary> styled as a small button ---------- */
+.ws .ws-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 2px solid var(--ws-ink);
+  background: var(--ws-paper);
+  color: var(--fg);
+  box-shadow: 3px 3px 0 var(--ws-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.ws .ws-toggle::-webkit-details-marker { display: none; }
+.ws .ws-toggle::marker { content: ""; }
+
+.ws .ws-toggle::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.ws details[open] > .ws-toggle::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.ws .ws-toggle:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ws-ink);
+}
+
+/* ---------- Focus: one visible ring for everything interactive ---------- */
+.ws a:focus-visible,
+.ws button:focus-visible,
+.ws summary:focus-visible {
+  outline: 3px solid var(--ws-ink);
+  outline-offset: 4px;
+}
+
+/* ============================================================
+   Shared components
+   ============================================================ */
+
+/* ---------- The sticker arc (SeriesArc.astro): public page and series map ---------- */
+.series-arc ol {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The line runs through the sticker centres (64 px stickers). */
+.series-arc ol::before {
+  content: "";
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  top: 30px;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.series-arc li {
+  position: relative;
+}
+
+.arc-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.arc-sticker {
+  width: 64px;
+  height: 64px;
+  font-size: 18px;
+  transition: transform .12s ease;
+}
+
+.arc-showcase .arc-sticker {
+  border-style: dashed;
+}
+
+.arc-node:hover .arc-sticker {
+  transform: translateY(-4px) rotate(-6deg);
+}
+
+.arc-node:focus-visible {
+  outline: none;
+}
+
+.arc-node:focus-visible .arc-sticker {
+  outline: 3px solid var(--ws-ink);
+  outline-offset: 4px;
+}
+
+.arc-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.series-dates {
+  margin: 28px 0 40px;
+}
+
+@media (max-width: 640px) {
+  .arc-sticker { width: 38px; height: 38px; font-size: 12px; box-shadow: 2px 2px 0 var(--ws-ink); }
+  .series-arc ol::before { left: 19px; right: 19px; top: 18px; }
+  .arc-node { gap: 8px; }
+  .arc-verb { font-size: 8.5px; letter-spacing: 0; }
+  .arc-date { display: none; }
+  .series-dates { margin: 22px 0 28px; }
+}
