@@ -50,6 +50,7 @@ workshop-planning/
 
 # local AI-assistant config and browser-automation scratch output
 CLAUDE.local.md
+.netlify/
 .claude/
 CLAUDE.md
 .playwright-mcp/
