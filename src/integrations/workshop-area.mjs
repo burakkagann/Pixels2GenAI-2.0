@@ -24,12 +24,16 @@ export const WORKSHOP_AREA = flag('PUBLIC_WORKSHOP_AREA');
 /** The six-workshop series section on the public /workshops page (BLD-09). */
 export const WORKSHOP_SERIES = flag('PUBLIC_WORKSHOP_SERIES');
 
-/** Paths below /workshops are the participant area; /workshops itself is public. */
-export const isWorkshopAreaPath = (pathname) => /^\/workshops\/[^/]/.test(pathname);
+/** Public pages below /workshops (the ticket terms); every other path below it is the participant area. */
+const PUBLIC_WORKSHOP_PAGES = ['/workshops/terms'];
+
+/** Paths below /workshops are the participant area; /workshops itself and PUBLIC_WORKSHOP_PAGES are public. */
+export const isWorkshopAreaPath = (pathname) =>
+  /^\/workshops\/[^/]/.test(pathname) && !PUBLIC_WORKSHOP_PAGES.includes(pathname.replace(/(\.html|\/)$/, ''));
 
 const SITE = 'https://pixels2genai.art';
-// "/workshops/" followed by anything but a delimiter, inside text files.
-const AREA_PATH_IN_TEXT = /\/workshops\/[^\s/)"'<>]/;
+// "/workshops/" followed by anything but a delimiter, inside text files (the public terms page excepted).
+const AREA_PATH_IN_TEXT = /\/workshops\/(?!terms\b)[^\s/)"'<>]/;
 
 // Things that must never reach the built site, in any file. A match fails the
 // build: a key or dev address that slipped into browser code is a leak even if
@@ -43,6 +47,13 @@ const SECRET_PATTERNS = [
   { name: 'tutor dev token', re: /TUTOR_DEV_TOKEN|dev-local/ },
   { name: 'secret or pepper assignment', re: /\b[A-Z0-9_]*(?:SECRET|PEPPER)[A-Z0-9_]*["']?\s*[:=]\s*["'][^"']{6,}/ },
   { name: 'localhost address', re: /\b(?:localhost|127\.0\.0\.1):\d{2,5}/ },
+];
+// Workshop lesson material must never reach the public site before the release (DEC-26, DEC-77): the
+// lesson sources, their media (cells, solutions) and the answer checks. A match fails the build.
+const LESSON_MATERIAL = [
+  { name: 'workshop media folder', re: /(^|\/)workshop-media\// },
+  { name: 'answer-check file', re: /\.check\.py$/ },
+  { name: 'workshop lesson page', re: /(^|\/)workshops\/w[1-7]-[a-z]+\/[0-9]/ },
 ];
 // Includes the downloadable lesson scripts (.py) and notebooks.
 const TEXT_FILE = /\.(html|js|mjs|css|json|txt|xml|webmanifest|svg|map|py|ipynb|md)$/i;
@@ -74,6 +85,7 @@ function filesUnder(dir) {
  *   - the area flag is off but area pages were built anyway;
  *   - the area flag is on and an area page lacks noindex, carries JSON-LD,
  *     loads analytics, or has inline event handlers / javascript: URLs;
+ *   - the area flag is off and workshop lesson material was built (LESSON_MATERIAL);
  *   - any text file in dist/ contains a secret pattern (SECRET_PATTERNS).
  */
 function checkForLeaks(distDir, logger) {
@@ -101,14 +113,14 @@ function checkForLeaks(distDir, logger) {
   }
 
   // dist/workshops/ also holds the pilot's poster and gallery images, which
-  // are public assets; only .html pages count.
+  // are public assets; only .html pages count, and the public terms page doesn't.
   const areaPages = [];
   const walk = (dir) => {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(p);
-      else if (entry.name.endsWith('.html')) areaPages.push(p);
+      else if (entry.name.endsWith('.html') && isWorkshopAreaPath('/' + path.relative(distDir, p).replace(/\\/g, '/'))) areaPages.push(p);
     }
   };
   walk(path.join(distDir, 'workshops'));
@@ -142,6 +154,15 @@ function checkForLeaks(distDir, logger) {
 
   let scanned = 0;
   for (const file of filesUnder(distDir)) {
+    const rel = path.relative(distDir, file).replace(/\\/g, '/');
+    // The tutor panel lives in the gitignored src/components/tutor/ until the tutor launches, but a local
+    // production build still bundles it when that folder exists. Build anything you upload from a clean export.
+    if (/TutorPanel|TutorDev/.test(rel)) errors.push(`Tutor panel code was built: ${rel} (build from a clean export).`);
+    if (!WORKSHOP_AREA) {
+      for (const rule of LESSON_MATERIAL) {
+        if (rule.re.test(rel)) errors.push(`PUBLIC_WORKSHOP_AREA is off, but a ${rule.name} was built: ${rel}`);
+      }
+    }
     if (!TEXT_FILE.test(file)) continue;
     scanned += 1;
     const text = fs.readFileSync(file, 'utf8');

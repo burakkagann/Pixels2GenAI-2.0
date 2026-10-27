@@ -1,0 +1,198 @@
+---
+// Ticket terms for the workshop series (LEG-04, approved 23 Oct 2026 in the W1 launch kit), at /workshops/terms. Linked from the
+// /workshops tickets block, pretix and Luma. Same register as /privacy and /imprint: a plain legal page.
+import Base from '@/layouts/Base.astro';
+import Footer from '@/components/chrome/Footer.astro';
+---
+
+<Base
+  title="Ticket terms"
+  description="Ticket terms for the Pixels2GenAI workshop series in Berlin: what you buy, who can take part, cancelling, and what happens if a workshop moves."
+>
+  <main id="main-content" class="terms-page">
+    <article class="terms">
+      <header class="terms-head">
+        <div class="terms-eyebrow">
+          <span class="dot" aria-hidden="true"></span>
+          <span>§ Terms · Workshop tickets</span>
+        </div>
+        <h1>Ticket terms <em>·</em> the workshop series.</h1>
+        <p class="terms-lede">
+          Version 1.1, 27 October 2026. Organiser: Burak Kağan Yılmazer, postal
+          address as stated in the <a href="/imprint">imprint</a>,
+          workshops@pixels2genai.art. Small business under § 19 UStG: no VAT
+          is charged.
+        </p>
+      </header>
+
+      <section>
+        <h2>1. What you buy</h2>
+        <p>A ticket is a seat for one person at one workshop, on a Saturday from 11:00 to 15:30 at the Academis studio in Berlin. The series pass is a seat for one person at all six workshops: 5 December 2026, 9 January, 6 February, 6 March, 10 April and 8 May 2027. At most 8 people take part in each workshop. Tickets are sold on pretix and on Luma; the series pass only on pretix, until 8 January 2027. From 6 December the pass covers the remaining five workshops at €405 (reduced €270).</p>
+      </section>
+      <section>
+        <h2>2. Who can take part</h2>
+        <p>You must be 18 or older. The reduced price is for students, people on low income and people who are unemployed. We don't ask for proof.</p>
+      </section>
+      <section>
+        <h2>3. What to bring</h2>
+        <p>Your own laptop is a must, with a current Chrome or Firefox and its charger. Bring one photo of your own; it stays on your laptop. The sixth workshop uses TouchDesigner: the free version on a laptop with a dedicated graphics card or a newer Mac. We send setup steps beforehand.</p>
+      </section>
+      <section>
+        <h2>4. Your personal code</h2>
+        <p>Four days before the workshop you receive an email with a personal code, the address and an information sheet. The code opens the workshop's lessons and the AI tutor until two weeks after the workshop. With the series pass you get one code for the whole series: each workshop opens on its day and stays open until two weeks after the sixth workshop. Your progress is stored under the code without your name; details are on the <a href="/privacy">privacy page</a>.</p>
+      </section>
+      <section>
+        <h2>5. If you can't come</h2>
+        <p>Up to 7 days before the workshop you can cancel for a full refund. After that there is no refund, but you can give your seat to someone else: tell us their name and email by 12:00 on the day before the workshop. If another workshop of the series has a free seat, you can move to it instead. Series pass: a full refund before the first workshop your pass covers; after that, you can send someone else to any session you miss, on the same terms.</p>
+      </section>
+      <section>
+        <h2>6. If we cancel or move a workshop</h2>
+        <p>If fewer than 5 people have booked 7 days before, or if illness or the venue makes it necessary, we move the workshop to a new date or cancel it. You choose: keep your seat for the new date, or get a full refund. If you don't answer, your ticket moves to the new date and you can still ask for a refund until 7 days before it. Series pass holders get back the share of the pass price for each session that can't be rescheduled: €75 (reduced €50) on the pass for all six workshops, €81 (reduced €54) on the pass from the second workshop.</p>
+      </section>
+      <section>
+        <h2>7. Sales end</h2>
+        <p>Ticket sales for each workshop end at 12:00 on the day before.</p>
+      </section>
+      <section>
+        <h2>8. On the day</h2>
+        <p>The studio's corridor is shoe-free (bring socks or slippers; the studio plans to provide slippers) and the kitchen is for staff only; please bring food and drinks in closed containers. We may photograph prints, screens and hands. We only photograph your face if you say yes on the consent card.</p>
+      </section>
+      <section>
+        <h2>9. Your print</h2>
+        <p>You leave with a print-ready image of your own photo. If you'd like a photo print, we send one by post after the workshop; we use your address only for that and delete it afterwards.</p>
+      </section>
+      <section>
+        <h2>10. Research</h2>
+        <p>The series is part of research on teaching creative coding. Taking part in the research is optional and asked separately when you enter your code.</p>
+      </section>
+      <section>
+        <h2>11. Questions</h2>
+        <p>workshops@pixels2genai.art</p>
+      </section>
+
+      <p class="terms-foot">
+        Version 1.1 · 27 October 2026 · Pixels2GenAI
+      </p>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .terms-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px var(--pad-x) 96px;
+  }
+
+  .terms-head {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+
+  .terms-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin-bottom: 22px;
+  }
+
+  .terms-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .terms h1 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 48px);
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    margin: 0 0 24px;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+
+  .terms h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .terms-lede {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--fg);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .terms section {
+    margin: 0 0 36px;
+  }
+
+  .terms h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+    color: var(--fg);
+  }
+
+  .terms p,
+  .terms li {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--fg-2);
+    margin: 0 0 12px;
+    max-width: 62ch;
+  }
+
+  .terms ul {
+    margin: 0 0 12px;
+    padding-left: 20px;
+  }
+
+  .terms a {
+    color: var(--link, var(--accent));
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    transition: border-color .15s;
+  }
+
+  .terms a:hover {
+    border-bottom-color: currentColor;
+  }
+
+  .terms .arr {
+    font-size: 0.85em;
+    color: var(--fg-3);
+    margin-left: 2px;
+  }
+
+  .terms-foot {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin: 48px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+</style>
