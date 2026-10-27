@@ -1,18 +1,30 @@
 ---
 /**
  * The six-workshop series on the public /workshops page (BLD-09), in the
- * workshop brand (05b): the arc, the six cards, W7, a workshop day, the
- * sign-up block and the participant-access note. Rendered only when
+ * workshop brand (05b): the arc over the calendar with the dates on it
+ * (DEC-81, DEC-82), the six cards, W7, a workshop day and the tickets block.
+ * Rendered only when
  * PUBLIC_WORKSHOP_SERIES=true. Data: src/data/workshops/series.ts.
  */
 import { SERIES, SHOWCASE } from '@/data/workshops/series';
-import SeriesArc from '@/components/workshops/SeriesArc.astro';
+import SeriesCalendarArc from '@/components/workshops/SeriesCalendarArc.astro';
 import SeriesCard from '@/components/workshops/SeriesCard.astro';
 import WorkshopDay from '@/components/workshops/WorkshopDay.astro';
+import { bandKey, shortDate } from '@/components/workshops/seriesFormat';
+import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/workshop-brand.css';
 import '@/styles/workshops-page.css';
 
 const datesPending = SERIES.some((w) => !w.dateIso);
+const [first] = SERIES;
+const w1Shop = TICKETS.pretix.w1;
+const w1Luma = TICKETS.luma.w1;
+const passShop = TICKETS.pretix.pass;
+const P = TICKETS.price;
+const late = new Date().toISOString().slice(0, 10) >= TICKETS.passLate.from;
+const pass = late
+  ? { label: 'Series pass · W2 to W6', standard: TICKETS.passLate.standard, reduced: TICKETS.passLate.reduced }
+  : { label: 'Series pass · all six Saturdays', standard: P.passStandard, reduced: P.passReduced };
 ---
 
 <section class="ws series" id="series" aria-labelledby="series-title">
@@ -21,33 +33,64 @@ const datesPending = SERIES.some((w) => !w.dateIso);
     <p class="series-deck">One idea per workshop. Each builds on the last, and each stands on its own.</p>
   </div>
 
-  <SeriesArc />
-  {datesPending && <p class="ws-chip series-dates">Dates come one at a time · W1 first</p>}
+  <SeriesCalendarArc />
+  <p class="series-practical">Every workshop is a Saturday, {TICKETS.time}, at the Academis studio in Berlin, with eight people at most.</p>
 
   <div class="series-grid">
     {SERIES.map((w) => <SeriesCard workshop={w} />)}
   </div>
 
   <article class="ws-card series-showcase" id="showcase" aria-labelledby="showcase-title">
-    <span class="ws-sticker fill-yellow showcase-sticker">W7</span>
-    <div>
+    <ul class="showcase-wall" aria-label="The wall, waiting for one piece from each workshop">
+      {SERIES.map((w) => (
+        <li data-band={bandKey(w.band)}>
+          <span class="showcase-tag">W{w.n} {w.verb}</span>
+          <span class="showcase-frame-text">{SHOWCASE.frameText}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="showcase-body">
+      <p class="ws-label showcase-kicker">W7 · {SHOWCASE.date} · {SHOWCASE.price}</p>
       <h3 class="ws-display showcase-title" id="showcase-title">{SHOWCASE.title}</h3>
       <p class="showcase-text">{SHOWCASE.idea}</p>
+      <p class="showcase-note">{SHOWCASE.note}</p>
+      <a class="ws-btn" href="/announce?topic=workshops" data-announce data-topic="workshops">{SHOWCASE.cta}</a>
     </div>
   </article>
 
   <WorkshopDay />
 
-  <div class="ws-card series-cta">
-    <div>
-      <h3 class="ws-display cta-title">Want in?</h3>
-      <p class="cta-text">Hear first when W1 gets a date. One email per workshop, no newsletter.</p>
+  <div class="ws-card series-cta" id="tickets">
+    <div class="tk-wrap">
+      <h3 class="ws-display cta-title">Tickets</h3>
+      <div class="tk-grid">
+        <div class="tk-col">
+          <p class="ws-label">W1 See · {shortDate(first.dateIso!)}</p>
+          <p class="tk-price">€{P.standard}</p>
+          <p class="tk-sub">€{P.reduced} reduced for {TICKETS.reducedFor}. No proof needed.</p>
+          <div class="sc-btns">
+            {w1Shop ? <a class="ws-btn fill-studio" href={w1Shop}>Get a ticket →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
+            {w1Luma && <a class="ws-btn" href={w1Luma}>Also on Luma</a>}
+          </div>
+        </div>
+        <div class="tk-col">
+          <p class="ws-label">{pass.label}</p>
+          <p class="tk-price">€{pass.standard}</p>
+          <p class="tk-sub">€{pass.reduced} reduced. Limited, until {TICKETS.passUntil}. One code for the whole series.</p>
+          <div class="sc-btns">
+            {passShop ? <a class="ws-btn fill-studio" href={passShop}>Get the pass →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
+          </div>
+        </div>
+      </div>
+      <ul class="tk-facts">
+        <li>Max 8 people · 18+ · English</li>
+        <li>Your own laptop is a must (Chrome or Firefox, and the charger)</li>
+        <li>Bring one photo of your own</li>
+        <li>{TICKETS.venue}, hosted by {TICKETS.host}</li>
+        <li>Your personal code arrives by email four days before your workshop</li>
+      </ul>
+      <p class="tk-small">No VAT is charged (§ 19 UStG). <a href={TICKETS.terms}>Ticket terms</a> · Not for W1? <a href="/announce?topic=workshops" data-announce data-topic="workshops">Hear when W2 opens</a></p>
     </div>
-    <a class="ws-btn fill-studio" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
   </div>
 
-  <p class="series-access">
-    <span class="ws-chip">Have a code?</span>
-    The participant area opens with W1. Your code comes with your ticket.
-  </p>
 </section>

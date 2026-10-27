@@ -1,0 +1,210 @@
+---
+/**
+ * The series as one arch over the calendar (DEC-81): each workshop sits at its
+ * real date from November to June, so the winter gap and the monthly rhythm
+ * show without reading. The arch is coloured by band; W7 closes it. Drawn at
+ * build time from series.ts, so a date change moves the node. No client JS.
+ *
+ * Two drawings of the same data: a wide arch (desktop and tablet) and the
+ * same curve turned upright for phones, with the text to the right so nothing
+ * shrinks. Only one is displayed at a time; every node links to its card.
+ */
+import { SERIES, SHOWCASE } from '@/data/workshops/series';
+import { TICKETS } from '@/data/workshops/tickets';
+import { bandKey, cardDate } from '@/components/workshops/seriesFormat';
+
+const DAY = 86_400_000;
+const toTime = (iso: string) => new Date(`${iso}T12:00:00Z`).getTime();
+const dated = SERIES.filter((w) => w.dateIso);
+
+// Time axis: from the first of W1's month to the end of the showcase month
+// (W7 is "June": drawn mid-month, after W6).
+const first = new Date(`${dated[0].dateIso!.slice(0, 7)}-01T12:00:00Z`);
+const start = first.getTime();
+const showcaseTime = Date.UTC(first.getUTCFullYear() + 1, 5, 15, 12);
+const end = Date.UTC(first.getUTCFullYear() + 1, 6, 1, 12);
+const frac = (t: number) => (t - start) / (end - start);
+
+// Month ticks (first of each month) with a year mark on January.
+const months: { t: number; label: string }[] = [];
+for (let d = new Date(start); d.getTime() < end; d.setUTCMonth(d.getUTCMonth() + 1)) {
+  const m = d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+  months.push({ t: d.getTime(), label: d.getUTCMonth() === 0 ? `${m} ’${String(d.getUTCFullYear()).slice(2)}` : m });
+}
+
+// The longest gap between two workshops is the winter break; it gets a note.
+let gapAt = 0;
+let gapLen = 0;
+for (let i = 1; i < dated.length; i++) {
+  const len = toTime(dated[i].dateIso!) - toTime(dated[i - 1].dateIso!);
+  if (len > gapLen) { gapLen = len; gapAt = i; }
+}
+const showGap = gapLen > 35 * DAY;
+const gapMid = showGap ? (toTime(dated[gapAt - 1].dateIso!) + toTime(dated[gapAt].dateIso!)) / 2 : 0;
+
+const nodes = dated.map((w) => ({
+  w,
+  f: frac(toTime(w.dateIso!)),
+  band: bandKey(w.band),
+  label: `W${w.n} ${w.verb}, ${cardDate(w.dateIso!)}`,
+  short: new Date(`${w.dateIso}T12:00:00Z`)
+    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+    .replace(',', '')
+    .toUpperCase(),
+  onSale: TICKETS.onSale.includes(w.id),
+}));
+const showcaseF = frac(showcaseTime);
+
+// Band segments of the coloured arch: each band runs from halfway after the
+// previous band's last workshop to halfway before the next band's first.
+const bands: { key: string; name: string; from: number; to: number }[] = [];
+for (const n of nodes) {
+  const last = bands[bands.length - 1];
+  if (last && last.key === n.band) last.to = n.f;
+  else bands.push({ key: n.band, name: n.w.band, from: n.f, to: n.f });
+}
+const PAD = 0.035;
+const segments = bands.map((b, i) => ({
+  ...b,
+  from: i === 0 ? b.from - PAD : (bands[i - 1].to + b.from) / 2,
+  to: i === bands.length - 1 ? b.to + PAD : (b.to + bands[i + 1].from) / 2,
+}));
+
+// ---- Wide drawing: an arch, y = base - rise * (1 - u²), u in [-1, 1].
+const W = { x0: 50, x1: 950, base: 250, rise: 150, axis: 302 };
+const wx = (f: number) => W.x0 + f * (W.x1 - W.x0);
+const wy = (f: number) => {
+  const u = 2 * f - 1;
+  return W.base - W.rise * (1 - u * u);
+};
+const wPath = (a: number, b: number) => {
+  const steps = Math.max(2, Math.round((b - a) * 120));
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
+    const f = a + ((b - a) * i) / steps;
+    d += `${i ? 'L' : 'M'}${wx(f).toFixed(1)},${wy(f).toFixed(1)} `;
+  }
+  return d.trim();
+};
+
+// ---- Tall drawing (phones): the curve turned upright, bulging to the right.
+const T = { y0: 34, y1: 526, x0: 70, bulge: 110 };
+const ty = (f: number) => T.y0 + f * (T.y1 - T.y0);
+const tx = (f: number) => T.x0 + T.bulge * Math.sin(Math.PI * f);
+const tPath = (a: number, b: number) => {
+  const steps = Math.max(2, Math.round((b - a) * 120));
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
+    const f = a + ((b - a) * i) / steps;
+    d += `${i ? 'L' : 'M'}${tx(f).toFixed(1)},${ty(f).toFixed(1)} `;
+  }
+  return d.trim();
+};
+---
+
+<nav class="cal-arc" aria-label="The six workshops and the showcase, on the calendar">
+  <svg class="cal-arc-wide" viewBox="0 0 1000 360" role="group">
+    <line class="ca-axis" x1={W.x0} y1={W.axis} x2={W.x1} y2={W.axis} />
+    {months.map((m, i) => {
+      const x = wx(frac(m.t));
+      const next = i + 1 < months.length ? wx(frac(months[i + 1].t)) : W.x1;
+      return (
+        <g aria-hidden="true">
+          <line class="ca-axis" x1={x} y1={W.axis - 6} x2={x} y2={W.axis + 6} />
+          <text class="ca-month" x={(x + next) / 2} y={W.axis + 24}>{m.label}</text>
+        </g>
+      );
+    })}
+    {showGap && <text class="ca-note" x={wx(frac(gapMid))} y={W.axis + 44} aria-hidden="true">winter break</text>}
+
+    <path class="ca-under" d={wPath(0, 1)} />
+    {segments.map((s) => (
+      <g data-band={s.key} aria-hidden="true">
+        <path class="ca-band" d={wPath(s.from, s.to)} />
+        <text class="ca-bandname" x={wx((s.from + s.to) / 2)} y={wy((s.from + s.to) / 2) - 52}>{s.name.toUpperCase()}</text>
+      </g>
+    ))}
+
+    {nodes.map((n) => {
+      const x = wx(n.f);
+      const y = wy(n.f);
+      return (
+        <a href={`#${n.w.slug}`} class="ca-node" data-band={n.band} aria-label={n.label}>
+          <circle class="ca-shadow" cx={x + 3} cy={y + 3} r="21" />
+          <circle class="ca-dot" cx={x} cy={y} r="21" />
+          <text class="ca-wn" x={x} y={y + 6}>W{n.w.n}</text>
+          <text class="ca-verb" x={x} y={y + 40}>{n.w.verb.toUpperCase()}</text>
+          <text class="ca-date" x={x} y={y + 56}>{n.short}</text>
+          {n.onSale && (
+            <g class="ca-sale">
+              <rect x={x - 46} y={y - 64} width="92" height="20" />
+              <text x={x} y={y - 50}>ON SALE</text>
+            </g>
+          )}
+        </a>
+      );
+    })}
+    <a href="#showcase" class="ca-node ca-showcase" aria-label={`W7 ${SHOWCASE.title}, June`}>
+      <circle class="ca-dot" cx={wx(showcaseF)} cy={wy(showcaseF)} r="21" />
+      <text class="ca-wn" x={wx(showcaseF)} y={wy(showcaseF) + 6}>W7</text>
+      <text class="ca-verb" x={wx(showcaseF)} y={wy(showcaseF) + 40}>{SHOWCASE.title.toUpperCase()}</text>
+      <text class="ca-date" x={wx(showcaseF)} y={wy(showcaseF) + 56}>JUNE</text>
+    </a>
+  </svg>
+
+  <svg class="cal-arc-tall" viewBox="0 0 340 560" role="group">
+    <path class="ca-under" d={tPath(0, 1)} />
+    {segments.map((s) => (
+      <g data-band={s.key} aria-hidden="true"><path class="ca-band" d={tPath(Math.max(0, s.from), Math.min(1, s.to))} /></g>
+    ))}
+    {nodes.map((n) => {
+      const x = tx(n.f);
+      const y = ty(n.f);
+      return (
+        <a href={`#${n.w.slug}`} class="ca-node" data-band={n.band} aria-label={n.label}>
+          <circle class="ca-shadow" cx={x + 3} cy={y + 3} r="19" />
+          <circle class="ca-dot" cx={x} cy={y} r="19" />
+          <text class="ca-wn ca-small" x={x} y={y + 5}>W{n.w.n}</text>
+          <text class="ca-verb" x={x + 30} y={y - 2} text-anchor="start">{n.w.verb.toUpperCase()}{n.onSale ? ' · ON SALE' : ''}</text>
+          <text class="ca-date" x={x + 30} y={y + 14} text-anchor="start">{n.short} {n.w.dateIso!.slice(0, 4)}</text>
+        </a>
+      );
+    })}
+    <a href="#showcase" class="ca-node ca-showcase" aria-label={`W7 ${SHOWCASE.title}, June`}>
+      <circle class="ca-dot" cx={tx(showcaseF)} cy={ty(showcaseF)} r="19" />
+      <text class="ca-wn ca-small" x={tx(showcaseF)} y={ty(showcaseF) + 5}>W7</text>
+      <text class="ca-verb" x={tx(showcaseF) + 30} y={ty(showcaseF) + 5} text-anchor="start">{SHOWCASE.title.toUpperCase()} · JUNE</text>
+    </a>
+  </svg>
+</nav>
+
+<style>
+  .cal-arc { margin: 0 0 8px; }
+  .cal-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .cal-arc .cal-arc-tall { display: none; max-width: 340px; margin: 0 auto; }
+  @media (max-width: 700px) {
+    .cal-arc .cal-arc-wide { display: none; }
+    .cal-arc .cal-arc-tall { display: block; }
+  }
+  .ca-axis { stroke: var(--fg-3); stroke-width: 1.5; }
+  .ca-month { fill: var(--fg-3); font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-anchor: middle; }
+  .ca-note { fill: var(--fg-3); font-family: var(--serif); font-style: italic; font-size: 14px; text-anchor: middle; }
+  .ca-under { fill: none; stroke: var(--ws-ink); stroke-width: 3; stroke-dasharray: 2 7; stroke-linecap: round; }
+  .ca-band { fill: none; stroke: var(--fill); stroke-width: 10; stroke-linecap: round; }
+  .ca-bandname { fill: var(--fill); font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: .1em; text-anchor: middle; }
+  .ca-shadow { fill: var(--ws-ink); }
+  .ca-dot { fill: var(--fill); stroke: var(--ws-ink); stroke-width: 2.5; }
+  .ca-wn { fill: var(--on-fill); font-family: var(--ws-display); font-weight: 800; font-size: 16px; text-anchor: middle; }
+  .ca-wn.ca-small { font-size: 14px; }
+  .ca-verb { fill: var(--fg); font-family: var(--mono); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-anchor: middle; }
+  .ca-date { fill: var(--fg-2); font-family: var(--mono); font-size: 12px; text-anchor: middle; }
+  .cal-arc text[text-anchor="start"] { text-anchor: start; }
+  .ca-showcase .ca-dot { fill: var(--ws-paper); stroke-dasharray: 5 4; }
+  .ca-showcase .ca-wn { fill: var(--fg); }
+  .ca-sale rect { fill: var(--ws-yellow); stroke: var(--ws-ink); stroke-width: 2; }
+  .ca-sale text { fill: var(--ws-on-yellow); font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-anchor: middle; }
+  .ca-node { cursor: pointer; }
+  .ca-node:hover .ca-dot, .ca-node:focus-visible .ca-dot { stroke-width: 4; }
+  .ca-node:focus-visible { outline: none; }
+  .ca-node:focus-visible .ca-shadow { fill: var(--link, var(--ws-ink)); }
+</style>

@@ -1,18 +1,34 @@
 ---
 /**
- * One workshop card: a colour band (number, verb, band), the image of what
- * you could make, the title and one "You make" line. Everything else (the
- * idea, what it builds on, what you need, the three lessons) sits behind
- * "Inside" (native <details>, no client JS). The id is the arc's anchor.
+ * One workshop card (DEC-83): a colour band (number, verb, band), the image
+ * with a calendar tile, the title, the idea, aligned "You make" / "When" rows,
+ * "What you'll learn" (native <details>, no client JS) and the action pinned
+ * to the bottom so a row of cards lines up. A buy button appears only once
+ * the shop link exists; later workshops name the day their tickets open.
+ * The id is the arc's anchor.
  */
 import type { SeriesWorkshop } from '@/data/workshops/series';
-import { bandKey, longDate } from '@/components/workshops/seriesFormat';
+import { bandKey, cardDate } from '@/components/workshops/seriesFormat';
+import { TICKETS } from '@/data/workshops/tickets';
 
 interface Props {
   workshop: SeriesWorkshop;
 }
 
 const { workshop: w } = Astro.props;
+const onSale = TICKETS.onSale.includes(w.id);
+const shop = TICKETS.pretix[w.id] ?? null;
+const luma = TICKETS.luma[w.id] ?? null;
+
+// Calendar tile parts, and the day single tickets open (four weeks before).
+const day = w.dateIso ? new Date(`${w.dateIso}T12:00:00Z`) : null;
+const tile = day && {
+  wd: day.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }).toUpperCase(),
+  d: day.getUTCDate(),
+  m: day.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase(),
+};
+const opens = day && new Date(day.getTime() - 28 * 86_400_000)
+  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 ---
 
 <article class="ws-card series-card" id={w.slug} data-band={bandKey(w.band)} aria-labelledby={`${w.slug}-title`}>
@@ -24,20 +40,28 @@ const { workshop: w } = Astro.props;
 
   <figure class="sc-figure">
     <img src={w.image.src} alt={w.image.alt} width="720" height="450" loading="lazy" decoding="async" />
+    {tile && (
+      <span class="sc-tile" aria-hidden="true">
+        <span class="sc-tile-wd">{tile.wd}</span>
+        <span class="sc-tile-d">{tile.d}</span>
+        <span class="sc-tile-m">{tile.m}</span>
+      </span>
+    )}
     <figcaption class="sc-credit">{w.image.credit}</figcaption>
   </figure>
 
   <div class="sc-body">
     <h4 class="ws-display sc-title" id={`${w.slug}-title`}>{w.title}</h4>
-    <p class="sc-make"><span class="ws-label">You make</span> {w.make}</p>
-    {w.dateIso && <p class="ws-chip fill-yellow sc-date">{longDate(w.dateIso)}</p>}
+    <p class="sc-idea">{w.idea}</p>
+    <dl class="sc-rows">
+      <dt class="ws-label">You make</dt><dd>{w.cardMake}</dd>
+      {w.dateIso && <><dt class="ws-label">When</dt><dd>{cardDate(w.dateIso)} · {TICKETS.time}</dd></>}
+      {w.needs && w.needsOnCard && <><dt class="ws-label">You need</dt><dd>{w.needs}</dd></>}
+    </dl>
 
     <details class="sc-inside">
-      <summary class="ws-toggle">Inside</summary>
+      <summary class="ws-toggle">What you'll learn · 3 lessons</summary>
       <div class="sc-inside-body">
-        <p class="sc-idea">{w.idea}</p>
-        {w.thread && <p class="sc-fact"><span class="ws-label">Builds on</span> {w.threadText}</p>}
-        {w.needs && <p class="sc-fact"><span class="ws-label">You need</span> {w.needs}</p>}
         <ol class="sc-lessons" aria-label="The three lessons">
           {w.cores.map((core) => (
             <li>
@@ -47,7 +71,27 @@ const { workshop: w } = Astro.props;
             </li>
           ))}
         </ol>
+        {w.thread && <p class="sc-fact"><span class="ws-label">Builds on</span> {w.threadText}</p>}
+        {w.needs && !w.needsOnCard && <p class="sc-fact"><span class="ws-label">You need</span> {w.needs}</p>}
       </div>
     </details>
+
+    <div class="sc-foot">
+      {onSale ? (
+        <>
+          <p class="sc-price"><b>€{TICKETS.price.standard}</b> · €{TICKETS.price.reduced} reduced</p>
+          {shop ? (
+            <div class="sc-btns">
+              <a class="ws-btn fill-studio" href={shop}>Get a ticket →</a>
+              {luma && <a class="ws-btn" href={luma}>Also on Luma</a>}
+            </div>
+          ) : (
+            <p class="sc-later">{TICKETS.notReady}</p>
+          )}
+        </>
+      ) : (
+        <p class="sc-later">{opens ? <>Tickets from <b>{opens}</b></> : 'Date to follow'}<br />or with the series pass</p>
+      )}
+    </div>
   </div>
 </article>

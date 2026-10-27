@@ -50,10 +50,17 @@ export interface SeriesWorkshop {
   cores: [WorkshopCore, WorkshopCore, WorkshopCore];
   /** The make-your-piece brief. */
   make: string;
+  /** The outcome in one line, for the card face (DEC-83). */
+  cardMake: string;
+  /** One line of context under the title on the home page mini cards (DEC-100). */
+  homeLine: string;
   /** Equipment beyond a laptop with a browser (shown as "You need"). */
   needs?: string;
-  /** Card image (public/workshops/series/, 720 × 450 WebP), always credited.
-   *  Work made with the series' techniques until the workshop has its own output. */
+  /** Show "You need" on the card itself, not only behind "Inside" (W6: TouchDesigner, DEC-44). */
+  needsOnCard?: boolean;
+  /** Card image (public/workshops/series/one-photo/, 720 × 450 WebP): one source photo through each
+   *  workshop's technique (DEC-90). Source: "Berliner Dom und Fernsehturm, 170117, ako.jpg", Ansgar Koreng,
+   *  Wikimedia Commons, CC0. W5 and W6 are concept stills until BLD-23 and BLD-25. */
   image: { src: string; alt: string; credit: string };
   warmup: string;
 }
@@ -61,7 +68,7 @@ export interface SeriesWorkshop {
 export const SERIES: SeriesWorkshop[] = [
   {
     id: 'w1', slug: 'w1-see', n: 1, verb: 'See', title: 'Pixel · Grid · Kernel', band: 'Foundations',
-    date: 'TBA',
+    date: 'Sat 5 Dec 2026', dateIso: '2026-12-05',
     idea: 'An image is a grid of numbers, and a kernel changes each pixel from its neighbours.',
     thread: null,
     threadText: 'The start of the series: no earlier idea needed.',
@@ -70,13 +77,15 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '3.4.1', title: 'Convolution', sub: 'a kernel reads the neighbours; you write the loop yourself', minutes: 55, source: 'live' },
       { id: '3.4.5', title: 'Dithering and halftone', sub: 'kernels for print', minutes: 50, source: 'new' },
     ],
-    make: 'A riso-style print or zine page of your own photo',
+    make: 'A print-ready riso-style image of your own photo; a photo print follows by post if you want one',
+    cardMake: 'A riso-style print of your own photo',
+    homeLine: 'An image is a grid of numbers',
     warmup: '3 quick questions: what is a pixel, what is 255, what is a neighbour?',
-    image: { src: '/workshops/series/w1-see.webp', alt: 'A warm ember spiral of colour, drawn from a NumPy array of zeros with polar coordinates.', credit: 'Print · Array Zero, spiral bloom' },
+    image: { src: '/workshops/series/one-photo/w1.webp', alt: 'A riso-style print of the Berliner Dom and the Fernsehturm in pink and blue dots, made with a sharpening kernel and dithering.', credit: "Made with W1's lessons, from one photo" },
   },
   {
     id: 'w2', slug: 'w2-grow', n: 2, verb: 'Grow', title: 'Emergence', band: 'Foundations',
-    date: 'TBA',
+    date: 'Sat 9 Jan 2027', dateIso: '2027-01-09',
     idea: 'A simple rule, applied again and again, makes complex form.',
     thread: 'w1',
     threadText: 'From W1, the kernel: the Game of Life counts neighbours with one.',
@@ -87,12 +96,14 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '6.3.5', title: 'Flow fields', sub: 'noise-driven lines, ready for a pen plotter', minutes: 55, source: 'new' },
     ],
     make: 'A one-line, one-colour piece: print or animated',
+    cardMake: 'A one-colour line drawing of your photo, grown from a flow field',
+    homeLine: 'Simple rules grow complex forms',
     warmup: '3 questions on kernels and neighbours',
-    image: { src: '/workshops/series/w2-grow.webp', alt: 'A dense, colourful self-similar plaid made by a recursive function.', credit: 'Pilot participant · Fractal Square' },
+    image: { src: '/workshops/series/one-photo/w2.webp', alt: "The Berliner Dom and the Fernsehturm drawn in thin blue lines that flow along the building's edges.", credit: "Made with W2's lessons, from one photo" },
   },
   {
     id: 'w3', slug: 'w3-sort', n: 3, verb: 'Sort', title: 'Patterns in data', band: 'Machine learning',
-    date: 'TBA',
+    date: 'Sat 6 Feb 2027', dateIso: '2027-02-06',
     idea: 'Pixels are points: similar ones are close, and you can measure how wrong a summary is.',
     thread: 'w2',
     threadText: 'From W2, iteration: k-means repeats one rule until the error stops falling.',
@@ -102,12 +113,14 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '7.3.2', title: 'An image-embedding map', sub: 'a gallery sorted by what images look like', minutes: 55, source: 'leaf' },
     ],
     make: 'A stipple portrait or a sorted gallery poster',
+    cardMake: 'A stipple print of your photo, with its own colour palette',
+    homeLine: 'Sort pixels like data points',
     warmup: '3 questions on rules that repeat',
-    image: { src: '/workshops/series/w3-sort.webp', alt: 'A network of glowing amber cells on black, like a map of regions around points.', credit: 'Exhibition · Neural-Mycelium' },
+    image: { src: '/workshops/series/one-photo/w3.webp', alt: 'The Berliner Dom and the Fernsehturm as coloured stipple dots, with its five-colour palette in the corner.', credit: "Made with W3's lessons, from one photo" },
   },
   {
     id: 'w4', slug: 'w4-learn', n: 4, verb: 'Learn', title: 'The neuron', band: 'Machine learning',
-    date: 'TBA',
+    date: 'Sat 6 Mar 2027', dateIso: '2027-03-06',
     idea: 'Learning means nudging weights, again and again, to lower an error.',
     thread: 'w3',
     threadText: 'From W3, error; from W1, the weighted sum.',
@@ -117,12 +130,14 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '9.4.2', title: 'What a network sees', sub: 'feature maps of your own photo', minutes: 55, source: 'leaf' },
     ],
     make: 'A training animation or feature-map print',
+    cardMake: 'Your photo as a neuron you trained sees it, plus its training animation',
+    homeLine: 'Teach one neuron to see',
     warmup: '3 questions on distance and error',
-    image: { src: '/workshops/series/w4-learn.webp', alt: 'A green and brown terrain of ridges and basins shaped by the tanh activation function.', credit: 'Print · Tectonic Threshold, tanh' },
+    image: { src: '/workshops/series/one-photo/w4.webp', alt: 'The Berliner Dom in orange against a blue sky: what one trained neuron sees as warm or cool.', credit: "Made with W4's lessons, from one photo" },
   },
   {
     id: 'w5', slug: 'w5-dream', n: 5, verb: 'Dream', title: 'From noise to image', band: 'Generative AI',
-    date: 'TBA',
+    date: 'Sat 10 Apr 2027', dateIso: '2027-04-10',
     idea: 'A trained network turns noise into an image, step by step.',
     thread: 'w4',
     threadText: 'From W2, noise; from W4, a network that learns.',
@@ -133,13 +148,15 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '12.3.2', title: 'A real model', sub: 'your sketch or style, turned into an image', minutes: 55, source: 'live' },
     ],
     make: 'Your sketch or your style turned into an image, labelled as AI-made',
+    cardMake: 'Your sketch turned into an image by a real model, labelled AI-made',
+    homeLine: 'A model turns your sketch into an image',
     needs: 'A laptop with a GPU, or a free Google Colab account',
     warmup: '3 questions on learning',
-    image: { src: '/workshops/series/w5-dream.webp', alt: 'Violet and amber smoke-like filaments traced by three strange attractors.', credit: 'Print · Orbit Sediment, trichrome' },
+    image: { src: '/workshops/series/one-photo/w5.webp', alt: 'A black line sketch of the Berliner Dom and the Fernsehturm, the kind of sketch a model turns into a new image.', credit: 'Concept · the sketch the model starts from' },
   },
   {
     id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Live', band: 'Generative AI',
-    date: 'TBA',
+    date: 'Sat 8 May 2027', dateIso: '2027-05-08',
     idea: 'Input, process, output: every frame, in TouchDesigner.',
     thread: 'w5',
     threadText: 'Everything so far, running live.',
@@ -149,18 +166,26 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '13.3.4', title: 'Real-time diffusion', sub: 'your W5 style on the live camera', minutes: 55, source: 'new' },
     ],
     make: 'A recording of you inside your piece, plus a one-page capstone plan',
-    needs: 'TouchDesigner installed (the free Non-Commercial edition is enough)',
+    cardMake: 'A recording of you inside your piece',
+    homeLine: 'Real-time art you play with your body',
+    needs: 'The free TouchDesigner on a laptop with a dedicated graphics card or a newer Mac. Setup steps follow before the workshop.',
+    needsOnCard: true,
     warmup: '3 questions on the whole series',
-    image: { src: '/workshops/series/w6-play.webp', alt: 'Streaks of iridescent flocking agents moving across a dark field.', credit: 'Exhibition · Selection Pressure' },
+    image: { src: '/workshops/series/one-photo/w6.webp', alt: "The Berliner Dom and the Fernsehturm as glowing particles in the photo's colours on a dark background.", credit: "Concept · particles in the photo's colours" },
   },
 ];
 
-/** W7: capstone pieces shown together after W6 (DEC-16). */
+/** W7: capstone pieces shown together after W6 (DEC-16). On /workshops as the
+ *  "empty wall" (W7d): one dashed frame per workshop, waiting for a piece. */
 export const SHOWCASE = {
   title: 'Showcase',
   sub: 'W7 · capstone pieces, shown together',
-  idea: 'After W6, the pieces made across the series are shown together. Date and format to come.',
-  date: 'TBA',
+  idea: "After W6 on 8 May, the pieces made across the series are shown together: prints, animations and recordings. Bring friends. You don't have to show anything to come.",
+  date: 'June 2027',
+  price: 'Free',
+  note: 'Date and venue are not fixed yet.',
+  cta: 'Hear when the date is set →', // no-break space keeps the arrow with its word
+  frameText: 'your piece here',
 };
 
 /**

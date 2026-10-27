@@ -16,3 +16,12 @@ export const longDate = (iso: string) =>
     month: 'long',
     year: 'numeric',
   });
+
+/** "2026-11-21" → "Sat 21 Nov 2026" (the card's date line). */
+export const cardDate = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).replace(',', '');

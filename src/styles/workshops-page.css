@@ -222,9 +222,9 @@
   padding: 16px 16px 18px;
 }
 
-/* Equal-height cards: the Inside toggle sits at the bottom of each. */
+/* Equal-height cards: the action (.sc-foot) sits at the bottom of each. */
 .sc-inside {
-  margin-top: auto;
+  margin: 14px 0 0;
   align-self: stretch;
 }
 
@@ -234,15 +234,6 @@
   margin: 0 0 10px;
 }
 
-.sc-make {
-  margin: 0 0 16px;
-  font-family: var(--serif);
-  font-size: 15.5px;
-  line-height: 1.45;
-  color: var(--fg);
-}
-
-.sc-make .ws-label,
 .sc-fact .ws-label {
   display: block;
   margin-bottom: 2px;
@@ -339,35 +330,118 @@
   color: var(--fg-2);
 }
 
-/* ---------- W7 ---------- */
+/* ---------- W7 (W7d, the empty wall) ----------
+   Six dashed frames, one per workshop, waiting for a piece; the text and
+   the announce button beside them. Phone: the frames go 3 × 2, tags only. */
 .ws .series-showcase {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: 32px;
-  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  margin-top: 40px;
+  padding: 0;
   border-style: dashed;
   box-shadow: none;
+  overflow: visible;
 }
 
-.showcase-sticker {
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  font-size: 16px;
+.showcase-wall {
+  margin: 0;
+  padding: 24px 22px 22px;
+  list-style: none;
+  background: var(--bg-2);
+  border-right: var(--ws-border) dashed var(--ws-ink);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 16px;
 }
+
+.showcase-wall li {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  padding: 8px;
+  background: var(--ws-paper);
+  border: 2px dashed var(--ws-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--fg-2);
+  text-align: center;
+}
+
+.showcase-tag {
+  position: absolute;
+  left: -6px;
+  top: -11px;
+  padding: 1px 6px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--ws-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.showcase-body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ws .showcase-kicker { margin: 0; }
 
 .showcase-title {
-  font-size: 24px;
-  margin: 0 0 4px;
+  font-size: 30px;
+  line-height: 1;
+  margin: 0;
 }
 
 .showcase-text {
   margin: 0;
+  max-width: 60ch;
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 15.5px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.showcase-note {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
   color: var(--fg-2);
+}
+
+.showcase-body .ws-btn { margin-top: 4px; }
+
+@media (max-width: 720px) {
+  .ws .series-showcase { grid-template-columns: minmax(0, 1fr); }
+  .showcase-wall {
+    border-right: 0;
+    border-bottom: var(--ws-border) dashed var(--ws-ink);
+    padding: 20px 12px 14px;
+    gap: 18px 10px;
+  }
+  /* Tags only: the frame is a short slot, "your piece here" stays for screen readers. */
+  .showcase-wall li { aspect-ratio: 4 / 3; padding: 0; }
+  .showcase-frame-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .showcase-tag { left: -4px; font-size: 11px; padding: 1px 4px; }
+  .showcase-body { padding: 16px; }
+  .showcase-body .ws-btn { padding-inline: 16px; }
+  .showcase-title { font-size: 26px; }
 }
 
 /* ---------- A workshop day ----------
@@ -633,17 +707,6 @@
   line-height: 1.45;
 }
 
-.series-access {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  margin: 28px 0 0;
-  font-family: var(--serif);
-  font-size: 15.5px;
-  color: var(--fg-2);
-}
-
 /* ============================================================
    The pilot (cycle i), in the brand
    ============================================================ */
@@ -882,3 +945,77 @@
   color: var(--link);
   border-bottom: 1px solid currentColor;
 }
+
+/* ============================================================
+   Launch: dates, prices, tickets (DEC-74, DEC-75)
+   ============================================================ */
+.ws .sc-later { margin: 8px 0 0; font-size: 14px; }
+.ws .sc-price { margin: 0; font-size: 17px; }
+.ws .sc-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.ws .tk-later { margin: 0; font-size: 14px; }
+.ws .tk-wrap { display: grid; gap: 18px; width: 100%; }
+.ws .tk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px 32px; }
+.ws .tk-col { display: grid; gap: 6px; align-content: start; }
+.ws .tk-col .ws-label { margin: 0; }
+.ws .tk-price { margin: 0; font-family: var(--sans); font-weight: 800; font-size: 40px; line-height: 1; }
+.ws .tk-sub { margin: 0; font-family: var(--serif); font-size: 15.5px; }
+.ws .tk-facts { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-family: var(--serif); font-size: 15.5px; }
+.ws .tk-small { margin: 0; font-size: 13.5px; }
+.ws .tk-small a { color: inherit; }
+
+/* ============================================================
+   Round 2 (BLD-21, DEC-81 to DEC-85): practical line,
+   card date tile, aligned rows, action pinned to the bottom
+   ============================================================ */
+.ws .series-practical {
+  margin: 8px 0 20px;
+  padding: 4px 0 4px 14px;
+  border-left: 4px solid var(--ws-yellow);
+  max-width: 68ch;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.ws .sc-tile {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  justify-items: center;
+  padding: 4px 10px 5px;
+  background: var(--ws-paper);
+  color: var(--fg);
+  border: 2px solid var(--ws-ink);
+  box-shadow: 3px 3px 0 var(--ws-ink);
+}
+.ws .sc-tile-wd, .ws .sc-tile-m { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; }
+.ws .sc-tile-d { font-family: var(--ws-display); font-weight: 800; font-size: 24px; line-height: 1; }
+
+.ws .sc-rows {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+  align-self: stretch;
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.ws .sc-rows dt { padding-top: 3px; font-size: 10px; color: var(--fg-3); white-space: nowrap; }
+.ws .sc-rows dd { margin: 0; }
+.ws .sc-inside-body .sc-fact { margin: 12px 0 0; }
+
+.ws .sc-foot {
+  margin-top: auto;
+  align-self: stretch;
+  padding-top: 14px;
+  border-top: 2px solid var(--line-2);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.ws .sc-foot .sc-later { margin: 0; }
+.ws .sc-body > .sc-inside { margin-bottom: 14px; }

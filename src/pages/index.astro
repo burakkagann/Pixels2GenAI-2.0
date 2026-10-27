@@ -3,6 +3,7 @@ import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
 import JourneyCube from '@/components/cube/JourneyCube.tsx';
 import WorkshopSpecimen from '@/components/workshops/WorkshopSpecimen.astro';
+import SeriesSpecimen from '@/components/workshops/SeriesSpecimen.astro';
 import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
 import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 import { MODULES } from '@/data/curriculum/modules';
@@ -96,6 +97,8 @@ const RESULT_GROUPS = MODULES.map((m) => ({
   name: m.name ?? `${m.title} ${m.em}`.trim(),
   leaves: ALL_LEAVES.filter((l) => l.mIdx === m.idx),
 })).filter((g) => g.leaves.length > 0);
+// The six-workshop series (BLD-09g): the landing block points to it once PUBLIC_WORKSHOP_SERIES is on.
+const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
 ---
 
 <Base
@@ -694,19 +697,25 @@ const RESULT_GROUPS = MODULES.map((m) => ({
     <div class="section-head">
       <div class="section-num">§ 2 · <span>Workshops</span></div>
       <div>
-        <h2 class="section-title">The curriculum, <em>in a single day.</em></h2>
-        <p class="section-desc">A recurring one-day workshop: the whole curriculum in a single sitting. First cohort below; the next is in planning.</p>
+        {seriesOn
+          ? <h2 class="section-title">The curriculum, <em>in the room.</em></h2>
+          : <h2 class="section-title">The curriculum, <em>in a single day.</em></h2>}
+        {seriesOn
+          ? <p class="section-desc">Hands-on Saturdays in Berlin with Academis. The pilot came first; the six-part series starts on 5 December. <a href="/workshops">See the series →</a></p>
+          : <p class="section-desc">A recurring one-day workshop: the whole curriculum in a single sitting. First cohort below; the next is in planning.</p>}
       </div>
     </div>
 
     <div class="workshops-archive">
       <div class="archive-head">
         <span class="archive-org">Pixels2GenAI · Workshop archive</span>
-        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {UPCOMING_WORKSHOPS.length} in planning</span>
+        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {seriesOn ? '1 on sale' : `${UPCOMING_WORKSHOPS.length} in planning`}</span>
       </div>
 
-      {PAST_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} />)}
-      {UPCOMING_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} defaultOpen={true} />)}
+      {/* Oldest first and collapsed; the active workshop last and open (DEC-98). */}
+      {PAST_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} bridge={seriesOn} />)}
+      {seriesOn && <SeriesSpecimen index={PAST_WORKSHOPS.length + 1} />}
+      {!seriesOn && UPCOMING_WORKSHOPS.map(w => <WorkshopSpecimen workshop={w} defaultOpen={true} />)}
     </div>
   </section>
 

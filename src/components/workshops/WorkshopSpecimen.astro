@@ -18,9 +18,13 @@ import type { Workshop } from '@/data/site/workshops';
 interface Props {
   workshop: Workshop;
   defaultOpen?: boolean;
+  /** Series on (BLD-30): /workshops is the series page, so the past
+   *  workshop links to its findings and to its own section there. */
+  bridge?: boolean;
 }
 
-const { workshop: w, defaultOpen = false } = Astro.props;
+const { workshop: w, defaultOpen = false, bridge = false } = Astro.props;
+const pastHref = bridge ? '/workshops#past' : '/workshops';
 
 // Roman lowercase ordinal → zero-padded Arabic index ("i" → "01").
 const romanToArabic: Record<string, number> = {
@@ -104,7 +108,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
 
     {isPast ? (
       <div class="specimen-aside">
-        <a class="specimen-poster" href="/workshops" aria-label="Open the workshop case study — poster lifts on hover">
+        <a class="specimen-poster" href={pastHref} aria-label="Open the workshop case study — poster lifts on hover">
           <img src={w.poster} alt={`Printed poster announcing Workshop ${indexDisplay} · ${w.city} · ${w.date}.`} loading="lazy" />
         </a>
         <div class="specimen-poster-cap">Poster · {w.city}</div>
@@ -125,7 +129,14 @@ const summaryMeta = `${w.city} · ${w.date}`;
 
   {isPast && (
     <div class="specimen-actions">
-      <a class="btn-ghost" href="/workshops">See the full workshop →</a>
+      {bridge ? (
+        <>
+          <a class="btn-ghost" href="/research">Read the findings →</a>
+          <a class="btn-ghost" href={pastHref}>The pilot on the workshops page →</a>
+        </>
+      ) : (
+        <a class="btn-ghost" href="/workshops">See the full workshop →</a>
+      )}
     </div>
   )}
 </details>
