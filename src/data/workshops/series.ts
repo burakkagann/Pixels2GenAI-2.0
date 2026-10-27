@@ -60,7 +60,8 @@ export interface SeriesWorkshop {
   needsOnCard?: boolean;
   /** Card image (public/workshops/series/one-photo/, 720 × 450 WebP): one source photo through each
    *  workshop's technique (DEC-90). Source: "Berliner Dom und Fernsehturm, 170117, ako.jpg", Ansgar Koreng,
-   *  Wikimedia Commons, CC0. W5 and W6 are concept stills until BLD-23 and BLD-25. */
+   *  Wikimedia Commons, CC0. W5 shows the flow-matching path from noise to the photo (a real model image
+   *  follows, BLD-23); W6 is a concept still until W6 is designed (BLD-25). */
   image: { src: string; alt: string; credit: string };
   warmup: string;
 }
@@ -152,7 +153,7 @@ export const SERIES: SeriesWorkshop[] = [
     homeLine: 'A model turns your sketch into an image',
     needs: 'A laptop with a GPU, or a free Google Colab account',
     warmup: '3 questions on learning',
-    image: { src: '/workshops/series/one-photo/w5.webp', alt: 'A black line sketch of the Berliner Dom and the Fernsehturm, the kind of sketch a model turns into a new image.', credit: 'Concept · the sketch the model starts from' },
+    image: { src: '/workshops/series/one-photo/w5.webp', alt: "The Berliner Dom and the Fernsehturm in six vertical bands, from pure noise on the left to the clear photo on the right.", credit: "Made with W5's maths, from one photo" },
   },
   {
     id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Live', band: 'Generative AI',
