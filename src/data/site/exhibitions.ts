@@ -123,6 +123,18 @@ export interface Exhibition {
    * animated-with-still + first capture-pending.
    */
   landingPlates?: string[];
+
+  /**
+   * Ordered work `id`s (printedWorks or animatedWorks) hung on the framed
+   * wall in the landing § 3 row (DEC E2). A print stands for its series: the
+   * frame tag shows the series title and the count of prints in it. Animated
+   * works need a `stillSrc`; one without a capture stays out of the wall and
+   * is counted in the facts only.
+   */
+  landingWall?: string[];
+
+  /** Short date span for the landing summary bar ("March 27–28, 2026"). */
+  dateRange?: string;
 }
 
 export const EXHIBITIONS: Exhibition[] = [
@@ -131,6 +143,7 @@ export const EXHIBITIONS: Exhibition[] = [
     ordinal: 'i',
     status: 'past',
     date: 'March 27, 2026',
+    dateRange: 'March 27–28, 2026',
     dateIso: '2026-03-27',
     openingHours: 'March 27 · 18:00 — opening',
     publicHours: 'March 28 · 10:00–16:00 — public',
@@ -352,6 +365,17 @@ export const EXHIBITIONS: Exhibition[] = [
     // as still posters here; the per-show page autoplays the video).
     landingPlates: [
       'array-zero-spiral-bloom',
+      'orbit-sediment-trichrome',
+      'maris-menger-flake',
+      'neural-mycelium',
+      'selection-pressure',
+    ],
+    // The landing § 3 framed wall: one frame per print series (three by
+    // Burak, one by Maris) plus the two live pieces that have a capture.
+    // Dissolution has none, so it appears in the facts only.
+    landingWall: [
+      'array-zero-spiral-bloom',
+      'tectonic-threshold-tanh',
       'orbit-sediment-trichrome',
       'maris-menger-flake',
       'neural-mycelium',

@@ -729,28 +729,16 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       </div>
     </div>
 
-    <div class="exhibitions-archive">
-      <div class="exhibition-archive-head">
+    {/* § 2 archive anatomy; the only row stays open so the works show (R1). */}
+    <div class="workshops-archive exhibitions-archive">
+      <div class="archive-head">
         <span class="archive-org">Pixels2GenAI · Exhibition archive</span>
-        <span class="archive-count">▌ {String(PAST_EXHIBITIONS.length).padStart(2, '0')} completed</span>
+        <span class="archive-count">▌ {PAST_EXHIBITIONS.length} completed<span class="archive-count-wide"> · next show unscheduled</span></span>
       </div>
 
       {PAST_EXHIBITIONS.map(ex => <ExhibitionSpecimen exhibition={ex} defaultOpen={true} />)}
     </div>
   </section>
-
-  <script is:inline>
-    // Phone widths: the exhibition specimen starts closed — its open body
-    // (poster, case text, plate strip) costs several viewports of scroll.
-    // Progressive enhancement: without JS it simply stays open. The
-    // "In planning" workshop specimen stays open — it carries the
-    // Register CTA.
-    if (matchMedia('(max-width: 640px)').matches) {
-      document.querySelectorAll('.exhibition-specimen[open]').forEach((d) => {
-        d.removeAttribute('open');
-      });
-    }
-  </script>
 
   <!-- ========== ABOUT THE AUTHOR ==========
        Between the exhibition and the research on purpose: the reader has just

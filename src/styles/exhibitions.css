@@ -542,6 +542,168 @@
 }
 
 /* ============================================================
+   LANDING § 3 — Framed wall (DEC E2, C1 ink tags, R1 open)
+   The row reuses the § 2 archive anatomy from workshops.css
+   (.workshops-archive, .archive-head, .workshop-specimen,
+   .specimen-summary, .specimen-dl, .specimen-actions); index.astro
+   loads both stylesheets. Only the wall and the wall text are new.
+   The wall is the W7d showcase wall from /workshops, filled with
+   the exhibited works. Tokens only.
+   ============================================================ */
+
+.exhibition-row .exhibition-wall-body {
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 28px;
+}
+
+.exhibition-wall {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 16px;
+  margin: 0;
+  padding: 18px;
+  list-style: none;
+  border: 2px dashed var(--fg);
+  background: var(--bg-3);
+}
+
+.exhibition-wall > li { display: grid; min-width: 0; }
+
+.exhibition-frame {
+  position: relative;
+  display: grid;
+  padding: 10px 10px 6px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 2px solid var(--fg);
+  box-shadow: 3px 3px 0 var(--fg);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.exhibition-frame:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--fg);
+}
+
+.exhibition-frame:focus-visible {
+  outline: 2px solid var(--c2);
+  outline-offset: 3px;
+}
+
+.exhibition-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line-2);
+}
+
+/* Ink tag (C1): fg fill, bg text; the medium is named in words below. */
+.exhibition-frame-tag {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  z-index: 1;
+  max-width: calc(100% + 2px);
+  padding: 3px 8px;
+  background: var(--fg);
+  color: var(--bg);
+  border: 2px solid var(--fg);
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.exhibition-frame-medium {
+  padding-top: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+.exhibition-wall-label {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.exhibition-wall-eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+.exhibition-wall-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.exhibition-wall-lede {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.exhibition-row-actions .btn:focus-visible,
+.exhibition-row-actions .btn-ghost:focus-visible {
+  outline: 2px solid var(--c2);
+  outline-offset: 3px;
+}
+
+/* Small tablets: the wall text drops under the wall before the frames get small. */
+@media (max-width: 900px) {
+  .exhibition-row .exhibition-wall-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Phones: frames stay a 3 × 2 grid (no sideways row); the tag moves under
+   the image as a caption bar and the medium line is dropped. */
+@media (max-width: 720px) {
+  .archive-count-wide { display: none; }
+  .exhibition-row .exhibition-wall-body { gap: 18px; }
+  .exhibition-wall { gap: 12px 8px; padding: 10px; }
+  .exhibition-frame { padding: 5px 5px 0; box-shadow: 2px 2px 0 var(--fg); }
+  .exhibition-frame-tag {
+    position: static;
+    order: 2;
+    max-width: none;
+    margin: 4px -5px 0;
+    padding: 2px 5px;
+    border-width: 0;
+    border-top: 2px solid var(--fg);
+    font-size: 10.5px;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+  .exhibition-frame-medium { display: none; }
+  .exhibition-wall-title { font-size: 22px; }
+}
+
+/* Narrow phones: keep long names ("Nieuwenhuis") on one line in the tag. */
+@media (max-width: 380px) {
+  .exhibition-frame-tag { font-size: 9.5px; letter-spacing: -0.01em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exhibition-frame { transition: none; }
+  .exhibition-frame:hover { transform: none; }
+}
+
+/* ============================================================
    ROUTE PAGE — per-show /exhibitions/<id> (e.g. /exhibitions/2026-03)
    Mirrors /workshops route's typographic register but with its own
    visual identity: poster prominent rather than dimmed, plate gallery

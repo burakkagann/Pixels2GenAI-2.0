@@ -1,16 +1,16 @@
 ---
 /**
- * One exhibition rendered as a collapsible <details> specimen card in the
- * landing § 3 catalog. Mirrors the WorkshopSpecimen pattern.
+ * One exhibition rendered as a collapsible <details> row in the landing § 3
+ * archive. It uses the § 2 archive anatomy (workshops.css: .workshop-specimen,
+ * .specimen-summary, .specimen-dl, .specimen-actions) and fills the body with
+ * a framed wall of exhibited works beside the wall text (DEC E2, C1, R1).
  *
- * v1 constraint: past/completed exhibitions only. No upcoming variant —
- * the catalog has exactly one row and doesn't promise the next show.
- *
- * The plate strip below the body reads from `exhibition.landingPlates`
- * (an ordered list of work `id`s mixing printedWorks and animatedWorks).
- * When undefined, it auto-derives a sensible default.
+ * The wall reads from `exhibition.landingWall` (ordered work ids). A print
+ * stands for its series: the tag shows the series title and the medium line
+ * the number of prints in it. Animated works without a still are skipped;
+ * the facts still count them.
  */
-import type { Exhibition, ExhibitionPrintedWork, ExhibitionAnimatedWork } from '@/data/site/exhibitions';
+import type { Exhibition } from '@/data/site/exhibitions';
 
 interface Props {
   exhibition: Exhibition;
@@ -25,80 +25,55 @@ const romanToArabic: Record<string, number> = {
 };
 const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padStart(2, '0');
 
-// `exhibition-2026-03` → `2026-03` for use in the route href.
-const slug = ex.id.replace(/^exhibition-/, '');
-const route = `/exhibitions/${slug}`;
+const numberWords = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const artistCount = numberWords[ex.artists.length] ?? String(ex.artists.length);
 
-// Lookup maps for landingPlates resolution.
-const printedById: Record<string, ExhibitionPrintedWork> = Object.fromEntries(
-  ex.printedWorks.map((w) => [w.id, w])
-);
-const animatedById: Record<string, ExhibitionAnimatedWork> = Object.fromEntries(
-  ex.animatedWorks.map((w) => [w.id, w])
-);
+// `exhibition-2026-03` → `/exhibitions/2026-03`.
+const route = `/exhibitions/${ex.id.replace(/^exhibition-/, '')}`;
 
-// Fallback when no landingPlates curation is provided: first three prints,
-// first animated with a still, first capture-pending.
-const fallback = [
-  ...ex.printedWorks.slice(0, 3).map((w) => w.id),
-  ...ex.animatedWorks.filter((w) => !!w.stillSrc).slice(0, 1).map((w) => w.id),
-  ...ex.animatedWorks.filter((w) => w.status === 'capture-pending').slice(0, 1).map((w) => w.id),
-];
+const opened = new Date(`${ex.dateIso}T00:00:00Z`);
+const monthYear = opened.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-type Plate =
-  | { kind: 'print';    href: string; src: string; alt: string; label: string }
-  | { kind: 'animated'; href: string; src: string; alt: string; label: string }
-  | { kind: 'text';     href: string; title: string; note: string };
+type Frame = { href: string; src: string; alt: string; tag: string; medium: string };
 
-const plateIds = ex.landingPlates ?? fallback;
-
-const plates: Plate[] = plateIds
-  .map((id): Plate | null => {
-    if (printedById[id]) {
-      const p = printedById[id];
-      const label = p.subtitle ? `${p.title} · ${p.subtitle}` : p.title;
+const frames: Frame[] = (ex.landingWall ?? [])
+  .map((id): Frame | null => {
+    const print = ex.printedWorks.find((w) => w.id === id);
+    if (print) {
+      const series = ex.printSeries?.find((s) => s.workIds.includes(id));
+      const count = series?.workIds.length ?? 1;
+      const label = print.subtitle ? `${print.title} · ${print.subtitle}` : print.title;
       return {
-        kind: 'print',
-        href: route,
-        src: p.src,
-        alt: `${label} · printed work by ${p.artist}.`,
-        label,
+        href: `${route}#prints`,
+        src: print.src,
+        alt: `${label}, printed work by ${print.artist}.`,
+        tag: series?.title ?? print.title,
+        medium: count === 1 ? '1 print' : `${count} prints`,
       };
     }
-    if (animatedById[id]) {
-      const a = animatedById[id];
-      const label = a.subtitle ? `${a.title} · ${a.subtitle}` : a.title;
-      if (a.stillSrc) {
-        return {
-          kind: 'animated',
-          href: a.githubUrl,
-          src: a.stillSrc,
-          alt: `${a.title} · live preview · still frame.`,
-          label,
-        };
-      }
+    const live = ex.animatedWorks.find((w) => w.id === id);
+    if (live?.stillSrc) {
       return {
-        kind: 'text',
-        href: a.githubUrl,
-        title: a.title,
-        note: 'capture pending · GitHub →',
+        href: `${route}#animated`,
+        src: live.stillSrc,
+        alt: `${live.title}, still frame of the live piece by ${live.artist}.`,
+        tag: live.title,
+        medium: 'Live · screen',
       };
     }
-    return null; // typo in landingPlates id
+    return null; // unknown id, or a live piece with no capture yet
   })
-  .filter((p): p is Plate => p !== null);
+  .filter((f): f is Frame => f !== null);
 
-const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
+const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${word}$`), '').replace(' · ', ', ');
 ---
 
-<details class="exhibition-specimen" open={defaultOpen}>
-  <summary class="exhibition-specimen-summary">
+<details class="workshop-specimen exhibition-row" open={defaultOpen}>
+  <summary class="specimen-summary">
     <span class="summary-index">{indexDisplay}</span>
-    <span class="summary-status completed">✓ Completed</span>
-    <span class="summary-identifier">
-      Group show · <em>{ex.artists.length} artists</em>
-    </span>
-    <span class="summary-meta">{ex.city} · {ex.date}</span>
+    <span class="summary-status completed done">✓ Completed</span>
+    <span class="summary-identifier">Group show · <em>{artistCount} artists</em></span>
+    <span class="summary-meta">{ex.city} · {ex.dateRange ?? ex.date}</span>
     <span class="summary-chevron" aria-hidden="true">
       <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="2,2 6,6 10,2"></polyline>
@@ -106,84 +81,44 @@ const totalWorks = ex.printedWorks.length + ex.animatedWorks.length;
     </span>
   </summary>
 
-  <article class="exhibition-specimen-body">
-    <div class="exhibition-specimen-text">
-      <h3>{indexDisplay} · <em>The first group show.</em></h3>
-      <p class="lede">
-        Over two days, {ex.artists.length} artists turned the {ex.venue} office into
-        a gallery: prints on the walls, code-driven work on screen and projection.
-        Many pieces grew straight from curriculum modules: equations, algorithms,
-        and models arranged as objects you could walk between.
+  <article class="specimen-body exhibition-wall-body">
+    <ul class="exhibition-wall" aria-label="Works in the show">
+      {frames.map((f) => (
+        <li>
+          <a class="exhibition-frame" href={f.href} aria-label={`${f.tag}, ${f.medium.toLowerCase()}: on the exhibition page`}>
+            <span class="exhibition-frame-tag">{f.tag}</span>
+            <img src={f.src} alt={f.alt} width="480" height="360" loading="lazy" decoding="async" />
+            <span class="exhibition-frame-medium">{f.medium}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="exhibition-wall-label">
+      <p class="exhibition-wall-eyebrow">{indexDisplay} · {monthYear} · {ex.city}</p>
+      <h3 class="exhibition-wall-title">The first group show</h3>
+      <p class="exhibition-wall-lede">
+        For two days the Academis office became a gallery: prints on the walls,
+        code-driven pieces on screens. Several grew from curriculum modules.
       </p>
-
-      <dl class="exhibition-specimen-dl">
-        <dt>Opening</dt>
-        <dd>{ex.openingHours.replace(/\s*—\s*opening$/, '')} · <em>invited guests</em></dd>
-
-        <dt>Public</dt>
-        <dd>{ex.publicHours.replace(/\s*—\s*public$/, '')}</dd>
+      <dl class="specimen-dl">
+        <dt>Dates</dt>
+        <dd>{strip(ex.openingHours, 'opening')} · <em>opening</em> · {strip(ex.publicHours, 'public')} · <em>public</em></dd>
 
         <dt>Where</dt>
-        <dd>{ex.venue} · {ex.address} · <em>{ex.station}</em> · {ex.city}</dd>
+        <dd>{ex.venue} · {ex.address}{ex.station && <> · <em>{ex.station}</em></>} · {ex.city}</dd>
 
         <dt>Artists</dt>
         <dd>{ex.artists.map((a) => a.name).join(', ')}</dd>
 
-        <dt>Format</dt>
-        <dd>Prints + animated installations · <em>admission {ex.admission.toLowerCase()}</em></dd>
-
-        <dt>Co-organised</dt>
-        <dd>With <a href={ex.organiserHref} target="_blank" rel="noopener">{ex.organiser}</a></dd>
+        <dt>Works</dt>
+        <dd>{ex.printedWorks.length} prints · {ex.animatedWorks.length} live pieces · admission {ex.admission.toLowerCase()}</dd>
       </dl>
-    </div>
-
-    <aside class="exhibition-specimen-aside">
-      <a class="exhibition-specimen-poster" href={route} aria-label="Open the exhibition page — poster lifts on hover">
-        <img
-          src={ex.poster}
-          alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.city} · ${ex.date}.`}
-          loading="lazy"
-        />
-      </a>
-      <div class="exhibition-specimen-poster-cap">Poster · {ex.city}</div>
-    </aside>
-
-    <div class="exhibition-plate-strip">
-      <div class="exhibition-plate-strip-head">
-        <span><b>Plates</b> · {plates.length} of {totalWorks} works</span>
-        <span>Two artists · prints + live</span>
-      </div>
-      <div class="exhibition-plate-strip-grid">
-        {plates.map((p) => {
-          if (p.kind === 'text') {
-            return (
-              <a class="exhibition-plate is-text" href={p.href} target="_blank" rel="noopener">
-                <span>
-                  {p.title}
-                  <small>{p.note}</small>
-                </span>
-              </a>
-            );
-          }
-          const isAnimated = p.kind === 'animated';
-          return (
-            <a
-              class={`exhibition-plate${isAnimated ? ' is-animated' : ''}`}
-              href={p.href}
-              {...(isAnimated ? { target: '_blank', rel: 'noopener' } : {})}
-              aria-label={p.label}
-            >
-              <img src={p.src} alt={p.alt} loading="lazy" />
-            </a>
-          );
-        })}
-      </div>
     </div>
   </article>
 
-  <div class="exhibition-specimen-actions">
-    <a class="btn-ghost" href={route}>See the full exhibition →</a>
-    <a class="btn-announce" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
-    <span class="actions-note">Next show unscheduled · one mail when it is</span>
+  <div class="specimen-actions exhibition-row-actions">
+    <a class="btn btn-pri" href={route}>See the exhibition →</a>
+    <a class="btn-ghost" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
   </div>
 </details>
