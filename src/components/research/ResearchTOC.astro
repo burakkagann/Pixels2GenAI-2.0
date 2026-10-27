@@ -42,9 +42,13 @@ const tocItems = headings.filter(h => h.depth === 2 || h.depth === 3);
   // the toc-card's left-border + tint background carry the accent.
   const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc-card a[data-toc-slug]'));
   const lis = links.map(a => a.closest('li')!).filter(Boolean);
-  const sections = links
-    .map((a, i) => ({ li: lis[i], el: document.getElementById(a.dataset.tocSlug!) }))
-    .filter((s): s is { li: HTMLElement; el: HTMLElement } => !!s.el);
+  // flatMap keeps only links whose <li> and heading both exist, and lets
+  // TypeScript see both as non-null.
+  const sections = links.flatMap((a, i) => {
+    const li = lis[i];
+    const el = document.getElementById(a.dataset.tocSlug!);
+    return li && el ? [{ li, el }] : [];
+  });
 
   // Current section = the last heading whose top has scrolled above the
   // offset line (sticky header + a little air). Recomputed on scroll, so it
