@@ -124,6 +124,15 @@
   background: color-mix(in srgb, var(--c1) 6%, transparent);
 }
 
+/* Pilot row on the series home page (DEC-102): the filled teal sticker,
+   twin of the series row's yellow "On sale". */
+.summary-status.done {
+  color: var(--bg);
+  background: var(--c1);
+  border-color: var(--fg);
+  font-weight: 700;
+}
+
 .summary-status.planning {
   color: color-mix(in srgb, var(--studio-ink) 85%, var(--fg));
   border-color: var(--studio-dim);
@@ -204,6 +213,9 @@
     gap: 22px;
   }
 }
+
+/* Pilot row (DEC-102): one column, the module cards then the facts. */
+.specimen-body.pilot-body { grid-template-columns: minmax(0, 1fr); }
 
 .specimen-text {
   display: flex;

@@ -12,8 +12,14 @@
  * String fields literally equal to 'TBA' render as plain "TBA" text.
  * `modules: []` renders as a single chip reading "TBA".
  * `capacity: 0` renders as "TBA" in the cohort line.
+ *
+ * With `bridge` (series flag on) a past workshop whose modules all carry a
+ * `card` renders as the pilot row (DEC-102/103): the modules as mini cards
+ * (MiniCards.astro, same as the series row), then the facts, no poster, and
+ * a filled "✓ Completed" sticker. Flag off, the markup is unchanged.
  */
 import type { Workshop } from '@/data/site/workshops';
+import MiniCards, { type MiniCardItem } from '@/components/workshops/MiniCards.astro';
 
 interface Props {
   workshop: Workshop;
@@ -35,6 +41,19 @@ const indexDisplay = String(arabic).padStart(2, '0');
 
 const isPast = w.status === 'past';
 
+// Pilot row on the series home page (DEC-102): only when every module has a card.
+const pilotCards: MiniCardItem[] | null =
+  bridge && isPast && w.modules.length > 0 && w.modules.every((m) => m.card)
+    ? w.modules.map((m) => ({
+        href: `/lessons/${m.idx}`,
+        band: m.card!.band,
+        head: m.idx,
+        image: m.card!.image,
+        title: m.card!.title,
+        line: m.card!.line,
+      }))
+    : null;
+
 const cohortLine = isPast
   ? `${w.participants ?? 'TBA'} participants · one day · pixel → diffusion`
   : w.capacity > 0
@@ -46,10 +65,10 @@ const identifier = isPast ? 'One-day intensive' : 'Next in the program';
 const summaryMeta = `${w.city} · ${w.date}`;
 ---
 
-<details class="workshop-specimen" open={defaultOpen}>
+<details class:list={['workshop-specimen', { 'pilot-specimen': pilotCards }]} open={defaultOpen}>
   <summary class="specimen-summary">
     <span class="summary-index">{indexDisplay}</span>
-    <span class={`summary-status ${isPast ? 'completed' : 'planning'}`}>
+    <span class={`summary-status ${isPast ? 'completed' : 'planning'}${pilotCards ? ' done' : ''}`}>
       {isPast ? '✓ Completed' : '▌ In planning'}
     </span>
     <span class="summary-identifier">Workshop · <em>{isPast ? 'one-day intensive' : 'registration open'}</em></span>
@@ -61,7 +80,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
     </span>
   </summary>
 
-  <article class="specimen-body">
+  <article class:list={['specimen-body', { 'pilot-body': pilotCards }]}>
     <div class="specimen-text">
       <h3 class="specimen-title">{indexDisplay} · <em>{identifier}.</em></h3>
 
@@ -75,6 +94,8 @@ const summaryMeta = `${w.city} · ${w.date}`;
         </p>
       )}
 
+      {pilotCards && <MiniCards items={pilotCards} label="The six pilot modules" />}
+
       <dl class="specimen-dl">
         <dt>Date</dt>
         <dd>{w.date}{w.hours && <> · <em>{w.hours}</em></>}</dd>
@@ -85,16 +106,20 @@ const summaryMeta = `${w.city} · ${w.date}`;
         <dt>Cohort</dt>
         <dd>{cohortLine}</dd>
 
-        <dt>Modules</dt>
-        <dd class="chips">
-          {w.modules.length === 0 ? (
-            <span class="chip">TBA</span>
-          ) : (
-            w.modules.map(m => (
-              <span class="chip"><b>{m.idx}</b>{m.title}</span>
-            ))
-          )}
-        </dd>
+        {!pilotCards && (
+          <>
+            <dt>Modules</dt>
+            <dd class="chips">
+              {w.modules.length === 0 ? (
+                <span class="chip">TBA</span>
+              ) : (
+                w.modules.map(m => (
+                  <span class="chip"><b>{m.idx}</b>{m.title}</span>
+                ))
+              )}
+            </dd>
+          </>
+        )}
 
         {w.outcome && (
           <>
@@ -106,7 +131,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
 
     </div>
 
-    {isPast ? (
+    {pilotCards ? null : isPast ? (
       <div class="specimen-aside">
         <a class="specimen-poster" href={pastHref} aria-label="Open the workshop case study — poster lifts on hover">
           <img src={w.poster} alt={`Printed poster announcing Workshop ${indexDisplay} · ${w.city} · ${w.date}.`} loading="lazy" />
@@ -140,3 +165,4 @@ const summaryMeta = `${w.city} · ${w.date}`;
     </div>
   )}
 </details>
+

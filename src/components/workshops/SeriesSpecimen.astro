@@ -3,12 +3,14 @@
  * The workshop series as the newest row of the landing § 2 archive (BLD-30,
  * DEC-98/99): same <details> specimen as the pilot above it, open by default,
  * with the six workshops as small versions of the /workshops cards (band
- * header, date tile, image, title and one line of context, DEC-100). Rendered only when
+ * header, date tile, image, title and one line of context, DEC-100; the
+ * cards are MiniCards.astro, shared with the pilot row). Rendered only when
  * PUBLIC_WORKSHOP_SERIES=true. Data: src/data/workshops/series.ts, tickets.ts.
  */
 import { SERIES, type WorkshopId } from '@/data/workshops/series';
 import { TICKETS } from '@/data/workshops/tickets';
 import { bandKey } from '@/components/workshops/seriesFormat';
+import MiniCards, { type MiniCardItem } from '@/components/workshops/MiniCards.astro';
 import '@/styles/tokens-workshop.css';
 
 interface Props {
@@ -31,6 +33,17 @@ const P = TICKETS.price;
 const late = new Date().toISOString().slice(0, 10) >= TICKETS.passLate.from;
 const passPrice = late ? TICKETS.passLate.standard : P.passStandard;
 const ticketHref = TICKETS.pretix.w1 ?? '/workshops#tickets';
+const cards: MiniCardItem[] = SERIES.map((w) => ({
+  href: '/workshops',
+  band: bandKey(w.band),
+  head: `W${w.n} ${w.verb.toUpperCase()}`,
+  now: onSale(w.id),
+  image: w.image.src,
+  tile: w.dateIso ? tile(w.dateIso) : undefined,
+  title: w.title,
+  line: w.homeLine,
+  srLabel: w.date,
+}));
 ---
 
 <details class="workshop-specimen series-specimen" open>
@@ -51,24 +64,7 @@ const ticketHref = TICKETS.pretix.w1 ?? '/workshops#tickets';
       <p class="specimen-lede">
         From a single pixel to a model that paints. One idea per workshop, each on its own; every image below is the same photo, changed by that day's lessons.
       </p>
-      <ol class="mini-cards" aria-label="The six workshops">
-        {SERIES.map((w) => {
-          const t = w.dateIso ? tile(w.dateIso) : null;
-          return (
-            <li data-band={bandKey(w.band)} class:list={[{ now: onSale(w.id) }]}>
-              <a href="/workshops">
-                <span class="mc-head">W{w.n} {w.verb.toUpperCase()}{onSale(w.id) && <em>On sale</em>}</span>
-                <span class="mc-fig">
-                  <img src={w.image.src} alt="" width="720" height="450" loading="lazy" decoding="async" />
-                  {t && <span class="mc-tile" aria-hidden="true"><span>{t.wd}</span><b>{t.d}</b><span>{t.m}</span></span>}
-                </span>
-                <span class="mc-text"><b>{w.title}</b><span>{w.homeLine}</span></span>
-                <span class="sr-only">{w.date}</span>
-              </a>
-            </li>
-          );
-        })}
-      </ol>
+      <MiniCards items={cards} label="The six workshops" />
       <dl class="specimen-dl">
         <dt>Where</dt>
         <dd>Berlin · {TICKETS.venue.replace(', Berlin', '')} · with <a href="https://www.academis.eu" target="_blank" rel="noopener">Academis</a></dd>
@@ -94,98 +90,5 @@ const ticketHref = TICKETS.pretix.w1 ?? '/workshops#tickets';
   }
   .series-body { grid-template-columns: minmax(0, 1fr); }
 
-  .mini-cards {
-    list-style: none;
-    margin: 18px 0 20px;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .mini-cards [data-band='foundations'] { --fill: var(--c1); }
-  .mini-cards [data-band='ml'] { --fill: var(--c2); }
-  .mini-cards [data-band='genai'] { --fill: var(--c3); }
-  /* relative: keeps each card's sr-only label positioned inside its card. */
-  .mini-cards li { min-width: 0; position: relative; }
   .series-specimen .specimen-actions .btn:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
-  .mini-cards a {
-    display: grid;
-    height: 100%;
-    grid-template-rows: auto auto 1fr;
-    background: var(--bg);
-    color: var(--fg);
-    border: 2px solid var(--fg);
-    box-shadow: 3px 3px 0 var(--fg);
-    text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .mini-cards a:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--fg); }
-  .mini-cards a:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
-  .mini-cards .now a { box-shadow: 4px 4px 0 var(--ws-yellow), 4px 4px 0 2px var(--fg); }
-  .mc-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 9px;
-    background: var(--fill);
-    color: var(--bg);
-    border-bottom: 2px solid var(--fg);
-    font-family: var(--sans);
-    font-weight: 800;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-  .mc-head em {
-    font-style: normal;
-    font-family: var(--mono);
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 1px 5px;
-    background: var(--ws-yellow);
-    color: var(--ws-on-yellow);
-    border: 1px solid var(--fg);
-  }
-  .mc-fig { position: relative; display: block; border-bottom: 2px solid var(--fg); }
-  .mc-fig img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
-  .mc-tile {
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    display: grid;
-    justify-items: center;
-    padding: 2px 7px 3px;
-    background: var(--bg);
-    color: var(--fg);
-    border: 2px solid var(--fg);
-  }
-  .mc-tile span { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; }
-  .mc-tile b { font-family: var(--sans); font-weight: 800; font-size: 17px; line-height: 1; }
-  .mc-text { display: block; padding: 7px 9px 9px; font-family: var(--serif); }
-  .mc-text b { display: block; font-weight: 600; font-size: 13px; line-height: 1.25; }
-  .mc-text span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.35; color: var(--fg-2); }
-
-  /* Phones (M3): a 3 x 2 grid of image tiles, all six visible, no sideways
-     scroll. The context line, the tile's weekday/month and the "On sale" tag
-     drop out; W1 keeps its yellow shadow and the full line stays on /workshops. */
-  @media (max-width: 720px) {
-    .mini-cards {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px 8px;
-    }
-    .mc-head { font-size: 11px; padding: 3px 6px; }
-    .mc-head em { display: none; }
-    .mc-tile { top: 3px; left: 3px; padding: 0 4px 1px; border-width: 1.5px; }
-    .mc-tile span { display: none; }
-    .mc-tile b { font-size: 12px; }
-    .mc-text { padding: 5px 6px 7px; }
-    .mc-text b { font-size: 12px; }
-    .mc-text span { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .mini-cards a { transition: none; }
-    .mini-cards a:hover { transform: none; }
-  }
 </style>

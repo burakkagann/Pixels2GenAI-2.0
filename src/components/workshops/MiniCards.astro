@@ -1,0 +1,153 @@
+---
+/**
+ * The row of small workshop cards in the landing § 2 archive (DEC-100,
+ * DEC-102): band header, image, bold title and one line. Shared by the
+ * series row (SeriesSpecimen, with date tiles and the "On sale" tag) and
+ * the pilot row (WorkshopSpecimen with `bridge`, one card per module), so
+ * both rows stay one family. Phones (≤720 px) get M3 (DEC-103).
+ */
+import '@/styles/tokens-workshop.css';
+
+export type MiniCardBand = 'foundations' | 'ml' | 'genai';
+
+export interface MiniCardItem {
+  href: string;
+  band: MiniCardBand;
+  /** Text in the coloured header ("W1 PIXELS", "1.1.1"). */
+  head: string;
+  /** Yellow tag in the header and the yellow shadow (series: on sale). */
+  now?: boolean;
+  image: string;
+  /** Alt text; empty when the title and line already say it. */
+  alt?: string;
+  /** Date tile over the image (series only). */
+  tile?: { wd: string; d: number; m: string };
+  title: string;
+  line: string;
+  /** Extra text for screen readers (the series date). */
+  srLabel?: string;
+}
+
+interface Props {
+  items: MiniCardItem[];
+  label: string;
+}
+
+const { items, label } = Astro.props;
+---
+
+<ol class="mini-cards" aria-label={label}>
+  {items.map((c) => (
+    <li data-band={c.band} class:list={[{ now: c.now }]}>
+      <a href={c.href}>
+        <span class="mc-head">{c.head}{c.now && <em>On sale</em>}</span>
+        <span class="mc-fig">
+          <img src={c.image} alt={c.alt ?? ''} width="720" height="450" loading="lazy" decoding="async" />
+          {c.tile && <span class="mc-tile" aria-hidden="true"><span>{c.tile.wd}</span><b>{c.tile.d}</b><span>{c.tile.m}</span></span>}
+        </span>
+        <span class="mc-text"><b>{c.title}</b><span>{c.line}</span></span>
+        {c.srLabel && <span class="sr-only">{c.srLabel}</span>}
+      </a>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .mini-cards {
+    list-style: none;
+    margin: 18px 0 20px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .mini-cards [data-band='foundations'] { --fill: var(--c1); }
+  .mini-cards [data-band='ml'] { --fill: var(--c2); }
+  .mini-cards [data-band='genai'] { --fill: var(--c3); }
+  /* relative: keeps each card's sr-only label positioned inside its card. */
+  .mini-cards li { min-width: 0; position: relative; }
+  .mini-cards a {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto auto 1fr;
+    /* minmax(0, 1fr): a long word cannot widen the card past its grid track. */
+    grid-template-columns: minmax(0, 1fr);
+    background: var(--bg);
+    color: var(--fg);
+    border: 2px solid var(--fg);
+    box-shadow: 3px 3px 0 var(--fg);
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .mini-cards a:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--fg); }
+  .mini-cards a:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
+  .mini-cards .now a { box-shadow: 4px 4px 0 var(--ws-yellow), 4px 4px 0 2px var(--fg); }
+  .mc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    background: var(--fill);
+    color: var(--bg);
+    border-bottom: 2px solid var(--fg);
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .mc-head em {
+    font-style: normal;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    background: var(--ws-yellow);
+    color: var(--ws-on-yellow);
+    border: 1px solid var(--fg);
+  }
+  .mc-fig { position: relative; display: block; border-bottom: 2px solid var(--fg); }
+  .mc-fig img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+  .mc-tile {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: grid;
+    justify-items: center;
+    padding: 2px 7px 3px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 2px solid var(--fg);
+  }
+  .mc-tile span { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; }
+  .mc-tile b { font-family: var(--sans); font-weight: 800; font-size: 17px; line-height: 1; }
+  .mc-text { display: block; padding: 7px 9px 9px; font-family: var(--serif); }
+  .mc-text b { display: block; font-weight: 600; font-size: 13px; line-height: 1.25; }
+  .mc-text span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.35; color: var(--fg-2); }
+
+  /* Phones (M3): a 3 x 2 grid of image tiles, all six visible, no sideways
+     scroll. The context line, the tile's weekday/month and the "On sale" tag
+     drop out; W1 keeps its yellow shadow and the full line stays on /workshops. */
+  @media (max-width: 720px) {
+    .mini-cards {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px 8px;
+    }
+    .mc-head { font-size: 11px; padding: 3px 6px; }
+    .mc-head em { display: none; }
+    .mc-tile { top: 3px; left: 3px; padding: 0 4px 1px; border-width: 1.5px; }
+    .mc-tile span { display: none; }
+    .mc-tile b { font-size: 12px; }
+    .mc-text { padding: 5px 6px 7px; }
+    /* At 360 px a tile is ~78 px wide; a long word ("Convolution") hyphenates
+       instead of pushing its tile past the grid. */
+    .mc-text b { font-size: 12px; hyphens: auto; overflow-wrap: break-word; }
+    .mc-text span { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-cards a { transition: none; }
+    .mini-cards a:hover { transform: none; }
+  }
+</style>

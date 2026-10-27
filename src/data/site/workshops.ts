@@ -10,6 +10,13 @@ export type WorkshopStatus = 'past' | 'upcoming' | 'planning';
 export interface WorkshopModule {
   idx: string;
   title: string;
+  /** Mini card in the home pilot row (DEC-102, series flag on). */
+  card?: {
+    band: 'foundations' | 'ml' | 'genai';
+    title: string;
+    line: string;
+    image: string;
+  };
 }
 
 export interface Workshop {
@@ -51,13 +58,24 @@ export const WORKSHOPS: Workshop[] = [
     fee: '10€ · drinks + snacks included',
     supervisor: 'Kristian Rother · Academis',
     supervisorHref: 'https://www.academis.eu',
+    // Card images (DEC-102, I1): one photo through each module's technique.
+    // Source photo: "Aussicht Oberbaumbrücke Spree Berlin 04" by Singlespeedfahrer,
+    // Wikimedia Commons, CC0 1.0 (public domain dedication; no attribution required).
+    // Renders: workshop-planning/design/pilot-render/pilot-render.py (720 x 450 WebP).
     modules: [
-      { idx: '1.1.1', title: 'RGB Basics' },
-      { idx: '1.2.2', title: 'Cellular Automata' },
-      { idx: '3.4.1', title: 'Convolution' },
-      { idx: '4.1.1', title: 'Fractal Square' },
-      { idx: '9.1.1', title: 'Perceptron' },
-      { idx: '12.3.1', title: 'DDPM Basics' },
+      { idx: '1.1.1', title: 'RGB Basics',
+        card: { band: 'foundations', title: 'RGB basics', line: 'Each channel on its own', image: '/workshops/pilot/one-photo/p111.webp' } },
+      { idx: '1.2.2', title: 'Cellular Automata',
+        card: { band: 'foundations', title: 'Cellular automata', line: 'The skyline as a living grid', image: '/workshops/pilot/one-photo/p122.webp' } },
+      { idx: '3.4.1', title: 'Convolution',
+        // Soft hyphen: on 360 px phones the tile is narrower than the word.
+        card: { band: 'foundations', title: 'Convo­lution', line: 'One 3×3 kernel, embossed', image: '/workshops/pilot/one-photo/p341.webp' } },
+      { idx: '4.1.1', title: 'Fractal Square',
+        card: { band: 'foundations', title: 'Fractal square', line: 'The recursion over the photo', image: '/workshops/pilot/one-photo/p411.webp' } },
+      { idx: '9.1.1', title: 'Perceptron',
+        card: { band: 'ml', title: 'Perceptron', line: 'One neuron splits sky from city', image: '/workshops/pilot/one-photo/p911.webp' } },
+      { idx: '12.3.1', title: 'DDPM Basics',
+        card: { band: 'genai', title: 'DDPM basics', line: 'Noise to photo, t = 1000 → 0', image: '/workshops/pilot/one-photo/p1231.webp' } },
     ],
     poster: '/workshops/poster-2026-02.jpg',
     gallery: [
