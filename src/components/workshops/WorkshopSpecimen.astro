@@ -145,7 +145,7 @@ const summaryMeta = `${w.city} · ${w.date}`;
           <span>Designed once the date and venue land.</span>
         </div>
         <div class="specimen-upcoming-cta">
-          <a class="btn btn-pri" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
+          <a class="btn btn-pri btn-workshop" href="/announce?topic=workshops" data-announce data-topic="workshops">Register interest →</a>
           <span class="note">No newsletter · single mail per workshop</span>
         </div>
       </div>
@@ -156,11 +156,11 @@ const summaryMeta = `${w.city} · ${w.date}`;
     <div class="specimen-actions">
       {bridge ? (
         <>
-          <a class="btn-ghost" href="/research">Read the findings →</a>
-          <a class="btn-ghost" href={pastHref}>The pilot on the workshops page →</a>
+          <a class="btn btn-sec" href="/research">Read the findings →</a>
+          <a class="btn btn-sec" href={pastHref}>The pilot on the workshops page →</a>
         </>
       ) : (
-        <a class="btn-ghost" href="/workshops">See the full workshop →</a>
+        <a class="btn btn-sec" href="/workshops">See the full workshop →</a>
       )}
     </div>
   )}

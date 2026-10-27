@@ -18,9 +18,9 @@
    Layered on:
      - tokens.css → palette, typography, spacing
      - landing.css → .btn / .btn-pri / .btn-sec (global via Base)
-   Pink stays a brand moment: eyebrows, ems, required asterisks,
-   and the submit button — as text always via --studio-ink. The
-   strip and the new exhibition CTA carry no pink at all.
+   Pink stays a brand moment: eyebrows, ems and required asterisks,
+   as text always via --studio-ink. The sign-up buttons are the
+   yellow .btn-signup primary (BT6).
    ============================================================ */
 
 /* Theme-aware inks, derived from tokens only — same derivation as
@@ -84,7 +84,6 @@
 }
 
 .announce-strip .btn-pri {
-  --card-accent: var(--studio);
   white-space: nowrap;
 }
 
@@ -258,8 +257,6 @@
   margin: 0 auto 26px;
   max-width: 44ch;
 }
-
-.am-thanks .btn { --card-accent: var(--studio); }
 
 /* ---------- /announce · no-JS fallback page ---------- */
 .signup-page {
@@ -491,15 +488,7 @@
   margin-top: 2px;
 }
 
-.signup-form button {
-  --card-accent: var(--studio);
-  cursor: pointer;
-  font: inherit;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
+/* The submit button is the shared .btn base (landing.css, yellow sign-up). */
 
 .signup-form button:disabled {
   opacity: 0.6;
@@ -562,23 +551,3 @@
   margin: 0 0 30px;
 }
 
-.thanks-page .btn { --card-accent: var(--studio); }
-
-/* ---------- Light theme · filled-pink button legibility ----------
-   Same fix as workshops.css: .btn-pri sets `color: var(--bg)` (cream
-   on light) — flip the label to --fg and re-ink the hover state so
-   label and border hold AA on cream. Dark theme untouched. */
-[data-theme="light"] .signup-form button,
-[data-theme="light"] .am-thanks .btn,
-[data-theme="light"] .thanks-page .btn,
-[data-theme="light"] .announce-strip .btn-pri {
-  color: var(--fg);
-}
-
-[data-theme="light"] .signup-form button:hover,
-[data-theme="light"] .am-thanks .btn:hover,
-[data-theme="light"] .thanks-page .btn:hover,
-[data-theme="light"] .announce-strip .btn-pri:hover {
-  color: var(--studio-ink);
-  border-color: var(--studio-ink);
-}

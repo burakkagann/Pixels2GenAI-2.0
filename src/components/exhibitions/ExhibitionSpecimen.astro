@@ -130,8 +130,8 @@ const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${wo
 
   {!onPage && (
     <div class="specimen-actions exhibition-row-actions">
-      <a class="btn btn-pri" href={route}>See the exhibition →</a>
-      <a class="btn-ghost" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
+      <a class="btn btn-pri btn-exhibition" href={route}>See the exhibition →</a>
+      <a class="btn btn-sec" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
     </div>
   )}
 </details>

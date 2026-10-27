@@ -76,8 +76,8 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
     </div>
   </article>
   <div class="specimen-actions">
-    <a class="btn btn-pri" href={ticketHref}>Get a W{first.n} ticket →</a>
-    <a class="btn-ghost" href="/workshops">See the series →</a>
+    <a class="btn btn-pri btn-workshop" href={ticketHref}>Get a W{first.n} ticket →</a>
+    <a class="btn btn-sec" href="/workshops">See the series →</a>
   </div>
 </details>
 
@@ -90,5 +90,4 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
   }
   .series-body { grid-template-columns: minmax(0, 1fr); }
 
-  .series-specimen .specimen-actions .btn:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
 </style>

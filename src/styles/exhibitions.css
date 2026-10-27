@@ -149,12 +149,6 @@
   color: var(--fg);
 }
 
-.exhibition-row-actions .btn:focus-visible,
-.exhibition-row-actions .btn-ghost:focus-visible {
-  outline: 2px solid var(--c2);
-  outline-offset: 3px;
-}
-
 /* Small tablets: the wall text drops under the wall before the frames get small. */
 @media (max-width: 900px) {
   .exhibition-row .exhibition-wall-body { grid-template-columns: minmax(0, 1fr); }
@@ -183,14 +177,6 @@
   .exhibition-wall-title,
   .exhibition-display { font-size: 22px; }
   .exhibition-kicker { font-size: 12px; }
-}
-
-/* Phones and touch: both row buttons reach the 44 px tap target. */
-@media (pointer: coarse), (max-width: 720px) {
-  .exhibition-row-actions .btn,
-  .exhibition-row-actions .btn-ghost,
-  .exhibition-close-actions .btn,
-  .exhibition-close-actions .btn-ghost { min-height: 44px; font-size: 12px; }
 }
 
 /* Narrow phones: keep long names ("Nieuwenhuis") on one line in the tag. */
@@ -288,10 +274,12 @@
   max-width: 64ch;
 }
 
-/* Prose links: ink underline, blue on hover (X8). */
+/* Prose links: ink underline, blue on hover (X8). The closing text holds
+   the actions bar too, so only links inside its paragraphs are matched;
+   the buttons keep their own colours and padding. */
 .exhibition-section .deck a,
 .exhibition-plate-credit a,
-.exhibition-close-text a {
+.exhibition-close-text p a {
   color: var(--fg);
   border-bottom: 1px solid var(--line-2);
   padding-bottom: 1px;
@@ -300,7 +288,7 @@
 
 .exhibition-section .deck a:hover,
 .exhibition-plate-credit a:hover,
-.exhibition-close-text a:hover {
+.exhibition-close-text p a:hover {
   border-bottom-color: var(--c2);
 }
 

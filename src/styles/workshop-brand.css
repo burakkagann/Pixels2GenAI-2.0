@@ -71,8 +71,7 @@
 /* Chips and buttons are paper unless they carry an explicit fill-* class;
    they must not pick up a band colour from the card or page around them.
    (Stickers do inherit the band on purpose.) */
-.ws .ws-chip[class*="fill-"],
-.ws .ws-btn[class*="fill-"] {
+.ws .ws-chip[class*="fill-"] {
   background: var(--fill);
   color: var(--on-fill);
 }
@@ -107,35 +106,25 @@
   font-weight: 800;
 }
 
-/* ---------- Button: the press effect is half the style ---------- */
+/* ---------- Button: the press effect is half the style ----------
+   The shape, hover lift, press and focus come from the site's shared
+   button base (landing.css "Buttons", BT6). The brand only scales it up
+   (3 px border, 6 px shadow; 2 px / 4 px on phones) and fills it from the
+   fill-* classes above. Unfilled buttons are paper. */
 .ws .ws-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  --btn-fill: var(--ws-paper);
+  --btn-on: var(--fg);
+  --btn-line: var(--ws-ink);
+  --btn-drop: var(--ws-ink);
+  --btn-border: var(--ws-border);
+  --btn-shadow: var(--ws-shadow);
   padding: 14px 22px;
-  border: var(--ws-border) solid var(--ws-ink);
-  background: var(--ws-paper);
-  color: var(--fg);
-  box-shadow: var(--ws-hard-shadow);
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform .12s ease, box-shadow .12s ease;
 }
 
-.ws .ws-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--ws-shadow) + 2px) calc(var(--ws-shadow) + 2px) 0 var(--ws-ink);
-}
-
-.ws .ws-btn:active {
-  transform: translate(var(--ws-shadow), var(--ws-shadow));
-  box-shadow: 0 0 0 var(--ws-ink);
+.ws .ws-btn[class*="fill-"] {
+  --btn-fill: var(--fill);
+  --btn-on: var(--on-fill);
 }
 
 /* ---------- Toggle: a <summary> styled as a small button ---------- */

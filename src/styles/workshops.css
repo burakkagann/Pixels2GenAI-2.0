@@ -337,23 +337,7 @@
   flex-wrap: wrap;
 }
 
-/* Bordered CTA on the .btn-sec pattern (landing.css); the section's
-   blue working accent appears on hover. */
-.specimen-actions .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  background: transparent;
-  color: var(--fg);
-  border: 1px solid var(--line-2);
-  padding: 9px 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.specimen-actions .btn-ghost:hover { border-color: var(--c2); }
+/* The buttons in the bar use the shared .btn base (landing.css). */
 
 /* ---------- Aside: dimmed poster (past) or placeholder + CTA (upcoming) ---------- */
 .specimen-aside {
@@ -468,7 +452,6 @@
 }
 
 .specimen-upcoming-cta .btn-pri {
-  --card-accent: var(--studio);
   width: 100%;
   justify-content: center;
 }
@@ -993,8 +976,6 @@
   .upcoming-card .u-cta { text-align: left; }
 }
 
-.upcoming-card .u-cta .btn { --card-accent: var(--studio); }
-
 .upcoming-card .u-meta {
   display: block;
   margin-top: 12px;
@@ -1039,23 +1020,6 @@
 .workshops-ack a:hover {
   color: var(--studio-ink);
   border-bottom-color: var(--studio-ink);
-}
-
-/* ---------- Light theme · filled-pink button legibility ----------
-   .btn-pri (landing.css) sets `color: var(--bg)`, which is cream in the
-   light theme — 2.58:1 on the pink fill. Flip the label to --fg (6.4:1)
-   and re-ink the hover state (transparent fill + pink label) so the
-   label and border hold AA on cream. Dark theme is untouched.
-   (announce.css applies the same fix to the announcements form.) */
-[data-theme="light"] .specimen-upcoming-cta .btn-pri,
-[data-theme="light"] .upcoming-card .u-cta .btn {
-  color: var(--fg);
-}
-
-[data-theme="light"] .specimen-upcoming-cta .btn-pri:hover,
-[data-theme="light"] .upcoming-card .u-cta .btn:hover {
-  color: var(--studio-ink);
-  border-color: var(--studio-ink);
 }
 
 [data-theme="light"] .gallery-modal .g-close:hover {

@@ -420,6 +420,13 @@
 
 .showcase-body .ws-btn { margin-top: 4px; }
 
+/* Tablets and phones: the showcase column is about 260 px wide, so the
+   button steps down a notch to keep "Hear when the date is set →" on one
+   line. */
+@media (max-width: 1100px) {
+  .ws .showcase-body .ws-btn { font-size: 12px; letter-spacing: 0.06em; padding-inline: 16px; }
+}
+
 @media (max-width: 720px) {
   .ws .series-showcase { grid-template-columns: minmax(0, 1fr); }
   .showcase-wall {

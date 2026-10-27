@@ -105,6 +105,24 @@
   --link-hover:  #A3BAF5;
   --warn:        #E0A674;            /* amber — shifted from dusty pink to avoid --studio collision */
 
+  /* ---------- Actions · buttons (BT6, section-coloured; BLD-39) ----------
+     One button shape site-wide (landing.css "Buttons"); the primary fill
+     follows the section. Each fill keeps one label colour in both themes:
+       --action        curriculum, cover, research, 404: blue + paper label
+       --studio        workshops: pink + --on-action-bright
+       --fg / --bg     exhibition: the frame-tag ink (flips with the theme)
+       --action-yellow announce / sign-up: yellow + --on-action-bright
+     Dark: blue sits between --c2 light and --c2-soft (5.15:1 label). */
+  --action:           #3D62BD;
+  --action-hover:     #2D52A8;
+  --on-action:        #F6F3EC;   /* fixed paper label, never flips */
+  --action-yellow:    #F2D14B;   /* = --ws-yellow; fills only, never text */
+  --on-action-bright: var(--bg); /* near-black label on pink and yellow */
+  /* Secondary: paper fill with a small shadow in light; in dark an outline
+     with no resting shadow, so it never matches a dark primary beside it. */
+  --btn-sec-fill:     transparent;
+  --btn-sec-shadow:   0px;
+
   /* ---------- Admonition · note (promoted from prose.css hardcodes) ---------- */
   --note-border: #5d6878;
   --note-title:  #8a95a5;
@@ -247,6 +265,13 @@
   --accent-glow: rgba(45, 82, 168, 0.45);
   --link-hover: #1E3A7A;
   --warn:       #99561C; /* was #A85F1F */
+
+  /* ---------- Actions · buttons (see :root) ---------- */
+  --action:           #2D52A8;   /* = --c2, 6.57:1 with --on-action */
+  --action-hover:     #1E3A7A;
+  --on-action-bright: var(--fg);
+  --btn-sec-fill:     var(--bg);
+  --btn-sec-shadow:   2px;
 
   /* ---------- Admonition note ---------- */
   --note-border: #6F7A8C;

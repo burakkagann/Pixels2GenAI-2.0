@@ -158,25 +158,19 @@
   flex-wrap: wrap;
 }
 
-/* Phone: the pair of CTAs stretches margin to margin. */
+/* Phone: the pair of CTAs stretches margin to margin, two to a row. Below
+   420 px a half-width cell is too narrow for "See the curriculum" on one
+   line, so the pair stacks full width instead. */
 @media (max-width: 540px) {
   .cover-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
-  .cover-actions .btn { justify-content: center; }
 }
 
-/* Narrow phones: "See the curriculum" wrapped to two lines in its half-width
-   cell at 360px. Trim the side padding and tracking so each label fits on
-   one line. */
-@media (max-width: 400px) {
-  .cover-actions .btn {
-    padding-left: 10px;
-    padding-right: 10px;
-    letter-spacing: 0.04em;
-  }
+@media (max-width: 419px) {
+  .cover-actions { grid-template-columns: 1fr; }
 }
 
 /* ---------- Cover: fit the first screen (desktop, >960px) ----------
@@ -269,44 +263,130 @@
 /* Phone type/spacing for the cover lives in the "Phone rhythm" block
    further down (≤640px), which comes later in the cascade. */
 
-.btn {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 13px 18px;
-  border: 1px solid;
-  transition: all .2s;
+/* ---------- Buttons (BT6, BLD-39) ----------
+   One shape for every button on the site: 2 px ink border, hard ink
+   shadow, bold mono caps, 44 px tall. Hover lifts, press sinks into the
+   page. Colour comes only from the variables below; the tokens live in
+   tokens.css ("Actions · buttons").
+     .btn.btn-pri               blue primary (curriculum, cover, 404)
+     .btn-pri.btn-workshop      pink primary (workshop tickets, interest)
+     .btn-pri.btn-exhibition    ink primary (the exhibition)
+     .btn-pri.btn-signup        yellow primary (announce / sign-up)
+     .btn.btn-sec               secondary (paper; outline in dark)
+   .btn-ghost is an alias of .btn.btn-sec. The workshop brand's .ws-btn
+   (workshop-brand.css) uses the same base and only resizes it. */
+.btn,
+.btn-ghost,
+.ws-btn {
+  --btn-fill: var(--btn-sec-fill);
+  --btn-on: var(--fg);
+  --btn-fill-hover: var(--btn-fill);
+  --btn-line: var(--fg);
+  --btn-drop: var(--fg);
+  --btn-border: 2px;
+  --btn-shadow: 4px;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  /* In a wrapping actions bar a button moves to its own line instead of
+     shrinking and breaking its label; it only shrinks past the bar's width. */
+  flex: 0 0 auto;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 18px;
+  border: var(--btn-border) solid var(--btn-line);
+  background: var(--btn-fill);
+  color: var(--btn-on);
+  box-shadow: var(--btn-shadow) var(--btn-shadow) 0 var(--btn-drop);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+
+.btn:hover,
+.btn-ghost:hover,
+.ws-btn:hover {
+  background: var(--btn-fill-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: calc(var(--btn-shadow) + 2px) calc(var(--btn-shadow) + 2px) 0 var(--btn-drop);
+}
+
+.btn:active,
+.btn-ghost:active,
+.ws-btn:active {
+  transform: translate(var(--btn-shadow), var(--btn-shadow));
+  box-shadow: 0 0 0 var(--btn-drop);
+}
+
+/* Focus: a 2 px blue ring, offset clear of the shadow. Inside .ws the
+   brand's 3 px ink ring wins (workshop-brand.css). */
+.btn:focus-visible,
+.btn-ghost:focus-visible,
+.ws-btn:focus-visible {
+  outline: 2px solid var(--c2);
+  outline-offset: 6px;
 }
 
 .btn-pri {
-  background: var(--card-accent, var(--accent));
-  color: var(--bg);
-  border-color: var(--card-accent, var(--accent));
+  --btn-fill: var(--action);
+  --btn-on: var(--on-action);
+  --btn-fill-hover: var(--action-hover);
 }
 
-.btn-pri:hover {
-  background: transparent;
-  color: var(--card-accent, var(--accent));
+.btn-pri.btn-workshop {
+  --btn-fill: var(--studio);
+  --btn-on: var(--on-action-bright);
+  --btn-fill-hover: var(--studio);
 }
 
-.btn-sec {
-  background: transparent;
-  color: var(--fg);
-  border-color: var(--line-2);
+/* The exhibition's ink is the frame-tag colour (--fg fill, --bg label),
+   so it flips with the theme. A paper line between the fill and the ink
+   shadow keeps it reading as a pressable button, not as a tag (tags have
+   no shadow and no arrow). */
+.btn-pri.btn-exhibition {
+  --btn-fill: var(--fg);
+  --btn-on: var(--bg);
+  --btn-fill-hover: var(--fg);
+  --btn-line: var(--bg);
 }
 
-.btn-sec:hover {
-  border-color: var(--fg);
+.btn-pri.btn-signup {
+  --btn-fill: var(--action-yellow);
+  --btn-on: var(--on-action-bright);
+  --btn-fill-hover: var(--action-yellow);
 }
 
-/* Touch: lift CTAs to the 44px minimum (desktop keeps the tighter 39px). */
-@media (pointer: coarse) {
-  .btn { min-height: 44px; }
+.btn-sec,
+.btn-ghost {
+  --btn-shadow: var(--btn-sec-shadow);
+}
+
+/* Phones: one notch smaller and tighter so labels stay on one line at
+   390 px. Below that the longest label ("The pilot on the workshops page")
+   may break; it breaks into balanced lines inside the 44 px minimum. */
+@media (max-width: 540px) {
+  .btn,
+  .btn-ghost {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    padding: 0 14px;
+    text-wrap: balance;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn-ghost, .ws-btn { transition: none; }
+  .btn:hover, .btn-ghost:hover, .ws-btn:hover,
+  .btn:active, .btn-ghost:active, .ws-btn:active { transform: none; }
 }
 
 /* ---------- Cube plate (cover, right column) ----------
