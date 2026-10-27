@@ -141,10 +141,15 @@ const { items, label } = Astro.props;
     .mc-tile span { display: none; }
     .mc-tile b { font-size: 12px; }
     .mc-text { padding: 5px 6px 7px; }
-    /* At 360 px a tile is ~78 px wide; a long word ("Convolution") hyphenates
-       instead of pushing its tile past the grid. */
-    .mc-text b { font-size: 12px; hyphens: auto; overflow-wrap: break-word; }
+    /* Words never hyphenate on their own; only a soft hyphen in the data may
+       split one, and only when it cannot fit the card at all. */
+    .mc-text b { font-size: 12px; hyphens: manual; overflow-wrap: break-word; }
     .mc-text span { display: none; }
+  }
+  /* Narrow phones: a slimmer side padding keeps "Convolution" on one line at
+     12 px (FIX-10; the pilot card's 16 px gutter is in workshops.css). */
+  @media (max-width: 420px) {
+    .mc-text { padding-inline: 5px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mini-cards a { transition: none; }

@@ -216,6 +216,11 @@
 
 /* Pilot row (DEC-102): one column, the module cards then the facts. */
 .specimen-body.pilot-body { grid-template-columns: minmax(0, 1fr); }
+/* Narrow phones: a 16 px side gutter gives the three card columns room for
+   "Convolution" on one line at 12 px (FIX-10). */
+@media (max-width: 420px) {
+  .specimen-body.pilot-body { padding-inline: 16px; }
+}
 
 .specimen-text {
   display: flex;
