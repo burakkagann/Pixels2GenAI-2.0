@@ -47,7 +47,8 @@ const frames: Frame[] = (ex.landingWall ?? [])
         href: `${route}#prints`,
         src: print.src,
         alt: `${label}, printed work by ${print.artist}.`,
-        tag: series?.title ?? print.title,
+        // A guest's series is titled with the artist's name, so its frame shows the work's title instead.
+        tag: series && !series.artist ? series.title : print.title,
         medium: count === 1 ? '1 print' : `${count} prints`,
       };
     }
