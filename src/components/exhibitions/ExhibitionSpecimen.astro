@@ -9,15 +9,21 @@
  * stands for its series: the tag shows the series title and the medium line
  * the number of prints in it. Animated works without a still are skipped;
  * the facts still count them.
+ *
+ * With `onPage` the same row opens the per-show page (X1b): frames link to
+ * the series and live pieces further down, and the actions bar is left out
+ * (the page closes with the same two buttons).
  */
 import type { Exhibition } from '@/data/site/exhibitions';
 
 interface Props {
   exhibition: Exhibition;
   defaultOpen?: boolean;
+  /** Rendered at the top of the exhibition's own page. */
+  onPage?: boolean;
 }
 
-const { exhibition: ex, defaultOpen = false } = Astro.props;
+const { exhibition: ex, defaultOpen = false, onPage = false } = Astro.props;
 
 // Roman lowercase ordinal → zero-padded Arabic ("i" → "01").
 const romanToArabic: Record<string, number> = {
@@ -30,6 +36,10 @@ const artistCount = numberWords[ex.artists.length] ?? String(ex.artists.length);
 
 // `exhibition-2026-03` → `/exhibitions/2026-03`.
 const route = `/exhibitions/${ex.id.replace(/^exhibition-/, '')}`;
+// Frame links: in-page anchors on the show's own page, the page route elsewhere.
+const base = onPage ? '' : route;
+// On the show's own page the row sits right under the h1, so its title is an h2.
+const TitleTag = onPage ? 'h2' : 'h3';
 
 const opened = new Date(`${ex.dateIso}T00:00:00Z`);
 const monthYear = opened.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -44,7 +54,7 @@ const frames: Frame[] = (ex.landingWall ?? [])
       const count = series?.workIds.length ?? 1;
       const label = print.subtitle ? `${print.title} · ${print.subtitle}` : print.title;
       return {
-        href: `${route}#prints`,
+        href: series ? `${base}#series-${series.id}` : `${base}#prints`,
         src: print.src,
         alt: `${label}, printed work by ${print.artist}.`,
         // A guest's series is titled with the artist's name, so its frame shows the work's title instead.
@@ -55,7 +65,7 @@ const frames: Frame[] = (ex.landingWall ?? [])
     const live = ex.animatedWorks.find((w) => w.id === id);
     if (live?.stillSrc) {
       return {
-        href: `${route}#animated`,
+        href: `${base}#live-${live.id}`,
         src: live.stillSrc,
         alt: `${live.title}, still frame of the live piece by ${live.artist}.`,
         tag: live.title,
@@ -86,7 +96,7 @@ const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${wo
     <ul class="exhibition-wall" aria-label="Works in the show">
       {frames.map((f) => (
         <li>
-          <a class="exhibition-frame" href={f.href} aria-label={`${f.tag}, ${f.medium.toLowerCase()}: on the exhibition page`}>
+          <a class="exhibition-frame" href={f.href} aria-label={`${f.tag}, ${f.medium.toLowerCase()}${onPage ? '' : ': on the exhibition page'}`}>
             <span class="exhibition-frame-tag">{f.tag}</span>
             <img src={f.src} alt={f.alt} width="480" height="360" loading="lazy" decoding="async" />
             <span class="exhibition-frame-medium">{f.medium}</span>
@@ -97,7 +107,7 @@ const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${wo
 
     <div class="exhibition-wall-label">
       <p class="exhibition-wall-eyebrow">{indexDisplay} · {monthYear} · {ex.city}</p>
-      <h3 class="exhibition-wall-title">The first group show</h3>
+      <TitleTag class="exhibition-wall-title">The first group show</TitleTag>
       <p class="exhibition-wall-lede">
         For two days the Academis office became a gallery: prints on the walls,
         code-driven pieces on screens. Several grew from curriculum modules.
@@ -118,8 +128,10 @@ const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${wo
     </div>
   </article>
 
-  <div class="specimen-actions exhibition-row-actions">
-    <a class="btn btn-pri" href={route}>See the exhibition →</a>
-    <a class="btn-ghost" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
-  </div>
+  {!onPage && (
+    <div class="specimen-actions exhibition-row-actions">
+      <a class="btn btn-pri" href={route}>See the exhibition →</a>
+      <a class="btn-ghost" href="/announce?topic=exhibitions" data-announce data-topic="exhibitions">Hear about the next show →</a>
+    </div>
+  )}
 </details>

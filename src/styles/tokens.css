@@ -121,6 +121,12 @@
   --figure-frame-line: #2A2A2F;
   --figure-frame-fg:   #F2EEE6;
 
+  /* ---------- Print mat ----------
+     Near-black mat behind the exhibition prints and live captures. The
+     works are all on black, so the mat stays near-black in both themes
+     (the light value below is the same on purpose). */
+  --mat: #0C0C0E;
+
   /* ---------- Typography ---------- */
   --serif: "Literata Variable", "Literata", "Iowan Old Style", Georgia, serif;
   --sans:  "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
@@ -250,6 +256,9 @@
   --figure-frame-bg:   #FFFCF3;
   --figure-frame-line: #D9CCB2;
   --figure-frame-fg:   #15101C;
+
+  /* ---------- Print mat — theme-invariant near-black (see :root) ---------- */
+  --mat: #0C0C0E;
 
   /* ---------- Grain overlay — dark noise + multiply blend on cream ---------- */
   --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.10'/></svg>");

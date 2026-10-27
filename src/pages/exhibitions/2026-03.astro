@@ -1,7 +1,9 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
-import { EXHIBITION_BY_ID } from '@/data/site/exhibitions';
+import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
+import { EXHIBITION_BY_ID, PAST_EXHIBITIONS } from '@/data/site/exhibitions';
+import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
 
 const ex = EXHIBITION_BY_ID['exhibition-2026-03'];
@@ -14,9 +16,25 @@ const indexDisplay = String(romanToArabic[ex.ordinal.toLowerCase()] ?? 0).padSta
 
 // Print-gallery clusters. Falls back to one untitled group holding every work,
 // so a show without `printSeries` still renders a single flat grid.
-const printGroups = ex.printSeries ?? [
+type PrintGroup = { id: string; title: string; statement?: string; workIds: string[]; artist?: string; artistUrl?: string };
+const printGroups: PrintGroup[] = ex.printSeries ?? [
   { id: 'all', title: '', workIds: ex.printedWorks.map((w) => w.id) },
 ];
+
+const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const captured = ex.animatedWorks.filter((w) => w.videoSrc || w.stillSrc).length;
+
+// Series credit line (X3a): Burak's series name their artist; a guest series
+// says "Guest artist" (her name is the series tag). The guest statement drops
+// its "Guest artist · " prefix, since the credit line carries it.
+const seriesCredit = (series: PrintGroup) => {
+  const first = ex.printedWorks.find((w) => w.id === series.workIds[0]);
+  return `${count(series.workIds.length, 'print')} · ${series.artist ? 'Guest artist' : first?.artist ?? ''}`;
+};
+const seriesLede = (statement: string) => {
+  const text = statement.replace(/^Guest artist · /, '');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 ---
 
 <Base
@@ -27,104 +45,43 @@ const printGroups = ex.printSeries ?? [
   <main id="main-content" class="exhibition-page">
     <!-- ========== HEAD ========== -->
     <header class="exhibition-head">
-      <div class="eyebrow">
-        <span class="dot"></span>
-        <span>§ Exhibition {ex.ordinal.toUpperCase()} · {ex.date} · {ex.city}</span>
-      </div>
       <h1>The studio, <em>transformed into a gallery.</em></h1>
-      {ex.statement.map((p) => <p class="lede">{p}</p>)}
+      <p class="lede">{ex.statement[0]}</p>
     </header>
 
-    <!-- ========== § Feature · poster + body ========== -->
-    <section class="exhibition-section" id="feature">
-      <h2>Exhibition {ex.ordinal.toUpperCase()} · <em>{ex.date}.</em></h2>
-      <p class="deck">
-        A two-day group show co-organised with
-        <a href={ex.organiserHref} target="_blank" rel="noopener">{ex.organiser}</a>.
-        Six artists. Printed work on the walls; code-driven installations on screens and projection.
-      </p>
-
-      <div class="exhibition-feature">
-        <div>
-          <a class="exhibition-poster" href={ex.posterPdf ?? ex.poster} target="_blank" rel="noopener">
-            <img src={ex.poster} alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.date} · ${ex.city}.`} loading="lazy" />
-          </a>
-          <div class="exhibition-poster-cap">{ex.posterCaption ?? 'Poster'}</div>
-        </div>
-
-        <div class="exhibition-feature-body">
-          <span class="eyebrow">Group show · {ex.artists.length} artists</span>
-          <h3>Six artists, <em>one office, three days.</em></h3>
-          <p class="narrative">
-            The exhibition opened on <em>March 27 at 6pm</em> for press and invited guests, and remained
-            open for the general public on <em>March 28 from 10am to 4pm</em>. The works moved between two
-            registers: printed pieces hung as objects, and code-driven installations running live on
-            screens and projection.
-          </p>
-
-          <div class="exhibition-meta">
-            <div><b>Opening</b><span>{ex.openingHours}</span></div>
-            <div><b>Public</b><span>{ex.publicHours}</span></div>
-            <div><b>Venue</b><span>{ex.venue} · {ex.station}</span></div>
-            <div><b>Address</b><span>{ex.address} · {ex.district ?? ex.city}</span></div>
-            <div><b>Admission</b><span>{ex.admission}</span></div>
-            <div><b>Co-organised</b><span>{ex.organiser}</span></div>
-          </div>
-        </div>
+    <!-- ========== Record row (X1b): the home § 3 row, open ========== -->
+    <div class="workshops-archive exhibitions-archive exhibition-record">
+      <div class="archive-head">
+        <span class="archive-org">Pixels2GenAI · Exhibition archive</span>
+        <span class="archive-count">▌ {PAST_EXHIBITIONS.length} completed<span class="archive-count-wide"> · next show unscheduled</span></span>
       </div>
-    </section>
+      <ExhibitionSpecimen exhibition={ex} defaultOpen={true} onPage={true} />
+    </div>
 
-    <!-- ========== § Artists ========== -->
-    <section class="exhibition-section" id="artists">
-      <h2>Artists · <em>six on view.</em></h2>
-      <p class="deck">
-        Six software developers, working across hand-programmed images, the aesthetics of mathematical
-        rules, and AI as an art-making tool.
-      </p>
-
-      <div class="exhibition-artists">
-        {ex.artists.map((a) => (
-          <div class="exhibition-artist">
-            <b>{a.name}</b>
-            {a.role
-              ? <span>{a.role}</span>
-              : <span class="pending">contributing artist</span>}
-          </div>
-        ))}
-      </div>
-
-      <div class="exhibition-curators-block">
-        <div class="curators-eyebrow"><span>Curators</span></div>
-        <div class="exhibition-curators">
-          {ex.curators.map((c) => (
-            <div class="exhibition-artist exhibition-curator">
-              <b>{c.name}</b>
-              {c.role && <span>{c.role}</span>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== § Plates · printed works ========== -->
+    <!-- ========== § Printed works (X2b, X3a, X4a) ========== -->
     <section class="exhibition-section" id="prints">
-      <h2>Plates · <em>printed works.</em></h2>
+      <div class="exhibition-section-head">
+        <p class="exhibition-kicker">
+          {count(ex.printedWorks.length, 'print')}{ex.printSeries && ` · ${count(ex.printSeries.length, 'series', 'series')}`}
+        </p>
+        <h2 class="exhibition-display">Printed works</h2>
+      </div>
       <p class="deck">
         {ex.printSeries ? `${ex.printSeries.length} series across two artists` : 'Pieces that resolved into a single frame'} —
         {ex.printedWorks.length} prints in all. Click any plate to enlarge.
       </p>
 
-      {printGroups.map((series, si) => (
-        <div class="print-series">
+      {printGroups.map((series) => (
+        <div class="print-series" id={series.title ? `series-${series.id}` : undefined}>
           {series.title && (
             <div class="print-series-head">
-              <span class="print-series-eyebrow"><span class="dot"></span>{String(si + 1).padStart(2, '0')}</span>
-              <h3 class="print-series-title">
+              <h3 class="exhibition-tag">
                 {series.artistUrl
-                  ? <a href={series.artistUrl} target="_blank" rel="noopener">{series.title}</a>
+                  ? <a href={series.artistUrl} target="_blank" rel="noopener">{series.title} ↗</a>
                   : series.title}
               </h3>
-              {series.statement && <p class="print-series-lede">{series.statement}</p>}
+              <span class="exhibition-medium">{seriesCredit(series)}</span>
+              {series.statement && <p class="print-series-lede">{seriesLede(series.statement)}</p>}
             </div>
           )}
 
@@ -132,6 +89,9 @@ const printGroups = ex.printSeries ?? [
             {series.workIds.map((id) => {
               const w = ex.printedWorks.find((p) => p.id === id);
               if (!w) return null;
+              // X4a: a guest series is titled with the artist's name, so each
+              // of its frames carries the work's own title, as on the home wall.
+              const guest = !!series.artist;
               return (
                 <button
                   type="button"
@@ -139,18 +99,11 @@ const printGroups = ex.printSeries ?? [
                   data-id={w.id}
                   aria-label={`Open plate: ${w.title}${w.subtitle ? ' · ' + w.subtitle : ''}`}
                 >
-                  <div class="plate-frame">
+                  {guest && <span class="exhibition-tag">{w.title}</span>}
+                  <span class="plate-frame">
                     <img src={w.src} alt={`${w.title}${w.subtitle ? ' · ' + w.subtitle : ''} · printed work by ${w.artist}.`} loading="lazy" />
-                  </div>
-                  <div class="plate-cap">
-                    <b>
-                      {w.title}
-                      {w.subtitle && <em> · {w.subtitle}</em>}
-                    </b>
-                    {w.technique
-                      ? <span>{w.technique}</span>
-                      : <span class="plate-artist">{w.artist}</span>}
-                  </div>
+                  </span>
+                  <span class="exhibition-medium">{guest ? '1 print' : w.subtitle ?? w.title}</span>
                 </button>
               );
             })}
@@ -237,9 +190,12 @@ const printGroups = ex.printSeries ?? [
       </script>
     </section>
 
-    <!-- ========== § Animated installations ========== -->
+    <!-- ========== § Live pieces (X5a): framed screens, play in place ========== -->
     <section class="exhibition-section" id="animated">
-      <h2>Animated · <em>installations on view.</em></h2>
+      <div class="exhibition-section-head">
+        <p class="exhibition-kicker">{count(ex.animatedWorks.length, 'piece')} · {captured} captured</p>
+        <h2 class="exhibition-display">Live pieces</h2>
+      </div>
       <p class="deck">
         Code-driven pieces that ran live during the exhibition. Two play here as looping captures;
         Dissolution is a live-only webcam piece whose capture is still pending. Each card links to its
@@ -248,9 +204,10 @@ const printGroups = ex.printSeries ?? [
 
       <div class="exhibition-anim">
         {ex.animatedWorks.map((w) => (
-          <a class="exhibition-anim-card" href={w.githubUrl} target="_blank" rel="noopener">
+          <article class="exhibition-anim-card" id={`live-${w.id}`}>
             {w.videoSrc ? (
               <div class="anim-frame is-video">
+                <span class="exhibition-tag">{w.title}</span>
                 <video
                   class="anim-video"
                   muted
@@ -262,32 +219,29 @@ const printGroups = ex.printSeries ?? [
                 >
                   <source src={w.videoSrc} type="video/mp4" />
                 </video>
-                <span class="anim-badge">▶ live</span>
               </div>
             ) : w.stillSrc ? (
-              <div class={`anim-frame${w.hoverSrc ? ' has-hover' : ''}`}>
-                <img class="rest" src={w.stillSrc} alt={`${w.title} · still frame.`} loading="lazy" />
-                {w.hoverSrc && <img class="play" src={w.hoverSrc} alt="" loading="lazy" />}
-                <span class="anim-badge">{w.hoverSrc ? '▶ hover' : '▶ live'}</span>
+              <div class="anim-frame">
+                <span class="exhibition-tag">{w.title}</span>
+                <img class="anim-still" src={w.stillSrc} alt={`${w.title} · still frame.`} loading="lazy" />
               </div>
             ) : (
               <div class="anim-frame placeholder">
-                <span class="anim-badge">▶ pending</span>
+                <span class="exhibition-tag">{w.title}</span>
               </div>
             )}
             <div class="anim-body">
-              <h4>
-                {w.title}
-                {w.subtitle && <em> · {w.subtitle}</em>}
-              </h4>
-              <span class="technique">{w.technique}</span>
-              <p>{w.description}</p>
-              <div class="anim-foot">
-                <span>{w.artist}</span>
-                <span class="repo">GitHub →</span>
-              </div>
+              <span class="exhibition-medium">
+                {w.status === 'capture-pending' ? 'Live · webcam · capture pending' : 'Live · screen'}{w.subtitle && ` · ${w.subtitle}`}
+              </span>
+              <details class="anim-about">
+                <summary>About the piece</summary>
+                <p class="technique">{w.technique}</p>
+                <p>{w.description}</p>
+              </details>
+              <a class="anim-source" href={w.githubUrl} target="_blank" rel="noopener">Source on GitHub →</a>
             </div>
-          </a>
+          </article>
         ))}
       </div>
 
@@ -332,37 +286,68 @@ const printGroups = ex.printSeries ?? [
       </script>
     </section>
 
-    <!-- ========== § Documents ========== -->
-    <section class="exhibition-section" id="documents">
-      <h2>Documents.</h2>
+    <!-- ========== § Artists (X6a): after the works ========== -->
+    <section class="exhibition-section" id="artists">
+      <div class="exhibition-section-head">
+        <p class="exhibition-kicker">{count(ex.artists.length, 'artist')} · {count(ex.curators.length, 'curator')}</p>
+        <h2 class="exhibition-display">Artists</h2>
+      </div>
       <p class="deck">
-        The poster and printed materials produced for the exhibition.
+        Six software developers, working across hand-programmed images, the aesthetics of mathematical
+        rules, and AI as an art-making tool.
       </p>
 
-      <div class="exhibition-docs">
-        {ex.posterPdf && (
-          <a class="doc" href={ex.posterPdf} target="_blank" rel="noopener">
-            <span class="kind">PDF</span>
-            Poster · {ex.date}
-          </a>
-        )}
+      <div class="exhibition-artists">
+        {ex.artists.map((a) => (
+          <div class="exhibition-artist">
+            <b>{a.name}</b>
+            {a.role && <span>{a.role}</span>}
+          </div>
+        ))}
+      </div>
+
+      <div class="exhibition-curators-block">
+        <p class="curators-eyebrow">Curators</p>
+        <div class="exhibition-curators">
+          {ex.curators.map((c) => (
+            <div class="exhibition-artist exhibition-curator">
+              <b>{c.name}</b>
+              {c.role && <span>{c.role}</span>}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
 
-    <!-- ========== Acknowledgements ========== -->
-    <section class="exhibition-ack">
-      <h3>Co-organised with Academis.</h3>
-      <p>
-        The exhibition was run jointly with
-        <a href={ex.organiserHref} target="_blank" rel="noopener">Kristian Rother</a>
-        and Academis, who provided the venue at Steinmetzstrasse 40 and the curatorial framing that
-        connected the works on view.
-      </p>
-      <p>
-        The exhibition is part of the wider Pixels2GenAI project — a Master's thesis exploring how
-        learners move from the basics of pixel manipulation to generative AI. The works shown here are
-        produced by artists working independently; the project provides the shared frame.
-      </p>
+    <!-- ========== Close (X7a): framed poster, credits, the two buttons ========== -->
+    <section class="exhibition-close" aria-label="Poster and credits">
+      <figure class="exhibition-close-poster">
+        <a class="exhibition-frame" href={ex.posterPdf ?? ex.poster} target="_blank" rel="noopener">
+          <span class="exhibition-frame-tag">Poster</span>
+          <img src={ex.poster} alt={`Printed poster announcing Pixels2GenAI Exhibition ${indexDisplay} · ${ex.date} · ${ex.city}.`} loading="lazy" />
+          <span class="exhibition-frame-medium">{ex.posterPdf ? 'PDF · open ↗' : 'Open ↗'}</span>
+        </a>
+      </figure>
+
+      <div class="exhibition-close-text">
+        <p class="exhibition-kicker">Co-organised</p>
+        <h2 class="exhibition-display">With Academis</h2>
+        <p>
+          The exhibition was run jointly with
+          <a href={ex.organiserHref} target="_blank" rel="noopener">Kristian Rother</a>
+          and Academis, who provided the venue at Steinmetzstrasse 40 and the curatorial framing that
+          connected the works on view.
+        </p>
+        <p>
+          The exhibition is part of the wider Pixels2GenAI project — a Master's thesis exploring how
+          learners move from the basics of pixel manipulation to generative AI. The works shown here are
+          produced by artists working independently; the project provides the shared frame.
+        </p>
+        <div class="specimen-actions exhibition-close-actions">
+          <a class="btn btn-pri" href="/announce?topic=exhibitions">Hear about the next show →</a>
+          <a class="btn-ghost" href="/#exhibition">Back to the archive →</a>
+        </div>
+      </div>
     </section>
   </main>
 
