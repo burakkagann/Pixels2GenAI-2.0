@@ -778,19 +778,6 @@
   .station-title { font-size: 24px; }
 }
 
-.station-pitch {
-  font-family: var(--serif);
-  font-size: 15px;
-  font-style: italic;
-  color: var(--fg-2);
-  /* No ch cap: the pitch is one sentence, so let it run the full column and
-     wrap only when the viewport runs out. A 72ch cap (619px) broke it in
-     two even with ~1100px free. `pretty` avoids a one-word last line. */
-  margin: 6px 0 0;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-
 .station-right {
   font-family: var(--mono);
   font-size: max(11px, var(--fs-min));
@@ -2232,7 +2219,7 @@
 .curriculum-archive .station-title {
   grid-row: 1;
   grid-column: 2;
-  align-self: end;
+  align-self: center;
   margin: 0;
   font-family: var(--sans);
   font-weight: 800;
@@ -2240,7 +2227,6 @@
   letter-spacing: -0.01em;
 }
 .curriculum-archive .station-title em { color: var(--cycle); font-style: normal; }
-.curriculum-archive .station-pitch { grid-column: 2; grid-row: 2; font-size: 14px; margin-top: 4px; align-self: start; }
 .curriculum-archive .station-right { display: flex; gap: 14px; align-items: baseline; }
 .curriculum-archive .station-right span { display: inline; }
 .curriculum-archive .station-right b {
@@ -2316,7 +2302,7 @@
 
 /* PB2: the path stamp, numeral + "Path", in the path colour. */
 .path-stamp {
-  grid-row: 1 / span 2;
+  grid-row: 1;
   grid-column: 1;
   display: inline-grid;
   place-items: center;
@@ -2434,7 +2420,6 @@
   .curriculum-archive .station { padding: 14px 16px 18px; }
   .curriculum-archive .station-head { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .curriculum-archive .station-title { font-size: 20px; }
-  .curriculum-archive .station-pitch { display: none; }
   .curriculum-archive .station-right { justify-content: flex-start; text-align: left; }
   .curriculum-archive .station-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -146,7 +146,9 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         {/* Curriculum first and in colour: visitors see what they would learn
             before being asked to start. */}
         <a class="btn btn-pri" href="#curriculum">See the curriculum</a>
-        <a class="btn btn-sec" href="/lessons/1.1.1">Start learning</a>
+        {/* Workshops pink (BT6). Stays on the page: the script below scrolls
+            to § 2 and moves focus to its heading; without JS the hash jumps. */}
+        <a class="btn btn-pri btn-workshop" href="#workshops" data-cover-jump="workshops">See the workshops ↓</a>
       </div>
     </div>
 
@@ -280,7 +282,6 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
               <span class="path-stamp" aria-hidden="true"><b>{cyc}</b><span>Path</span></span>
               <span class="station-label sr-only">Path {cyc}</span>
               <h3 class="station-title">{cy.name}<em>.</em></h3>
-              <p class="station-pitch">{cy.pitch}</p>
             </div>
             <div class="station-right">
               <span><b>{mods.length}</b> modules</span>
@@ -375,6 +376,33 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     </div>
     </div>
   </section>
+
+  <script is:inline>
+    // Cover: the workshops button scrolls in place (smooth unless the visitor
+    // prefers reduced motion), keeps the hash, and puts focus on the § 2
+    // heading so keyboard and screen-reader users continue from there. It
+    // stops the click here so Base.astro's anchor handler, which would focus
+    // the whole section instead, does not run as well.
+    (() => {
+      const jump = document.querySelector('[data-cover-jump]');
+      if (!jump) return;
+      jump.addEventListener('click', (e) => {
+        const id = jump.getAttribute('data-cover-jump');
+        const section = document.getElementById(id);
+        if (!section) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+        const heading = section.querySelector('h2');
+        if (heading) {
+          if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+          heading.focus({ preventScroll: true });
+        }
+      });
+    })();
+  </script>
 
   <script is:inline>
     // § 1 Curriculum — station accordion. One panel open per station; clicking
