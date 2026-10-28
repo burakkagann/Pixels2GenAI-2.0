@@ -2580,6 +2580,7 @@
   /* .workshops-archive raises specificity over workshops.css, loaded later. */
   .workshops-archive > .archive-head { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 8px 14px; letter-spacing: 0.1em; }
   .workshops-archive > .archive-head .archive-org { letter-spacing: 0.14em; }
+  .workshops-archive > .archive-head .archive-count { letter-spacing: 0.04em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
