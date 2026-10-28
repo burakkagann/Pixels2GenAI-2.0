@@ -184,7 +184,8 @@ const tPath = (a: number, b: number) => {
       <li data-band={n.band}>
         <a href={`#${n.w.slug}`} aria-label={n.label}>
           <b>W{n.w.n} · {n.w.verb}</b>
-          <span>{n.short}{n.onSale ? ' · On sale' : ''}</span>
+          <span class="cg-date">{n.short}</span>
+          <span class="cg-tag">{n.onSale ? 'On sale' : ''}</span>
         </a>
       </li>
     ))}
@@ -212,7 +213,9 @@ const tPath = (a: number, b: number) => {
     .ca-grid li { min-width: 0; }
     .ca-grid a {
       display: grid;
-      align-content: center;
+      height: 100%;
+      box-sizing: border-box;
+      align-content: start;
       min-height: 52px;
       padding: 8px 10px;
       border: 2px solid var(--ws-ink);
@@ -224,6 +227,9 @@ const tPath = (a: number, b: number) => {
     }
     .ca-grid b { font-family: var(--ws-display); font-weight: 800; text-transform: uppercase; font-size: 15px; line-height: 1.15; }
     .ca-grid span { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-2); }
+    .ca-grid .cg-date { white-space: nowrap; }
+    .ca-grid .cg-tag { color: var(--fg); font-weight: 700; }
+    .ca-grid .cg-tag:empty { display: none; }
     .ca-grid .is-showcase { grid-column: 1 / -1; }
     .ca-grid .is-showcase a { border-style: dashed; border-left-width: 2px; box-shadow: none; }
   }
