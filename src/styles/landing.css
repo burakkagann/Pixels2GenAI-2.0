@@ -2281,6 +2281,10 @@
   border-bottom: 1px solid var(--line);
   background: var(--bg-2);
 }
+/* Phones (<= 640 px): the path progress bars crowd the small screen, so they are hidden there. */
+@media (max-width: 640px) {
+  .path-bar { display: none; }
+}
 .pr-path { min-width: 0; display: grid; gap: 6px; }
 .pr-lab {
   display: flex;
@@ -2458,11 +2462,6 @@ a.mx-link:hover .mx-t { text-decoration: underline; text-underline-offset: 3px; 
 .mx-plan b { display: block; font-family: var(--mono); font-size: max(10px, var(--fs-min)); letter-spacing: .08em; text-transform: uppercase; color: var(--fg); }
 
 @media (max-width: 540px) {
-  .path-bar { gap: 10px; padding: 10px 14px 12px; }
-  .pr-path { flex: 1 1 0 !important; }
-  .pr-name, .pr-w { display: none; }
-  .pr-lab { gap: 6px; }
-  .pr-count { letter-spacing: .04em; }
 
   /* Head: title row with the 44 px close, the teaches line, then bar + Start. */
   .mh {
