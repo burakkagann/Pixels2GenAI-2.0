@@ -1,5 +1,6 @@
 /**
- * Five Research Questions and three DBR Cycles that anchor the Research
+ * Five Research Questions and three DBR Cycles (Cycle i, the pilot, is reported;
+ * Cycle ii, the six-workshop series, is the current one) that anchor the Research
  * section on the landing page. Drawn from the project's CLAUDE.md.
  */
 
@@ -7,7 +8,11 @@ export interface RQEntry {
   tag: string;       // "RQ 1"
   title: string;     // short heading
   question: string;  // italic body (full formal RQ; also shown on /research)
-  gloss: string;     // one-line plain-language version shown on the landing card
+  gloss: string;     // one-line plain-language version (kept for /research and search snippets)
+  /** What the Cycle i pilot found, shown on the landing finding card: a short
+   *  number or phrase plus one plain sentence. Sourced from src/pages/research.mdx
+   *  (§ III-VII). `pending` marks a question the pilot did not test. */
+  finding: { value: string; line: string; pending?: boolean };
 }
 
 export const RQS: RQEntry[] = [
@@ -17,6 +22,7 @@ export const RQS: RQEntry[] = [
     question:
       'What pedagogical principles and design patterns effectively scaffold learning progressions from basic array manipulation to generative AI in creative contexts?',
     gloss: 'Which teaching patterns best scaffold the climb from arrays to generative AI?',
+    finding: { value: '9.7 vs 12.7', line: 'Mental demand of hands-on versus conceptual lessons, out of 20 (p = .016).' },
   },
   {
     tag: 'RQ 2',
@@ -24,6 +30,7 @@ export const RQS: RQEntry[] = [
     question:
       'How can complex technical concepts be decomposed and sequenced to maintain optimal cognitive load while building toward advanced applications?',
     gloss: 'How should hard concepts be split and sequenced so novices avoid overload?',
+    finding: { value: 'ρ = −0.86', line: 'More prior experience, lower reported workload (n = 8, p = .007).' },
   },
   {
     tag: 'RQ 3',
@@ -31,6 +38,7 @@ export const RQS: RQEntry[] = [
     question:
       'What strategies effectively integrate real-time systems with progressive AI learning, and at what points in the curriculum should these integrations occur?',
     gloss: 'When and how should real-time systems join the learning path?',
+    finding: { value: 'Cycle ii', line: 'Not tested in the pilot. The sixth workshop of the series runs in TouchDesigner.', pending: true },
   },
   {
     tag: 'RQ 4',
@@ -38,6 +46,7 @@ export const RQS: RQEntry[] = [
     question:
       'How can learning outcomes in creative AI education be assessed across technical proficiency, creative expression, and conceptual understanding?',
     gloss: 'How do you measure technical skill, creativity, and understanding together?',
+    finding: { value: '3.6 → 12.1', line: 'Mean test score out of 24, before and after. Everyone who took both tests improved.' },
   },
   {
     tag: 'RQ 5',
@@ -45,6 +54,7 @@ export const RQS: RQEntry[] = [
     question:
       'To what extent do learners successfully transfer foundational computational concepts to novel creative AI contexts, and what factors facilitate this transfer?',
     gloss: 'Do learners carry core concepts into new creative AI work, and what helps?',
+    finding: { value: '7 of 9', line: 'Exit tickets named a later project to use it in.' },
   },
 ];
 

@@ -108,7 +108,7 @@
 
 .cover-meta {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-2);
   letter-spacing: 0.04em;
   display: grid;
@@ -129,7 +129,7 @@
   display: block;
   font-weight: 400;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   margin-bottom: 4px;
   letter-spacing: 0.1em;
 }
@@ -370,8 +370,8 @@
 }
 
 /* Phones: one notch smaller and tighter so labels stay on one line at
-   390 px. Below that the longest label ("The pilot on the workshops page")
-   may break; it breaks into balanced lines inside the 44 px minimum. */
+   360 px (the longest, "The pilot on /workshops →", was shortened for it).
+   A label that still breaks wraps into balanced lines inside the 44 px minimum. */
 @media (max-width: 540px) {
   .btn,
   .btn-ghost {
@@ -408,7 +408,7 @@
   gap: 14px;
   align-items: baseline;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -441,7 +441,7 @@
 
 .author-note-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -475,7 +475,7 @@
   flex-wrap: wrap;
   gap: 8px 20px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.06em;
 }
 
@@ -544,7 +544,7 @@
 
 .section-num {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-2);
@@ -659,7 +659,7 @@
 
 .path .tag {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--card-accent, var(--accent));
@@ -705,7 +705,7 @@
 .path ol li .ix {
   font-family: var(--mono);
   color: var(--card-accent, var(--accent));
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   min-width: 56px;
 }
 
@@ -717,7 +717,7 @@
 
 .path .meta-row {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -752,7 +752,7 @@
 
 .station-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--cycle, var(--accent));
@@ -793,7 +793,7 @@
 
 .station-right {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   text-align: right;
   line-height: 1.7;
@@ -862,7 +862,7 @@
   justify-content: space-between;
   align-items: baseline;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.04em;
 }
@@ -894,7 +894,7 @@
 .card-meta {
   margin-top: auto;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   padding-top: 8px;
   border-top: 1px solid var(--line);
@@ -960,7 +960,7 @@
 .panel-fw {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.04em;
 }
@@ -983,7 +983,7 @@
 .panel-subs .sub h6 .snum {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   margin-right: 6px;
   letter-spacing: 0.04em;
@@ -1018,7 +1018,7 @@
 
 .panel-subs .sub .leaf .lnum {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   flex-shrink: 0;
   min-width: 44px;
@@ -1183,7 +1183,7 @@
 
 .rq .tag {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--studio-text);
   letter-spacing: 0.14em;
   margin-bottom: 10px;
@@ -1393,7 +1393,7 @@
 .foot a,
 .foot li {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-2);
   letter-spacing: 0.04em;
 }
@@ -1445,7 +1445,7 @@
 
 .foot .about-meta dt {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: max(9.5px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -1484,7 +1484,7 @@
 .foot .about-meta dd a .arr {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   opacity: 0.7;
   letter-spacing: 0;
 }
@@ -1494,7 +1494,7 @@
   border-top: 1px solid var(--line);
   margin-top: 28px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.06em;
   display: flex;
@@ -1870,7 +1870,7 @@
   background: none;
   color: var(--fg-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -1889,7 +1889,7 @@
 
 .search-summary {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1913,7 +1913,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1944,7 +1944,7 @@
   padding: 0 12px 6px;
   border-bottom: 1px solid var(--line);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 400;
   color: var(--fg-3);
   text-transform: uppercase;
@@ -1962,7 +1962,7 @@
   margin: 4px 0 0;
   padding: 0 12px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1976,7 +1976,7 @@
   background: none;
   color: var(--fg-2);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -2041,14 +2041,14 @@
 
 .curriculum-results .result .r-id {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.04em;
 }
 
 .curriculum-results .result .r-mod {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2062,7 +2062,7 @@
 
 .curriculum-results .result .r-soon {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--fg-3);
@@ -2158,3 +2158,449 @@
 }
 
 .stations[hidden] { display: none; }
+
+/* ============================================================
+   HOME PAGE STANDARD (28 Oct 2026, approved H2 + H1 cover)
+   One look for the whole home page, taken from § 2 Workshops and
+   § 3 Exhibition: archive strips, ink frames with hard shadows,
+   band headers in the section or path colour, section-coloured
+   primary buttons. Written down in docs/references/design-system.md
+   ("Home page design standard", S-1…S-14). IDs in the comments are
+   the options-page IDs (H1-cover, H2-curriculum, …) and the phone
+   proposals (M-n). The site header is not part of this block.
+   ============================================================ */
+
+/* H1-cover: the meta grid and the cube plate take the ink frame. */
+.cover-meta {
+  background: var(--fg);
+  border: 2px solid var(--fg);
+  gap: 2px;
+  box-shadow: 3px 3px 0 var(--fg);
+}
+.cube-plate {
+  border: 2px solid var(--fg);
+  box-shadow: 4px 4px 0 var(--fg);
+  background: var(--bg-3);
+}
+/* H1-cover: "Fig. 0" as an ink tag (S-5). */
+.cube-caption .fig-num {
+  background: var(--fg);
+  color: var(--bg);
+  padding: 2px 7px;
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* H1-rhythm: section head to body 32 px (phones keep 28 px). */
+@media (min-width: 641px) {
+  .section-head { margin-bottom: 32px; }
+}
+
+/* H1-footer: the colophon opens on the archive strips' 2 px ink rule. */
+.foot { border-top: 2px solid var(--fg); }
+
+/* ---------- H2-curriculum ---------- */
+.curriculum-search {
+  border-radius: 0;
+  border: 2px solid var(--fg);
+  background: var(--bg);
+}
+.curriculum-tools { margin-bottom: 18px; }
+
+/* The three paths live in one archive; each path is a band row. */
+.curriculum-archive .stations { padding: 0; }
+.curriculum-archive .station {
+  margin: 0;
+  padding: 18px 22px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.curriculum-archive .station:last-child { border-bottom: 0; }
+.curriculum-archive .station-head {
+  border-bottom: 0;
+  padding: 0;
+  margin: 0 0 14px;
+  align-items: center;
+}
+.curriculum-archive .station-left {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+/* Path label as a filled sticker (S-5), twin of "On sale" / "Completed". */
+.curriculum-archive .station-label {
+  grid-row: 1;
+  justify-self: start;
+  background: var(--cycle);
+  color: var(--bg);
+  padding: 2px 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--fg);
+}
+.curriculum-archive .station-title {
+  grid-row: 1;
+  grid-column: 2;
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+.curriculum-archive .station-title em { color: var(--cycle); font-style: normal; }
+.curriculum-archive .station-pitch { grid-column: 1 / -1; font-size: 14px; margin-top: 6px; }
+.curriculum-archive .station-right { display: flex; gap: 14px; align-items: baseline; }
+.curriculum-archive .station-right span { display: inline; }
+.curriculum-archive .station-right b {
+  display: inline;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 15px;
+  margin-right: 4px;
+}
+
+/* Module cards as mini cards (S-4): path-coloured band, ink frame,
+   hard shadow, an image slot, small text. */
+.curriculum-archive .station-cards {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 860px) {
+  .curriculum-archive .station-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.curriculum-archive .mod-card {
+  padding: 0;
+  gap: 0;
+  min-height: 0;
+  border: 2px solid var(--fg);
+  background: var(--bg);
+  box-shadow: 3px 3px 0 var(--fg);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.curriculum-archive .mod-card:hover {
+  background: var(--bg);
+  border-color: var(--fg);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--fg);
+}
+.curriculum-archive .mod-card.active {
+  border-color: var(--fg);
+  background: var(--bg);
+  box-shadow: 4px 4px 0 var(--cycle), 4px 4px 0 2px var(--fg);
+}
+/* A module with no live lesson yet: dashed frame, no shadow (S-7). */
+.curriculum-archive .mod-card.no-live { border-style: dashed; box-shadow: none; }
+.curriculum-archive .mod-card .card-top {
+  padding: 5px 9px;
+  background: var(--cycle);
+  color: var(--bg);
+  border-bottom: 2px solid var(--fg);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.curriculum-archive .mod-card .card-top b { color: var(--bg); font-weight: 800; letter-spacing: 0; }
+.curriculum-archive .mod-card .card-top .card-fw {
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: max(10px, var(--fs-min));
+}
+.curriculum-archive .mod-card .card-title {
+  margin: 0;
+  padding: 8px 9px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.curriculum-archive .mod-card .card-title em { font-weight: 400; font-size: 13px; }
+.curriculum-archive .mod-card .card-meta {
+  margin: 0;
+  padding: 6px 9px 8px;
+  border-top: 0;
+  font-size: max(11px, var(--fs-min));
+  color: var(--fg-3);
+}
+.curriculum-archive .card-meta .cm-subs { display: none; }
+.curriculum-archive .cm-live { color: var(--fg); font-weight: 700; }
+
+/* The image slot (S-12): a 16:10 framed mat with the module number. It
+   takes the module cover image once those are picked; until then it shows
+   nothing it cannot back up. Modules without lessons get the dashed
+   "Lessons coming" slot. */
+.mod-fig {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  background: var(--bg-3);
+  border-bottom: 2px solid var(--fg);
+}
+.mod-fig::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--line-2);
+}
+.mod-fig-num {
+  position: relative;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg-2);
+}
+.mod-card.no-live .mod-fig { border-bottom-style: dashed; }
+.mod-card.no-live .mod-fig::before { display: none; }
+.mod-fig-soon {
+  font-family: var(--mono);
+  font-size: max(10px, var(--fs-min));
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  text-align: center;
+  line-height: 1.4;
+}
+.curriculum-archive .station-panel { border: 2px solid var(--fg); box-shadow: 3px 3px 0 var(--fg); }
+
+/* H2-curriculum, phone: a 3-column grid of tiles (no list, no swipe);
+   the open panel spans the row under its tile. */
+@media (max-width: 540px) {
+  .curriculum-archive .station { padding: 14px 16px 18px; }
+  .curriculum-archive .station-head { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .curriculum-archive .station-title { font-size: 20px; }
+  .curriculum-archive .station-pitch { display: none; }
+  .curriculum-archive .station-right { justify-content: flex-start; text-align: left; }
+  .curriculum-archive .station-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 8px;
+    border: 0;
+    background: none;
+  }
+  .curriculum-archive .mod-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    border: 2px solid var(--fg);
+    background: var(--bg);
+    box-shadow: 3px 3px 0 var(--fg);
+  }
+  .curriculum-archive .mod-card:last-child { border-bottom: 2px solid var(--fg); }
+  .curriculum-archive .mod-card.no-live { border-style: dashed; box-shadow: none; }
+  .curriculum-archive .mod-card.active { box-shadow: 3px 3px 0 var(--cycle), 3px 3px 0 2px var(--fg); }
+  .curriculum-archive .mod-card .card-top { padding: 3px 6px; }
+  .curriculum-archive .mod-card .card-top b { font-size: 12px; }
+  .curriculum-archive .mod-card .card-title {
+    padding: 5px 6px 7px;
+    font-size: 12px;
+    hyphens: manual;
+    overflow-wrap: anywhere;
+  }
+  .curriculum-archive .mod-card .card-meta { display: none; }
+  .mod-fig-num { font-size: 24px; }
+  .mod-fig::before { inset: 5px; }
+  .curriculum-archive .station-cards > .station-panel {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    border: 2px solid var(--fg);
+    box-shadow: none;
+    background: var(--bg-2);
+  }
+}
+
+/* ---------- H2-research: five finding cards in an archive ---------- */
+.research-archive .rqs {
+  background: var(--bg-2);
+  border: 0;
+  gap: 10px;
+  padding: 20px 22px 24px;
+}
+.research-archive .rq {
+  background: var(--bg);
+  border: 2px solid var(--fg);
+  box-shadow: 3px 3px 0 var(--fg);
+  padding: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+}
+.research-archive .rq:hover { background: var(--bg); }
+/* Band header in the research blue (S-9: pink belongs to workshops). */
+.research-archive .rq .tag {
+  margin: 0;
+  padding: 5px 9px;
+  background: var(--action);
+  color: var(--on-action);
+  border-bottom: 2px solid var(--fg);
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.research-archive .rq h4 { margin: 0; padding: 8px 10px 0; font-size: 14px; font-weight: 600; line-height: 1.25; }
+.research-archive .rq .rq-find {
+  margin: 0;
+  padding: 6px 10px 10px;
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  font-style: normal;
+}
+.research-archive .rq-find b {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.research-archive .rq-find span { font-family: var(--serif); font-size: 13px; line-height: 1.35; color: var(--fg-2); }
+/* RQ 3 was not tested in the pilot: the dashed "not there yet" frame (S-7). */
+.research-archive .rq.is-pending { border-style: dashed; box-shadow: none; }
+
+@media (max-width: 640px) {
+  .research-archive .rqs { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px 16px 18px; }
+  .research-archive .rq { padding: 0; min-height: 0; }
+  .research-archive .rq:last-child { grid-column: 1 / -1; }
+  /* M-10: titles and numbers only on phones; the sentences stay on /research. */
+  .research-archive .rq-find span { display: none; }
+  .research-archive .rq-find b { font-size: 18px; }
+  .research-archive .rq h4 { font-size: 14px; }
+}
+
+/* ---------- H2-author: one framed card (with the H1 link chips) ----------
+   Content and order unchanged (DEC-114). */
+.author-card {
+  max-width: 760px;
+  border: 2px solid var(--fg);
+  box-shadow: 3px 3px 0 var(--fg);
+  background: var(--bg);
+  padding: 18px 22px 20px;
+}
+.author-card p { font-size: 16px; line-height: 1.55; }
+.author-note-links a {
+  border: 2px solid var(--fg);
+  padding: 4px 10px;
+  color: var(--fg);
+  background: var(--bg);
+  box-shadow: 2px 2px 0 var(--fg);
+}
+.author-note-links a:hover { border-bottom-color: var(--fg); }
+@media (max-width: 640px) {
+  .author-card { padding: 14px 16px 16px; }
+  .author-card p { font-size: 15px; }
+}
+
+/* Archive strips stack on phones: status under the title (M-7 / M-8). */
+@media (max-width: 640px) {
+  /* .workshops-archive raises specificity over workshops.css, loaded later. */
+  .workshops-archive > .archive-head { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 8px 14px; letter-spacing: 0.1em; }
+  .workshops-archive > .archive-head .archive-org { letter-spacing: 0.14em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .curriculum-archive .mod-card { transition: none; }
+  .curriculum-archive .mod-card:hover { transform: none; }
+}
+
+/* ============================================================
+   PHONE SET (BLD-33: M-1…M-24 + H1, approved 28 Oct, DEC-106/114)
+   Phone-only rules for the home page and the shared chrome. The
+   text floor (M-15) is the --fs-min token in tokens.css.
+   ============================================================ */
+.lead-short { display: none; }
+
+@media (max-width: 640px) {
+  /* M-1: no cube on phones (the island loads with client:media). */
+  .cube-plate { display: none; }
+
+  /* M-2: the meta grid as one mono line. */
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 12px;
+  }
+  .cover-meta > div { display: contents; }
+  .cover-meta > div b,
+  .cover-meta > div:nth-child(2),
+  .cover-meta > div:nth-child(3) { display: none; }
+  .cover-meta span {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--fg-3);
+  }
+
+  /* M-3: the one-sentence lead. */
+  .lead-long { display: none; }
+  .lead-short { display: inline; }
+
+  /* M-4: open module panel: no duplicate title row; lesson rows 44 px. */
+  .station-panel .panel-head { display: none; }
+  .panel-subs .sub .leaf-link { min-height: 44px; align-items: center; }
+
+  /* M-7: the series link in the § 2 lead repeats the CTA below it. */
+  #workshops .section-desc .desc-link { display: none; }
+
+  /* M-11: footer link rows 44 px; the Research links fold into one. */
+  .foot .foot-grid ul a,
+  .foot .about-meta dd a,
+  .foot .bottom a { display: inline-flex; align-items: center; min-height: 44px; }
+  /* The author/supervisor links keep their underline at the text, not at
+     the bottom of the 44 px row. */
+  .foot .about-meta dd a {
+    border-bottom: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--accent-dim);
+    text-underline-offset: 3px;
+  }
+  .foot ul { gap: 0; }
+  .foot .foot-grid > div:last-child ul li { margin: 0; }
+  .foot .foot-grid > div:last-child ul li:nth-child(n+2) { display: none; }
+  .foot .foot-grid > div:last-child ul { columns: auto; }
+
+  /* M-16: every button-like link at least 44 px tall. */
+  .colo-link,
+  .research-cta a,
+  .workshops-archive .spec-actions a,
+  .workshops-archive a.sp-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* M-17: the star note: no glyph, one paragraph, button under it. */
+  .foot { padding-top: 24px; }
+  .colo { display: grid; justify-items: start; gap: 10px; text-align: left; padding-block: 16px; margin: 0 0 32px; }
+  .colo-glyph { display: none; }
+  .foot .colo-line { margin: 0; font-size: 15px; line-height: 1.45; }
+  .foot .colo-line br { display: none; }
+  .foot .colo-link { margin: 0; white-space: nowrap; }
+}
+
+/* H1 (HDR-D1): on phones the section nav wraps to a second line instead
+   of scrolling sideways. Nothing else in the header changes: at 360 px and
+   up with default text the links fit and the header looks as before. */
+@media (max-width: 640px) {
+  .frame-top .nav-mid { overflow-x: visible; flex-wrap: wrap; row-gap: 0; }
+}
+
+/* M-12: 44 px tap areas for the wordmark and the GitHub link on touch
+   screens, grown with an invisible hit box so the header does not move. */
+@media (pointer: coarse) {
+  .frame-top .mark,
+  .nav-r a.gh-link { position: relative; }
+  .frame-top .mark::after,
+  .nav-r a.gh-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 44px;
+    transform: translateY(-50%);
+  }
+}

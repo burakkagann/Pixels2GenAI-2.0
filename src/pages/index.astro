@@ -96,6 +96,9 @@ const RESULT_GROUPS = MODULES.map((m) => ({
   name: m.name ?? `${m.title} ${m.em}`.trim(),
   leaves: ALL_LEAVES.filter((l) => l.mIdx === m.idx),
 })).filter((g) => g.leaves.length > 0);
+// Curriculum archive counts (home standard S-2): modules, lessons and how many are live.
+const LIVE_BY_MODULE = Object.fromEntries(MODULES.map((m) => [m.idx, ALL_LEAVES.filter((l) => l.mIdx === m.idx && l.slug).length]));
+const LIVE_TOTAL = ALL_LEAVES.filter((l) => l.slug).length;
 // The six-workshop series (BLD-09g): the landing block points to it once PUBLIC_WORKSHOP_SERIES is on.
 const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
 ---
@@ -117,8 +120,10 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
         one continuous journey.
       </h1>
+      {/* M-3: phones get the one-sentence lead (draft copy, for Kağan to reword). */}
       <p class="cover-lead">
-        An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, <em>across fifteen progressive modules</em>, each producing a visual artifact.
+        <span class="lead-long">An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, <em>across fifteen progressive modules</em>, each producing a visual artifact.</span>
+        <span class="lead-short">An open-source curriculum from a single array element to modern generative models, in fifteen modules that each end in an image you made.</span>
       </p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
@@ -141,7 +146,9 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         <span class="fig-num">Fig. 0</span>
         <span>The journey object · M 01 → M 12</span>
       </div>
-      <JourneyCube client:idle />
+      {/* M-1: the plate is hidden under 641 px, and client:media keeps React
+          and the island's JS off phones entirely (BLD-35 measured the cost). */}
+      <JourneyCube client:media="(min-width: 641px)" />
     </div>
   </header>
 
@@ -224,6 +231,12 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       </div>
     </div>
 
+    {/* Home standard S-2: one archive strip over the three paths, as in § 2 and § 3. */}
+    <div class="workshops-archive curriculum-archive">
+    <div class="archive-head">
+      <span class="archive-org">Pixels2GenAI · Curriculum</span>
+      <span class="archive-count">▌ {MODULES.length} modules · {ALL_LEAVES.length} lessons · {LIVE_TOTAL} live</span>
+    </div>
     <div class="stations" data-stations>
     {CYCLES.map(cy => {
       const cyc = cy.cycle === 'c1' ? 'I' : cy.cycle === 'c2' ? 'II' : 'III';
@@ -254,10 +267,11 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
           <div class="station-cards">
             {mods.map(m => {
               const c = countLeaves(m.idx);
+              const live = LIVE_BY_MODULE[m.idx] ?? 0;
               return (
                 <button
                   type="button"
-                  class="mod-card"
+                  class:list={['mod-card', live > 0 ? 'has-live' : 'no-live']}
                   data-m={m.idx}
                   aria-expanded="false"
                   aria-controls={`panel-${m.idx}`}
@@ -266,9 +280,17 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                     <b>M {m.idx}</b>
                     <span class="card-fw">{m.fw}</span>
                   </div>
+                  {/* Image slot (H2-curriculum): a framed mat with the module
+                      number until the module cover images are picked. Modules
+                      with no live lesson get the dashed "Lessons coming" mat. */}
+                  <span class="mod-fig" aria-hidden="true">
+                    {live > 0
+                      ? <span class="mod-fig-num">{m.idx}</span>
+                      : <span class="mod-fig-soon">Lessons<br />coming</span>}
+                  </span>
                   {/* span, not h4: a <button> may only hold phrasing content. */}
                   <span class="card-title">{m.title}<br /><em>{m.em}</em></span>
-                  <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons</div>
+                  <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons{live > 0 && <> · <b class="cm-live">{live} live</b></>}</div>
                 </button>
               );
             })}
@@ -313,6 +335,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         </div>
       );
     })}
+    </div>
     </div>
   </section>
 
@@ -700,7 +723,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
           ? <h2 class="section-title">The curriculum, <em>in the room.</em></h2>
           : <h2 class="section-title">The curriculum, <em>in a single day.</em></h2>}
         {seriesOn
-          ? <p class="section-desc">Hands-on Saturdays in Berlin with Academis. The pilot came first; the six-part series starts on 5 December. <a href="/workshops">See the series →</a></p>
+          ? <p class="section-desc">Hands-on Saturdays in Berlin with Academis. The pilot came first; the six-part series starts on 5 December. <a class="desc-link" href="/workshops">See the series →</a></p>
           : <p class="section-desc">A recurring one-day workshop: the whole curriculum in a single sitting. First cohort below; the next is in planning.</p>}
       </div>
     </div>
@@ -746,7 +769,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
        url / sameAs in the JSON-LD above. -->
   <aside class="author-note" id="author" aria-labelledby="author-note-title">
     <h2 class="author-note-label" id="author-note-title">About the author</h2>
-    <div class="author-note-body">
+    <div class="author-note-body author-card">
       <p>
         <strong>Burak Kağan Yılmazer</strong> is an ML and creative technologist with a background in data and AI engineering. Pixels2GenAI began as the practical part of an MA thesis and is growing into a broader platform for creative AI education.
       </p>
@@ -768,23 +791,31 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <div class="section-num">§ 4 · <span>Research</span></div>
       <div>
         <h2 class="section-title">Five questions, <em>three cycles.</em></h2>
-        <p class="section-desc">The curriculum is the artifact of a design-based research thesis. Three cycles, the same five questions; this is the third.</p>
+        <p class="section-desc">The curriculum is the artifact of a design-based research thesis. Three cycles, the same five questions; this is the second.</p>
       </div>
     </div>
 
-    <div class="rqs">
-      {RQS.map(rq => (
-        <div class="rq">
-          <div class="tag">{rq.tag}</div>
-          <h4>{rq.title}</h4>
-          <p>{rq.gloss}</p>
-        </div>
-      ))}
+    {/* H2-research: an archive of five finding cards. Each shows its question's
+        title and what the Cycle i pilot found (research.ts → research.mdx);
+        the full questions stay on /research. */}
+    <div class="workshops-archive research-archive">
+      <div class="archive-head">
+        <span class="archive-org">Pixels2GenAI · Research</span>
+        <span class="archive-count">▌ 5 questions · Cycle i pilot, n = 9</span>
+      </div>
+      <div class="rqs">
+        {RQS.map(rq => (
+          <div class:list={['rq', rq.finding.pending && 'is-pending']}>
+            <div class="tag">{rq.tag}</div>
+            <h4>{rq.title}</h4>
+            <p class="rq-find"><b>{rq.finding.value}</b><span>{rq.finding.line}</span></p>
+          </div>
+        ))}
+      </div>
     </div>
 
     <div class="research-cta">
-      <a class="btn btn-sec" href="/research">Read the full study →</a>
-      <span class="research-cta-meta">DBR pilot · n = 9 · Cohen's d = 1.615 · ρ = −0.857</span>
+      <a class="btn btn-pri" href="/research">Read the full study →</a>
     </div>
   </section>
 
