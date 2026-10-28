@@ -313,10 +313,13 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                     <span class="card-fw">{m.fw}</span>
                   </div>
                   {/* MC3: the module's best lesson output as a one-ink riso print;
-                      a module without live lessons shows its planned sub-topics. */}
+                      a module without live lessons shows its planned sub-topics.
+                      Decorative inside the button (aria-hidden), so the button's
+                      name stays "M nn, title, lessons"; the alt text is kept for
+                      wherever the covers appear outside a control. */}
                   {COVERS[m.idx] && live > 0
-                    ? <span class="mod-fig"><img src={COVERS[m.idx].src} width={COVERS[m.idx].width} height={COVERS[m.idx].height} alt={COVERS[m.idx].alt} loading="lazy" decoding="async" /></span>
-                    : <span class="mod-fig mod-plan">
+                    ? <span class="mod-fig" aria-hidden="true"><img src={COVERS[m.idx].src} width={COVERS[m.idx].width} height={COVERS[m.idx].height} alt={COVERS[m.idx].alt} loading="lazy" decoding="async" /></span>
+                    : <span class="mod-fig mod-plan" aria-hidden="true">
                         <b>Planned</b>
                         <span class="mod-plan-list">{(PLANNED_TOPICS[m.idx] ?? (SUBTOPICS[m.idx] ?? []).map((s) => s.title)).map((t) => <span>{t}</span>)}</span>
                         <span class="mod-plan-n">{(SUBTOPICS[m.idx] ?? []).length} {(SUBTOPICS[m.idx] ?? []).length === 1 ? 'topic' : 'topics'}</span>
@@ -835,7 +838,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="workshops-archive research-archive">
       <div class="archive-head">
         <span class="archive-org">Pixels2GenAI · Research</span>
-        <span class="archive-count">▌ 5 questions · pilot n = 9</span>
+        <span class="archive-count">▌ {RQS.length} questions · pilot n = 9</span>
       </div>
       <div class="rqs">
         {RQS.map(rq => (

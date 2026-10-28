@@ -2458,7 +2458,20 @@
   .curriculum-archive .mod-card .card-top b { font-size: 12px; }
   /* Tiles show one short title, which may wrap to two lines at a space or
      soft hyphen but never mid-word (no overflow-wrap: anywhere). */
-  .curriculum-archive .mod-card .card-title { display: none; }
+  /* The full title stays for screen readers; the short form is aria-hidden. */
+  .curriculum-archive .mod-card .card-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .curriculum-archive .mod-card { position: relative; }
+  .curriculum-archive .mod-card .card-title em { display: inline; }
   .curriculum-archive .mod-card .card-short {
     display: block;
     padding: 5px 6px 7px;
