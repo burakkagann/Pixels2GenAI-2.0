@@ -95,3 +95,12 @@ const pass = late
   </div>
 
 </section>
+
+<style>
+  /* Phone taps: the two text links in the small print are about 17 px tall, so each gets an invisible
+     hit area 44 px tall around it (the text and the line keep their size). */
+  @media (max-width: 640px) {
+    .tk-small a { position: relative; }
+    .tk-small a::after { content: ''; position: absolute; inset: -14px -4px; }
+  }
+</style>
