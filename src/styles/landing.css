@@ -341,6 +341,12 @@
   --btn-fill-hover: var(--action-hover);
 }
 
+.btn-pri.btn-path {
+  --btn-fill: var(--p-action);
+  --btn-on: var(--on-action);
+  --btn-fill-hover: var(--p-action);
+}
+
 .btn-pri.btn-workshop {
   --btn-fill: var(--studio);
   --btn-on: var(--on-action-bright);
@@ -912,116 +918,6 @@
   display: block;
 }
 
-.panel-head {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 20px 0 16px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--line);
-  flex-wrap: wrap;
-}
-
-.panel-num {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--cycle, var(--accent));
-  letter-spacing: 0.06em;
-}
-
-.panel-head h5 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.panel-head h5 em {
-  color: var(--fg-2);
-  font-style: italic;
-  font-weight: 400;
-}
-
-.panel-fw {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
-  color: var(--fg-3);
-  letter-spacing: 0.04em;
-}
-
-.panel-subs {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 28px;
-}
-
-.panel-subs .sub h6 {
-  margin: 0 0 8px;
-  font-family: var(--serif);
-  font-size: 14px;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--fg);
-}
-
-.panel-subs .sub h6 .snum {
-  font-family: var(--mono);
-  font-style: normal;
-  font-size: max(10px, var(--fs-min));
-  color: var(--fg-3);
-  margin-right: 6px;
-  letter-spacing: 0.04em;
-}
-
-.panel-subs .sub .leaf {
-  font-family: var(--serif);
-  font-size: 13px;
-  padding: 3px 0;
-  color: var(--fg);
-  display: flex;
-  gap: 8px;
-  text-decoration: none;
-  line-height: 1.4;
-}
-
-.panel-subs .sub .leaf:hover {
-  color: var(--cycle, var(--accent));
-}
-
-/* Shipped leaf = <div.leaf> holding the link and the completion toggle as
-   siblings (a button nested in a link is invalid). The link carries the
-   number + title row and inherits the leaf's colour and hover. */
-.panel-subs .sub .leaf-link {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  color: inherit;
-  text-decoration: none;
-}
-
-.panel-subs .sub .leaf .lnum {
-  font-family: var(--mono);
-  font-size: max(10px, var(--fs-min));
-  color: var(--fg-3);
-  flex-shrink: 0;
-  min-width: 44px;
-  letter-spacing: 0.04em;
-}
-
-.panel-subs .sub .leaf.soon {
-  color: var(--fg-3);
-  font-style: italic;
-  cursor: default;
-}
-
-.panel-subs .sub .leaf.soon:hover {
-  color: var(--fg-3);
-}
-
 @media (max-width: 720px) {
   /* Keep the two-column head: counts stay stacked on the right edge
      (smaller), opposite the Path label — left-stacking them wasted the
@@ -1035,19 +931,6 @@
   .station-right b {
     display: inline;
     font-size: 15px;
-  }
-
-  .panel-head {
-    gap: 8px;
-  }
-
-  .panel-head h5 {
-    font-size: 18px;
-  }
-
-  .panel-fw {
-    margin-left: 0;
-    flex-basis: 100%;
   }
 }
 
@@ -2081,8 +1964,6 @@
 }
 
 /* --- Completion toggle (shared: leaves + results) ----------- */
-.leaf-ttl { flex: 1; }
-
 .leaf-done {
   margin-left: auto;
   flex-shrink: 0;
@@ -2111,7 +1992,7 @@
 
 .leaf-done svg { width: 11px; height: 11px; }
 
-.leaf:hover .leaf-done,
+.mx-row:hover .leaf-done,
 .result:hover .leaf-done,
 .leaf-done:focus-visible { opacity: 1; }
 
@@ -2123,7 +2004,7 @@
 .leaf-done:hover { border-color: var(--cycle, var(--accent)); }
 
 /* Completed state — tick stays visible, leaf number dims */
-.leaf.done .leaf-done,
+.mx-row.done .leaf-done,
 .result.done .leaf-done {
   opacity: 1;
   color: var(--bg);
@@ -2131,7 +2012,7 @@
   border-color: var(--cycle, var(--c1));
 }
 
-.leaf.done .leaf-ttl,
+.mx-row.done .mx-t,
 .result.done .r-title {
   color: var(--fg-3);
   text-decoration: line-through;
@@ -2324,43 +2205,6 @@
 }
 .curriculum-archive .station-left { column-gap: 14px; }
 
-/* PB2: the progress bar under the archive strip, one segment per path
-   sized by its lessons, the live part filled in the path colour. */
-.path-bar {
-  display: flex;
-  align-items: stretch;
-  padding: 10px 22px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg-2);
-}
-.path-seg {
-  position: relative;
-  display: block;
-  min-width: 0;
-  height: 22px;
-  border: 2px solid var(--fg);
-  background: var(--bg);
-}
-.path-seg i { position: absolute; inset: 0 auto 0 0; background: var(--cycle); }
-.path-seg em {
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 1px 5px;
-  background: var(--fg);
-  color: var(--bg);
-  font-family: var(--mono);
-  font-style: normal;
-  font-size: max(10px, var(--fs-min));
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  line-height: 1.3;
-}
-.path-bar-arrow { display: grid; place-items: center; width: 22px; font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
-
 /* PB2: Rule / Tools / You make, one framed row under each path head. */
 .path-facts {
   display: grid;
@@ -2412,7 +2256,266 @@
 .mod-plan-list span { font-family: var(--sans); font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--fg); }
 .mod-plan-n { display: none; font-family: var(--mono); font-size: 12px; color: var(--fg-3); letter-spacing: .08em; text-transform: uppercase; }
 .card-short { display: none; }
-.curriculum-archive .station-panel { border: 2px solid var(--fg); box-shadow: 3px 3px 0 var(--fg); }
+.curriculum-archive .station-panel {
+  padding: 0;
+  border: 2px solid var(--fg);
+  box-shadow: 3px 3px 0 var(--fg);
+  background: var(--bg-2);
+}
+.curriculum-archive .station-panel.mp-empty { border-style: dashed; box-shadow: none; }
+/* BT-a: the Start button takes the path's darker action shade. */
+.station-panel[data-p="1"] { --p-action: var(--path-1-action); }
+.station-panel[data-p="2"] { --p-action: var(--path-2-action); }
+.station-panel[data-p="3"] { --p-action: var(--path-3-action); }
+@media (max-width: 860px) {
+  .pr-name, .pr-w { display: none; }
+}
+
+/* PR2 (28 Oct): a thin framed bar under each path label; the count sits beside
+   the name, never on the fill. Paths are sized by their lessons. */
+.path-bar {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.pr-path { min-width: 0; display: grid; gap: 6px; }
+.pr-lab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg);
+  white-space: nowrap;
+}
+.pr-n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 20px;
+  padding: 0 4px;
+  border: 2px solid var(--fg);
+  background: var(--cycle);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.pr-name { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+.pr-count { margin-left: auto; color: var(--fg-3); }
+.pr-count b { color: var(--fg); font-weight: 700; }
+.pr-bar, .mh-bar { position: relative; border: 2px solid var(--fg); background: var(--bg); }
+.pr-bar { height: 10px; }
+.pr-bar i, .mh-bar i { position: absolute; inset: 0 auto 0 0; background: var(--cycle); }
+
+/* MP4 + H-c (28 Oct): the module panel. A minimal title row, one "teaches"
+   line, then one compact row per lesson: its riso print in the path ink and
+   the title. No time anywhere. */
+.mh {
+  display: grid;
+  gap: 2px;
+  padding: 8px 0 10px 14px;
+  border-bottom: 2px solid var(--fg);
+  border-left: 8px solid var(--cycle);
+  background: var(--bg);
+}
+.mh-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; min-height: 44px; }
+.mh-stamp {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 4px;
+  border: 2px solid var(--fg);
+  background: var(--cycle);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 12px;
+}
+.mh-idx { flex: 0 0 auto; font-family: var(--mono); font-size: max(11px, var(--fs-min)); font-weight: 700; letter-spacing: .08em; color: var(--fg-3); }
+.mh-title { margin: 0; min-width: 0; font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.2; }
+.mh-prog {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.mh-prog b { color: var(--fg); }
+.mh-bar { width: 64px; height: 10px; }
+.mh-act { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.mh-btn { white-space: nowrap; min-height: 44px; padding: 0 16px; margin-right: 4px; font-size: 13px; }
+.mh-soon { font-size: 12px; padding: 2px 8px; }
+.mp-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-left: 2px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mh-close { align-self: stretch; height: auto; min-height: 52px; margin: -8px 0 -2px 0; border-bottom: 2px solid var(--fg); }
+.mp-close:focus-visible, .mx-link:focus-visible { outline: 2px solid var(--c2); outline-offset: 2px; }
+.mh-teach { margin: 0; padding-right: 14px; font-family: var(--serif); font-size: 14px; line-height: 1.35; color: var(--fg); }
+
+.mp-soon {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px dashed var(--fg-3);
+  color: var(--fg-3);
+  font-family: var(--mono);
+  font-size: max(10px, var(--fs-min));
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-style: normal;
+  white-space: nowrap;
+}
+.mp-sub-h {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.mp-sub-h b { color: var(--fg); margin-right: 6px; }
+
+.mx-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 22px;
+  padding: 10px 14px 12px;
+  background: var(--bg-2);
+}
+.mx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--fg);
+}
+.mx-link {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 36px 40px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 3px 0;
+  color: inherit;
+  text-decoration: none;
+}
+.mx-p {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+}
+.mx-p img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mx-p.is-soon { background: transparent; border: 1px dashed var(--fg-3); }
+.mx-row .lid { font-family: var(--mono); font-size: max(10px, var(--fs-min)); color: var(--fg-3); }
+.mx-t, .mh-title { min-width: 0; hyphens: manual; overflow-wrap: break-word; }
+a.mx-link:hover .mx-t { text-decoration: underline; text-underline-offset: 3px; }
+.mx-row.soon { color: var(--fg-3); }
+
+/* A module with nothing live: the plan as quiet type. */
+.mx-plan {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px 24px;
+  padding: 10px 14px 12px;
+  background: var(--bg-2);
+}
+.mx-plan p { margin: 0; font-family: var(--serif); font-size: 13px; line-height: 1.4; color: var(--fg-3); }
+.mx-plan b { display: block; font-family: var(--mono); font-size: max(10px, var(--fs-min)); letter-spacing: .08em; text-transform: uppercase; color: var(--fg); }
+
+@media (max-width: 540px) {
+  .path-bar { gap: 10px; padding: 10px 14px 12px; }
+  .pr-path { flex: 1 1 0 !important; }
+  .pr-name, .pr-w { display: none; }
+  .pr-lab { gap: 6px; }
+  .pr-count { letter-spacing: .04em; }
+
+  /* Head: title row with the 44 px close, the teaches line, then bar + Start. */
+  .mh {
+    grid-template-columns: auto auto minmax(0, 1fr) 44px;
+    grid-template-areas: "stamp idx title close" "teach teach teach teach" "prog prog act act";
+    gap: 6px 8px;
+    align-items: center;
+    padding: 6px 0 10px 10px;
+    border-left-width: 6px;
+  }
+  .mh-top, .mh-act { display: contents; }
+  .mh-stamp { grid-area: stamp; }
+  .mh-idx { grid-area: idx; }
+  .mh-title { grid-area: title; font-size: 15px; }
+  .mh-close { grid-area: close; width: 44px; min-height: 44px; margin: -6px 0 0; align-self: start; }
+  .mh-teach { grid-area: teach; font-size: 13.5px; padding-right: 10px; }
+  .mh-prog { grid-area: prog; margin-left: 0; }
+  .mh-bar { width: 52px; }
+  .mh-btn { grid-area: act; justify-self: end; margin: 0 14px 4px 0; font-size: 12px; padding-inline: 12px; }
+  .mh-soon { grid-area: act; justify-self: end; margin-right: 10px; }
+
+  /* Lessons: two columns of 44 px print rows, id over title. */
+  .mx-cols { grid-template-columns: 1fr; padding: 8px 10px 10px; gap: 8px; }
+  .mx-cols > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; align-content: start; }
+  .mx-cols .mp-sub-h { grid-column: 1 / -1; }
+  .mx-row { min-height: 48px; }
+  .mx-link {
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-areas: "p lid" "p t";
+    gap: 0 7px;
+    padding: 4px 0;
+    min-height: 48px;
+    align-content: center;
+  }
+  .mx-link .mx-p { grid-area: p; }
+  .mx-link .lid { grid-area: lid; line-height: 1.1; }
+  .mx-link .mx-t { grid-area: t; font-size: 12.5px; line-height: 1.15; }
+  .mx-link .mp-soon { grid-area: lid; justify-self: end; padding: 0 3px; }
+  /* No room for the completion toggle in a two-across row: done lessons carry
+     a tick on the print instead. */
+  .mx-row .leaf-done { display: none; }
+  .mx-row.done .mx-p::after {
+    content: "";
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--fg);
+    background: var(--cycle);
+  }
+  .mx-plan { grid-template-columns: 1fr; padding: 10px; gap: 8px; }
+}
 
 /* H2-curriculum, phone: a 3-column grid of tiles (no list, no swipe);
    the open panel spans the row under its tile. */
@@ -2471,11 +2574,6 @@
   .mod-fig.mod-plan { padding: 6px; align-content: center; justify-items: center; gap: 2px; }
   .mod-plan-list { display: none; }
   .mod-plan-n { display: block; }
-  .path-bar { padding: 8px 14px; }
-  .path-seg { height: 20px; }
-  .path-seg em { left: 2px; padding: 0 4px; }
-  .path-seg em span { display: none; }
-  .path-bar-arrow { width: 14px; font-size: 12px; }
   .path-stamp { width: 48px; height: 48px; box-shadow: 2px 2px 0 var(--fg); }
   .path-stamp b { font-size: 19px; }
   .curriculum-archive .station-left { grid-template-columns: auto minmax(0, 1fr); }
@@ -2623,10 +2721,6 @@
   /* M-3: the one-sentence lead. */
   .lead-long { display: none; }
   .lead-short { display: inline; }
-
-  /* M-4: open module panel: no duplicate title row; lesson rows 44 px. */
-  .station-panel .panel-head { display: none; }
-  .panel-subs .sub .leaf-link { min-height: 44px; align-items: center; }
 
   /* M-7: the series link in the § 2 lead repeats the CTA below it. */
   #workshops .section-desc .desc-link { display: none; }

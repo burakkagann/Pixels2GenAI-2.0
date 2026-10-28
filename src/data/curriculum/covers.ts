@@ -43,3 +43,44 @@ export const PLANNED_TOPICS: Record<string, string[]> = {
   '14': ['Data sources', 'Visualisation', 'Sonification', 'Data sculptures'],
   '15': ['Your own piece', 'built from all three paths'],
 };
+
+/**
+ * Lesson prints in the module panel (MP4, approved 28 Oct 2026): every shipped
+ * lesson's output reprinted as a square one-ink riso print in its path's ink,
+ * a private render script (render_thumbs.py, from the MC3 pipeline).
+ * workshop-planning/review/curriculum-panel-2026-10-28/r2/render_thumbs.py.
+ * No print repeats a module cover. A lesson that is not shipped has no file.
+ */
+export const LESSON_PRINT_SIZE = 192;
+export const lessonPrint = (id: string) => `/curriculum-covers/lessons/${id}.webp`;
+
+/** Soft hyphens (U+00AD) for long single words in lesson titles, so the
+ *  two-column phone rows break them cleanly instead of clipping or overflowing.
+ *  Display only: search, links and structured data keep the plain title. */
+const SHY = '­';
+const WORD_BREAKS: Record<string, string> = {
+  Harmonograph: `Harmo${SHY}nograph`,
+  Backpropagation: `Back${SHY}propagation`,
+  Visualization: `Visual${SHY}ization`,
+  Visualizations: `Visual${SHY}izations`,
+  Transformations: `Trans${SHY}formations`,
+  Classification: `Classi${SHY}fication`,
+  Dimensionality: `Dimen${SHY}sionality`,
+  Convolutional: `Convo${SHY}lutional`,
+  Autoencoders: `Auto${SHY}encoders`,
+  Autoencoder: `Auto${SHY}encoder`,
+  Segmentation: `Segmen${SHY}tation`,
+  Concatenation: `Concat${SHY}enation`,
+  Personalization: `Personal${SHY}ization`,
+  Mathematics: `Mathe${SHY}matics`,
+  Hyperparameter: `Hyper${SHY}parameter`,
+};
+export const breakTitle = (title: string) =>
+  title.replace(/[A-Za-z]{8,}/g, (w) => WORD_BREAKS[w] ?? w);
+
+/** Plain-text module title for the panel head: the catalog's own name when it
+ *  is not longer than "title em" (TouchDesigner), else "title em". */
+export const panelTitle = (m: { title: string; em: string; name?: string }) => {
+  const two = `${m.title} ${m.em}`;
+  return m.name && m.name.length <= two.length ? m.name : two;
+};

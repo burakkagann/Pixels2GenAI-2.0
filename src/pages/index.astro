@@ -8,7 +8,7 @@ import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astr
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS, countLeaves } from '@/data/curriculum/subtopics';
 import { RQS, CYCLES } from '@/data/site/research';
-import { COVERS, PLANNED_TOPICS } from '@/data/curriculum/covers';
+import { COVERS, PLANNED_TOPICS, lessonPrint, LESSON_PRINT_SIZE, breakTitle, panelTitle } from '@/data/curriculum/covers';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/site/workshops';
 import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
 import '@/styles/workshops.css';
@@ -100,7 +100,7 @@ const RESULT_GROUPS = MODULES.map((m) => ({
 // Curriculum archive counts (home standard S-2): modules, lessons and how many are live.
 const LIVE_BY_MODULE = Object.fromEntries(MODULES.map((m) => [m.idx, ALL_LEAVES.filter((l) => l.mIdx === m.idx && l.slug).length]));
 const LIVE_TOTAL = ALL_LEAVES.filter((l) => l.slug).length;
-// PB2: per-path progress, one segment per path sized by its lessons, the live part filled.
+// PR2: per-path progress, a thin bar under each path label with the count beside it.
 const PATH_NUM = { c1: 'I', c2: 'II', c3: 'III' } as const;
 const PATH_PROGRESS = CYCLES.map((cy) => {
   const mods = MODULES.filter((m) => m.cycle === PATH_NUM[cy.cycle]).map((m) => m.idx);
@@ -250,16 +250,19 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <span class="archive-org">Pixels2GenAI · Curriculum</span>
       <span class="archive-count">▌ {MODULES.length} modules · {ALL_LEAVES.length} lessons · {LIVE_TOTAL} live</span>
     </div>
-    {/* PB2: the three paths as one progress bar, live lessons filled. */}
-    <div class="path-bar" role="img" aria-label={PATH_PROGRESS.map((p) => `Path ${p.n} ${p.cy.name}: ${p.live} of ${p.total} lessons live`).join('; ')}>
-      {PATH_PROGRESS.map((p, i) => (
-        <>
-          {i > 0 && <span class="path-bar-arrow" aria-hidden="true">→</span>}
-          <span class="path-seg" style={`--cycle: var(--${p.cy.cycle}); flex: ${p.total};`}>
+    {/* PR2: one thin bar per path under its label, sized by its lessons, live part filled; the count sits beside the name, never on the fill. */}
+    <div class="path-bar">
+      {PATH_PROGRESS.map((p) => (
+        <div class="pr-path" style={`--cycle: var(--${p.cy.cycle}); flex: ${p.total};`}>
+          <div class="pr-lab">
+            <span class="pr-n" aria-hidden="true">{p.n}</span>
+            <span class="pr-name">{p.cy.name}</span>
+            <span class="pr-count"><b>{p.live}</b> / {p.total}<span class="pr-w"> live</span></span>
+          </div>
+          <div class="pr-bar" role="img" aria-label={`Path ${p.n} ${p.cy.name}: ${p.live} of ${p.total} lessons live`}>
             <i style={`width: ${Math.round((100 * p.live) / p.total)}%;`}></i>
-            <em>{p.n}<span> · {p.cy.name}</span></em>
-          </span>
-        </>
+          </div>
+        </div>
       ))}
     </div>
     <div class="stations" data-stations>
@@ -337,35 +340,64 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
           <div class="station-panels">
             {mods.map(m => {
               const subs = SUBTOPICS[m.idx] ?? [];
-              const c = countLeaves(m.idx);
+              const leaves = subs.flatMap(s => s.leaves);
+              const live = LIVE_BY_MODULE[m.idx] ?? 0;
+              const first = leaves.find(l => l.lessonSlug);
+              const pct = leaves.length ? Math.round((100 * live) / leaves.length) : 0;
+              const title = panelTitle(m);
               return (
-                <div class="station-panel" id={`panel-${m.idx}`} data-m={m.idx} hidden>
-                  <div class="panel-head">
-                    <span class="panel-num">M {m.idx}</span>
-                    <h5>{m.title} <em>{m.em}</em></h5>
-                    <span class="panel-fw">{m.fw} · {c.subs} sub-topics · {c.leaves} lessons</span>
+                <div class:list={['station-panel', live === 0 && 'mp-empty']} id={`panel-${m.idx}`} data-m={m.idx} data-p={cyc === 'I' ? 1 : cyc === 'II' ? 2 : 3} role="region" aria-label={`M ${m.idx} ${title}, lessons`} hidden>
+                  {/* H-c head: title row (stamp, M nn, name, module bar + count, Start, close) and the one "teaches" line. */}
+                  <div class="mh">
+                    <div class="mh-top">
+                      <span class="mh-stamp" aria-hidden="true">{cyc}</span>
+                      <span class="mh-idx">M {m.idx}</span>
+                      <h5 class="mh-title">{breakTitle(title)}</h5>
+                      <span class="mh-prog">
+                        <span class="mh-bar" role="img" aria-label={`${live} of ${leaves.length} lessons live`}><i style={`width: ${pct}%;`}></i></span>
+                        <span class="mh-n" aria-hidden="true"><b>{live}</b> / {leaves.length}</span>
+                      </span>
+                      <span class="mh-act">
+                        {first
+                          ? <a class="btn btn-pri btn-path mh-btn" href={`/lessons/${first.lessonSlug}`}>Start with {first.id} →</a>
+                          : <span class="mp-soon mh-soon">Soon</span>}
+                        <button type="button" class="mp-close mh-close" data-mp-close aria-label={`Close M ${m.idx}`}>×</button>
+                      </span>
+                    </div>
+                    <p class="mh-teach">{m.teaches}</p>
                   </div>
-                  <div class="panel-subs">
-                    {subs.map(s => (
-                      <div class="sub">
-                        <h6><span class="snum">{s.id}</span>{s.title}</h6>
-                        {s.leaves.map(l => (
-                          l.lessonSlug
-                            ? <div class="leaf" data-leaf-slug={l.lessonSlug}>
-                                <a class="leaf-link" href={`/lessons/${l.lessonSlug}`}>
-                                  <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
-                                </a>
-                                <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${l.id} complete`} title="Mark complete">
-                                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </button>
-                              </div>
-                            : <span class="leaf soon">
-                                <span class="lnum">{l.id}</span><span class="leaf-ttl">{l.title}</span>
-                              </span>
+                  {live > 0
+                    ? <div class="mx-cols">
+                        {subs.map(s => (
+                          <div>
+                            <p class="mp-sub-h"><b>{s.id}</b>{s.title}</p>
+                            {s.leaves.map(l => (
+                              l.lessonSlug
+                                ? <div class="mx-row" data-leaf-slug={l.lessonSlug}>
+                                    <a class="mx-link" href={`/lessons/${l.lessonSlug}`}>
+                                      <span class="mx-p" aria-hidden="true"><img src={lessonPrint(l.lessonSlug)} width={LESSON_PRINT_SIZE} height={LESSON_PRINT_SIZE} alt={`Riso print of the output of ${l.title}`} loading="lazy" decoding="async" /></span>
+                                      <span class="lid">{l.id}</span><span class="mx-t">{breakTitle(l.title)}</span>
+                                    </a>
+                                    <button type="button" class="leaf-done" data-leaf-toggle aria-label={`Toggle ${l.id} complete`} title="Mark complete">
+                                      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </button>
+                                  </div>
+                                : <div class="mx-row soon">
+                                    <span class="mx-link">
+                                      <span class="mx-p is-soon" aria-hidden="true"></span>
+                                      <span class="lid">{l.id}</span><span class="mx-t">{breakTitle(l.title)}</span>
+                                      <span class="mp-soon">Soon</span>
+                                    </span>
+                                  </div>
+                            ))}
+                          </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
+                    : <div class="mx-plan">
+                        {subs.map(s => (
+                          <p><b>{s.id} {s.title}</b><span>{s.leaves.map(l => l.title).join(' · ')}</span></p>
+                        ))}
+                      </div>}
                 </div>
               );
             })}
@@ -409,7 +441,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     // an already-active card closes it. Every card is its own Tab stop (plain
     // disclosure buttons, no roving tabindex); arrow keys also move focus
     // between cards within a station, Enter/Space toggle (native <button>),
-    // Escape closes the open panel.
+    // Escape closes the open panel (from a card or from inside the panel).
     //
     // Panel placement is layout-aware: on phones (≤540px, where the cards are a
     // single-column table of contents) the open panel is relocated to sit right
@@ -458,6 +490,22 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         if (!active) return;
         const panel = station.querySelector('.station-panel[data-m="' + active.getAttribute('data-m') + '"]');
         if (panel) place(panel, active);
+      });
+
+      // The panel's own close button and Escape inside the panel close it and
+      // hand focus back to its card; nothing navigates.
+      const closeFromPanel = (panel) => {
+        const card = cards.find((c) => c.getAttribute('data-m') === panel.getAttribute('data-m'));
+        if (!card) return;
+        if (card.classList.contains('active')) toggle(card);
+        card.focus();
+      };
+      panels.forEach((panel) => {
+        const x = panel.querySelector('[data-mp-close]');
+        if (x) x.addEventListener('click', () => closeFromPanel(panel));
+        panel.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); closeFromPanel(panel); }
+        });
       });
 
       cards.forEach((card, i) => {

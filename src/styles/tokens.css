@@ -123,6 +123,13 @@
   --btn-sec-fill:     transparent;
   --btn-sec-shadow:   0px;
 
+  /* Path "Start with x.y.z" button (BT-a, 28 Oct): a darker shade of the path
+     colour so the action reads apart from the path identity; paper label
+     (--on-action). Dark reuses the --cN-dim shades. */
+  --path-1-action:    var(--c1-dim);
+  --path-2-action:    var(--c2-dim);
+  --path-3-action:    var(--c3-dim);
+
   /* ---------- Admonition · note (promoted from prose.css hardcodes) ---------- */
   --note-border: #5d6878;
   --note-title:  #8a95a5;
@@ -276,6 +283,9 @@
   --on-action-bright: var(--fg);
   --btn-sec-fill:     var(--bg);
   --btn-sec-shadow:   2px;
+  --path-1-action:    #074B43;   /* path ink at 68 % toward black */
+  --path-2-action:    #1F3872;
+  --path-3-action:    #781F44;
 
   /* ---------- Admonition note ---------- */
   --note-border: #6F7A8C;

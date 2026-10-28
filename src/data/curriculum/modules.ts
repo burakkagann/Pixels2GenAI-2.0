@@ -24,25 +24,28 @@ export interface ModuleEntry {
   /** Full module name where "title em" doesn't read as one (breadcrumbs,
    *  structured data). Falls back to `${title} ${em}`. */
   name?: string;
+  /** One plain line under the module title in the home curriculum panel (H-c):
+   *  what the module teaches. Draft copy, for Kağan's review. */
+  teaches: string;
 }
 
 export const MODULES: ModuleEntry[] = [
-  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I' },
-  { idx: '01', title: 'Pixel',             em: 'Fundamentals',        fw: 'F1',    cycle: 'I',   firstLesson: '1.1.1' },
-  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I',   firstLesson: '2.1.1' },
-  { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I',   firstLesson: '3.1.1' },
-  { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1' },
-  { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I',   firstLesson: '5.1.1' },
-  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II',  firstLesson: '6.1.1', name: 'Noise & Procedural Generation' },
-  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II' },
-  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II',  firstLesson: '8.1.1' },
-  { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II',  firstLesson: '9.1.1' },
-  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II',  firstLesson: '10.1.1', name: 'TouchDesigner' },
-  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II',  firstLesson: '11.1.1' },
-  { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.1' },
-  { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III' },
-  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III' },
-  { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', capstone: true },
+  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I', teaches: 'What generative art is, how algorithms, ML and AI relate, and a working Python setup.' },
+  { idx: '01', title: 'Pixel',             em: 'Fundamentals',        fw: 'F1',    cycle: 'I',   firstLesson: '1.1.1', teaches: 'An image is a grid of numbers: write colour, randomness and structure pixel by pixel.' },
+  { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I',   firstLesson: '2.1.1', teaches: 'Draw with maths: lines and shapes, coordinate fields, polar curves.' },
+  { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I',   firstLesson: '3.1.1', teaches: 'Move, warp, mask and filter real photos.' },
+  { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1', teaches: 'Recursion: one rule repeated at every scale.' },
+  { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I',   firstLesson: '5.1.1', teaches: 'Simulate many simple agents and let behaviour emerge.' },
+  { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II',  firstLesson: '6.1.1', name: 'Noise & Procedural Generation', teaches: 'Smooth randomness for terrain, clouds and textures.' },
+  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II', teaches: 'Classical machine learning on images: clustering, classification, reduction, statistics.' },
+  { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II',  firstLesson: '8.1.1', teaches: 'Add time: turn image operations into looping animations.' },
+  { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II',  firstLesson: '9.1.1', teaches: 'Neural networks from a single neuron up to CNNs and RNNs.' },
+  { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II',  firstLesson: '10.1.1', name: 'TouchDesigner', teaches: 'Real-time visuals with node networks in TouchDesigner.' },
+  { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II',  firstLesson: '11.1.1', teaches: 'Camera input for live, interactive pieces.' },
+  { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.1', teaches: 'Generative models: GANs, VAEs, diffusion and transformers.' },
+  { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III', teaches: 'Run AI models live inside TouchDesigner.' },
+  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III', teaches: 'Data as material: images, sound and objects from data.' },
+  { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', capstone: true, teaches: 'Your own project, built from all three paths.' },
 ];
 
 /**
