@@ -51,9 +51,23 @@ const SECRET_PATTERNS = [
 // Workshop lesson material must never reach the public site before the release (DEC-26, DEC-77): the
 // lesson sources, their media (cells, solutions) and the answer checks. A match fails the build.
 const LESSON_MATERIAL = [
-  { name: 'workshop media folder', re: /(^|\/)workshop-media\// },
-  { name: 'answer-check file', re: /\.check\.py$/ },
-  { name: 'workshop lesson page', re: /(^|\/)workshops\/w[1-7]-[a-z]+\/[0-9]/ },
+  { name: 'workshop media folder', re: /(^|\/)workshop-media\//i },
+  { name: 'workshop-area source folder', re: /(^|\/)workshop-area\//i },
+  { name: 'answer-check file', re: /\.check\.py$/i },
+  { name: 'workshop lesson page', re: /(^|\/)workshops\/w[1-7]-[a-z]+\/[0-9]/i },
+];
+// SEC-32: with the area flag off, no built text file may even point at the workshop media route, so a page
+// or script that links or fetches /workshop-media/... fails the build too, not only a copied file.
+const LESSON_MEDIA_IN_TEXT = /\/workshop-media\//i;
+// Private working folders and files (CLAUDE.local.md "private, never in the public repo"). They must never
+// be in dist/, whatever the flags, so a stray copy into public/ fails the build.
+const PRIVATE_PATHS = [
+  { name: 'workshop planning folder', re: /(^|\/)workshop-planning\//i },
+  { name: 'AI tutor planning folder', re: /(^|\/)ai-tutor(-planning)?\//i },
+  { name: 'tutor component folder', re: /(^|\/)components\/tutor\//i },
+  { name: 'Claude settings folder', re: /(^|\/)\.claude\//i },
+  { name: 'local working-rules file', re: /(^|\/)CLAUDE\.local\.md$/i },
+  { name: 'environment file', re: /(^|\/)\.env(\.[^/]*)?$/i },
 ];
 // Includes the downloadable lesson scripts (.py) and notebooks.
 const TEXT_FILE = /\.(html|js|mjs|css|json|txt|xml|webmanifest|svg|map|py|ipynb|md)$/i;
@@ -85,7 +99,9 @@ function filesUnder(dir) {
  *   - the area flag is off but area pages were built anyway;
  *   - the area flag is on and an area page lacks noindex, carries JSON-LD,
  *     loads analytics, or has inline event handlers / javascript: URLs;
- *   - the area flag is off and workshop lesson material was built (LESSON_MATERIAL);
+ *   - the area flag is off and workshop lesson material was built (LESSON_MATERIAL), or a text file
+ *     points at /workshop-media/ (LESSON_MEDIA_IN_TEXT, SEC-32);
+ *   - a private working folder or file reached dist/ (PRIVATE_PATHS), whatever the flags;
  *   - any text file in dist/ contains a secret pattern (SECRET_PATTERNS).
  */
 function checkForLeaks(distDir, logger) {
@@ -163,9 +179,15 @@ function checkForLeaks(distDir, logger) {
         if (rule.re.test(rel)) errors.push(`PUBLIC_WORKSHOP_AREA is off, but a ${rule.name} was built: ${rel}`);
       }
     }
+    for (const rule of PRIVATE_PATHS) {
+      if (rule.re.test(rel)) errors.push(`A private ${rule.name} reached dist/: ${rel}`);
+    }
     if (!TEXT_FILE.test(file)) continue;
     scanned += 1;
     const text = fs.readFileSync(file, 'utf8');
+    if (!WORKSHOP_AREA && LESSON_MEDIA_IN_TEXT.test(text)) {
+      errors.push(`PUBLIC_WORKSHOP_AREA is off, but ${rel} points at /workshop-media/.`);
+    }
     for (const rule of SECRET_PATTERNS) {
       const match = text.match(rule.re);
       // Report where, never the matched value itself (the log may be public).
