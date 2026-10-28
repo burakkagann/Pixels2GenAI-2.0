@@ -34,7 +34,7 @@ const pass = late
   </div>
 
   <SeriesCalendarArc />
-  <p class="series-practical">Every workshop is a Saturday, {TICKETS.time}, at the Academis studio in Berlin, with eight people at most.</p>
+  <p class="series-practical">Every workshop is a Saturday, {TICKETS.time}, with eight people at most.<br />{TICKETS.venueLine}</p>
 
   <div class="series-grid">
     {SERIES.map((w) => <SeriesCard workshop={w} />)}
@@ -77,6 +77,7 @@ const pass = late
           <p class="ws-label">{pass.label}</p>
           <p class="tk-price">€{pass.standard}</p>
           <p class="tk-sub">€{pass.reduced} reduced. Limited, until {TICKETS.passUntil}. One code for the whole series.</p>
+          <p class="tk-sub">{TICKETS.singlesLater}</p>
           <div class="sc-btns">
             {passShop ? <a class="ws-btn fill-studio" href={passShop}>Get the pass →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
           </div>
@@ -86,7 +87,7 @@ const pass = late
         <li>Max 8 people · 18+ · English</li>
         <li>Your own laptop is a must (Chrome or Firefox, and the charger)</li>
         <li>Bring one photo of your own</li>
-        <li>{TICKETS.venue}, hosted by {TICKETS.host}</li>
+        <li>{TICKETS.venueLine} · hosted by {TICKETS.host}</li>
         <li>Your personal code arrives by email four days before your workshop</li>
       </ul>
       <p class="tk-small">No VAT is charged (§ 19 UStG). <a href={TICKETS.terms}>Ticket terms</a> · Not for W1? <a href="/announce?topic=workshops" data-announce data-topic="workshops">Hear when W2 opens</a></p>

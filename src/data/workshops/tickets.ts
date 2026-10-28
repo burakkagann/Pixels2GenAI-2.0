@@ -18,6 +18,11 @@ export const TICKETS = {
   reducedFor: 'students, people on low income or unemployed',
   passUntil: '8 Jan',
   venue: 'Academis studio, Berlin',
+  /** The full venue line on /workshops (DEC-121): same studio as the pilot. `venue` above stays the short form
+   *  the home series row uses. */
+  venueLine: 'Academis studio · Steinmetzstraße 40, 10783 Berlin · U Kleistpark',
+  /** Q-E2 (DEC-120): for now pretix sells W2–W6 only through the pass; their single tickets open later. */
+  singlesLater: 'Single tickets for W2 to W6 open later. Until then the pass is the way to book them.',
   host: 'Kristian Rother',
   time: '11:00–15:30',
   terms: '/workshops/terms',
