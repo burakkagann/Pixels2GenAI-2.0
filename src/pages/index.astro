@@ -8,6 +8,7 @@ import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astr
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS, countLeaves } from '@/data/curriculum/subtopics';
 import { RQS, CYCLES } from '@/data/site/research';
+import { COVERS, PLANNED_TOPICS } from '@/data/curriculum/covers';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/site/workshops';
 import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
 import '@/styles/workshops.css';
@@ -99,6 +100,16 @@ const RESULT_GROUPS = MODULES.map((m) => ({
 // Curriculum archive counts (home standard S-2): modules, lessons and how many are live.
 const LIVE_BY_MODULE = Object.fromEntries(MODULES.map((m) => [m.idx, ALL_LEAVES.filter((l) => l.mIdx === m.idx && l.slug).length]));
 const LIVE_TOTAL = ALL_LEAVES.filter((l) => l.slug).length;
+// PB2: per-path progress, one segment per path sized by its lessons, the live part filled.
+const PATH_NUM = { c1: 'I', c2: 'II', c3: 'III' } as const;
+const PATH_PROGRESS = CYCLES.map((cy) => {
+  const mods = MODULES.filter((m) => m.cycle === PATH_NUM[cy.cycle]).map((m) => m.idx);
+  const leaves = ALL_LEAVES.filter((l) => mods.includes(l.mIdx));
+  return { cy, n: PATH_NUM[cy.cycle], total: leaves.length, live: leaves.filter((l) => l.slug).length };
+});
+// Phone tiles show one title line; these long ones get a soft hyphen or a
+// short form so a title never breaks mid-word or clips.
+const SHORT_TITLE: Record<string, string> = { '03': 'Trans­formations', '10': 'Touch­Designer', '13': 'AI + TD' };
 // The six-workshop series (BLD-09g): the landing block points to it once PUBLIC_WORKSHOP_SERIES is on.
 const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
 ---
@@ -237,6 +248,18 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <span class="archive-org">Pixels2GenAI · Curriculum</span>
       <span class="archive-count">▌ {MODULES.length} modules · {ALL_LEAVES.length} lessons · {LIVE_TOTAL} live</span>
     </div>
+    {/* PB2: the three paths as one progress bar, live lessons filled. */}
+    <div class="path-bar" role="img" aria-label={PATH_PROGRESS.map((p) => `Path ${p.n} ${p.cy.name}: ${p.live} of ${p.total} lessons live`).join('; ')}>
+      {PATH_PROGRESS.map((p, i) => (
+        <>
+          {i > 0 && <span class="path-bar-arrow" aria-hidden="true">→</span>}
+          <span class="path-seg" style={`--cycle: var(--${p.cy.cycle}); flex: ${p.total};`}>
+            <i style={`width: ${Math.round((100 * p.live) / p.total)}%;`}></i>
+            <em>{p.n}<span> · {p.cy.name}</span></em>
+          </span>
+        </>
+      ))}
+    </div>
     <div class="stations" data-stations>
     {CYCLES.map(cy => {
       const cyc = cy.cycle === 'c1' ? 'I' : cy.cycle === 'c2' ? 'II' : 'III';
@@ -253,7 +276,9 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         <div class="station" id={`station-${cy.cycle}`} style={`--cycle: var(--${cy.cycle});`}>
           <div class="station-head">
             <div class="station-left">
-              <span class="station-label">Path {cyc}</span>
+              {/* PB2: the path stamp (numeral + "Path"); the label stays for screen readers. */}
+              <span class="path-stamp" aria-hidden="true"><b>{cyc}</b><span>Path</span></span>
+              <span class="station-label sr-only">Path {cyc}</span>
               <h3 class="station-title">{cy.name}<em>.</em></h3>
               <p class="station-pitch">{cy.pitch}</p>
             </div>
@@ -263,6 +288,13 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
               <span class="station-done" data-station-done hidden></span>
             </div>
           </div>
+
+          {/* PB2: the path's fact row (draft copy, research.ts CYCLES). */}
+          <dl class="path-facts">
+            <div><dt>Rule</dt><dd>{cy.rule}</dd></div>
+            <div><dt>Tools</dt><dd>{cy.tools}</dd></div>
+            <div><dt>You make</dt><dd>{cy.makes}</dd></div>
+          </dl>
 
           <div class="station-cards">
             {mods.map(m => {
@@ -280,16 +312,18 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                     <b>M {m.idx}</b>
                     <span class="card-fw">{m.fw}</span>
                   </div>
-                  {/* Image slot (H2-curriculum): a framed mat with the module
-                      number until the module cover images are picked. Modules
-                      with no live lesson get the dashed "Lessons coming" mat. */}
-                  <span class="mod-fig" aria-hidden="true">
-                    {live > 0
-                      ? <span class="mod-fig-num">{m.idx}</span>
-                      : <span class="mod-fig-soon">Lessons<br />coming</span>}
-                  </span>
+                  {/* MC3: the module's best lesson output as a one-ink riso print;
+                      a module without live lessons shows its planned sub-topics. */}
+                  {COVERS[m.idx] && live > 0
+                    ? <span class="mod-fig"><img src={COVERS[m.idx].src} width={COVERS[m.idx].width} height={COVERS[m.idx].height} alt={COVERS[m.idx].alt} loading="lazy" decoding="async" /></span>
+                    : <span class="mod-fig mod-plan">
+                        <b>Planned</b>
+                        <span class="mod-plan-list">{(PLANNED_TOPICS[m.idx] ?? (SUBTOPICS[m.idx] ?? []).map((s) => s.title)).map((t) => <span>{t}</span>)}</span>
+                        <span class="mod-plan-n">{(SUBTOPICS[m.idx] ?? []).length} {(SUBTOPICS[m.idx] ?? []).length === 1 ? 'topic' : 'topics'}</span>
+                      </span>}
                   {/* span, not h4: a <button> may only hold phrasing content. */}
                   <span class="card-title">{m.title}<br /><em>{m.em}</em></span>
+                  <span class="card-short" aria-hidden="true">{SHORT_TITLE[m.idx] ?? m.title}</span>
                   <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons{live > 0 && <> · <b class="cm-live">{live} live</b></>}</div>
                 </button>
               );

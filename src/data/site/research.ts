@@ -66,6 +66,11 @@ export interface CycleEntry {
   name: string;
   /** One-sentence pitch shown in the § 2 Curriculum station header. */
   pitch: string;
+  /** The path's fact row on the home page (PB2): what writes the rule, the
+   *  tools, and what the learner makes. Draft copy for Kağan to reword. */
+  rule: string;
+  tools: string;
+  makes: string;
 }
 
 export const CYCLES: CycleEntry[] = [
@@ -75,6 +80,9 @@ export const CYCLES: CycleEntry[] = [
     pitch: 'Pixels, geometry, recursion, simulation. NumPy and PIL only, no networks yet. Visual intuition first.',
     modules: 'Modules 00 – 05',
     cycle: 'c1',
+    rule: 'You write the rule.',
+    tools: 'NumPy · PIL',
+    makes: 'Patterns, shapes, fractals, simulations',
   },
   {
     label: 'Machine Learning',
@@ -82,6 +90,9 @@ export const CYCLES: CycleEntry[] = [
     pitch: 'Procedural generation, classical ML, animation, first neural networks, real-time. Arrays become inference.',
     modules: 'Modules 06 – 11',
     cycle: 'c2',
+    rule: 'The data writes the rule.',
+    tools: 'NumPy · PyTorch · TouchDesigner',
+    makes: 'Noise, motion, neural networks, live input',
   },
   {
     label: 'Generative AI',
@@ -89,5 +100,8 @@ export const CYCLES: CycleEntry[] = [
     pitch: 'GANs, VAEs, diffusion, language models, integration, capstone. The generative stack, end to end.',
     modules: 'Modules 12 – 15',
     cycle: 'c3',
+    rule: 'The model makes the image.',
+    tools: 'PyTorch · GPU runs (outputs included)',
+    makes: 'GANs, VAEs, diffusion, your capstone',
   },
 ];

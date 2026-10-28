@@ -2229,20 +2229,10 @@
   column-gap: 12px;
   align-items: center;
 }
-/* Path label as a filled sticker (S-5), twin of "On sale" / "Completed". */
-.curriculum-archive .station-label {
-  grid-row: 1;
-  justify-self: start;
-  background: var(--cycle);
-  color: var(--bg);
-  padding: 2px 8px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  border: 1px solid var(--fg);
-}
 .curriculum-archive .station-title {
   grid-row: 1;
   grid-column: 2;
+  align-self: end;
   margin: 0;
   font-family: var(--sans);
   font-weight: 800;
@@ -2250,7 +2240,7 @@
   letter-spacing: -0.01em;
 }
 .curriculum-archive .station-title em { color: var(--cycle); font-style: normal; }
-.curriculum-archive .station-pitch { grid-column: 1 / -1; font-size: 14px; margin-top: 6px; }
+.curriculum-archive .station-pitch { grid-column: 2; grid-row: 2; font-size: 14px; margin-top: 4px; align-self: start; }
 .curriculum-archive .station-right { display: flex; gap: 14px; align-items: baseline; }
 .curriculum-archive .station-right span { display: inline; }
 .curriculum-archive .station-right b {
@@ -2324,44 +2314,118 @@
 .curriculum-archive .card-meta .cm-subs { display: none; }
 .curriculum-archive .cm-live { color: var(--fg); font-weight: 700; }
 
-/* The image slot (S-12): a 16:10 framed mat with the module number. It
-   takes the module cover image once those are picked; until then it shows
-   nothing it cannot back up. Modules without lessons get the dashed
-   "Lessons coming" slot. */
-.mod-fig {
-  position: relative;
-  display: grid;
+/* PB2: the path stamp, numeral + "Path", in the path colour. */
+.path-stamp {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  display: inline-grid;
   place-items: center;
-  aspect-ratio: 16 / 10;
-  background: var(--bg-3);
-  border-bottom: 2px solid var(--fg);
+  align-content: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--fg);
+  background: var(--cycle);
+  color: var(--bg);
+  box-shadow: 3px 3px 0 var(--fg);
 }
-.mod-fig::before {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border: 1px solid var(--line-2);
+.path-stamp b { font-family: var(--serif); font-size: 26px; line-height: 1; font-weight: 600; }
+.path-stamp span {
+  font-family: var(--mono);
+  font-size: max(10px, var(--fs-min));
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
-.mod-fig-num {
+.curriculum-archive .station-left { column-gap: 14px; }
+
+/* PB2: the progress bar under the archive strip, one segment per path
+   sized by its lessons, the live part filled in the path colour. */
+.path-bar {
+  display: flex;
+  align-items: stretch;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.path-seg {
   position: relative;
-  font-family: var(--sans);
-  font-weight: 800;
-  font-size: 34px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--fg-2);
+  display: block;
+  min-width: 0;
+  height: 22px;
+  border: 2px solid var(--fg);
+  background: var(--bg);
 }
-.mod-card.no-live .mod-fig { border-bottom-style: dashed; }
-.mod-card.no-live .mod-fig::before { display: none; }
-.mod-fig-soon {
+.path-seg i { position: absolute; inset: 0 auto 0 0; background: var(--cycle); }
+.path-seg em {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1px 5px;
+  background: var(--fg);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: max(10px, var(--fs-min));
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.path-bar-arrow { display: grid; place-items: center; width: 22px; font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
+
+/* PB2: Rule / Tools / You make, one framed row under each path head. */
+.path-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 14px;
+  border: 2px solid var(--fg);
+  background: var(--bg);
+}
+.path-facts div { padding: 6px 10px; border-left: 2px solid var(--fg); }
+.path-facts div:first-child { border-left: 0; }
+.path-facts dt {
   font-family: var(--mono);
   font-size: max(10px, var(--fs-min));
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--fg-3);
-  text-align: center;
-  line-height: 1.4;
 }
+.path-facts dd { margin: 2px 0 0; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--fg); }
+/* The rule in the path colour, nudged toward ink so it holds AA as text. */
+.path-facts div:first-child dd { color: color-mix(in srgb, var(--cycle) 80%, var(--fg)); }
+
+/* MC3: the cover slot (S-12). A riso print of the module's lesson output on
+   the 16:10 frame; a module without lessons gets the dashed planned tile. */
+.mod-fig {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: var(--bg);
+  border-bottom: 2px solid var(--fg);
+}
+.mod-fig img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mod-fig.mod-plan {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border-bottom-style: dashed;
+}
+.mod-plan b {
+  font-family: var(--mono);
+  font-size: max(10px, var(--fs-min));
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cycle) 80%, var(--fg));
+}
+.mod-plan-list { display: grid; gap: 1px; }
+.mod-plan-list span { font-family: var(--sans); font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--fg); }
+.mod-plan-n { display: none; font-family: var(--mono); font-size: 12px; color: var(--fg-3); letter-spacing: .08em; text-transform: uppercase; }
+.card-short { display: none; }
 .curriculum-archive .station-panel { border: 2px solid var(--fg); box-shadow: 3px 3px 0 var(--fg); }
 
 /* H2-curriculum, phone: a 3-column grid of tiles (no list, no swipe);
@@ -2392,15 +2456,34 @@
   .curriculum-archive .mod-card.active { box-shadow: 3px 3px 0 var(--cycle), 3px 3px 0 2px var(--fg); }
   .curriculum-archive .mod-card .card-top { padding: 3px 6px; }
   .curriculum-archive .mod-card .card-top b { font-size: 12px; }
-  .curriculum-archive .mod-card .card-title {
+  /* Tiles show one short title, which may wrap to two lines at a space or
+     soft hyphen but never mid-word (no overflow-wrap: anywhere). */
+  .curriculum-archive .mod-card .card-title { display: none; }
+  .curriculum-archive .mod-card .card-short {
+    display: block;
     padding: 5px 6px 7px;
+    font-family: var(--serif);
     font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
     hyphens: manual;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
   }
   .curriculum-archive .mod-card .card-meta { display: none; }
-  .mod-fig-num { font-size: 24px; }
-  .mod-fig::before { inset: 5px; }
+  .mod-fig.mod-plan { padding: 6px; align-content: center; justify-items: center; gap: 2px; }
+  .mod-plan-list { display: none; }
+  .mod-plan-n { display: block; }
+  .path-bar { padding: 8px 14px; }
+  .path-seg { height: 20px; }
+  .path-seg em { left: 2px; padding: 0 4px; }
+  .path-seg em span { display: none; }
+  .path-bar-arrow { width: 14px; font-size: 12px; }
+  .path-stamp { width: 48px; height: 48px; box-shadow: 2px 2px 0 var(--fg); }
+  .path-stamp b { font-size: 19px; }
+  .curriculum-archive .station-left { grid-template-columns: auto minmax(0, 1fr); }
+  .path-facts { grid-template-columns: 1fr 1fr; }
+  .path-facts div:nth-child(3) { display: none; }
+  .path-facts dd { font-size: 12px; }
   .curriculum-archive .station-cards > .station-panel {
     grid-column: 1 / -1;
     margin-top: 0;
