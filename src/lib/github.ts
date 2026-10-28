@@ -1,3 +1,5 @@
+import { SUBTOPICS } from '@/data/curriculum/subtopics';
+
 /**
  * GitHub repo stats, fetched once at build time.
  *
@@ -13,6 +15,16 @@
 /** Repo whose stars are shown next to the header "GitHub" link. Keep this in
  *  sync with the GitHub href in FrameTop.astro / Footer.astro. */
 export const GITHUB_REPO = 'burakkagann/Pixels2GenAI-2.0';
+
+/** Number of shipped lessons (leaves wired with a `lessonSlug`), for the
+ *  footer line. Always derived from the curriculum data, never typed in. */
+export function shippedLessonCount(): number {
+  return Object.values(SUBTOPICS).reduce(
+    (total, subs) =>
+      total + subs.reduce((n, sub) => n + sub.leaves.filter((leaf) => leaf.lessonSlug).length, 0),
+    0,
+  );
+}
 
 let cached: Promise<number | null> | undefined;
 

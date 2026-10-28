@@ -135,17 +135,19 @@ const navItems = [
         ? `Pixels2GenAI on GitHub — ${stars} ${stars === 1 ? 'star' : 'stars'}`
         : 'Pixels2GenAI on GitHub'}
     >
-      GitHub
-      <svg class="gh-pxstar" viewBox="0 0 11 11" width="18" height="18" shape-rendering="crispEdges" aria-hidden="true">
-        {STAR_PIXELS.map((p, i) => (
-          <rect x={p.x} y={p.y} width="1" height="1" style={`--i:${i}`} />
-        ))}
-      </svg>
+      <span class="gh-cell">
+        <svg class="gh-pxstar" viewBox="0 0 11 11" width="14" height="14" shape-rendering="crispEdges" aria-hidden="true">
+          {STAR_PIXELS.map((p) => (
+            <rect x={p.x} y={p.y} width="1" height="1" />
+          ))}
+        </svg>
+        <span class="gh-word">GitHub</span>
+      </span>
       {/* Build-time count is the no-JS fallback; the script below refreshes
           it client-side. Rendered even when null so the script has a target
-          (CSS hides it while :empty). */}
+          (CSS hides the segment while :empty, so a failed load leaves a
+          plain "star GitHub" chip with no "0" and no empty box). */}
       <span class="gh-count">{stars !== null ? formatStars(stars) : ''}</span>
-      <span class="gh-arr" aria-hidden="true">↗</span>
     </a>
     <button
       class="theme-toggle"
@@ -179,8 +181,8 @@ const navItems = [
   // deploys, so refresh it client-side via a same-origin serverless proxy
   // (/.netlify/functions/github-stars) — the browser never contacts GitHub
   // directly, so no visitor IP leaves for a US third party. Cached in
-  // sessionStorage for an hour, patching the header chip and footer colophon
-  // count. No-JS visitors (and local `astro preview`, where the function isn't
+  // sessionStorage for an hour, patching the header chip and footer star
+  // button count. No-JS visitors (and local `astro preview`, where the function isn't
   // served) keep the build-time number.
   const STARS_KEY = 'p2g-stars';
   const STARS_TTL = 60 * 60 * 1000;
@@ -189,7 +191,7 @@ const navItems = [
     const fmt = formatStars(n);
     const label = `${n} ${n === 1 ? 'star' : 'stars'}`;
     document.querySelectorAll('.gh-count').forEach((el) => { el.textContent = fmt; });
-    document.querySelectorAll('.colo-count').forEach((el) => { el.textContent = `· ${fmt}`; });
+    document.querySelectorAll('.colo-count').forEach((el) => { el.textContent = fmt; });
     document.querySelector('.gh-link')
       ?.setAttribute('aria-label', `Pixels2GenAI on GitHub — ${label}`);
     document.querySelector('.colo-link')
@@ -220,7 +222,6 @@ const navItems = [
 
   const SESSION_KEY = 'p2g-octo-greeted';
   const octo = document.querySelector('.octo') as SVGElement | null;
-  const ghChip = document.querySelector('.gh-link');
 
   // On a fine pointer with motion allowed, the octopus follows the cursor
   // across the header (canvas, set up below) instead of the CSS wave. On
@@ -229,8 +230,8 @@ const navItems = [
     matchMedia('(pointer: fine)').matches &&
     matchMedia('(prefers-reduced-motion: no-preference)').matches;
 
-  // First arrival per session: the GitHub star chip assembles once. The
-  // octocat wave only plays when it isn't roaming the header (see canRoam).
+  // First arrival per session: the octopus waves once, unless it is roaming
+  // the header (see canRoam). The GitHub chip is static and never animates.
   // sessionStorage throws when storage is blocked (some privacy modes);
   // unguarded, that aborted this whole module before the theme toggle below
   // was wired up. Treat "can't tell" as not-first-visit: no animation.
@@ -241,10 +242,6 @@ const navItems = [
   } catch {}
   if (firstVisit) {
     if (!canRoam) octo?.classList.add('octo--play');
-    if (ghChip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      ghChip.classList.add('gh-play');
-      setTimeout(() => ghChip.classList.remove('gh-play'), 1400);
-    }
   }
 
   if (octo && !canRoam) {

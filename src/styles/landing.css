@@ -1154,72 +1154,111 @@
   margin: 0 auto;
 }
 
-/* Colophon margin note — one serif line + star CTA above the footer grid.
-   The corner sparkle fills with highlight ink while the link is engaged
-   (:has() is progressive enhancement; without it the link still works). */
-.colo {
-  position: relative;
-  text-align: center;
-  padding: 4px 0 42px;
+/* Open-source strip above the footer grid: a mono label row, one serif line
+   and the "Star on GitHub" split button (count attached). Selectors start
+   with `.foot` so they beat `.foot a` / `.foot p` (the footer's 11 px mono).
+   The pixel star in the button assembles once, when the strip is >= 60 % in
+   view (Footer.astro script adds .gs-lit); static under reduced motion. */
+.gs, .gs * { box-sizing: border-box; }
+.foot .gs {
   margin-bottom: 46px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+.gs .gs-strip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 22px;
+  align-items: baseline;
+  padding: 10px 22px;
+  border-top: 2px solid var(--fg);
   border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
-
-.colo-glyph {
-  position: absolute;
-  top: 0;
-  right: 0;
+.gs .gs-strip b { font-weight: 400; color: var(--fg); letter-spacing: 0.22em; }
+.gs .gs-strip span { color: var(--fg-3); }
+.gs .gs-row {
+  display: flex;
+  align-items: center;
+  gap: 18px 22px;
+  padding: 18px 22px;
 }
-.colo-glyph rect {
-  fill: var(--fg-3);
-  opacity: 0.4;
-  transition: fill .25s, opacity .25s;
-}
-.colo:has(.colo-link:hover) .colo-glyph rect,
-.colo:has(.colo-link:focus-visible) .colo-glyph rect {
-  fill: var(--highlight);
-  opacity: 1;
-}
-
-/* Specificity note: `.foot p` / `.foot a` set the footer's mono register,
-   so these overrides are written as `.foot .colo-*`. */
-.foot .colo-line {
-  max-width: 84ch; /* wide enough that the <br> is the only break on desktop */
-  margin: 0 auto 20px;
+.foot .gs .gs-line {
+  flex: 1 1 auto;
+  margin: 0;
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 17px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.5;
   letter-spacing: 0;
-  color: var(--fg-2);
+  color: var(--fg);
 }
-
-.foot .colo-link {
+/* Split button: the face (star + label) and the count cell share the one
+   BT6 press shape. */
+.foot .gs a.gs-btn {
+  padding: 0;
+  gap: 0;
+  align-items: stretch;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--btn-on);
+}
+.foot .gs a.gs-btn:hover { color: var(--btn-on); }
+.gs .gs-face { display: inline-flex; align-items: center; gap: 10px; padding: 0 18px; }
+.foot .gs .gs-n {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border: 1px solid var(--line-2);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: color .2s, border-color .2s;
-}
-.foot .colo-link:hover {
-  color: var(--highlight);
-  border-color: var(--highlight);
-}
-
-.colo-count {
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 12px;
+  border-left: 2px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
-.colo-count:empty { display: none; }
+/* Count not loaded: no cell, no "0", no empty box. */
+.foot .gs .gs-n:empty { display: none; }
 
-@media (max-width: 540px) {
-  .colo-glyph { display: none; }
+.gs .gs-px { flex: 0 0 auto; display: block; position: relative; width: 16px; height: 16px; }
+.gs .gs-px svg { position: absolute; inset: 0; display: block; }
+.gs .gs-px .px-base rect { fill: currentColor; }
+.gs .gs-px .px-lit rect { fill: var(--action-yellow); } /* fixed yellow in both themes */
+/* The header chip once lit its pixels top to bottom; here the same
+   row-by-row assembly is one composited wipe: an outer box slides down while
+   the star inside slides up by the same amount, in 11 steps (one per pixel
+   row). Transform + opacity only. */
+.gs .px-lit-wrap { position: absolute; inset: 0; overflow: hidden; transform: translateY(-100%); opacity: 1; }
+.gs .px-lit-wrap > svg { transform: translateY(100%); }
+@keyframes gs-assemble-o { 0% { transform: translateY(-100%); opacity: 1; animation-timing-function: steps(11, end); } 55%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes gs-assemble-i { 0% { transform: translateY(100%); animation-timing-function: steps(11, end); } 55%, 100% { transform: none; } }
+.gs.gs-lit .px-lit-wrap { animation: gs-assemble-o 1.4s 1 both; }
+.gs.gs-lit .px-lit-wrap > svg { animation: gs-assemble-i 1.4s 1 both; }
+/* Hover / focus: the star fills. */
+.gs .gs-btn:hover .px-lit-wrap, .gs .gs-btn:hover .px-lit-wrap > svg,
+.gs .gs-btn:focus-visible .px-lit-wrap, .gs .gs-btn:focus-visible .px-lit-wrap > svg {
+  transform: none; opacity: 1; transition: transform .7s steps(11, end);
 }
+/* Off screen: freeze anything mid-play. */
+.gs.gs-paused, .gs.gs-paused * { animation-play-state: paused !important; }
 
+@media (max-width: 640px) {
+  .gs .gs-strip { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 8px 14px; letter-spacing: 0.1em; }
+  .gs .gs-row { flex-wrap: wrap; padding: 14px; gap: 12px 14px; }
+  .foot .gs .gs-line { flex-basis: 100%; font-size: 15px; }
+}
+@media (max-width: 540px) {
+  .gs .gs-face { padding: 0 14px; }
+  .foot .gs .gs-n { font-size: 12px; min-width: 40px; padding: 0 10px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .colo-glyph rect { transition: none; }
+  .gs .px-lit-wrap, .gs .px-lit-wrap > svg { transition: none !important; animation: none !important; }
 }
 
 .foot-grid {
@@ -1537,17 +1576,6 @@
    container inset that aligns the edges) so all four sit on one line; the
    overflow-x: auto from the ≤920px rule stays as the ultimate fallback. The
    13px vertical padding keeps the 44px touch height. */
-/* ≤380px: wordmark + "GitHub ★ 4 ↗" + theme toggle need ~308px but a
-   320px screen leaves 280px inside the padding, so the first header row
-   pushed the page sideways. Collapse the GitHub link to its star + count:
-   font-size 0 hides the "GitHub" word and the arrow (bare text), the SVG
-   keeps its explicit size, and the count gets its size back. The link's
-   aria-label still names it "Pixels2GenAI on GitHub — N stars". */
-@media (max-width: 380px) {
-  .nav-r a.gh-link { font-size: 0; gap: 4px; }
-  .nav-r a.gh-link .gh-count { font-size: 11px; }
-}
-
 @media (max-width: 420px) {
   .nav-mid { padding: 0 calc(var(--pad-x) - 8px); }
   .nav-mid a {
@@ -1582,47 +1610,57 @@
   border-bottom-color: var(--fg-3);
 }
 
-/* GitHub link with build-time star count. The pixel star assembles into
-   highlight ink pixel-by-pixel (top to bottom, --i stagger) on hover/focus,
-   and once per session on first arrival — the FrameTop script adds .gh-play
-   alongside the octocat wave, then removes it so the star settles back. */
+/* GitHub chip: a static split chip, star + "GitHub" | star count, in an ink
+   frame. No autoplay; hover / focus lifts it 1 px with a 2 px ink shadow (the
+   BT6 press in miniature). The count segment is hidden while :empty, so a
+   failed count load leaves a plain "star GitHub" chip. On touch screens the
+   hit area grows to 44 px (M-12 below) without moving the header. */
 .nav-r a.gh-link {
   display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border-bottom: 0;
-}
-.nav-r a.gh-link:hover .gh-arr {
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--fg);
   color: var(--fg);
+  transition: transform .12s ease, box-shadow .12s ease;
 }
-.gh-pxstar {
-  flex: none;
+.nav-r a.gh-link:hover,
+.nav-r a.gh-link:focus-visible {
+  border-color: var(--fg);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 var(--fg);
 }
-.gh-pxstar rect {
-  fill: var(--fg-3);
-  opacity: 0.45;
-  transition: opacity .12s, fill .12s;
-}
-.nav-r a.gh-link:hover .gh-pxstar rect,
-.nav-r a.gh-link:focus-visible .gh-pxstar rect,
-.nav-r a.gh-link.gh-play .gh-pxstar rect {
-  fill: var(--highlight);
-  opacity: 1;
-  transition-delay: calc(var(--i) * 9ms);
-}
+.nav-r a.gh-link:active { transform: translate(1px, 1px); box-shadow: none; }
+.nav-r a.gh-link:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
+.gh-cell { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; }
+.gh-word { white-space: nowrap; }
+.gh-pxstar { flex: none; }
+.gh-pxstar rect { fill: var(--fg); }
 .gh-count {
-  color: var(--fg-2);
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-left: 1px solid var(--fg);
+  background: var(--bg-2);
+  color: var(--fg);
   font-variant-numeric: tabular-nums;
 }
-/* Empty until the client-side refresh lands (e.g. API unreachable at build) —
-   hide so the flex gap doesn't double up. */
 .gh-count:empty { display: none; }
-.gh-arr {
-  transition: color .15s;
+
+/* <= 380px: wordmark + chip + theme toggle need more than a 320 px screen
+   leaves, so the word "GitHub" goes and the star + count stay (the
+   aria-label still names the link). */
+@media (max-width: 380px) {
+  .nav-r a.gh-link .gh-word { display: none; }
+  /* Tighter padding keeps the chip no wider than the old star + count, so
+     the wordmark keeps its full width. */
+  .gh-cell, .gh-count { padding-inline: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gh-pxstar rect { transition: none; }
+  .nav-r a.gh-link { transition: none; }
+  .nav-r a.gh-link:hover,
+  .nav-r a.gh-link:focus-visible { transform: none; }
 }
 
 /* ---------- Theme toggle (sun/moon, binary) ----------
@@ -2742,24 +2780,18 @@ a.mx-link:hover .mx-t { text-decoration: underline; text-underline-offset: 3px; 
   .foot .foot-grid > div:last-child ul { columns: auto; }
 
   /* M-16: every button-like link at least 44 px tall. */
-  .colo-link,
   .research-cta a,
   .workshops-archive .spec-actions a,
   .workshops-archive a.sp-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
-  /* M-17: the star note: no glyph, one paragraph, button under it. */
+  /* M-17: less air above the open-source strip. */
   .foot { padding-top: 24px; }
-  .colo { display: grid; justify-items: start; gap: 10px; text-align: left; padding-block: 16px; margin: 0 0 32px; }
-  .colo-glyph { display: none; }
-  .foot .colo-line { margin: 0; font-size: 15px; line-height: 1.45; }
-  .foot .colo-line br { display: none; }
-  .foot .colo-link { margin: 0; white-space: nowrap; }
 }
 
-/* H1 (HDR-D1): on phones the section nav wraps to a second line instead
+/* H1 (HDR-D1): on the two-row header (<= 920 px) the section nav wraps to a second line instead
    of scrolling sideways. Nothing else in the header changes: at 360 px and
    up with default text the links fit and the header looks as before. */
-@media (max-width: 640px) {
+@media (max-width: 920px) {
   .frame-top .nav-mid { overflow-x: visible; flex-wrap: wrap; row-gap: 0; }
 }
 
