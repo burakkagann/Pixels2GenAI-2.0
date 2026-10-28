@@ -43,7 +43,7 @@ code, pre, kbd, samp {
 /* Eyebrow — mono uppercase label preceded by an accent rule */
 .eyebrow {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -80,7 +80,7 @@ code, pre, kbd, samp {
    line; let the flex item shrink instead of forcing the break. */
 @media (max-width: 480px) {
   .eyebrow {
-    font-size: 10px;
+    font-size: max(10px, var(--fs-min));
     letter-spacing: 0.08em;
     gap: 8px;
     margin-bottom: 22px;

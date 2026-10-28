@@ -176,7 +176,7 @@
 
 .sc-bandname {
   margin-left: auto;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   opacity: 0.9;
   white-space: nowrap;
 }
@@ -209,7 +209,7 @@
   background: var(--ws-paper);
   border: 2px solid var(--ws-ink);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: max(9.5px, var(--fs-min));
   letter-spacing: 0.06em;
   color: var(--fg);
 }
@@ -237,7 +237,7 @@
 .sc-fact .ws-label {
   display: block;
   margin-bottom: 2px;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
 }
 
@@ -299,7 +299,7 @@
   color: var(--on-fill);
   border: 2px solid var(--ws-ink);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 700;
 }
 
@@ -316,7 +316,7 @@
   grid-column: 3;
   grid-row: 1;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
 }
 
@@ -363,7 +363,7 @@
   background: var(--ws-paper);
   border: 2px dashed var(--ws-ink);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.05em;
   color: var(--fg-2);
   text-align: center;
@@ -413,7 +413,7 @@
 .showcase-note {
   margin: 0;
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: max(11.5px, var(--fs-min));
   letter-spacing: 0.04em;
   color: var(--fg-2);
 }
@@ -445,7 +445,7 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-  .showcase-tag { left: -4px; font-size: 11px; padding: 1px 4px; }
+  .showcase-tag { left: -4px; font-size: max(11px, var(--fs-min)); padding: 1px 4px; }
   .showcase-body { padding: 16px; }
   .showcase-body .ws-btn { padding-inline: 16px; }
   .showcase-title { font-size: 26px; }
@@ -502,7 +502,7 @@
   padding: 0;
   list-style: none;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
 }
 
@@ -570,7 +570,7 @@
 
 .day-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -581,7 +581,7 @@
 
 .day-min {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
   white-space: nowrap;
 }
@@ -626,7 +626,7 @@
 }
 
 .day-legend dt {
-  font-size: 10.5px;
+  font-size: max(10.5px, var(--fs-min));
   color: var(--fg);
   margin-bottom: 4px;
 }
@@ -682,7 +682,7 @@
     width: auto;
     height: auto;
     clip: auto;
-    font-size: 10px;
+    font-size: max(10px, var(--fs-min));
     color: var(--fg-3);
   }
   .day-break .day-text { display: none; }
@@ -818,7 +818,7 @@
 .pilot-fine {
   margin: 14px 0 26px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   line-height: 1.6;
   color: var(--fg-3);
 }
@@ -996,7 +996,7 @@
   border: 2px solid var(--ws-ink);
   box-shadow: 3px 3px 0 var(--ws-ink);
 }
-.ws .sc-tile-wd, .ws .sc-tile-m { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; }
+.ws .sc-tile-wd, .ws .sc-tile-m { font-family: var(--mono); font-size: max(10px, var(--fs-min)); letter-spacing: .1em; }
 .ws .sc-tile-d { font-family: var(--ws-display); font-weight: 800; font-size: 24px; line-height: 1; }
 
 .ws .sc-rows {
@@ -1009,7 +1009,7 @@
   font-size: 15px;
   line-height: 1.4;
 }
-.ws .sc-rows dt { padding-top: 3px; font-size: 10px; color: var(--fg-3); white-space: nowrap; }
+.ws .sc-rows dt { padding-top: 3px; font-size: max(10px, var(--fs-min)); color: var(--fg-3); white-space: nowrap; }
 .ws .sc-rows dd { margin: 0; }
 .ws .sc-inside-body .sc-fact { margin: 12px 0 0; }
 
@@ -1026,3 +1026,24 @@
 }
 .ws .sc-foot .sc-later { margin: 0; }
 .ws .sc-body > .sc-inside { margin-bottom: 14px; }
+
+/* ---------- Phone set (BLD-33) ---------- */
+@media (max-width: 640px) {
+  /* M-18 (taps): pilot lesson chips, the hero text link, the pilot poster
+     and the toggles reach 44 px. */
+  .ws a.pilot-lesson,
+  .series-hero .hero-link,
+  .ws a.pilot-poster,
+  .ws .ws-toggle { min-height: 44px; display: inline-flex; align-items: center; }
+
+  /* M-19: pilot stats as number-left rows instead of tall stacked tiles. */
+  .pilot-stats { gap: 8px; }
+  .ws .pilot-stat {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .pilot-num { font-size: 36px; line-height: 1; margin: 0; }
+}

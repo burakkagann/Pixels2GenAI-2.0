@@ -99,7 +99,7 @@ const { items, label } = Astro.props;
   .mc-head em {
     font-style: normal;
     font-family: var(--mono);
-    font-size: 9.5px;
+    font-size: max(9.5px, var(--fs-min));
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -121,7 +121,7 @@ const { items, label } = Astro.props;
     color: var(--fg);
     border: 2px solid var(--fg);
   }
-  .mc-tile span { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; }
+  .mc-tile span { font-family: var(--mono); font-size: max(9px, var(--fs-min)); letter-spacing: 0.1em; }
   .mc-tile b { font-family: var(--sans); font-weight: 800; font-size: 17px; line-height: 1; }
   .mc-text { display: block; padding: 7px 9px 9px; font-family: var(--serif); }
   .mc-text b { display: block; font-weight: 600; font-size: 13px; line-height: 1.25; }
@@ -135,7 +135,7 @@ const { items, label } = Astro.props;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px 8px;
     }
-    .mc-head { font-size: 11px; padding: 3px 6px; }
+    .mc-head { font-size: max(11px, var(--fs-min)); padding: 3px 6px; }
     .mc-head em { display: none; }
     .mc-tile { top: 3px; left: 3px; padding: 0 4px 1px; border-width: 1.5px; }
     .mc-tile span { display: none; }

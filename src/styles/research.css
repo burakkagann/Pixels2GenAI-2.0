@@ -26,7 +26,7 @@
   align-items: center;
   gap: 14px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -98,7 +98,7 @@
 
 .research-meta b {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -143,7 +143,7 @@
   gap: 14px;
   align-items: baseline;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -218,7 +218,7 @@
 
 .research-figure .figure-source {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -244,7 +244,7 @@
 
 .research-figure .figure-stats b {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: max(9.5px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -269,7 +269,7 @@
 .slope-chart svg .axis-ticks text,
 .slope-chart svg .axis-labels text {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   fill: var(--fg-3);
   letter-spacing: 0.10em;
 }
@@ -309,7 +309,7 @@
 
 .slope-chart svg .effect text {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.14em;
   fill: var(--highlight);
 }
@@ -341,7 +341,7 @@
 
 .stat-callout .eyebrow {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -400,7 +400,7 @@
 
 .research-colophon h4 {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -424,7 +424,7 @@
 
 .supervisors dt {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -477,7 +477,7 @@
 .citation .cit-label {
   display: block;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -508,7 +508,7 @@
 
 .docs-foot {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -576,7 +576,7 @@
 .research-main.lesson .lesson-section > h2 .rom {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--accent-soft);
@@ -595,7 +595,7 @@
 .research-main.lesson .rq-chip {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
@@ -617,4 +617,43 @@
   font-style: italic;
   color: var(--accent);
   font-weight: 500;
+}
+
+/* ---------- Phone set (BLD-33) ---------- */
+.jump-grid { display: none; }
+@media (max-width: 640px) {
+  /* M-20: jump grid to the nine sections, 44 px cells. */
+  .jump-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 18px 0 0; }
+  .jump-grid a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border: 1px solid var(--line-2);
+    background: var(--bg-2);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    line-height: 1.2;
+  }
+
+  /* M-19: stat callouts as number-left rows. */
+  .stat-row { gap: 1px; }
+  .stat-callout {
+    display: grid;
+    grid-template-columns: minmax(48px, max-content) minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 2px;
+    align-items: start;
+    padding: 10px 14px;
+  }
+  .stat-callout .eyebrow { grid-column: 2; grid-row: 1; margin: 0; }
+  .stat-callout .value { grid-column: 1; grid-row: 1 / span 2; font-size: 24px; white-space: nowrap; line-height: 1.05; align-self: center; }
+  .stat-callout .label { grid-column: 2; grid-row: 2; margin: 0; font-size: 14px; }
+
+  /* M-16: the PDF and download links reach 44 px. */
+  .research-colophon a, a.doc { min-height: 44px; display: inline-flex; align-items: center; }
 }

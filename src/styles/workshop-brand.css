@@ -49,7 +49,7 @@
 
 .ws .ws-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -86,7 +86,7 @@
   background: var(--ws-paper);
   color: var(--fg);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -138,7 +138,7 @@
   color: var(--fg);
   box-shadow: 3px 3px 0 var(--ws-ink);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -239,7 +239,7 @@
 
 .arc-date {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-3);
 }
 
@@ -251,7 +251,7 @@
   .arc-sticker { width: 38px; height: 38px; font-size: 12px; box-shadow: 2px 2px 0 var(--ws-ink); }
   .series-arc ol::before { left: 19px; right: 19px; top: 18px; }
   .arc-node { gap: 8px; }
-  .arc-verb { font-size: 8.5px; letter-spacing: 0; }
+  .arc-verb { font-size: max(8.5px, var(--fs-min)); letter-spacing: 0; }
   .arc-date { display: none; }
   .series-dates { margin: 22px 0 28px; }
 }

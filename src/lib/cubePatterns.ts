@@ -145,7 +145,7 @@ export const STAGES: Stage[] = [
   { code: 'M 03', name: 'Transformations', tick: 'Transforms', desc: 'rotation, affine, kaleidoscope — fields become motion',       cycle: 'c1' },
   { code: 'M 04', name: 'Fractals',        desc: 'recursion: an image inside itself, again and again',          cycle: 'c1' },
   { code: 'M 05', name: 'Simulation',      desc: 'rules become particles, particles become worlds',             cycle: 'c1' },
-  { code: 'M 07', name: 'Clustering',      desc: 'the first machine learning, on pixels we already know',       cycle: 'c2' },
+  { code: 'M 07', name: 'Classical ML', tick: 'Classical ML', desc: 'the first machine learning, on pixels we already know',       cycle: 'c2' },
   { code: 'M 09', name: 'Neural',          desc: 'nodes activate; the network sees what it has learned to see', cycle: 'c2' },
   { code: 'M 12', name: 'GenAI',           desc: 'from noise, a learned posterior; a model paints',             cycle: 'c3' },
 ];

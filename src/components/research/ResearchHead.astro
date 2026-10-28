@@ -11,6 +11,14 @@ interface Props {
 }
 
 const { eyebrow, headline, headlineEm, lede, sample, method, instruments, analysis } = Astro.props;
+
+// M-20: on phones, a 3 x 3 grid of jumps to the nine sections of /research
+// (the anchors in research.mdx). Wider screens have the side table of contents.
+const JUMPS = [
+  ['overview', 'I Overview'], ['method', 'II Method'], ['rq1', 'III Design'],
+  ['rq2', 'IV Load'], ['rq3', 'V Real-time'], ['rq4', 'VI Gains'],
+  ['rq5', 'VII Transfer'], ['themes', 'VIII Themes'], ['limits', 'IX Limits'],
+];
 ---
 
 <header class="research-head">
@@ -32,4 +40,8 @@ const { eyebrow, headline, headlineEm, lede, sample, method, instruments, analys
     <div><b>Instruments</b><span>{instruments}</span></div>
     <div><b>Analysis</b><span>{analysis}</span></div>
   </div>
+
+  <nav class="jump-grid" aria-label="Sections of the study">
+    {JUMPS.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+  </nav>
 </header>

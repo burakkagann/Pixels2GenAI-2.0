@@ -176,6 +176,25 @@ const tPath = (a: number, b: number) => {
       <text class="ca-verb" x={tx(showcaseF) + 30} y={ty(showcaseF) + 5} text-anchor="start">{SHOWCASE.title.toUpperCase()} · JUNE</text>
     </a>
   </svg>
+
+  {/* M-18: phones get the same seven stops as a 2-column grid of links
+      instead of the tall arch (which took ~560 px). */}
+  <ol class="ca-grid">
+    {nodes.map((n) => (
+      <li data-band={n.band}>
+        <a href={`#${n.w.slug}`} aria-label={n.label}>
+          <b>W{n.w.n} · {n.w.verb}</b>
+          <span>{n.short}{n.onSale ? ' · On sale' : ''}</span>
+        </a>
+      </li>
+    ))}
+    <li class="is-showcase">
+      <a href="#showcase" aria-label={`W7 ${SHOWCASE.title}, June`}>
+        <b>W7 · {SHOWCASE.title}</b>
+        <span>June</span>
+      </a>
+    </li>
+  </ol>
 </nav>
 
 <style>
@@ -185,6 +204,28 @@ const tPath = (a: number, b: number) => {
   @media (max-width: 700px) {
     .cal-arc .cal-arc-wide { display: none; }
     .cal-arc .cal-arc-tall { display: block; }
+  }
+  .ca-grid { display: none; }
+  @media (max-width: 640px) {
+    .cal-arc .cal-arc-tall { display: none; }
+    .ca-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .ca-grid li { min-width: 0; }
+    .ca-grid a {
+      display: grid;
+      align-content: center;
+      min-height: 52px;
+      padding: 8px 10px;
+      border: 2px solid var(--ws-ink);
+      border-left: 8px solid var(--fill, var(--ws-ink));
+      background: var(--bg-2);
+      color: var(--fg);
+      text-decoration: none;
+      box-shadow: 3px 3px 0 var(--ws-ink);
+    }
+    .ca-grid b { font-family: var(--ws-display); font-weight: 800; text-transform: uppercase; font-size: 15px; line-height: 1.15; }
+    .ca-grid span { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-2); }
+    .ca-grid .is-showcase { grid-column: 1 / -1; }
+    .ca-grid .is-showcase a { border-style: dashed; border-left-width: 2px; box-shadow: none; }
   }
   .ca-axis { stroke: var(--fg-3); stroke-width: 1.5; }
   .ca-month { fill: var(--fg-3); font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-anchor: middle; }

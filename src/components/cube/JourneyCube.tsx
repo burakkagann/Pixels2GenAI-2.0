@@ -554,10 +554,11 @@ export default function JourneyCube() {
                   }}
                   data-face={key}
                 />
-                <div className={styles['lbl-top']}>{meta.code}</div>
+                {/* M-14: the face codes ("F · front · 0°", "f 1 / 6") were
+                    unreadable over the noise and meant nothing to a learner;
+                    only the stage name stays. */}
                 <div className={styles['lbl-bot']}>
                   <span className={styles.ttl}>{currentStage.code} · {currentStage.name}</span>
-                  <span className={styles.n}>f {meta.idx} / 6</span>
                 </div>
               </div>
             ))}

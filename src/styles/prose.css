@@ -60,7 +60,7 @@
   gap: 12px;
   align-items: center;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -127,7 +127,7 @@
   margin-right: 14px;
   vertical-align: 0.2em;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--cycle-soft, var(--accent-soft));
   letter-spacing: 0.12em;
   font-style: normal;
@@ -150,7 +150,7 @@
   margin-right: 10px;
   vertical-align: 0.15em;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   color: var(--cycle-soft, var(--accent-soft));
   letter-spacing: 0.1em;
   background: var(--bg-cool-2);
@@ -287,7 +287,7 @@
   font-family: var(--mono);
   font-style: normal;
   color: var(--cycle-soft, var(--accent-soft));
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
 }
 
 .lesson .obj-list li:last-child {
@@ -326,7 +326,7 @@
 
 .lesson thead th {
   font-family: var(--mono);
-  font-size: calc(11px * var(--t-scale));
+  font-size: max(calc(11px * var(--t-scale)), var(--fs-min));
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -387,7 +387,7 @@
 
 .meta-strip b {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -428,7 +428,7 @@
   gap: 12px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--line-warm-2);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -449,7 +449,7 @@
   color: var(--fg-3);
   border: 1px solid var(--line-2);
   font: inherit;
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.08em;
   padding: 3px 8px;
   cursor: pointer;
@@ -470,7 +470,7 @@
   color: var(--cycle, var(--accent));
   border: 1px solid var(--cycle, var(--accent));
   font: inherit;
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.08em;
   padding: 3px 8px;
   cursor: pointer;
@@ -502,7 +502,7 @@
 .code-output-status {
   margin: 0 0 8px;
   color: var(--fg-3);
-  font-size: calc(11px * var(--t-scale));
+  font-size: max(calc(11px * var(--t-scale)), var(--fs-min));
 }
 
 .code-output pre {
@@ -551,7 +551,7 @@
 .code-output figcaption {
   margin-top: 6px;
   color: var(--fg-3);
-  font-size: calc(11px * var(--t-scale));
+  font-size: max(calc(11px * var(--t-scale)), var(--fs-min));
 }
 
 /* The error of a failed run, shown before any printed output. */
@@ -697,7 +697,7 @@
 .fig figcaption .fnum {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -807,7 +807,7 @@
 
 .ad .ad-title {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   /* Small text on a tinted surface: nudged toward --fg so it holds WCAG AA (4.5:1) in both themes. */
@@ -1061,7 +1061,7 @@
   padding: 8px 12px;
   margin: 8px 0;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   color: var(--fg-2);
   letter-spacing: 0.04em;
   max-width: 100%;
@@ -1091,7 +1091,7 @@
   background: var(--bg-2);
   padding: 16px 16px 18px 18px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
 }
 
 .toc-card .head {
@@ -1106,7 +1106,7 @@
 .toc-card .head h4 {
   margin: 0;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -1115,7 +1115,7 @@
 
 .toc-card .head .ix {
   color: var(--cycle-soft, var(--accent-soft));
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.08em;
 }
 
@@ -1126,7 +1126,7 @@
   margin-bottom: 10px;
   padding: 4px 0;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -1164,7 +1164,7 @@
 
 .toc-card li.l3 {
   padding-left: 22px;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
 }
 
 .toc-card li:hover {
@@ -1199,7 +1199,7 @@
   color: color-mix(in srgb, var(--cycle, var(--accent)) 85%, var(--fg));
   font-style: normal;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
 }
 
 /* ---------- Continue card (right rail, under TOC) ----------
@@ -1211,14 +1211,14 @@
   padding: 14px 16px 14px 18px;
   background: var(--bg-2);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
 }
 
 .continue-card h4 {
   margin: 0 0 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--line);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -1258,7 +1258,7 @@
 .continue-card a .k,
 .continue-card .soon .k {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.04em;
 }
@@ -1291,7 +1291,7 @@
 .continue-card .soon-tag {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-left: 4px;
@@ -1356,7 +1356,7 @@
   grid-template-columns: 1fr auto 1fr;
   gap: 18px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.06em;
 }
 
@@ -1384,7 +1384,7 @@
 .prev-next .pn .lbl {
   color: var(--fg-3);
   text-transform: uppercase;
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   letter-spacing: 0.14em;
   margin-bottom: 4px;
   display: block;
@@ -1403,7 +1403,7 @@
 .prev-next .pn .ix {
   font-family: var(--mono);
   color: var(--cycle-soft, var(--accent-soft));
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.1em;
 }
 
@@ -1417,7 +1417,7 @@
   text-align: center;
   color: var(--fg-3);
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   letter-spacing: 0.14em;
 }
 
@@ -1522,4 +1522,22 @@
 .refs ol li a:hover {
   color: var(--cycle, var(--accent));
   border-color: var(--cycle, var(--accent));
+}
+
+/* ---------- Phone set (BLD-33) ---------- */
+@media (max-width: 640px) {
+  /* M-23: duration · level · load · prereqs on one line. */
+  .meta-strip { display: flex; flex-wrap: wrap; gap: 4px 14px; border: 0; padding: 0; background: none; }
+  .meta-strip > div { display: contents; }
+  .meta-strip b { display: none; }
+  .meta-strip span { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--fg-2); }
+  .meta-strip > div + div span::before { content: "· "; color: var(--fg-3); }
+
+  /* M-24: Run and Copy 44 px tall with 12 px labels; download links and
+     the back link 44 px too. */
+  .code .chrome { min-height: 44px; align-items: stretch; }
+  .code .chrome .run,
+  .code .chrome .copy { min-height: 44px; min-width: 56px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .code .chrome .run { min-width: 72px; }
+  a.dl, a.back-link { min-height: 44px; display: inline-flex; align-items: center; }
 }

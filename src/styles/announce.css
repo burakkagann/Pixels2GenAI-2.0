@@ -68,7 +68,7 @@
   align-items: center;
   gap: 10px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--studio-ink);
@@ -169,7 +169,7 @@ html.am-locked {
 .sp-label {
   display: block;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--studio-ink);
@@ -222,7 +222,7 @@ html.am-locked {
   margin: 0 0 14px;
   padding: 3px 9px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: max(10px, var(--fs-min));
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -308,7 +308,7 @@ html.am-locked {
 .sf-field > label,
 .sf-more summary {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: max(11px, var(--fs-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fg-2);
@@ -483,7 +483,7 @@ html.am-locked {
 @media (max-width: 540px) {
   .sf-email-row { grid-template-columns: minmax(0, 1fr); }
   .sf-email-row .btn { width: 100%; }
-  .sf-chip-row label { font-size: 11px; letter-spacing: 0.02em; }
+  .sf-chip-row label { font-size: max(11px, var(--fs-min)); letter-spacing: 0.02em; }
 }
 
 /* ---------- /announce/thanks · confirmation (no-JS POST landing) ---------- */

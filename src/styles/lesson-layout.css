@@ -126,7 +126,7 @@
 .marker .long {
   font-family: var(--mono);
   font-style: normal;
-  font-size: 9.5px;
+  font-size: max(9.5px, var(--fs-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -139,7 +139,7 @@
      the phone view shows codes only (see ≤540px below). */
   grid-template-columns: repeat(8, minmax(0, 1fr));
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: max(9px, var(--fs-min));
   color: var(--fg-3);
   letter-spacing: 0.04em;
 }
@@ -219,14 +219,14 @@
     border-bottom: 1px solid var(--line-2);
     padding-bottom: 8px;
   }
-  .ticks { font-size: 8.5px; }
+  .ticks { font-size: max(8.5px, var(--fs-min)); }
 }
 
 /* Phone widths: module codes only — eight 9px names in ~40px cells were
    noise, the codes keep the timeline readable. */
 @media (max-width: 540px) {
   .tick .tname { display: none; }
-  .ticks { font-size: 9px; }
+  .ticks { font-size: max(9px, var(--fs-min)); }
 }
 
 @media (pointer: coarse) {

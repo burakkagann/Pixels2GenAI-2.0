@@ -155,6 +155,10 @@
   --pad-x: clamp(20px, 4vw, 56px);
   --read-w: 72ch;
   --t-scale: 1;
+  /* Phone text floor (M-15): small labels are written as
+     font-size: max(10px, var(--fs-min)), so they keep their size on wider
+     screens and never go under 12 px on phones (set below, ≤640px). */
+  --fs-min: 0px;
   /* Rendered height of the single-row sticky FrameTop (>920px). The landing
      cover subtracts it to fit the first screen. Not load-bearing: if the
      header grows and this is not updated, the cover overshoots the fold by
@@ -288,4 +292,9 @@
   /* ---------- Grain overlay — dark noise + multiply blend on cream ---------- */
   --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.10'/></svg>");
   --grain-blend: multiply;
+}
+
+/* M-15: the phone text floor (see --fs-min above). */
+@media (max-width: 640px) {
+  :root { --fs-min: 12px; }
 }
