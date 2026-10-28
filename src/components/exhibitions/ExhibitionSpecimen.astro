@@ -79,7 +79,7 @@ const frames: Frame[] = (ex.landingWall ?? [])
 const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${word}$`), '').replace(' · ', ', ');
 ---
 
-<details class="workshop-specimen exhibition-row" open={defaultOpen}>
+<details class="workshop-specimen exhibition-row" open={defaultOpen} data-phone-closed={onPage ? undefined : ''}>
   <summary class="specimen-summary">
     <span class="summary-index">{indexDisplay}</span>
     <span class="summary-status completed done">✓ Completed</span>
@@ -135,3 +135,12 @@ const strip = (s: string, word: string) => s.replace(new RegExp(`\\s*—\\s*${wo
     </div>
   )}
 </details>
+
+<script>
+  // M-8: on the home page the row starts closed on phones (the open wall is
+  // about 1.7 screens there); desktop keeps it open (R1). Runs once on load,
+  // so a visitor's own toggle is never undone. The show's own page keeps it open.
+  if (window.matchMedia('(max-width: 640px)').matches) {
+    document.querySelectorAll<HTMLDetailsElement>('details[data-phone-closed]').forEach((row) => { row.open = false; });
+  }
+</script>
