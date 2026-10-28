@@ -117,14 +117,6 @@ export interface Exhibition {
   printSeries?: ExhibitionPrintSeries[];
 
   /**
-   * Ordered list of work `id`s (mixing printedWorks and animatedWorks) shown
-   * in the landing § 4 specimen's plate strip. Curation is editorial — when
-   * undefined, the component falls back to first-three prints + first
-   * animated-with-still + first capture-pending.
-   */
-  landingPlates?: string[];
-
-  /**
    * Ordered work `id`s (printedWorks or animatedWorks) hung on the framed
    * wall in the landing § 3 row (DEC E2). A print stands for its series: the
    * frame tag shows the series title and the count of prints in it. Animated
@@ -359,16 +351,6 @@ export const EXHIBITIONS: Exhibition[] = [
         statement: 'Guest artist · geometry rendered in three dimensions.',
         workIds: ['maris-menger-flake', 'maris-koch-3d', 'maris-scene-rework'],
       },
-    ],
-    // Editorial curation for the landing § 4 plate strip — a mixed-media,
-    // two-artist teaser: 3 prints (2 Burak, 1 Maris) + 2 live captures (shown
-    // as still posters here; the per-show page autoplays the video).
-    landingPlates: [
-      'array-zero-spiral-bloom',
-      'orbit-sediment-trichrome',
-      'maris-menger-flake',
-      'neural-mycelium',
-      'selection-pressure',
     ],
     // The landing § 3 framed wall: one frame per print series (three by
     // Burak, one by Maris) plus the two live pieces that have a capture.
