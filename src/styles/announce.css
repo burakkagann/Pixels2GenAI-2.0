@@ -6,14 +6,14 @@
    Surfaces styled here:
      - .announce-band / .announce-strip → slim landing row between
        § 3 Exhibition and § 4 Research; CTA opens the popup
-     - .announce-modal / .am-*          → native <dialog> popup
-       (AnnounceModal.astro), same chassis as the /workshops
-       gallery lightbox
-     - .signup-page / .signup-form      → /announce, the no-JS
-       full-page fallback (moved here from workshops.css when
-       /workshops/signup was retired)
-     - .thanks-page                     → /announce/thanks (native
-       POST landing; the popup shows .am-thanks in place instead)
+     - .announce-modal / .am-*          → the register-interest pop-up
+       (AnnounceModal.astro, on every page via Base.astro), design
+       A1a "Slip"; a bottom sheet on phones
+     - .signup-page / .sp-*             → /announce, the no-JS and
+       shareable fallback page (same slip)
+     - .signup-form / .sf-*             → the shared form
+     - .thanks-page / .ok-*             → /announce/thanks (native
+       POST landing; the pop-up shows .am-ok in place instead)
 
    Layered on:
      - tokens.css → palette, typography, spacing
@@ -115,13 +115,21 @@
   }
 }
 
-/* ---------- Popup · native <dialog> ---------- */
+/* ---------- Pop-up · native <dialog> (design A1a "Slip") ---------- */
+
+/* F1: lock the page while the dialog is open. The padding stands in for
+   the scrollbar overflow:hidden removes (set by AnnounceModal's script). */
+html.am-locked {
+  overflow: hidden;
+  padding-right: var(--am-scrollbar, 0px);
+}
+
 .announce-modal {
-  border: 1px solid var(--line-2);
+  border: 2px solid var(--fg);
   background: var(--bg);
   color: var(--fg);
   padding: 0;
-  width: min(92vw, 620px);
+  width: min(92vw, 540px);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -130,258 +138,155 @@
   background: color-mix(in srgb, var(--bg-deep) 78%, transparent);
 }
 
+.am-form-view,
+.am-ok {
+  padding: 30px 30px 26px;
+}
+
+/* F3: a 44 px close button, top right (last in the DOM, first on screen). */
 .announce-modal .am-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  color: var(--fg-3);
-  border: 1px solid var(--line-2);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
+  top: 6px;
+  right: 6px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-/* 48px hit area around the 32px visual button. */
-.announce-modal .am-close::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-}
-
-.announce-modal .am-close:hover {
+  background: var(--bg);
   color: var(--fg);
-  border-color: var(--fg-3);
+  border: 2px solid var(--fg);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.am-inner {
-  padding: 36px 36px 32px;
+.announce-modal .am-close:focus-visible {
+  outline: 2px solid var(--c2);
+  outline-offset: 2px;
 }
 
-@media (max-width: 560px) {
-  .am-inner { padding: 28px 22px 26px; }
-}
-
-/* ≤400px the 92vw modal (~331px at 360) leaves little room once 22px side
-   padding is taken; loosen the width and tighten the inset so form fields
-   and copy don't wrap aggressively. */
-@media (max-width: 400px) {
-  .announce-modal { width: 95vw; }
-  .am-inner { padding: 24px 18px 22px; }
-}
-
-.am-inner .eyebrow {
+.am-eyebrow,
+.sp-label {
+  display: block;
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--studio-ink);
-  margin-bottom: 14px;
-  display: block;
+  margin: 0 0 10px;
 }
 
-.am-inner h2 {
+.am-h,
+.sp-h {
   font-family: var(--serif);
-  font-size: clamp(26px, 4vw, 34px);
-  line-height: 1.08;
   font-weight: 500;
   letter-spacing: -0.015em;
-  margin: 0 0 14px;
+  line-height: 1.08;
+  margin: 0 0 10px;
   text-wrap: balance;
 }
 
-.am-inner h2 em {
+.am-h { font-size: 30px; padding-right: 40px; }
+.am-h:focus { outline: none; }
+
+.am-h em,
+.sp-h em {
   font-style: italic;
   color: var(--studio-ink);
 }
 
-.am-inner .lede {
+.am-lede,
+.sp-lede {
   font-family: var(--serif);
   font-size: 15.5px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--fg-2);
-  margin: 0 0 26px;
-  max-width: 56ch;
+  margin: 0 0 20px;
+  max-width: 52ch;
 }
 
-/* AJAX failure note — hidden attribute toggles it. */
+/* Send failure (role="alert"); the hidden attribute toggles it. */
 .am-error {
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   color: var(--warn);
   border: 1px solid var(--warn);
   padding: 10px 12px;
   margin: 0;
 }
 
-/* In-place thanks state after a successful AJAX submit. */
-.am-thanks {
-  text-align: center;
-  padding: 28px 8px 8px;
-}
-
-.am-thanks .mark-pink {
+/* Success: the same panel swaps to this view; focus moves to the heading. */
+.ok-chip {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--studio);
-  border-radius: 50%;
-  margin-bottom: 18px;
-}
-
-.am-thanks h2 {
-  font-family: var(--serif);
-  font-size: clamp(28px, 4vw, 36px);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin: 0 0 16px;
-  line-height: 1.05;
-}
-
-.am-thanks h2 em {
-  font-style: italic;
-  color: var(--studio-ink);
-}
-
-.am-thanks p {
-  font-family: var(--serif);
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--fg-2);
-  margin: 0 auto 26px;
-  max-width: 44ch;
-}
-
-/* ---------- /announce · no-JS fallback page ---------- */
-.signup-page {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: clamp(48px, 8vh, 96px) var(--pad-x) 96px;
-}
-
-.signup-page .eyebrow {
+  margin: 0 0 14px;
+  padding: 3px 9px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--studio-ink);
-  margin-bottom: 18px;
-  display: block;
+  color: var(--bg);
+  background: var(--c1);
+  border: 1px solid var(--fg);
 }
 
-.signup-page h1 {
-  font-family: var(--serif);
-  font-size: clamp(36px, 5vw, 52px);
-  line-height: 1.05;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin: 0 0 22px;
-  max-width: 22ch;
-  text-wrap: balance;
+.am-ok-h { font-size: 34px; }
+
+/* Phones: a bottom sheet, near the thumb; the page stays visible above. */
+@media (max-width: 540px) {
+  .announce-modal {
+    width: 100%;
+    max-width: 100%;
+    margin: auto 0 0;
+    max-height: 88dvh;
+    border: 0;
+    border-top: 2px solid var(--fg);
+  }
+  .am-form-view,
+  .am-ok { padding: 22px 18px 20px; }
+  .am-h { font-size: 26px; }
+  .am-ok-h { font-size: 30px; }
+  .am-ok .btn { width: 100%; }
 }
 
-.signup-page h1 em {
-  font-style: italic;
-  color: var(--studio-ink);
+/* ---------- /announce · the fallback page (same slip) ---------- */
+.signup-page {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(40px, 7vh, 88px) var(--pad-x) 88px;
 }
 
-.signup-page .lede {
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.6;
-  color: var(--fg-2);
-  margin: 0 0 36px;
-  max-width: 56ch;
+.sp-head {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  align-items: baseline;
+  margin: 0 0 32px;
 }
 
-/* The page variant boxes the form; the modal supplies its own frame. */
-.signup-page .signup-form {
-  padding: 32px;
-  border: 1px solid var(--line);
+.sp-h { font-size: clamp(36px, 4.6vw, 58px); }
+.signup-page .sp-lede { font-size: 18px; margin: 0; }
+
+.sp-slip {
+  max-width: 640px;
+  margin-left: calc(240px + 24px);
+  padding: 26px;
+  border: 2px solid var(--fg);
   background: var(--bg-2);
 }
 
-/* ---------- The form (shared by popup and /announce) ---------- */
+@media (max-width: 760px) {
+  .sp-head { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 22px; }
+  .sp-label { margin: 0; }
+  .sp-slip { margin-left: 0; padding: 20px 18px; }
+}
+
+/* ---------- The form (shared by the pop-up and /announce) ---------- */
 .signup-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.signup-form > label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
-
-.signup-form .req {
-  color: var(--studio-ink);
-  font-style: normal;
-}
-
-.signup-form .opt {
-  /* Real information, not decoration: secondary text colour, not the
-     inactive --fg-4 tier (which was 1.75:1 in dark mode). */
-  color: var(--fg-3);
-  letter-spacing: 0.06em;
-  text-transform: none;
-}
-
-.signup-form input[type="text"],
-.signup-form input[type="email"],
-.signup-form textarea {
-  font-family: var(--serif);
-  font-size: 16px;
-  color: var(--fg);
-  background: var(--bg-2);
-  border: 1px solid var(--line-2);
-  padding: 11px 13px;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: border-color 0.15s;
-  width: 100%;
-}
-
-/* Boxed page variant sits on --bg-2, so its fields drop to --bg. */
-.signup-page .signup-form input[type="text"],
-.signup-page .signup-form input[type="email"],
-.signup-page .signup-form textarea {
-  background: var(--bg);
-}
-
-.signup-form input:focus,
-.signup-form textarea:focus {
-  outline: none;
-  border-color: var(--studio-ink);
-}
-
-/* Keyboard focus needs more than a border-colour shift on a 1px border. */
-.signup-form input:focus-visible,
-.signup-form textarea:focus-visible {
-  outline: 2px solid var(--studio-ink);
-  outline-offset: 2px;
-}
-
-/* Validation state — amber token; the browser supplies the message. */
-.signup-form input:user-invalid,
-.signup-form textarea:user-invalid {
-  border-color: var(--warn);
-}
-
-.signup-form textarea {
-  resize: vertical;
-  min-height: 84px;
+  gap: 16px;
 }
 
 .signup-form .honeypot {
@@ -392,162 +297,211 @@
   overflow: hidden;
 }
 
-/* Topic radio chips */
 .signup-form fieldset {
   border: 0;
-  padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 0;
+  min-width: 0;
 }
 
-.signup-form legend {
-  padding: 0;
-  margin-bottom: 2px;
+.signup-form legend,
+.sf-field > label,
+.sf-more summary {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--fg-2);
+  padding: 0;
+  margin: 0 0 6px;
+}
+
+.sf-opt {
   color: var(--fg-3);
+  text-transform: none;
+  letter-spacing: 0.04em;
 }
 
-.topic-options {
+.sf-field {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.topic-options label {
-  display: inline-flex;
+/* F2: field edges at 3:1 or more (--fg-3), 48 px tall. */
+.signup-form input[type="email"],
+.signup-form input[type="text"],
+.signup-form textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--fg-3);
+  border-radius: 0;
+}
+
+.signup-form textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.signup-form input:focus-visible,
+.signup-form textarea:focus-visible {
+  outline: 2px solid var(--c2);
+  outline-offset: 2px;
+  border-color: var(--fg);
+}
+
+.signup-form input[aria-invalid="true"] {
+  border-color: var(--warn);
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
+/* F3: the topic row, three 44 px segments. */
+.sf-chip-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--fg-3);
+}
+
+.sf-chip-row label {
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 9px;
-  cursor: pointer;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 6px;
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fg-2);
-  border: 1px solid var(--line-2);
-  background: var(--bg-2);
-  padding: 10px 14px;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-
-.signup-page .topic-options label { background: var(--bg); }
-
-.topic-options label:hover { border-color: var(--fg-3); }
-
-.topic-options input[type="radio"] {
-  appearance: none;
-  margin: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid var(--line-2);
-  background: transparent;
   cursor: pointer;
+}
+
+.sf-chip-row label + label { border-left: 1px solid var(--fg-3); }
+
+.sf-chip-row input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sf-chip-row label:has(input:checked) {
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+/* The tick says "chosen" without relying on the fill colour alone. */
+.sf-chip-row label:has(input:checked) span::before { content: "✓ "; }
+
+.sf-chip-row label:has(input:focus-visible) {
+  outline: 2px solid var(--c2);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.sf-email-row {
   display: grid;
-  place-items: center;
-  transition: border-color 0.15s;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
 }
 
-.topic-options input[type="radio"]::after {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--studio-ink);
-  transform: scale(0);
-  transition: transform 0.12s ease-in-out;
+.sf-email-row .btn { white-space: nowrap; }
+
+/* F4: our own message, in English, under the field. */
+.sf-err {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--warn);
 }
 
-.topic-options input[type="radio"]:checked::after { transform: scale(1); }
-.topic-options input[type="radio"]:checked { border-color: var(--studio-ink); }
+.sf-more {
+  border-top: 1px dashed var(--line-2);
+}
 
-.topic-options label:has(input:checked) {
-  border-color: var(--studio-dim);
+.sf-more summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sf-more summary::-webkit-details-marker { display: none; }
+
+.sf-more summary::before {
+  content: "+";
+  width: 14px;
+  font-size: 16px;
   color: var(--fg);
-  background: var(--studio-tint);
 }
 
-.topic-options input[type="radio"]:focus-visible {
-  outline: 1px solid var(--c2);
+.sf-more[open] summary::before { content: "–"; }
+
+.sf-more summary:focus-visible {
+  outline: 2px solid var(--c2);
   outline-offset: 2px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .topic-options input[type="radio"]::after { transition: none; }
+.sf-more-body {
+  display: grid;
+  gap: 14px;
+  padding: 4px 0;
 }
 
-.signup-form .submit-row {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 2px;
+.sf-consent {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg-2);
+  max-width: 60ch;
 }
 
-/* The submit button is the shared .btn base (landing.css, yellow sign-up). */
+.sf-consent a { color: var(--fg); }
 
 .signup-form button:disabled {
   opacity: 0.6;
   cursor: progress;
 }
 
-.signup-form .privacy {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 12.5px;
-  color: var(--fg-3);
-  line-height: 1.45;
-  margin: 0;
-  max-width: 42ch;
+@media (max-width: 540px) {
+  .sf-email-row { grid-template-columns: minmax(0, 1fr); }
+  .sf-email-row .btn { width: 100%; }
+  .sf-chip-row label { font-size: 11px; letter-spacing: 0.02em; }
 }
 
-.signup-form .privacy a {
-  color: var(--fg-2);
-  transition: color 0.15s;
-}
-
-.signup-form .privacy a:hover { color: var(--studio-ink); }
-
-/* ---------- /announce/thanks · confirmation page ---------- */
+/* ---------- /announce/thanks · confirmation (no-JS POST landing) ---------- */
 .thanks-page {
-  max-width: 560px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: clamp(60px, 12vh, 160px) var(--pad-x) 96px;
-  text-align: center;
+  padding: clamp(48px, 10vh, 120px) var(--pad-x) 96px;
 }
 
-.thanks-page .mark-pink {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--studio);
-  border-radius: 50%;
-  margin-bottom: 22px;
+.ok-card {
+  border: 2px solid var(--fg);
+  background: var(--bg-2);
+  padding: 30px;
 }
 
-.thanks-page h1 {
-  font-family: var(--serif);
-  font-size: clamp(34px, 5vw, 48px);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin: 0 0 20px;
-  line-height: 1.05;
-}
+.thanks-page .sp-h { font-size: clamp(30px, 4vw, 40px); }
 
-.thanks-page h1 em {
-  font-style: italic;
-  color: var(--studio-ink);
+@media (max-width: 540px) {
+  .ok-card { padding: 22px 18px; }
+  .ok-card .btn { width: 100%; }
 }
-
-.thanks-page p {
-  font-family: var(--serif);
-  font-size: 17px;
-  line-height: 1.6;
-  color: var(--fg-2);
-  margin: 0 0 30px;
-}
-

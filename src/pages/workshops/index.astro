@@ -1,7 +1,6 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
-import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 // Hero, series and pilot: the branded versions (components/workshops/brand/)
 // when PUBLIC_WORKSHOP_SERIES=true, else today's markup verbatim
 // (components/workshops/classic/); chosen at build time by the workshopArea
@@ -28,6 +27,5 @@ const pageDescription = series
     <Hero /> <Series /><Pilot />
   </main>
 
-  <AnnounceModal />
   <Footer />
 </Base>

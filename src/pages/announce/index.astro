@@ -1,41 +1,79 @@
 ---
-// Full-page version of the announcements form — the no-JS fallback
-// behind every [data-announce] trigger, and the redirect target for
-// the retired /workshops/signup URL (see netlify.toml). Submits
-// natively to /announce/thanks. A tiny script pre-selects the topic
-// carried in ?topic=…; without JS the default "Both" stands.
+// /announce: the fallback for the register-interest pop-up (design A1a).
+// On the site every sign-up link opens the pop-up in place; this page is
+//   - the no-JS fallback those links point to,
+//   - the shareable link for emails, posts and partner sites, and
+//   - a built page that carries the static Netlify "announcements" form,
+//     which Netlify detects at deploy time.
+// It submits natively to /announce/thanks. A small script pre-selects the
+// topic in ?topic=… and swaps the title to match; without JS "Both" stands.
+// The pop-up itself is not rendered here (announceModal={false}): sign-up
+// links on this page focus the form below instead.
 import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
 import AnnounceForm from '@/components/chrome/AnnounceForm.astro';
+import { announceCopy } from '@/data/site/announce';
 import '@/styles/announce.css';
+
+const copy = announceCopy(import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true');
 ---
 
 <Base
   title="Announcements · Workshops & exhibitions"
-  description="Leave an email to be notified when the next Pixels2GenAI workshop or exhibition is confirmed. One announcement email per event, no newsletter."
+  description="Leave an email to hear when new Pixels2GenAI workshop tickets open or the next exhibition has a date. One email per event, no newsletter."
+  announceModal={false}
 >
-  <main id="main-content" class="signup-page">
-    <span class="eyebrow">§ Announcements · Workshops &amp; exhibitions</span>
-    <h1>Hear about <em>the next one.</em></h1>
-    <p class="lede">
-      Workshops and exhibitions are announced once a date and a venue are
-      confirmed — one mail per event, no newsletter. Leave an email, choose
-      what you'd like to hear about, and we'll write only when there is
-      something to announce.
-    </p>
-
-    <AnnounceForm />
+  <main id="main-content" class="signup-page" data-copy={JSON.stringify(copy)}>
+    <div class="sp-head">
+      <span class="sp-label">§ Announcements</span>
+      <div>
+        <h1 class="sp-h" id="sp-title">{copy.both.lead}<em>{copy.both.em}</em></h1>
+        <p class="sp-lede">{copy.both.lede}</p>
+      </div>
+    </div>
+    <div class="sp-slip">
+      <AnnounceForm idPrefix="ap" />
+    </div>
   </main>
 
   <Footer />
 </Base>
 
 <script>
-  const topic = new URLSearchParams(location.search).get('topic');
-  if (topic === 'workshops' || topic === 'exhibitions') {
-    const radio = document.querySelector<HTMLInputElement>(
-      `input[name="topics"][value="${topic}"]`
-    );
-    if (radio) radio.checked = true;
+  type Topic = 'workshops' | 'exhibitions' | 'both';
+  type Copy = Record<Topic, { lead: string; em: string; lede: string }>;
+
+  const page = document.querySelector<HTMLElement>('.signup-page');
+  const form = page?.querySelector<HTMLFormElement>('form');
+
+  if (page && form) {
+    const copy = JSON.parse(page.dataset.copy ?? '{}') as Copy;
+    const title = page.querySelector('#sp-title') as HTMLElement;
+    const lede = page.querySelector('.sp-lede') as HTMLElement;
+    const email = form.querySelector('input[name="email"]') as HTMLInputElement;
+
+    const select = (topic: Topic) => {
+      const radio = form.querySelector<HTMLInputElement>(`input[name="topics"][value="${topic}"]`);
+      if (radio) radio.checked = true;
+      const c = copy[topic] ?? copy.both;
+      const em = document.createElement('em');
+      em.textContent = c.em;
+      title.replaceChildren(c.lead, em);
+      lede.textContent = c.lede;
+    };
+
+    const fromUrl = new URLSearchParams(location.search).get('topic');
+    if (fromUrl === 'workshops' || fromUrl === 'exhibitions') select(fromUrl);
+
+    // A sign-up link on this page (the footer's) stays here: it picks its
+    // topic and moves focus to the email field.
+    document.addEventListener('click', (e) => {
+      const el = (e.target as Element | null)?.closest<HTMLElement>('[data-announce]');
+      if (!el || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const topic = el.dataset.topic as Topic | undefined;
+      select(topic && topic in copy ? topic : 'both');
+      email.focus();
+    });
   }
 </script>

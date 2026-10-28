@@ -1,25 +1,44 @@
 ---
 /**
- * The shared announcements capture form (Netlify Forms,
- * name="announcements"). Rendered in two places:
+ * The shared announcements form (Netlify Forms, name="announcements"),
+ * design A1a "Slip": topic row, email and button on one row, name and
+ * note folded. Rendered in two places:
  *
- *   - inside AnnounceModal.astro (the popup; submits via fetch as a
- *     Netlify AJAX post, pass autofocus so the email field receives
- *     focus when the dialog opens)
- *   - on /announce (the no-JS fallback page; submits natively, the
- *     POST action lands on /announce/thanks)
+ *   - inside AnnounceModal.astro (the pop-up on every page; it submits
+ *     with fetch as a Netlify AJAX post and shows its own thanks state)
+ *   - on /announce (the no-JS fallback page; submits natively and the
+ *     POST lands on /announce/thanks)
  *
- * Netlify detects the form from the static HTML at deploy time —
- * data-netlify + the hidden form-name input are load-bearing, as is
- * the honeypot. The topic radio defaults to "Both" so the field is
- * always valid without JS; triggers pre-select a specific topic.
- * Styles live in src/styles/announce.css (.signup-form).
+ * Netlify detects the form from the static HTML at deploy time:
+ * data-netlify, the hidden form-name input, the honeypot and the field
+ * names email / name / topics (workshops | exhibitions | both) /
+ * interests are load-bearing, and /privacy describes exactly these
+ * fields. The topic defaults to "Both" so the form is valid without JS.
+ *
+ * With JS, the script below replaces the browser's validation bubble
+ * with an inline message under the email field (in English, whatever
+ * the browser's language). Without JS the browser's own check stands.
+ * Styles: src/styles/announce.css (.signup-form).
  */
+import { ANNOUNCE_TOPICS, type AnnounceTopic } from '@/data/site/announce';
+
 interface Props {
-  autofocus?: boolean;
+  /** Prefix for the element ids, unique per form on a page. */
+  idPrefix: string;
+  /** The topic checked in the static HTML. */
+  topic?: AnnounceTopic;
+  /** In the pop-up, the privacy link opens a new tab so the visitor keeps
+   *  the page and what they typed. */
+  inModal?: boolean;
 }
 
-const { autofocus = false } = Astro.props;
+const { idPrefix, topic = 'both', inModal = false } = Astro.props;
+const id = (name: string) => `${idPrefix}-${name}`;
+const TOPIC_LABEL: Record<AnnounceTopic, string> = {
+  workshops: 'Workshops',
+  exhibitions: 'Exhibitions',
+  both: 'Both',
+};
 ---
 
 <form
@@ -37,41 +56,113 @@ const { autofocus = false } = Astro.props;
     <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
   </p>
 
-  <label>
-    <span class="lbl">Email <span class="req">*</span></span>
-    <input type="email" name="email" required autocomplete="email" autofocus={autofocus} />
-  </label>
-
-  <label>
-    <span class="lbl">Name <span class="opt">— optional</span></span>
-    <input type="text" name="name" autocomplete="name" />
-  </label>
-
-  <fieldset>
-    <legend>Announce to me</legend>
-    <div class="topic-options">
-      <label><input type="radio" name="topics" value="workshops" /> Workshops</label>
-      <label><input type="radio" name="topics" value="exhibitions" /> Exhibitions</label>
-      <label><input type="radio" name="topics" value="both" checked /> Both</label>
+  <fieldset class="sf-topics">
+    <legend>Tell me about</legend>
+    <div class="sf-chip-row">
+      {ANNOUNCE_TOPICS.map((value) => (
+        <label>
+          <input type="radio" name="topics" value={value} checked={value === topic} />
+          <span>{TOPIC_LABEL[value]}</span>
+        </label>
+      ))}
     </div>
   </fieldset>
 
-  <label>
-    <span class="lbl">What would you hope the next one covers? <span class="opt">— optional</span></span>
-    <textarea name="interests" rows="3" placeholder="One or two sentences. For workshops, this genuinely shapes the module selection."></textarea>
-  </label>
-
-  <p class="am-error" role="alert" hidden>
-    Sending failed — please try again, or use the plain form at <a href="/announce">/announce</a>.
-  </p>
-
-  <div class="submit-row">
-    <button type="submit" class="btn btn-pri btn-signup">Add me to the list →</button>
-    <p class="privacy">
-      By submitting you agree that we store these details to send you
-      event announcements — nothing else. One mail per event, sent BCC,
-      never shared. Reply to any announcement to opt out. Details in the
-      <a href="/privacy">privacy note</a>.
-    </p>
+  <div class="sf-field">
+    <label for={id('email')}>Email</label>
+    <div class="sf-email-row">
+      <input
+        id={id('email')}
+        type="email"
+        name="email"
+        required
+        autocomplete="email"
+        inputmode="email"
+        autocapitalize="off"
+        spellcheck="false"
+        aria-describedby={id('email-err')}
+      />
+      <button type="submit" class="btn btn-pri btn-signup">Add me to the list →</button>
+    </div>
+    <p class="sf-err" id={id('email-err')} hidden></p>
   </div>
+
+  <details class="sf-more">
+    <summary>Add a name or a wish <span class="sf-opt">optional</span></summary>
+    <div class="sf-more-body">
+      <div class="sf-field">
+        <label for={id('name')}>Name <span class="sf-opt">optional</span></label>
+        <input id={id('name')} type="text" name="name" autocomplete="name" />
+      </div>
+      <div class="sf-field">
+        <label for={id('note')}>What should the next one cover? <span class="sf-opt">optional</span></label>
+        <textarea id={id('note')} name="interests" rows="2" placeholder="One or two sentences."></textarea>
+      </div>
+    </div>
+  </details>
+
+  <p class="am-error" role="alert" hidden>Sending failed. Check your connection and try again.</p>
+
+  <p class="sf-consent">
+    We keep what you enter only to send these announcements: sent by hand,
+    BCC, never shared. Reply to any of them to leave the list.
+    {inModal
+      ? <a href="/privacy" target="_blank" rel="noopener">Privacy note<span class="sr-only"> (opens in a new tab)</span></a>
+      : <a href="/privacy">Privacy note</a>}
+  </p>
 </form>
+
+<script>
+  // Inline email check (F4). Runs for every announcements form on the page.
+  // The listener is on the document in the capture phase, so it runs before
+  // the pop-up's own submit handler and can stop an invalid send.
+  const MSG_EMPTY = 'Enter your email address.';
+  const MSG_INVALID = 'Check the address: it needs an @ and a domain, like name@example.com.';
+
+  const forms = document.querySelectorAll<HTMLFormElement>('form.signup-form');
+
+  function parts(form: HTMLFormElement) {
+    const email = form.querySelector<HTMLInputElement>('input[name="email"]');
+    const err = email ? document.getElementById(email.getAttribute('aria-describedby') ?? '') : null;
+    return { email, err };
+  }
+
+  function setError(form: HTMLFormElement, message: string | null) {
+    const { email, err } = parts(form);
+    if (!email || !err) return;
+    err.textContent = message ?? '';
+    err.hidden = !message;
+    if (message) email.setAttribute('aria-invalid', 'true');
+    else email.removeAttribute('aria-invalid');
+  }
+
+  forms.forEach((form) => {
+    // Our own message replaces the browser bubble; without JS it stays.
+    form.noValidate = true;
+    const { email } = parts(form);
+    // Clear the message as soon as the address becomes valid.
+    email?.addEventListener('input', () => {
+      if (email.getAttribute('aria-invalid') && email.checkValidity()) setError(form, null);
+    });
+  });
+
+  document.addEventListener(
+    'submit',
+    (e) => {
+      const form = e.target as HTMLFormElement;
+      if (!form.matches?.('form.signup-form')) return;
+      const { email } = parts(form);
+      if (!email) return;
+      email.value = email.value.trim();
+      if (email.checkValidity()) {
+        setError(form, null);
+        return;
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setError(form, email.validity.valueMissing ? MSG_EMPTY : MSG_INVALID);
+      email.focus();
+    },
+    true,
+  );
+</script>

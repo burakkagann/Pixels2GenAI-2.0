@@ -1,93 +1,164 @@
 ---
 /**
- * Announcements popup — a native <dialog> on the same chassis as the
- * /workshops gallery lightbox. Include once per page that has
- * [data-announce] triggers (landing page, /workshops).
+ * The "Register interest" pop-up, design A1a "Slip" (Kağan, 28 Oct 2026).
+ * A native <dialog>, rendered once on every page by Base.astro (except
+ * /announce, which holds the same form in the page).
  *
- * Progressive enhancement: triggers are real links to
- * /announce?topic=…; this component's script upgrades them to open
- * the dialog instead and pre-selects the topic they carry in
- * data-topic. Without JS the links navigate to the full-page form.
+ * Rule: signing up never takes the visitor away from the page. Every
+ * sign-up link on the site is a real link to /announce?topic=… carrying
+ * data-announce and data-topic; the script below intercepts the click
+ * (delegated, so any such link works) and opens this dialog instead.
+ * Without JS the link goes to /announce and the form posts natively to
+ * /announce/thanks.
  *
- * Submission is a Netlify AJAX post (fetch to "/", url-encoded, with
- * form-name) so the dialog can swap to an in-place thanks state
- * instead of navigating. On failure an inline error appears and the
- * typed data is kept. Styles: src/styles/announce.css.
+ * Behaviour: the title and lede follow the trigger's topic (copy in
+ * src/data/site/announce.ts); page scroll is locked while open; Tab is
+ * kept inside the dialog; Escape, the close button or a backdrop click
+ * close it, and focus returns to the trigger. Sending is a Netlify AJAX
+ * post (fetch to "/" with form-name); on success the dialog swaps to an
+ * in-place thanks state and focus moves to its heading; on failure an
+ * inline error appears and the typed data is kept.
+ * Phones (≤ 540 px): a bottom sheet. Styles: src/styles/announce.css.
  */
 import AnnounceForm from '@/components/chrome/AnnounceForm.astro';
+import { announceCopy, ANNOUNCE_DONE } from '@/data/site/announce';
 import '@/styles/announce.css';
+
+const copy = announceCopy(import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true');
 ---
 
-<dialog class="announce-modal" id="announce-modal" aria-labelledby="announce-modal-title">
-  <button type="button" class="am-close" aria-label="Close">×</button>
-  <div class="am-inner">
-    <div class="am-form-view">
-      <span class="eyebrow">§ Announcements · Workshops &amp; exhibitions</span>
-      <h2 id="announce-modal-title">Hear about <em>the next one.</em></h2>
-      <p class="lede">
-        Events are announced once a date and a venue are confirmed — one
-        mail per event, no newsletter. We write only when there is
-        something to announce.
-      </p>
-      <AnnounceForm autofocus={true} />
-    </div>
-
-    <div class="am-thanks" role="status" hidden>
-      <span class="mark-pink" aria-hidden="true"></span>
-      <h2>Noted. <em>Thanks.</em></h2>
-      <p>
-        You're on the list. We'll email when the next workshop or
-        exhibition has a date and a venue — and only then. Reply to any
-        announcement and we'll take you off the list.
-      </p>
-      <button type="button" class="btn btn-pri btn-signup am-done">Back to the page →</button>
-    </div>
+<dialog class="announce-modal" id="announce-modal" aria-labelledby="am-title" data-copy={JSON.stringify(copy)}>
+  <div class="am-form-view">
+    <span class="am-eyebrow">§ Announcements</span>
+    <h2 class="am-h" id="am-title">{copy.both.lead}<em>{copy.both.em}</em></h2>
+    <p class="am-lede">{copy.both.lede}</p>
+    <AnnounceForm idPrefix="am" inModal />
   </div>
+
+  <div class="am-ok" hidden>
+    <span class="ok-chip">{ANNOUNCE_DONE.chip}</span>
+    <h2 class="am-h am-ok-h" id="am-ok-title" tabindex="-1">{ANNOUNCE_DONE.title}</h2>
+    <p class="am-lede">{ANNOUNCE_DONE.text}</p>
+    <button type="button" class="btn btn-pri btn-signup am-done">Back to the page →</button>
+  </div>
+
+  {/* Last in the DOM so Tab reaches the form first; placed top-right by CSS. */}
+  <button type="button" class="am-close" aria-label="Close">×</button>
 </dialog>
 
 <script>
+  type Topic = 'workshops' | 'exhibitions' | 'both';
+  type Copy = Record<Topic, { lead: string; em: string; lede: string }>;
+
   const dlg = document.getElementById('announce-modal') as HTMLDialogElement | null;
   const form = dlg?.querySelector('form') as HTMLFormElement | null;
 
   if (dlg && form) {
+    const copy = JSON.parse(dlg.dataset.copy ?? '{}') as Copy;
     const formView = dlg.querySelector('.am-form-view') as HTMLElement;
-    const thanksView = dlg.querySelector('.am-thanks') as HTMLElement;
-    const errorNote = dlg.querySelector('.am-error') as HTMLElement;
+    const okView = dlg.querySelector('.am-ok') as HTMLElement;
+    const okTitle = dlg.querySelector('#am-ok-title') as HTMLElement;
+    const title = dlg.querySelector('#am-title') as HTMLElement;
+    const lede = dlg.querySelector('.am-form-view .am-lede') as HTMLElement;
+    const sendError = dlg.querySelector('.am-error') as HTMLElement;
+    const email = form.querySelector('input[name="email"]') as HTMLInputElement;
+    const root = document.documentElement;
+    let trigger: HTMLElement | null = null;
 
-    // Upgrade every trigger link on the page into a popup opener.
-    document.querySelectorAll<HTMLElement>('[data-announce]').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
-        const topic = el.dataset.topic ?? 'both';
-        const radio = dlg.querySelector<HTMLInputElement>(
-          `input[name="topics"][value="${topic}"]`
-        );
-        if (radio) radio.checked = true;
-        formView.hidden = false;
-        thanksView.hidden = true;
-        errorNote.hidden = true;
-        dlg.showModal();
-      });
+    const setCopy = (topic: Topic) => {
+      const c = copy[topic] ?? copy.both;
+      const em = document.createElement('em');
+      em.textContent = c.em;
+      title.replaceChildren(c.lead, em);
+      lede.textContent = c.lede;
+    };
+
+    const open = (topic: Topic, from: HTMLElement) => {
+      trigger = from;
+      const radio = form.querySelector<HTMLInputElement>(`input[name="topics"][value="${topic}"]`);
+      if (radio) radio.checked = true;
+      setCopy(topic);
+      formView.hidden = false;
+      okView.hidden = true;
+      sendError.hidden = true;
+      // Clear a check message left from an earlier opening.
+      const emailError = dlg.querySelector<HTMLElement>('.sf-err');
+      if (emailError) emailError.hidden = true;
+      email.removeAttribute('aria-invalid');
+      dlg.setAttribute('aria-labelledby', 'am-title');
+      // F1 scroll lock. The padding stands in for the scrollbar that
+      // overflow:hidden removes, so the page behind does not jump sideways.
+      const scrollbar = window.innerWidth - root.clientWidth;
+      root.style.setProperty('--am-scrollbar', `${scrollbar}px`);
+      root.classList.add('am-locked');
+      dlg.showModal();
+      email.focus();
+    };
+
+    // Delegated: every [data-announce] link on the page, now or added later.
+    // Modified clicks (new tab or window) keep the browser's behaviour.
+    document.addEventListener('click', (e) => {
+      const el = (e.target as Element | null)?.closest<HTMLElement>('[data-announce]');
+      if (!el || e.defaultPrevented) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const topic = (el.dataset.topic as Topic | undefined) ?? 'both';
+      open(topic in copy ? topic : 'both', el);
+    });
+
+    dlg.addEventListener('close', () => {
+      root.classList.remove('am-locked');
+      root.style.removeProperty('--am-scrollbar');
+      // Return focus to the button that opened the dialog.
+      trigger?.focus({ preventScroll: true });
+      trigger = null;
     });
 
     dlg.querySelector('.am-close')?.addEventListener('click', () => dlg.close());
     dlg.querySelector('.am-done')?.addEventListener('click', () => dlg.close());
 
-    // Click on the backdrop closes — same logic as the /workshops gallery
-    // lightbox. A backdrop click targets the <dialog> itself (it has no
-    // padding, so its children cover the panel). Do NOT test clientX/Y
-    // against the panel rect: clicks synthesised by the keyboard (Enter to
-    // submit, the phone "Go" key, Space/arrows on the topic radios) report
-    // (0, 0), which read as "outside" and closed the dialog mid-signup.
+    // A backdrop click targets the <dialog> itself (it has no padding, so
+    // its children cover the panel). Don't test clientX/Y against the panel:
+    // keyboard-synthesised clicks report (0, 0) and would close mid-signup.
     dlg.addEventListener('click', (e) => {
       if (e.target === dlg) dlg.close();
     });
 
-    // Netlify AJAX submission — POST url-encoded to a page that
-    // contains the form; form-name routes it to "announcements".
+    // Focus trap: a native modal dialog lets Tab escape to the browser
+    // chrome; keep it cycling inside the dialog instead.
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusable = Array.from(
+        dlg.querySelectorAll<HTMLElement>('a[href], button, input, textarea, summary, [tabindex="0"]'),
+      ).filter((el) => {
+        if (el.matches(':disabled') || el.tabIndex < 0) return false;
+        // Skip anything hidden (the inactive view, a closed <details> body).
+        return el.getClientRects().length > 0;
+      });
+      // Radios: only the checked one is a Tab stop.
+      const stops = focusable.filter(
+        (el) => !(el instanceof HTMLInputElement && el.type === 'radio' && !el.checked),
+      );
+      if (!stops.length) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const active = document.activeElement;
+      // Focus on a non-stop (the thanks heading) or outside: Shift+Tab wraps too.
+      if (e.shiftKey && (active === first || !stops.includes(active as HTMLElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    // Netlify AJAX submission: POST url-encoded to a page that contains the
+    // form; form-name routes it to "announcements". Runs only after the
+    // inline email check in AnnounceForm.astro has passed.
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      errorNote.hidden = true;
+      sendError.hidden = true;
       const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
       try {
@@ -100,10 +171,13 @@ import '@/styles/announce.css';
         });
         if (!res.ok) throw new Error(`Netlify form post failed: ${res.status}`);
         formView.hidden = true;
-        thanksView.hidden = false;
+        okView.hidden = false;
+        dlg.setAttribute('aria-labelledby', 'am-ok-title');
         form.reset();
+        // F5: the focused button is now hidden; move focus to the thanks heading.
+        okTitle.focus();
       } catch {
-        errorNote.hidden = false;
+        sendError.hidden = false;
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }

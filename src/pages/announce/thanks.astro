@@ -1,29 +1,27 @@
 ---
-// Confirmation page for the native (no-JS) POST from /announce.
-// The popup shows the same copy in place (.am-thanks) instead of
-// navigating here. Also the redirect target for the retired
-// /workshops/thanks URL (see netlify.toml).
+// /announce/thanks: where the announcements form lands when it is sent
+// without JavaScript (the form's action). With JS the pop-up shows the
+// same message in place and never comes here. noindex (and left out of
+// the sitemap in astro.config.mjs). Also the target of the retired
+// /workshops/thanks URL (netlify.toml).
 import Base from '@/layouts/Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
+import { ANNOUNCE_DONE } from '@/data/site/announce';
 import '@/styles/announce.css';
 ---
 
 <Base
   title="Thanks · Announcements"
   noindex
-  description="Your details are on the announcements list. We'll email you when the next Pixels2GenAI workshop or exhibition has a date and a venue."
+  description="You're on the Pixels2GenAI announcements list."
 >
   <main id="main-content" class="thanks-page">
-    <span class="mark-pink" aria-hidden="true"></span>
-    <h1>Noted. <em>Thanks.</em></h1>
-    <p>
-      You're on the list. We'll email when the next workshop or exhibition
-      has a date and a venue — and only then. Announcements go out BCC;
-      reply to any of them and we'll take you off the list. In the
-      meantime, the curriculum lives at the home page; the pilot study
-      lives at <a href="/research">/research</a>.
-    </p>
-    <a class="btn btn-pri btn-signup" href="/">Back to the site →</a>
+    <div class="ok-card">
+      <span class="ok-chip">{ANNOUNCE_DONE.chip}</span>
+      <h1 class="sp-h">{ANNOUNCE_DONE.title}</h1>
+      <p class="sp-lede">{ANNOUNCE_DONE.text}</p>
+      <a class="btn btn-pri btn-signup" href="/">Back to the site →</a>
+    </div>
   </main>
 
   <Footer />

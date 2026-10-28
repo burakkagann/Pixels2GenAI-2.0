@@ -5,7 +5,6 @@ import JourneyCube from '@/components/cube/JourneyCube.tsx';
 import WorkshopSpecimen from '@/components/workshops/WorkshopSpecimen.astro';
 import SeriesSpecimen from '@/components/workshops/SeriesSpecimen.astro';
 import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
-import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS, countLeaves } from '@/data/curriculum/subtopics';
 import { RQS, CYCLES } from '@/data/site/research';
@@ -791,8 +790,8 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
 
   <!-- ========== ANNOUNCEMENTS — shared capture strip ==========
        The site's one capture moment, directly above the footer.
-       Serves both archives; the CTA opens the AnnounceModal popup
-       (no-JS fallback: the /announce page). -->
+       Serves both archives; the CTA opens the AnnounceModal pop-up
+       (rendered by Base.astro; no-JS fallback: the /announce page). -->
   <div class="announce-band" id="announcements">
     <aside class="announce-strip" aria-label="Event announcements">
       <span class="strip-eyebrow"><span class="dot" aria-hidden="true"></span>§ Announcements</span>
@@ -802,6 +801,5 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
   </div>
   </main>
 
-  <AnnounceModal />
   <Footer />
 </Base>

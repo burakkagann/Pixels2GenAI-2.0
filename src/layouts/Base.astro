@@ -13,6 +13,7 @@ import '@/styles/typography.css';
 import '@/styles/landing.css';
 import GrainOverlay from '@/components/chrome/GrainOverlay.astro';
 import FrameTop from '@/components/chrome/FrameTop.astro';
+import AnnounceModal from '@/components/chrome/AnnounceModal.astro';
 
 interface Props {
   title: string;
@@ -29,6 +30,9 @@ interface Props {
   /** Keep this page out of search results (form confirmations, 404). Emits
    *  robots noindex and drops the self-canonical, which would contradict it. */
   noindex?: boolean;
+  /** Render the register-interest pop-up (default). Only /announce turns it
+   *  off: that page holds the same form in the page itself. */
+  announceModal?: boolean;
 }
 
 const {
@@ -38,6 +42,7 @@ const {
   ogImage = '/og/home.png',
   jsonLd,
   noindex = false,
+  announceModal = true,
 } = Astro.props;
 
 const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
@@ -132,6 +137,9 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   <FrameTop onLanding={onLanding} />
 
   <slot />
+
+  {/* Every sign-up link on every page opens this pop-up in place. */}
+  {announceModal && <AnnounceModal />}
 
   <script>
     // Smooth scroll for in-page anchor links

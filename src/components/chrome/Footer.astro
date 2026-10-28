@@ -67,7 +67,9 @@ const prefix = Astro.url.pathname === '/' ? '' : '/';
         <li><a href={`${prefix}#workshops`}>§ 2 Workshops</a></li>
         <li><a href={`${prefix}#exhibition`}>§ 3 Exhibition</a></li>
         <li><a href={`${prefix}#research`}>§ 4 Research</a></li>
-        <li><a href={`${prefix}#announcements`}>§ Announcements</a></li>
+        {/* Opens the sign-up pop-up in place (AnnounceModal, via Base.astro);
+            /announce is only the no-JS fallback. */}
+        <li><a href="/announce" data-announce data-topic="both">§ Announcements</a></li>
       </ul>
     </div>
     <div>
