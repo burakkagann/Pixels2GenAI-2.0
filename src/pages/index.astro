@@ -176,7 +176,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     </div>
 
     <div class="curriculum-tools">
-      <div class="curriculum-search">
+      <label class="curriculum-search">
         <svg class="search-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
           <circle cx="11" cy="11" r="7" />
           <line x1="16.5" y1="16.5" x2="21" y2="21" />
@@ -190,7 +190,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
           aria-controls="curriculum-results"
         />
         <button type="button" class="search-clear" data-search-clear hidden aria-label="Clear search">Clear</button>
-      </div>
+      </label>
       <span class="search-summary" data-search-summary hidden aria-live="polite"></span>
       <label class="search-include" data-include-wrap hidden>
         <input type="checkbox" id="curriculum-search-include" data-include />

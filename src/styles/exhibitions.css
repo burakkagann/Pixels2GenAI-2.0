@@ -836,8 +836,8 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
   color: var(--fg);
   border: 1px solid color-mix(in srgb, var(--fg) 45%, transparent);
@@ -856,7 +856,3 @@
   color: var(--bg);
 }
 
-/* Modal close button reaches the 44 px tap target on touch. */
-@media (pointer: coarse), (max-width: 720px) {
-  .exhibition-modal-close { width: 44px; height: 44px; }
-}

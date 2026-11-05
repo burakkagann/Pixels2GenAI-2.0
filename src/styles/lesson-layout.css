@@ -233,3 +233,14 @@
   .tick { min-height: 44px; }
 }
 
+/* Q3: eight cells in the padded width are 40-43.8 px wide on phones, under the
+   44 px touch target. On touch the row bleeds into the page padding (8 x 44 =
+   352 px needs the 360 px screen edge to edge); the rail of the first and last
+   cell is inset by the same padding, so the drawn bar keeps its width. */
+@media (pointer: coarse) and (max-width: 540px) {
+  .ticks { margin-inline: calc(var(--pad-x) * -1); }
+  .tick { min-width: 44px; }
+  .tick:first-child::before { left: var(--pad-x); }
+  .tick:last-child::before { right: var(--pad-x); }
+}
+

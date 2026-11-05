@@ -1733,6 +1733,7 @@
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 10px;
+  cursor: text; /* a <label>: a tap anywhere in the box focuses the field */
   transition: border-color 0.15s ease;
 }
 
