@@ -16,6 +16,8 @@ export const TICKETS = {
    *  time, so it needs a redeploy on this date (BIZ-16). */
   passLate: { from: '2026-12-06', standard: 405, reduced: 270 },
   reducedFor: 'students, people on low income or unemployed',
+  /** The pass for all six stops when W1 sales end (terms §1, §7); `passUntil` is the late pass. */
+  passAllSixUntil: '12:00 on 4 Dec',
   passUntil: '8 Jan',
   venue: 'Academis studio, Berlin',
   /** The full venue line on /workshops (DEC-121): same studio as the pilot. `venue` above stays the short form

@@ -23,8 +23,8 @@ const passShop = TICKETS.pretix.pass;
 const P = TICKETS.price;
 const late = new Date().toISOString().slice(0, 10) >= TICKETS.passLate.from;
 const pass = late
-  ? { label: 'Series pass · W2 to W6', standard: TICKETS.passLate.standard, reduced: TICKETS.passLate.reduced }
-  : { label: 'Series pass · all six Saturdays', standard: P.passStandard, reduced: P.passReduced };
+  ? { label: 'Series pass · W2 to W6', standard: TICKETS.passLate.standard, reduced: TICKETS.passLate.reduced, until: TICKETS.passUntil }
+  : { label: 'Series pass · all six Saturdays', standard: P.passStandard, reduced: P.passReduced, until: TICKETS.passAllSixUntil };
 ---
 
 <section class="ws series" id="series" aria-labelledby="series-title">
@@ -76,7 +76,7 @@ const pass = late
         <div class="tk-col">
           <p class="ws-label">{pass.label}</p>
           <p class="tk-price">€{pass.standard}</p>
-          <p class="tk-sub">€{pass.reduced} reduced. Limited, until {TICKETS.passUntil}. One code for the whole series.</p>
+          <p class="tk-sub">€{pass.reduced} reduced. Limited, until {pass.until}. One code for the whole series.</p>
           <p class="tk-sub">{TICKETS.singlesLater}</p>
           <div class="sc-btns">
             {passShop ? <a class="ws-btn fill-studio" href={passShop}>Get the pass →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
