@@ -2,7 +2,7 @@
 
 The **curriculum content** of Pixels2GenAI — lesson prose, figures, diagrams,
 and other educational text and media (primarily under `src/content/`,
-`public/lessons/`, and the lesson MDX) — is licensed under the
+`public/lesson-media/`, and the lesson MDX) — is licensed under the
 
 **Creative Commons Attribution 4.0 International License (CC-BY 4.0).**
 

@@ -2,7 +2,7 @@
 
 Thanks for your interest in helping build Pixels2GenAI. This is an open
 educational curriculum, and the single most valuable contribution is **porting a
-lesson** — taking one of the ~190 unshipped exercises and bringing it to life as
+lesson** — taking one of the unshipped exercises (`npm run status`) and bringing it to life as
 a polished MDX lesson.
 
 By contributing you agree that your code is licensed under [MIT](LICENSE) and
