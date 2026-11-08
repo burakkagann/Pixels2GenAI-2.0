@@ -36,7 +36,18 @@ import '@/styles/workshops-page.css';
   </div>
   <div class="hero-collage" aria-hidden="true">
     {SERIES.map((w) => (
-      <img class="hero-tile" data-band-index={w.n} src={w.image.src} alt="" width="720" height="450" decoding="async" fetchpriority="low" />
+      <img
+        class="hero-tile"
+        data-band-index={w.n}
+        src={w.image.src.replace('.webp', '-360.webp')}
+        srcset={`${w.image.src.replace('.webp', '-240.webp')} 240w, ${w.image.src.replace('.webp', '-360.webp')} 360w`}
+        sizes="(max-width: 900px) 28vw, 175px"
+        alt=""
+        width="360"
+        height="360"
+        decoding="async"
+        fetchpriority="low"
+      />
     ))}
   </div>
 </header>
