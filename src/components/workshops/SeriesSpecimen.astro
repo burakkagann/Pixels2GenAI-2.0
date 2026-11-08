@@ -49,7 +49,7 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
 <details class="workshop-specimen series-specimen" open>
   <summary class="specimen-summary">
     <span class="summary-index">{indexDisplay}</span>
-    <span class="summary-status sale">On sale</span>
+    <span class="summary-status sale">{TICKETS.saleTag}</span>
     <span class="summary-identifier">Workshop series · <em>six Saturdays</em></span>
     <span class="summary-meta">Berlin · from {startLong}</span>
     <span class="summary-chevron" aria-hidden="true">
@@ -76,8 +76,14 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
     </div>
   </article>
   <div class="specimen-actions">
-    <a class="btn btn-pri btn-workshop" href={ticketHref}>Get a W{first.n} ticket →</a>
-    <a class="btn btn-sec" href="/workshops">See the series →</a>
+    {TICKETS.open ? (
+      <>
+        <a class="btn btn-pri btn-workshop" href={ticketHref}>Get a W{first.n} ticket →</a>
+        <a class="btn btn-sec" href="/workshops">See the series →</a>
+      </>
+    ) : (
+      <a class="btn btn-pri btn-workshop" href="/workshops">See the workshops →</a>
+    )}
   </div>
 </details>
 

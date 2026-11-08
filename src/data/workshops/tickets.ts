@@ -1,7 +1,7 @@
 /**
  * Tickets for the series (DEC-51, DEC-55, DEC-74, DEC-75): pretix sells single tickets and the series pass
  * (5 seats per workshop), Luma sells single tickets only (3 seats). The shop links are filled in when the shops
- * go live; while a link is null its button reads "Tickets open soon" and links nowhere, so the page never shows a
+ * go live; while a link is null its slot shows the notReady label below (not a link), so the page never shows a
  * dead button.
  */
 import type { WorkshopId } from '@/data/workshops/series';
@@ -28,5 +28,9 @@ export const TICKETS = {
   host: 'Kristian Rother',
   time: '11:00–15:30',
   terms: '/workshops/terms',
-  notReady: 'Tickets open soon',
+  /** The label shown in place of a ticket button while its shop link above is null. Wed 11 Nov: fill in `pretix.w1`, `pretix.pass` (and `luma.w1`) and the buttons return; this line is then unused. */
+  notReady: 'Tickets open Wed 11 Nov',
+  /** Open once the W1 shop link is filled in; the labels below follow it, so filling the link brings back 'On sale'. */
+  get open() { return Boolean(this.pretix.w1); },
+  get saleTag() { return this.open ? 'On sale' : 'Tickets Wed 11'; },
 };

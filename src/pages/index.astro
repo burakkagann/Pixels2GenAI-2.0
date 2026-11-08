@@ -11,6 +11,7 @@ import { RQS, CYCLES } from '@/data/site/research';
 import { COVERS, PLANNED_TOPICS, lessonPrint, LESSON_PRINT_SIZE, breakTitle, panelTitle } from '@/data/curriculum/covers';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/site/workshops';
 import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
+import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
 
@@ -846,7 +847,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="workshops-archive">
       <div class="archive-head">
         <span class="archive-org">Pixels2GenAI · Workshop archive</span>
-        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {seriesOn ? '1 on sale' : `${UPCOMING_WORKSHOPS.length} in planning`}</span>
+        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {seriesOn ? (TICKETS.open ? '1 on sale' : 'tickets Wed 11') : `${UPCOMING_WORKSHOPS.length} in planning`}</span>
       </div>
 
       {/* Oldest first and collapsed; the active workshop last and open (DEC-98). */}

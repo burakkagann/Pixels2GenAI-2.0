@@ -137,8 +137,8 @@ const tPath = (a: number, b: number) => {
           <text class="ca-date" x={x} y={y + 56}>{n.short}</text>
           {n.onSale && (
             <g class="ca-sale">
-              <rect x={x - 46} y={y - 64} width="92" height="20" />
-              <text x={x} y={y - 50}>ON SALE</text>
+              <rect x={x - (TICKETS.open ? 46 : 62)} y={y - 64} width={TICKETS.open ? 92 : 124} height="20" />
+              <text x={x} y={y - 50}>{TICKETS.saleTag.toUpperCase()}</text>
             </g>
           )}
         </a>
@@ -165,7 +165,7 @@ const tPath = (a: number, b: number) => {
           <circle class="ca-shadow" cx={x + 3} cy={y + 3} r="19" />
           <circle class="ca-dot" cx={x} cy={y} r="19" />
           <text class="ca-wn ca-small" x={x} y={y + 5}>W{n.w.n}</text>
-          <text class="ca-verb" x={x + 30} y={y - 2} text-anchor="start">{n.w.verb.toUpperCase()}{n.onSale ? ' · ON SALE' : ''}</text>
+          <text class="ca-verb" x={x + 30} y={y - 2} text-anchor="start">{n.w.verb.toUpperCase()}{n.onSale ? ' · ' + TICKETS.saleTag.toUpperCase() : ''}</text>
           <text class="ca-date" x={x + 30} y={y + 14} text-anchor="start">{n.short} {n.w.dateIso!.slice(0, 4)}</text>
         </a>
       );
@@ -185,7 +185,7 @@ const tPath = (a: number, b: number) => {
         <a href={`#${n.w.slug}`} aria-label={n.label}>
           <b>W{n.w.n} · {n.w.verb}</b>
           <span class="cg-date">{n.short}</span>
-          <span class="cg-tag">{n.onSale ? 'On sale' : ''}</span>
+          <span class="cg-tag">{n.onSale ? TICKETS.saleTag : ''}</span>
         </a>
       </li>
     ))}

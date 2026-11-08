@@ -959,7 +959,27 @@
 .ws .sc-later { margin: 8px 0 0; font-size: 14px; }
 .ws .sc-price { margin: 0; font-size: 17px; }
 .ws .sc-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-.ws .tk-later { margin: 0; font-size: 14px; }
+/* "Tickets open ..." while a shop link is null: a flat paper label with a thin ink border, not a button
+   (no shadow, no arrow, default cursor). Gone once the link is filled in. */
+.ws .tk-later {
+  display: inline-block;
+  margin: 0;
+  align-self: start;
+  justify-self: start;
+  width: fit-content;
+  padding: 10px 16px;
+  background: var(--ws-paper);
+  color: var(--fg);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--mono);
+  font-size: max(13px, var(--fs-min));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  cursor: default;
+}
+.ws .sc-foot .tk-later { margin: 0; }
 .ws .tk-wrap { display: grid; gap: 18px; width: 100%; }
 .ws .tk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px 32px; }
 .ws .tk-col { display: grid; gap: 6px; align-content: start; }

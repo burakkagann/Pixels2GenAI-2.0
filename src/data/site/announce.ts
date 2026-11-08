@@ -1,3 +1,4 @@
+import { TICKETS } from '@/data/workshops/tickets';
 /**
  * Copy for the "Register interest" pop-up (AnnounceModal.astro) and its
  * no-JavaScript fallback page (/announce). Design A1a "Slip", picked by
@@ -35,7 +36,7 @@ export function announceCopy(seriesOn: boolean): Record<AnnounceTopic, AnnounceC
       lead: 'Hear about the ',
       em: 'next workshop.',
       lede: seriesOn
-        ? 'W1 tickets are on sale. We write when the next tickets open and when the showcase has a date.'
+        ? (TICKETS.open ? 'W1 tickets are on sale. ' : 'W1 tickets open Wed 11 Nov. ') + 'We write when the next tickets open and when the showcase has a date.'
         : 'The next workshop is in planning. We write once it has a date and a venue.',
     },
     exhibitions: {

@@ -6,6 +6,7 @@
  * the pilot row (WorkshopSpecimen with `bridge`, one card per module), so
  * both rows stay one family. Phones (≤720 px) get M3 (DEC-103).
  */
+import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/tokens-workshop.css';
 
 export type MiniCardBand = 'foundations' | 'ml' | 'genai';
@@ -40,7 +41,7 @@ const { items, label } = Astro.props;
   {items.map((c) => (
     <li data-band={c.band} class:list={[{ now: c.now }]}>
       <a href={c.href}>
-        <span class="mc-head">{c.head}{c.now && <em>On sale</em>}</span>
+        <span class="mc-head">{c.head}{c.now && <em>{TICKETS.saleTag}</em>}</span>
         <span class="mc-fig">
           <img src={c.image} alt={c.alt ?? ''} width="720" height="450" loading="lazy" decoding="async" />
           {c.tile && <span class="mc-tile" aria-hidden="true"><span>{c.tile.wd}</span><b>{c.tile.d}</b><span>{c.tile.m}</span></span>}

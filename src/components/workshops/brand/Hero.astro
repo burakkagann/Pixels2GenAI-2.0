@@ -8,7 +8,9 @@
 import { SERIES } from '@/data/workshops/series';
 import { TICKETS } from '@/data/workshops/tickets';
 
-const w1Shop = TICKETS.pretix.w1 ?? '#tickets';
+// Same switch as the tickets block: no shop link yet, so no buttons, just the notReady line.
+const ticketsOpen = Boolean(TICKETS.pretix.w1);
+const w1Shop = TICKETS.pretix.w1;
 import '@/styles/workshop-brand.css';
 import '@/styles/workshops-page.css';
 ---
@@ -21,14 +23,20 @@ import '@/styles/workshops-page.css';
     </h1>
     <p class="hero-sub">Beyond prompting. Six Saturdays in Berlin, from a single pixel to a model that paints.</p>
     <div class="hero-actions">
-      <a class="ws-btn fill-studio" href={w1Shop}>Get a W1 ticket →</a>
-      <a class="ws-btn" href="#tickets">Series pass</a>
+      {ticketsOpen ? (
+        <>
+          <a class="ws-btn fill-studio" href={w1Shop!}>Get a W1 ticket →</a>
+          <a class="ws-btn" href="#tickets">Series pass</a>
+        </>
+      ) : (
+        <p class="tk-later">{TICKETS.notReady}</p>
+      )}
       <a class="hero-link" href="#past">Where it started: the pilot ↓</a>
     </div>
   </div>
   <div class="hero-collage" aria-hidden="true">
     {SERIES.map((w) => (
-      <img class="hero-tile" data-band-index={w.n} src={w.image.src} alt="" width="720" height="450" decoding="async" />
+      <img class="hero-tile" data-band-index={w.n} src={w.image.src} alt="" width="720" height="450" decoding="async" fetchpriority="low" />
     ))}
   </div>
 </header>
