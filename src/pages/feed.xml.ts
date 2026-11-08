@@ -25,7 +25,7 @@ export async function GET(context: APIContext) {
   return rss({
     title: 'Pixels2GenAI — Lessons',
     description:
-      'New lessons from the Pixels2GenAI curriculum: from a single array element to building, training, and reasoning about modern generative models.',
+      'New lessons from Pixels2GenAI, free Python lessons in generative art: set a pixel, draw a fractal, train a network, guide a diffusion model.',
     site: context.site!,
     items: ordered.map((lesson) => ({
       title: `${lesson.id} · ${lesson.data.title}`,

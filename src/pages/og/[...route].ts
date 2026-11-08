@@ -20,7 +20,7 @@ const pages: Record<string, { title: string; description: string }> = {
   home: {
     title: 'Pixels2GenAI',
     description:
-      'An open curriculum from a single array element to building, training, and reasoning about modern generative models.',
+      'Write the code behind generative art. Set a pixel. Draw a fractal. Train a network. Guide a diffusion model.',
   },
 };
 
