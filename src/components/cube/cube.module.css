@@ -298,7 +298,7 @@
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   color: var(--fg-3);
   margin-bottom: 8px;
@@ -392,8 +392,11 @@
    neighbours touched; at 8px they are ~54px, leaving a visible gap. */
 .journey-ticks .tick .tname {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
+  line-height: 1.25;
   letter-spacing: 0;
+  /* Long names break at their soft hyphens (Trans-forms, Simu-lation). */
+  hyphens: manual;
 }
 
 /* Below 8 x 58px cells (54px label + 2px air each side) a long name would
@@ -406,7 +409,7 @@
 .journey-ticks .tick {
   position: relative;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--fg-3);
   text-align: center;
@@ -433,7 +436,7 @@
 .journey-ticks .tick b {
   color: var(--fg-2);
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.08em;
   transition: color .15s;
@@ -570,6 +573,14 @@
 
 .ctrl-foot .note { flex: 1; }
 
+/* Home panel (lite): Pause alone, right-aligned, no rule above it. */
+.ctrl-foot.lite {
+  justify-content: flex-end;
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
 .ctrl-foot .btn-row {
   display: flex;
   gap: 6px;
@@ -581,7 +592,7 @@
   border: 1px solid var(--line-2);
   color: var(--fg-2);
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
   padding: 4px 9px;
   cursor: pointer;
   letter-spacing: 0.06em;

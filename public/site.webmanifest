@@ -1,7 +1,7 @@
 {
   "name": "Pixels2GenAI",
   "short_name": "Pixels2GenAI",
-  "description": "An open curriculum from a single array element to building, training, and reasoning about modern generative models.",
+  "description": "Free, open-source Python lessons in generative art. Set a pixel, draw a fractal, train a network, guide a diffusion model.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#110D16",

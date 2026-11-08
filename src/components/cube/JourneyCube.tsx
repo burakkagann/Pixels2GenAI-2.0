@@ -115,7 +115,13 @@ function journeyColor(j: number, pos: number): string {
 const JOURNEY_TRACK = `linear-gradient(90deg, ${Array.from({ length: 13 }, (_, n) =>
   `${journeyColor(n / 12, 0.62)} ${Math.round((n / 12) * 100)}%`).join(', ')})`;
 
-export default function JourneyCube() {
+type JourneyCubeProps = {
+  /** CB-2 (home): journey slider, stops and Pause only. Drops the noise
+   *  sliders, the "Pixels → GenAI n %" head, the hint line and Reset. */
+  lite?: boolean;
+};
+
+export default function JourneyCube({ lite = false }: JourneyCubeProps) {
   // ---- React state: drives only the UI display (slider numbers, active tick).
   // The RAF loop reads from `stateRef` instead so it never causes re-renders.
   const [ui, setUi] = useState({
@@ -569,10 +575,12 @@ export default function JourneyCube() {
       <div
         className={styles['cube-controls']}
       >
-        <div className={styles['ctrl-head']}>
-          <b>Pixels → GenAI</b>
-          <span className={styles.live}><span className={styles.d}></span>{progressPct}%</span>
-        </div>
+        {!lite && (
+          <div className={styles['ctrl-head']}>
+            <b>Pixels → GenAI</b>
+            <span className={styles.live}><span className={styles.d}></span>{progressPct}%</span>
+          </div>
+        )}
 
         <div className={styles.journey}>
           <div className={styles['journey-endpoints']}>
@@ -615,54 +623,56 @@ export default function JourneyCube() {
           </div>
         </div>
 
-        <div className={styles.sliders}>
-          <div className={styles.sl}>
-            <label>frequency <span className={styles.v}>{ui.freq.toFixed(3)}</span>
-              <input
-                type="range" min="0.05" max="0.9" step="0.005"
-                value={ui.freq}
-                onChange={(e) => updateSlider('freq', parseFloat(e.target.value))}
-                aria-label="Frequency"
-              />
-            </label>
+        {!lite && (
+          <div className={styles.sliders}>
+            <div className={styles.sl}>
+              <label>frequency <span className={styles.v}>{ui.freq.toFixed(3)}</span>
+                <input
+                  type="range" min="0.05" max="0.9" step="0.005"
+                  value={ui.freq}
+                  onChange={(e) => updateSlider('freq', parseFloat(e.target.value))}
+                  aria-label="Frequency"
+                />
+              </label>
+            </div>
+            <div className={styles.sl}>
+              <label>complexity <span className={styles.v}>{ui.centers.toFixed(0)}</span>
+                <input
+                  type="range" min="1" max="6" step="1"
+                  value={ui.centers}
+                  onChange={(e) => updateSlider('centers', parseInt(e.target.value, 10))}
+                  aria-label="Complexity"
+                />
+              </label>
+            </div>
+            <div className={styles.sl}>
+              <label>speed <span className={styles.v}>{ui.speed.toFixed(2)}</span>
+                <input
+                  type="range" min="0" max="3" step="0.05"
+                  value={ui.speed}
+                  onChange={(e) => updateSlider('speed', parseFloat(e.target.value))}
+                  aria-label="Speed"
+                />
+              </label>
+            </div>
+            <div className={styles.sl}>
+              <label>contrast <span className={styles.v}>{ui.contrast.toFixed(2)}</span>
+                <input
+                  type="range" min="0.4" max="2.4" step="0.05"
+                  value={ui.contrast}
+                  onChange={(e) => updateSlider('contrast', parseFloat(e.target.value))}
+                  aria-label="Contrast"
+                />
+              </label>
+            </div>
           </div>
-          <div className={styles.sl}>
-            <label>complexity <span className={styles.v}>{ui.centers.toFixed(0)}</span>
-              <input
-                type="range" min="1" max="6" step="1"
-                value={ui.centers}
-                onChange={(e) => updateSlider('centers', parseInt(e.target.value, 10))}
-                aria-label="Complexity"
-              />
-            </label>
-          </div>
-          <div className={styles.sl}>
-            <label>speed <span className={styles.v}>{ui.speed.toFixed(2)}</span>
-              <input
-                type="range" min="0" max="3" step="0.05"
-                value={ui.speed}
-                onChange={(e) => updateSlider('speed', parseFloat(e.target.value))}
-                aria-label="Speed"
-              />
-            </label>
-          </div>
-          <div className={styles.sl}>
-            <label>contrast <span className={styles.v}>{ui.contrast.toFixed(2)}</span>
-              <input
-                type="range" min="0.4" max="2.4" step="0.05"
-                value={ui.contrast}
-                onChange={(e) => updateSlider('contrast', parseFloat(e.target.value))}
-                aria-label="Contrast"
-              />
-            </label>
-          </div>
-        </div>
+        )}
 
-        <div className={styles['ctrl-foot']}>
-          <span className={styles.note}>Drag the master slider to traverse the curriculum.</span>
+        <div className={`${styles['ctrl-foot']}${lite ? ' ' + styles.lite : ''}`}>
+          {!lite && <span className={styles.note}>Drag the master slider to traverse the curriculum.</span>}
           <span className={styles['btn-row']}>
             <button type="button" onClick={handlePauseToggle}>{ui.paused ? 'Resume' : 'Pause'}</button>
-            <button type="button" onClick={handleReset}>Reset</button>
+            {!lite && <button type="button" onClick={handleReset}>Reset</button>}
           </span>
         </div>
       </div>

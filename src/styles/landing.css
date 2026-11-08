@@ -14,7 +14,7 @@
   /* minmax(0, …fr) — bare fr tracks grow to content min-content; a single
      wide child (the cube ticks were one) silently pushes the whole hero
      past the viewport, clipped by the body's overflow-x: hidden. */
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 64px;
   align-items: center;
   min-height: 78vh;
@@ -28,83 +28,79 @@
   }
 }
 
+/* LP-1: the headline in the /workshops voice (sans 800, upper case, yellow
+   mark), the lede in serif italic (L-b), a signed byline under the actions
+   (AU-1) and a one-line facts row (FL-1). */
 .cover-title {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(52px, 7vw, 96px);
-  line-height: 0.98;
+  font-family: var(--sans);
+  font-weight: 800;
+  text-transform: uppercase;
   letter-spacing: -0.02em;
-  margin: 0 0 28px;
+  line-height: 1.04;
+  font-size: clamp(42px, min(5.2vw, 7.6vh), 80px);
+  font-size: clamp(42px, min(5.2vw, 7.6svh), 80px);
+  margin: 0 0 24px;
+  color: var(--fg);
   text-wrap: balance;
 }
 
-.cover-title .px {
-  color: var(--c1);
+.cover-title .cover-mark {
+  background: var(--ws-yellow);
+  color: var(--ws-on-yellow);
+  padding: 0 0.12em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
-.cover-title .it {
+.cover-sub {
+  font-family: var(--serif);
   font-style: italic;
-  color: var(--c3);
+  font-size: clamp(19px, 1.8vw, 23px);
+  line-height: 1.45;
+  color: var(--fg-2);
+  max-width: 32ch;
+  margin: 0 0 30px;
   font-weight: 400;
 }
 
-.cover-title .am {
-  color: var(--fg);
-  font-weight: 400;
+.cover-facts {
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  line-height: 1.7;
+  margin: 22px 0 0;
 }
 
-/* Eyebrow as author + affiliation (a paper's title page): the name in the
-   serif at 16px, "Burak" italic, "Kağan" (the name the author goes by)
-   bold italic, "Yılmazer" roman; the thesis context below in the mono
-   label style. One accent only: the amber rule, aligned with the name. */
-.cover .eyebrow {
-  align-items: flex-start;
+.cover-facts span { white-space: nowrap; }
+
+.cover-by {
+  margin: 22px 0 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--fg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
 }
 
-.cover .eyebrow::before {
-  margin-top: 0.8em;
-}
-
-.cover .eyebrow .eb-name {
-  display: block;
+.cover-by .nm {
   font-family: var(--serif);
   font-size: 16px;
-  line-height: 1.3;
   letter-spacing: 0;
   text-transform: none;
   color: var(--fg);
 }
 
-.cover .eyebrow .eb-name .given {
-  font-style: italic;
-  color: var(--fg-2);
-}
-
-.cover .eyebrow .eb-name .called {
-  font-style: italic;
-  font-weight: 600;
-}
-
-.cover .eyebrow .eb-aff {
-  display: block;
-  margin-top: 4px;
-}
-
-.cover-lead {
-  font-family: var(--serif);
-  font-size: 21px;
-  line-height: 1.55;
-  color: var(--fg-2);
-  max-width: 56ch;
-  margin: 0 0 40px;
-  font-weight: 400;
-}
-
-.cover-lead em {
-  color: var(--fg);
-  font-style: italic;
-  font-weight: 400;
-}
+.cover-by .nm b { font-style: italic; font-weight: 600; }
+.cover-by .nw,
+.cover-meta .nw { white-space: nowrap; }
 
 .cover-meta {
   font-family: var(--mono);
@@ -144,12 +140,6 @@
   .cover-meta {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-/* The 52px clamp floor crowds a 360px screen; step the display size down
-   one notch while keeping the serif/line-height identity. */
-@media (max-width: 480px) {
-  .cover-title { font-size: 38px; }
 }
 
 .cover-actions {
@@ -195,8 +185,8 @@
   .cover {
     --cover-pad-y: clamp(20px, 3.5vh, 56px);
     --cover-pad-y: clamp(20px, 3.5svh, 56px);
-    --plate-min: 630px;
-    --plate-max: 880px;
+    --plate-min: 520px;
+    --plate-max: 640px;
     padding-top: var(--cover-pad-y);
     padding-bottom: var(--cover-pad-y);
     min-height: calc(100vh - var(--frame-h));
@@ -204,25 +194,22 @@
     gap: clamp(40px, 4vw, 64px);
   }
 
-  .cover .eyebrow { margin-bottom: clamp(14px, 2.4svh, 28px); }
+  .cover-title { margin-bottom: clamp(14px, 2.4svh, 24px); }
 
-  .cover-title {
-    font-size: clamp(46px, min(7vw, 8.5vh), 96px);
-    font-size: clamp(46px, min(7vw, 8.5svh), 96px);
-    margin-bottom: clamp(14px, 2.4svh, 28px);
+  .cover-sub { margin-bottom: clamp(16px, 3svh, 30px); }
+
+  /* CS: smaller cards (78 px tall), columns sized to their content. */
+  .cover-meta {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    margin-bottom: clamp(16px, 3svh, 28px);
   }
-
-  .cover-lead {
-    font-size: clamp(17px, 2.2svh, 21px);
-    margin-bottom: clamp(14px, 3svh, 40px);
-  }
-
-  .cover-meta { margin-bottom: clamp(12px, 2.6svh, 36px); }
-  .cover-meta > div { padding: clamp(8px, 1.2svh, 12px) 14px; }
+  .cover-meta > div { padding: 8px 10px; }
+  .cover-meta b { font-size: 10px; letter-spacing: 0.06em; margin-bottom: 2px; white-space: nowrap; }
+  .cover-meta span { font-size: 14px; line-height: 1.35; }
 
   .cube-plate {
-    height: clamp(var(--plate-min), calc(100vh - var(--frame-h) - 2 * var(--cover-pad-y)), var(--plate-max));
-    height: clamp(var(--plate-min), calc(100svh - var(--frame-h) - 2 * var(--cover-pad-y)), var(--plate-max));
+    height: clamp(var(--plate-min), calc(100vh - var(--frame-h) - 2 * var(--cover-pad-y) - 40px), var(--plate-max));
+    height: clamp(var(--plate-min), calc(100svh - var(--frame-h) - 2 * var(--cover-pad-y) - 40px), var(--plate-max));
     display: flex;
     flex-direction: column;
     padding-top: clamp(14px, 2svh, 24px);
@@ -252,12 +239,14 @@
   }
   .cover-actions {
     order: 1;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
   .cover-meta {
     order: 2;
     margin-bottom: 0;
   }
+  .cover-facts { order: 2; margin-top: 14px; }
+  .cover-by { order: 3; }
 }
 
 /* Phone type/spacing for the cover lives in the "Phone rhythm" block
@@ -268,9 +257,10 @@
    shadow, bold mono caps, 44 px tall. Hover lifts, press sinks into the
    page. Colour comes only from the variables below; the tokens live in
    tokens.css ("Actions · buttons").
-     .btn.btn-pri               blue primary (curriculum, cover, 404)
+     .btn.btn-pri               blue primary (curriculum sections, 404; the cover uses ink)
      .btn-pri.btn-workshop      pink primary (workshop tickets, interest)
      .btn-pri.btn-exhibition    ink primary (the exhibition)
+     .btn-sec.btn-shadow-studio paper with a pink shadow (cover workshops)
      .btn-pri.btn-signup        yellow primary (announce / sign-up)
      .btn.btn-sec               secondary (paper; outline in dark)
    .btn-ghost is an alias of .btn.btn-sec. The workshop brand's .ws-btn
@@ -362,6 +352,14 @@
   --btn-on: var(--bg);
   --btn-fill-hover: var(--fg);
   --btn-line: var(--bg);
+}
+
+/* BC-3: paper button with the workshops pink only in its hard shadow. */
+.btn-sec.btn-shadow-studio {
+  --btn-drop: var(--studio);
+  --btn-shadow: 4px;
+  --btn-line: var(--fg);
+  --btn-fill: var(--bg);
 }
 
 .btn-pri.btn-signup {
@@ -1085,17 +1083,16 @@
     padding-bottom: 48px;
     gap: 36px;
   }
-  .cover .eyebrow { margin-bottom: 18px; }
   .cover-title { margin-bottom: 18px; }
-  /* 17px (not 18) plus the CTA reorder above keeps both buttons on the
-     first screen down to a 360×640 phone. */
-  .cover-lead {
-    font-size: 17px;
+  /* 19px plus the CTA reorder above keeps both buttons on the first screen
+     down to a 360×640 phone. */
+  .cover-sub {
+    font-size: 19px;
     margin-bottom: 24px;
   }
   .cover-actions { margin-bottom: 28px; }
-  /* The stat grid is the cover's last item on phones (see the ≤960px
-     reorder), so it carries no bottom margin. */
+  /* The stat line and the byline follow the buttons (see the ≤960px
+     reorder); the stat grid carries no bottom margin. */
   .cover-meta { margin-bottom: 0; }
 
   .section {
@@ -2742,8 +2739,6 @@ a.mx-link:hover .mx-t { text-decoration: underline; text-underline-offset: 3px; 
    Phone-only rules for the home page and the shared chrome. The
    text floor (M-15) is the --fs-min token in tokens.css.
    ============================================================ */
-.lead-short { display: none; }
-
 @media (max-width: 640px) {
   /* M-1: no cube on phones (the island loads with client:media). */
   .cube-plate { display: none; }
@@ -2770,10 +2765,6 @@ a.mx-link:hover .mx-t { text-decoration: underline; text-underline-offset: 3px; 
     letter-spacing: .06em;
     color: var(--fg-3);
   }
-
-  /* M-3: the one-sentence lead. */
-  .lead-long { display: none; }
-  .lead-short { display: inline; }
 
   /* M-7: the series link in the § 2 lead repeats the CTA below it. */
   #workshops .section-desc .desc-link { display: none; }
