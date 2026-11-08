@@ -3,8 +3,9 @@
  * module's best real lesson output, reprinted as a one-ink riso print in its
  * path colour. Images are 480 x 300 WebP in public/curriculum-covers/, made
  * from workshop-planning/review/curriculum-covers-2026-10-28/render_covers.py.
- * Modules without a live lesson (00, 07, 13, 14, 15) have no entry: they show
- * their planned sub-topics as type instead of a picture.
+ * Modules without a live lesson (00, 13, 15) have no entry: they show their
+ * planned sub-topics as type instead of a picture. 07 and 14 are planned but
+ * carry a cover of the project's own work (ownCover in modules.ts).
  */
 export interface ModuleCover {
   src: string;
@@ -32,6 +33,9 @@ export const COVERS: Record<string, ModuleCover> = {
   '10': cover('10', 'Riso print of the TouchDesigner node network output from lesson 10.1.1'),
   '11': cover('11', 'Riso print of the face triangulation from lesson 11.2.3'),
   '12': cover('12', 'Riso print of the DreamBooth style grid from lesson 12.5.1'),
+  // Planned modules with an own-work cover (ownCover in modules.ts), not a lesson output.
+  '07': cover('07', 'Orbit Sediment, a print by Burak Kağan Yılmazer, in blue ink'),
+  '14': cover('14', 'Metabolic Rate, a data piece by Burak Kağan Yılmazer, printed in pink ink'),
 };
 
 /** Short forms of the planned sub-topics (subtopics.ts) for the modules that

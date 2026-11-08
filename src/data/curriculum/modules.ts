@@ -27,6 +27,9 @@ export interface ModuleEntry {
   /** One plain line under the module title in the home curriculum panel (H-c):
    *  what the module teaches. Draft copy, for Kağan's review. */
   teaches: string;
+  /** True when a planned module (no live lesson) shows a cover of the project's own
+   *  work (covers.ts has the entry). Without it, a cover needs a live lesson (MC3). */
+  ownCover?: boolean;
 }
 
 export const MODULES: ModuleEntry[] = [
@@ -37,14 +40,14 @@ export const MODULES: ModuleEntry[] = [
   { idx: '04', title: 'Fractals',          em: '& Recursion',         fw: 'F1+F2', cycle: 'I',   firstLesson: '4.1.1', teaches: 'Recursion: one rule repeated at every scale.' },
   { idx: '05', title: 'Simulation',        em: 'Emergent Behavior',   fw: 'F1',    cycle: 'I',   firstLesson: '5.1.1', teaches: 'Simulate many simple agents and let behaviour emerge.' },
   { idx: '06', title: 'Noise',             em: '& Procedural Gen.',   fw: 'F1',    cycle: 'II',  firstLesson: '6.1.1', name: 'Noise & Procedural Generation', teaches: 'Smooth randomness for terrain, clouds and textures.' },
-  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II', teaches: 'Classical machine learning on images: clustering, classification, reduction, statistics.' },
+  { idx: '07', title: 'Classical ML',      em: 'on Images',           fw: 'F2',    cycle: 'II', ownCover: true, teaches: 'Classical machine learning on images: clustering, classification, reduction, statistics.' },
   { idx: '08', title: 'Animation',         em: '& Time',              fw: 'F1',    cycle: 'II',  firstLesson: '8.1.1', teaches: 'Add time: turn image operations into looping animations.' },
   { idx: '09', title: 'Neural',            em: 'Networks',            fw: 'F2',    cycle: 'II',  firstLesson: '9.1.1', teaches: 'Neural networks from a single neuron up to CNNs and RNNs.' },
   { idx: '10', title: 'Touch',             em: 'Designer',            fw: 'F2',    cycle: 'II',  firstLesson: '10.1.1', name: 'TouchDesigner', teaches: 'Real-time visuals with node networks in TouchDesigner.' },
   { idx: '11', title: 'Interactive',       em: 'Systems',             fw: 'F1',    cycle: 'II',  firstLesson: '11.1.1', teaches: 'Camera input for live, interactive pieces.' },
   { idx: '12', title: 'Generative AI',     em: 'Models',              fw: 'F2',    cycle: 'III', firstLesson: '12.1.1', teaches: 'Generative models: GANs, VAEs, diffusion and transformers.' },
   { idx: '13', title: 'AI +',              em: 'TouchDesigner',       fw: 'F2',    cycle: 'III', teaches: 'Run AI models live inside TouchDesigner.' },
-  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III', teaches: 'Data as material: images, sound and objects from data.' },
+  { idx: '14', title: 'Data',              em: 'as Material',         fw: 'F1',    cycle: 'III', ownCover: true, teaches: 'Data as material: images, sound and objects from data.' },
   { idx: '15', title: 'Capstone',          em: 'Project',             fw: 'F3',    cycle: 'III', capstone: true, teaches: 'Your own project, built from all three paths.' },
 ];
 
