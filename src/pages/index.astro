@@ -14,6 +14,12 @@ import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
 import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
+// Fonts the cover paints with (headline, serif lede, stat values, mono stat labels). Their late swap-in
+// re-wraps the cover and moves the actions (CLS), so fetch them at once; same files the font CSS points to.
+import sansFontUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
+import serifFontUrl from '@fontsource-variable/literata/files/literata-latin-standard-normal.woff2?url';
+import serifItalicFontUrl from '@fontsource-variable/literata/files/literata-latin-standard-italic.woff2?url';
+import monoFontUrl from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 // Entity graph for the homepage: a named author (Person) and the project
 // (Organization) cross-linked by @id, then referenced as the author/provider of
@@ -121,6 +127,10 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
   onLanding={true}
   jsonLd={siteJsonLd}
 >
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={sansFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={serifFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={serifItalicFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={monoFontUrl} crossorigin />
   <main id="main-content">
   <!-- ========== COVER ========== -->
   <header class="cover">
