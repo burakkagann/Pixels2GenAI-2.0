@@ -121,6 +121,9 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImageUrl} />
 
+  {/* Optional per-page extras (e.g. a font preload), see /workshops. */}
+  <slot name="head" />
+
   {jsonLdBlocks.map((block) => (
     <script type="application/ld+json" set:html={JSON.stringify(block)} />
   ))}
