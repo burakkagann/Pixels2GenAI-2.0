@@ -48,13 +48,14 @@ import Footer from '@/components/chrome/Footer.astro';
             Netlify, Inc. <span class="arr">↗</span>
           </a>
           (San Francisco, USA). When you open a page, your browser sends a
-          request that Netlify's servers necessarily receive and briefly log:
+          request that Netlify's servers necessarily receive and log:
           your IP address, the page requested, the date and time, the
           referring page, and your browser and operating system. Netlify uses
-          these logs to deliver the site and to keep it secure, deletes them
-          after a short period, and processes them on our behalf under a data
-          processing agreement. Netlify participates in the EU–US Data Privacy
-          Framework. The legal basis is our legitimate interest in delivering
+          these logs to deliver the site and to keep it secure, and processes
+          them on our behalf under its data processing agreement. That
+          agreement says Netlify keeps its system logs online for 90 days and
+          offline for one year; we cannot change this. Netlify participates in
+          the EU–US Data Privacy Framework. The legal basis is our legitimate interest in delivering
           a working, secure website (Art. 6(1)(f) GDPR).
         </p>
       </section>
@@ -65,8 +66,8 @@ import Footer from '@/components/chrome/Footer.astro';
           If you sign up for announcements, we store the email address you
           provide, optionally your name, your topic choice (workshops,
           exhibitions, or both), and any free-text note you leave. The sole
-          purpose is to send you one announcement email when a matching
-          event is confirmed. The legal basis is your consent
+          purpose is to email you when a matching event is confirmed or its
+          tickets open. The legal basis is your consent
           (Art. 6(1)(a) GDPR), given by submitting the form.
         </p>
       </section>
@@ -93,8 +94,9 @@ import Footer from '@/components/chrome/Footer.astro';
           <a href="https://automattic.com/privacy/" target="_blank" rel="noopener">
             Akismet <span class="arr">↗</span>
           </a>
-          (Automattic Inc., USA). No one else receives your data, and we
-          never share or sell it.
+          (Automattic Inc., USA). When we send an announcement, your address
+          passes through our mailbox at Zoho Mail (see Workshop emails below).
+          No one else receives your data, and we never share or sell it.
         </p>
       </section>
 
@@ -114,8 +116,9 @@ import Footer from '@/components/chrome/Footer.astro';
             we remove you promptly.
           </li>
           <li>
-            You may request access to, correction of, or deletion of your
-            data (Art. 15–17 GDPR).
+            You may request access to, correction or deletion of your data,
+            restriction of its processing, and a copy in a portable format
+            (Art. 15–18 and 20 GDPR).
           </li>
           <li>
             You may withdraw consent at any time with effect for the
@@ -143,11 +146,14 @@ import Footer from '@/components/chrome/Footer.astro';
           <a href="https://umami.is/" target="_blank" rel="noopener">
             Umami <span class="arr">↗</span>
           </a>, a cookieless analytics service run by Umami Software, Inc.
-          (USA), with the data stored in its EU region (Germany). For each
-          page visit it records the page, the referring site, your browser,
-          operating system, device type and screen size, and your country,
-          region and city, which are derived from your IP address. The IP
-          address itself is not stored. To count visits rather than page
+          (USA), with the analytics data stored in its EU region; delivery,
+          security and support may involve services outside the EU. For each
+          page visit it records the page and its title, the referring site,
+          your browser, operating system, language, device type and screen
+          size, and your country, region and city, which are derived from your
+          IP address. The IP address itself is not stored in the analytics
+          records; Umami and its infrastructure providers may also record it
+          in operational and security logs. To count visits rather than page
           views, Umami forms a visit identifier from your IP address and
           browser details combined with a secret value that changes every
           month, so the identifier cannot be traced back to you and visits
@@ -206,8 +212,9 @@ import Footer from '@/components/chrome/Footer.astro';
             Luma <span class="arr">↗</span>
           </a>
           (Luma Labs, Inc., USA) for single tickets. When you buy, the shop
-          collects your name, your email address, your answers to the questions
-          at checkout (age confirmation, laptop, how you heard about the
+          collects your name, your email address and, if you ask for a full
+          invoice, your billing address, your answers to the questions at
+          checkout (age confirmation, laptop, how you heard about the
           workshop) and, if you give it, a phone number for changes on the day.
           Card payments are handled by Stripe; we never see your card details.
         </p>
@@ -273,7 +280,7 @@ import Footer from '@/components/chrome/Footer.astro';
       </section>
 
       <p class="privacy-foot">
-        Last revised October 2026 · Pixels2GenAI · Pressmark P2GA-r
+        Last revised November 2026 · Pixels2GenAI · Pressmark P2GA-r
       </p>
     </article>
   </main>
