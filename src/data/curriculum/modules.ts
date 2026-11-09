@@ -33,7 +33,7 @@ export interface ModuleEntry {
 }
 
 export const MODULES: ModuleEntry[] = [
-  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I', teaches: 'What generative art is, how algorithms, ML and AI relate, and a working Python setup.' },
+  { idx: '00', title: 'Foundations',       em: '& Definitions',       fw: 'F2',    cycle: 'I',   firstLesson: '0.1', teaches: 'What generative art is, how algorithms, ML and AI relate, and a working Python setup.' },
   { idx: '01', title: 'Pixel',             em: 'Fundamentals',        fw: 'F1',    cycle: 'I',   firstLesson: '1.1.1', teaches: 'An image is a grid of numbers: write colour, randomness and structure pixel by pixel.' },
   { idx: '02', title: 'Geometry',          em: '& Mathematics',       fw: 'F1',    cycle: 'I',   firstLesson: '2.1.1', teaches: 'Draw with maths: lines and shapes, coordinate fields, polar curves.' },
   { idx: '03', title: 'Transformations',   em: '& Effects',           fw: 'F1',    cycle: 'I',   firstLesson: '3.1.1', teaches: 'Move, warp, mask and filter real photos.' },

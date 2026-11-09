@@ -3,7 +3,7 @@
  * module's best real lesson output, reprinted as a one-ink riso print in its
  * path colour. Images are 480 x 300 WebP in public/curriculum-covers/, made
  * from workshop-planning/review/curriculum-covers-2026-10-28/render_covers.py.
- * Modules without a live lesson (00, 13, 15) have no entry: they show their
+ * Modules without a live lesson (13, 15) have no entry: they show their
  * planned sub-topics as type instead of a picture. 07 and 14 are planned but
  * carry a cover of the project's own work (ownCover in modules.ts).
  */
@@ -22,6 +22,7 @@ const cover = (idx: string, alt: string): ModuleCover => ({
 });
 
 export const COVERS: Record<string, ModuleCover> = {
+  '00': cover('00', 'Riso print of the fifty-point line web from lesson 0.1'),
   '01': cover('01', 'Riso print of the Richter-style random colour grid from lesson 1.2.1'),
   '02': cover('02', 'Riso print of the harmonograph curve from lesson 2.3.3'),
   '03': cover('03', 'Riso print of the swirl distortion from lesson 3.1.3'),
@@ -41,7 +42,6 @@ export const COVERS: Record<string, ModuleCover> = {
 /** Short forms of the planned sub-topics (subtopics.ts) for the modules that
  *  have no live lesson yet, sized to fit the 16:10 tile. */
 export const PLANNED_TOPICS: Record<string, string[]> = {
-  '00': ['What is generative art', 'AI, ML, algorithms', 'Setup'],
   '07': ['Clustering', 'Classification', 'Dimensionality reduction', 'Statistics'],
   '13': ['ML models in TD', 'Real-time AI effects', 'Generative models live', 'Hybrid pipelines'],
   '14': ['Data sources', 'Visualisation', 'Sonification', 'Data sculptures'],

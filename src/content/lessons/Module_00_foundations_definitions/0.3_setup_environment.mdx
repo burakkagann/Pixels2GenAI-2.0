@@ -1,0 +1,485 @@
+---
+module: "M 00"
+cycle: "I"
+title: "Setup & Environment"
+objective: "Know what the course needs and when, then set up Python on your own computer and prove that it works."
+description: "Modules 0 to 8 run in your browser. Set up Python 3.11 and a virtual environment for the exercises where you edit code, with a script that checks it."
+framework: "hands-on"
+duration: "20–25 min"
+published: 2025-10-27
+level: "beginner"
+load: "3 core concepts"
+prereqs: "None"
+prev:
+  slug: "0.2"
+  title: "Defining AI, ML & Algorithms"
+next:
+  slug: "1.1.1"
+  title: "Images as Arrays & RGB"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Overview
+
+You may need less than you expect. In Modules 0 to 8, a lesson's Run button runs its script inside your browser, so reading and running need no install at all [1]. You need Python on your computer when you want to edit a script, which is what the Modify and Create exercises ask for, and later modules need more.
+
+| To do this | You need |
+|---|---|
+| Read any lesson; press Run in Modules 0 to 8 | A browser |
+| Edit and write scripts, in any module | Python and the core kit |
+| Module 10 | TouchDesigner as well |
+| Module 11 | The camera kit as well, and a webcam |
+| Module 12 | The model kit as well. A GPU helps a lot |
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/what_each_stage_needs.png"
+  alt="A chart with one row per tool across modules 0 to 12. The browser row covers modules 0 to 8, Python and the core kit cover all of them, TouchDesigner covers module 10, the camera kit module 11, and the model kit module 12."
+  caption="What each stage of the course asks for. Install a kit when you reach its module, not before. Later modules state what they need."
+  num={1}
+  role="diagram"
+/>
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Decide what you need to install now, and what can wait.</li>
+  <li>Create a virtual environment for the course, and say why it helps.</li>
+  <li>Install packages from a requirements file and check that they work.</li>
+  <li>Run, change and write a script on your own computer.</li>
+</ol>
+
+## Quick start — try it on this page <a id="quick-start"></a>
+
+Press Run. This script reports its Python version and makes an image, with nothing installed.
+
+<CodeBlock lang="python" file="0.3_quick_start.py">
+```python
+"""
+A first script: report which Python is running, then make and save one image.
+
+Author: Pixels2GenAI Project
+"""
+import sys
+
+import numpy as np
+from PIL import Image
+
+print(f"Python {sys.version.split()[0]}, NumPy {np.__version__}")
+
+# An image is a grid of numbers. This one holds 256 greys, dark on the left.
+gradient = np.linspace(0, 255, 256, dtype=np.uint8)
+image = np.tile(gradient, (80, 1))
+
+Image.fromarray(image).save("first_image.png")
+print("Saved first_image.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_quick_start.py" label="0.3_quick_start.py — this script" />
+
+The first press takes a few seconds while your browser fetches Python. That copy of Python belongs to the page, so the version it prints may be newer than the 3.11 you would install below. If all you want for now is to read and run, you can stop here and go on to [lesson 1.1.1](/lessons/1.1.1).
+
+## Part 1 — Install Python 3.11 <a id="part-1"></a>
+
+The course's scripts are tested on Python 3.11, and every kit below installs on it. Version 3.11.9 is the last 3.11 release with installers for Windows and macOS [2], and 3.11 is due to receive security fixes until about October 2027 [3].
+
+1. Open the [Python 3.11.9 download page](https://www.python.org/downloads/release/python-3119/) and pick the installer for your system. The page points you to newer 3.11 releases, but those come as source code only, so stay on 3.11.9.
+2. On Windows, tick **Add python.exe to PATH** on the installer's first screen.
+3. On Linux, use your package manager or a version manager such as pyenv, since this release offers no Linux installer. Debian and Ubuntu may also need the `python3.11-venv` package for the next step.
+4. Open a new terminal (PowerShell on Windows, Terminal on macOS) and check the version with `py -3.11 --version` on Windows or `python3.11 --version` on macOS and Linux.
+
+It should print a version starting with 3.11. You can keep other Python versions installed alongside it.
+
+## Part 2 — A folder and a virtual environment <a id="part-2"></a>
+
+Packages installed into your computer's main Python can clash with other programs that rely on different versions. A virtual environment avoids that: it is a folder with its own Python and its own packages [4]. What you install for this course stays inside it, and if anything goes wrong you can delete the folder and start again.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/what_a_venv_keeps_apart.png"
+  alt="A diagram of a computer containing the system Python, left alone, and a course folder. The course folder holds a .venv folder with its own Python and packages, next to your scripts and images."
+  caption="The course's packages stay in .venv, inside your course folder."
+  num={2}
+  role="diagram"
+/>
+
+Run these once. On Windows, in PowerShell:
+
+<CodeBlock lang="powershell">
+```powershell
+mkdir pixels2genai
+cd pixels2genai
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+</CodeBlock>
+
+On macOS or Linux:
+
+<CodeBlock lang="bash">
+```bash
+mkdir pixels2genai
+cd pixels2genai
+python3.11 -m venv .venv
+source .venv/bin/activate
+```
+</CodeBlock>
+
+Your prompt now starts with `(.venv)`. Each time you open a new terminal, `cd` into the folder and run the last line again.
+
+<Dropdown summary="Windows says running scripts is disabled">
+
+PowerShell blocks scripts by default on some computers. Python's documentation gives this command, which allows local scripts for your user account [4]. Run it once, then activate again:
+
+<CodeBlock lang="powershell">
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+</CodeBlock>
+
+</Dropdown>
+
+## Part 3 — Install what you need <a id="part-3"></a>
+
+A requirements file lists packages for pip to install in one go [5]. Download the core kit, move the file from your Downloads folder into `pixels2genai`, then run the command below with `(.venv)` showing. It downloads about 125 MB, so allow a few minutes.
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_requirements-core.txt" label="0.3_requirements-core.txt — core kit" />
+
+<CodeBlock lang="bash">
+```bash
+python -m pip install -r 0.3_requirements-core.txt
+```
+</CodeBlock>
+
+That covers NumPy for arrays [6], Pillow for images [7], and the other packages the scripts in Modules 0 to 10 import. Leave the rest until you reach their modules:
+
+- **Module 10:** [TouchDesigner](https://derivative.ca/download). Its free Non-Commercial licence allows learning work, with a resolution limit; check the current terms on Derivative's page [8].
+- **Module 11:** the camera kit, for lessons that read a webcam.
+- **Module 12:** the model kit, which is large. For an NVIDIA GPU, use the [PyTorch selector](https://pytorch.org/get-started/locally/) in place of this file [9].
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_requirements-camera.txt" label="0.3_requirements-camera.txt — camera kit" />
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_requirements-models.txt" label="0.3_requirements-models.txt — model kit" />
+
+If something goes wrong, these are the usual causes:
+
+| What you see | What it means | What to do |
+|---|---|---|
+| `python` or `py` is not recognised | Python is not on your PATH | Run the installer again, choose **Modify**, and on Advanced Options tick **Add Python to environment variables** |
+| `No module named numpy` | The environment is not active | Check for `(.venv)`, then activate it |
+| `No such file or directory` | The file or the terminal is in another folder | Move the file into `pixels2genai`, then `cd` there |
+| A package will not install | Often the wrong Python version | Run `python --version` with `(.venv)` showing; it should say 3.11 |
+
+## Synthesis project <a id="synthesis"></a>
+
+<Exercise n={1} kicker="EXECUTE" title="Check your setup">
+
+Press Run to see the script work here. Then download it to your course folder and run it on your own computer with `python 0.3_check_setup.py`. The kit lines appear only on your computer.
+
+<CodeBlock lang="python" file="0.3_check_setup.py">
+```python
+"""
+Check which of the course's kits this Python can use, then save a picture to prove
+that images work. A missing kit is fine if you have not reached its modules yet.
+
+Author: Pixels2GenAI Project
+"""
+import importlib.util
+import sys
+
+import numpy as np
+from PIL import Image
+
+KITS = {
+    "Core kit (Modules 0 to 10)": ["numpy", "PIL", "matplotlib", "scipy", "imageio", "pandas", "cv2"],
+    "Camera kit (Module 11)": ["mediapipe"],
+    "Model kit (Module 12 onward)": ["torch", "torchvision", "tqdm"],
+}
+
+in_browser = sys.platform == "emscripten"
+python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+print(f"Python {sys.version.split()[0]}")
+
+if in_browser:
+    # The Run button fetches what a script imports, so there are no kits to check here.
+    print("Running on this page, in your browser. Nothing is installed on your computer.")
+else:
+    if python_version != "3.11":
+        print("Note: this course's scripts are tested on Python 3.11.")
+
+    # find_spec looks a package up without importing it. Importing the model kit
+    # would take many seconds, and we only need to know whether it is there.
+    for kit_name, package_names in KITS.items():
+        missing = [name for name in package_names if importlib.util.find_spec(name) is None]
+        if missing:
+            print(f"{kit_name}: not installed yet (missing {', '.join(missing)})")
+        else:
+            print(f"{kit_name}: ready")
+
+# The check every lesson depends on: can this Python make an image and save it?
+ramp = np.linspace(0, 1, 400)[np.newaxis, :, np.newaxis]
+teal = np.array([0, 131, 138])
+paper = np.array([243, 239, 231])
+picture = (paper + (teal - paper) * ramp) * np.ones((120, 400, 3))
+
+Image.fromarray(picture.astype(np.uint8)).save("setup_check.png")
+print("Saved setup_check.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_check_setup.py" label="0.3_check_setup.py — this script" />
+
+After the core kit, your own run should print something like this:
+
+<CodeBlock lang="text">
+```text
+Python 3.11.9
+Core kit (Modules 0 to 10): ready
+Camera kit (Module 11): not installed yet (missing mediapipe)
+Model kit (Module 12 onward): not installed yet (missing torch, torchvision, tqdm)
+Saved setup_check.png
+```
+</CodeBlock>
+
+**Reflection questions**
+
+1. Where did `setup_check.png` end up on your computer?
+2. Why doesn't the script import every package to test it?
+3. Are the "not installed yet" lines a problem?
+
+<Dropdown summary="Answers">
+
+1. In the folder your terminal was in when you ran the script. Scripts in this course save there unless you tell them otherwise.
+2. Importing PyTorch alone can take several seconds, and the script only needs to know whether a package is present. `importlib.util.find_spec` looks it up without loading it.
+3. No. They only tell you that those kits are not installed, which is what you want until you reach Modules 11 and 12.
+
+</Dropdown>
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/setup_check.png"
+  alt="A horizontal fade from off-white on the left to teal on the right."
+  caption="The image the script saves. If you can open it, your setup can make and save images."
+  num={3}
+  role="output"
+/>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Your own test card">
+
+Open this script in any text editor (VS Code is a popular free choice) and change the CONFIG values. Save, run, and open the image each time.
+
+<CodeBlock lang="python" file="0.3_exercise2.py">
+```python
+"""
+A test card: a two-colour fade whose size, colours and file name you control.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: change these values ==========
+WIDTH = 400                     # Pixels across
+HEIGHT = 200                    # Pixels down
+COLOUR_LEFT = (0, 131, 138)     # Red, green, blue, each from 0 to 255
+COLOUR_RIGHT = (243, 239, 231)  # The colour the fade ends on
+OUTPUT_FILE = "test_card.png"   # Saved in the folder you run this script from
+# =================================================
+
+left = np.array(COLOUR_LEFT)
+right = np.array(COLOUR_RIGHT)
+
+# How far along the fade each column is, from 0 at the left to 1 at the right.
+position = np.linspace(0, 1, WIDTH)[:, np.newaxis]
+one_row = left + (right - left) * position
+
+# Repeat that row until the picture is HEIGHT rows tall.
+picture = np.tile(one_row, (HEIGHT, 1, 1))
+
+Image.fromarray(picture.astype(np.uint8)).save(OUTPUT_FILE)
+print(f"Saved {OUTPUT_FILE}, {WIDTH} by {HEIGHT} pixels")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_exercise2.py" label="0.3_exercise2.py — this script" />
+
+**Goals**
+
+1. Swap `COLOUR_LEFT` and `COLOUR_RIGHT`.
+2. Set `COLOUR_LEFT = (255, 72, 176)` and `COLOUR_RIGHT = (0, 0, 0)`.
+3. Set `WIDTH = 800` and `HEIGHT = 100`.
+4. Set `OUTPUT_FILE = "banner.png"`, then find the new file.
+
+<Dropdown summary="Goal 1 — what to expect">
+The fade runs the other way, off-white on the left and teal on the right.
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+A fade from bright pink to black. Each colour is three numbers from 0 to 255, for red, green and blue, and [lesson 1.1.1](/lessons/1.1.1) explains how they mix.
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+A long, thin banner. The script computes the fade from `WIDTH`, so it still runs smoothly from edge to edge.
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+`banner.png` appears next to `test_card.png` in your course folder, and the old image is left as it was.
+</Dropdown>
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/test_card.png"
+  alt="A horizontal fade from teal on the left to off-white on the right."
+  caption="The starting output, before you change anything."
+  num={4}
+  role="output"
+/>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Stripes">
+
+Write your first picture of your own. The canvas is a table of numbers, with one row per pixel down, one column per pixel across, and three colour numbers in each cell, so `canvas[:, x]` means every row of column `x`.
+
+<CodeBlock lang="python" file="0.3_exercise3_starter.py">
+```python
+"""
+Stripes: a first picture of your own, on your own computer. Fill in the TODOs.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+STRIPE_WIDTH = 40               # Pixels across each stripe
+COLOUR_ONE = (61, 85, 136)      # Red, green, blue, each from 0 to 255
+COLOUR_TWO = (243, 239, 231)
+# =================================================================
+
+WIDTH, HEIGHT = 800, 400
+
+# A black canvas: HEIGHT rows, WIDTH columns, three colour numbers per pixel.
+canvas = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
+
+for x in range(WIDTH):
+    # TODO 1: Work out which stripe this column belongs to.
+    # Why: columns 0 to 39 are stripe 0, columns 40 to 79 are stripe 1, and so on.
+    # Whole-number division does this: x // STRIPE_WIDTH.
+    stripe_number = 0
+
+    # TODO 2: Use COLOUR_ONE for even stripes and COLOUR_TWO for odd ones.
+    # Why: alternating is what makes them stripes. stripe_number % 2 is 0 when even.
+    colour = COLOUR_ONE
+
+    # TODO 3: Paint the whole column.
+    # Why: canvas[:, x] means "every row, in column x". Assign colour to it.
+    pass
+
+Image.fromarray(canvas).save("my_stripes.png")
+print("Saved my_stripes.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_exercise3_starter.py" label="0.3_exercise3_starter.py — starter with TODOs" />
+
+The starter runs as it is and saves a black rectangle. Your three TODOs add the stripes.
+
+<Dropdown summary="Hint 1 — the stripe number">
+`stripe_number = x // STRIPE_WIDTH`. The `//` divides and throws away the remainder.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — the colour">
+Use `if stripe_number % 2 == 0:` and an `else:`, setting `colour` in each branch.
+</Dropdown>
+
+<Dropdown summary="Hint 3 — the column">
+`canvas[:, x] = colour`
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="0.3_exercise3_solution.py">
+```python
+"""
+Stripes: a first picture of your own, on your own computer.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+STRIPE_WIDTH = 40               # Pixels across each stripe
+COLOUR_ONE = (61, 85, 136)      # Red, green, blue, each from 0 to 255
+COLOUR_TWO = (243, 239, 231)
+# =================================================================
+
+WIDTH, HEIGHT = 800, 400
+
+# A black canvas: HEIGHT rows, WIDTH columns, three colour numbers per pixel.
+canvas = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
+
+for x in range(WIDTH):
+    stripe_number = x // STRIPE_WIDTH
+
+    if stripe_number % 2 == 0:
+        colour = COLOUR_ONE
+    else:
+        colour = COLOUR_TWO
+
+    canvas[:, x] = colour
+
+Image.fromarray(canvas).save("my_stripes.png")
+print("Saved my_stripes.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/0.3_exercise3_solution.py" label="0.3_exercise3_solution.py — finished script" />
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.3_setup_environment/my_stripes.png"
+  alt="Vertical stripes alternating between dark blue and off-white."
+  caption="Output with the starter's values."
+  num={5}
+  role="output"
+/>
+
+</Dropdown>
+
+**Make It Your Own**
+
+- Change `STRIPE_WIDTH` and the colours until you have something you would put on a wall.
+- Add a third colour, using `stripe_number % 3`.
+
+</Exercise>
+
+## Summary
+
+<Admonition title="Key takeaways">
+
+- Reading and pressing Run need only a browser in Modules 0 to 8. Editing scripts needs Python.
+- Keep the course in its own folder with its own `.venv`, and activate it each time you open a terminal.
+- Install kits when you reach their modules, and rerun `0.3_check_setup.py` to confirm them.
+- Scripts save images to the folder the terminal is in.
+
+</Admonition>
+
+You are ready for [lesson 1.1.1](/lessons/1.1.1), where those numbers become colours.
+
+## References
+
+<section class="refs">
+<ol>
+<li><span class="tag">[1]</span> Pyodide contributors. (n.d.). <em>Pyodide documentation</em>. <a href="https://pyodide.org/">https://pyodide.org/</a></li>
+<li><span class="tag">[2]</span> Python Software Foundation. (2024). <em>Python 3.11.9</em>. <a href="https://www.python.org/downloads/release/python-3119/">https://www.python.org/downloads/release/python-3119/</a></li>
+<li><span class="tag">[3]</span> Galindo Salgado, P. (2021). <em>PEP 664: Python 3.11 release schedule</em>. Python Software Foundation. <a href="https://peps.python.org/pep-0664/">https://peps.python.org/pep-0664/</a></li>
+<li><span class="tag">[4]</span> Python Software Foundation. (n.d.). <em>venv: Creation of virtual environments</em>. Python documentation. <a href="https://docs.python.org/3.11/library/venv.html">https://docs.python.org/3.11/library/venv.html</a></li>
+<li><span class="tag">[5]</span> The pip developers. (n.d.). <em>Requirements file format</em>. pip documentation. <a href="https://pip.pypa.io/en/stable/reference/requirements-file-format/">https://pip.pypa.io/en/stable/reference/requirements-file-format/</a></li>
+<li><span class="tag">[6]</span> Harris, C. R., Millman, K. J., van der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., van Kerkwijk, M. H., Brett, M., Haldane, A., del Río, J. F., Wiebe, M., Peterson, P., … Oliphant, T. E. (2020). Array programming with NumPy. <em>Nature, 585</em>(7825), 357–362. <a href="https://doi.org/10.1038/s41586-020-2649-2">https://doi.org/10.1038/s41586-020-2649-2</a></li>
+<li><span class="tag">[7]</span> Clark, A., &amp; contributors. (n.d.). <em>Pillow documentation</em>. <a href="https://pillow.readthedocs.io/">https://pillow.readthedocs.io/</a></li>
+<li><span class="tag">[8]</span> Derivative. (n.d.). <em>TouchDesigner Non-Commercial</em>. <a href="https://derivative.ca/UserGuide/TouchDesigner_Non-Commercial">https://derivative.ca/UserGuide/TouchDesigner_Non-Commercial</a></li>
+<li><span class="tag">[9]</span> PyTorch Foundation. (n.d.). <em>Get started locally</em>. <a href="https://pytorch.org/get-started/locally/">https://pytorch.org/get-started/locally/</a></li>
+</ol>
+</section>

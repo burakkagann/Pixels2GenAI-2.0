@@ -10,7 +10,7 @@ Free Python lessons, from a single pixel to generative AI. You write the rule, t
 
 | Part | What it is |
 |---|---|
-| **[Lessons](https://pixels2genai.art/#curriculum)** | 15 modules and a capstone in three paths. 192 lessons planned, 71 live (7 November 2026). Each lesson has three exercises: run, modify, create. |
+| **[Lessons](https://pixels2genai.art/#curriculum)** | 15 modules and a capstone in three paths. 192 lessons planned. Each lesson has three exercises: run, modify, create. |
 | **[Research](https://pixels2genai.art/research)** | A master's thesis using design-based research. In a one-day pilot in Berlin on 12 February 2026, the mean score of the eight participants who took both tests rose from 3.6 to 12.1 out of 24. |
 | **[Workshops](https://pixels2genai.art/workshops)** | Six Saturdays in Berlin from 5 December 2026, hosted by Kristian Rother at Academis. |
 | **[Exhibition](https://pixels2genai.art/exhibitions/2026-03)** | Prints made with code, shown at IT studio Academis in Berlin on 27 and 28 March 2026. |
@@ -18,29 +18,30 @@ Free Python lessons, from a single pixel to generative AI. You write the rule, t
 
 ## What you make
 
-Three module cards per path, the first modules with live lessons. Each card opens its first lesson; a planned module opens the curriculum.
+Module cards for each path. Each card opens its first lesson; a planned module opens the curriculum.
 
 ### I · Foundations
 
 You write the rule, with NumPy and PIL. Modules 0 to 5.
 
-<a href="https://pixels2genai.art/lessons/1.1.1"><img src=".github/readme/m01-light.webp#gh-light-mode-only" width="208" alt="M 01 Pixel Fundamentals: 9 lessons, 5 live"></a><a href="https://pixels2genai.art/lessons/1.1.1"><img src=".github/readme/m01-dark.webp#gh-dark-mode-only" width="208" alt="M 01 Pixel Fundamentals: 9 lessons, 5 live"></a>
-<a href="https://pixels2genai.art/lessons/2.1.1"><img src=".github/readme/m02-light.webp#gh-light-mode-only" width="208" alt="M 02 Geometry & Mathematics: 13 lessons, 10 live"></a><a href="https://pixels2genai.art/lessons/2.1.1"><img src=".github/readme/m02-dark.webp#gh-dark-mode-only" width="208" alt="M 02 Geometry & Mathematics: 13 lessons, 10 live"></a>
-<a href="https://pixels2genai.art/lessons/3.1.1"><img src=".github/readme/m03-light.webp#gh-light-mode-only" width="208" alt="M 03 Transformations & Effects: 17 lessons, 15 live"></a><a href="https://pixels2genai.art/lessons/3.1.1"><img src=".github/readme/m03-dark.webp#gh-dark-mode-only" width="208" alt="M 03 Transformations & Effects: 17 lessons, 15 live"></a>
+<a href="https://pixels2genai.art/lessons/0.1"><img src=".github/readme/m00-light.webp#gh-light-mode-only" width="208" alt="M 00 Foundations & Definitions: 3 lessons"></a><a href="https://pixels2genai.art/lessons/0.1"><img src=".github/readme/m00-dark.webp#gh-dark-mode-only" width="208" alt="M 00 Foundations & Definitions: 3 lessons"></a>
+<a href="https://pixels2genai.art/lessons/1.1.1"><img src=".github/readme/m01-light.webp#gh-light-mode-only" width="208" alt="M 01 Pixel Fundamentals: 9 lessons"></a><a href="https://pixels2genai.art/lessons/1.1.1"><img src=".github/readme/m01-dark.webp#gh-dark-mode-only" width="208" alt="M 01 Pixel Fundamentals: 9 lessons"></a>
+<a href="https://pixels2genai.art/lessons/2.1.1"><img src=".github/readme/m02-light.webp#gh-light-mode-only" width="208" alt="M 02 Geometry & Mathematics: 13 lessons"></a><a href="https://pixels2genai.art/lessons/2.1.1"><img src=".github/readme/m02-dark.webp#gh-dark-mode-only" width="208" alt="M 02 Geometry & Mathematics: 13 lessons"></a>
+<a href="https://pixels2genai.art/lessons/3.1.1"><img src=".github/readme/m03-light.webp#gh-light-mode-only" width="208" alt="M 03 Transformations & Effects: 17 lessons"></a><a href="https://pixels2genai.art/lessons/3.1.1"><img src=".github/readme/m03-dark.webp#gh-dark-mode-only" width="208" alt="M 03 Transformations & Effects: 17 lessons"></a>
 
 ### II · Machine Learning
 
 The data writes the rule, with NumPy, PyTorch and TouchDesigner. Modules 6 to 11.
 
-<a href="https://pixels2genai.art/lessons/6.1.1"><img src=".github/readme/m06-light.webp#gh-light-mode-only" width="208" alt="M 06 Noise & Procedural Generation: 15 lessons, 1 live"></a><a href="https://pixels2genai.art/lessons/6.1.1"><img src=".github/readme/m06-dark.webp#gh-dark-mode-only" width="208" alt="M 06 Noise & Procedural Generation: 15 lessons, 1 live"></a>
-<a href="https://pixels2genai.art/lessons/8.1.1"><img src=".github/readme/m08-light.webp#gh-light-mode-only" width="208" alt="M 08 Animation & Time: 14 lessons, 5 live"></a><a href="https://pixels2genai.art/lessons/8.1.1"><img src=".github/readme/m08-dark.webp#gh-dark-mode-only" width="208" alt="M 08 Animation & Time: 14 lessons, 5 live"></a>
-<a href="https://pixels2genai.art/lessons/9.1.1"><img src=".github/readme/m09-light.webp#gh-light-mode-only" width="208" alt="M 09 Neural Networks: 12 lessons, 6 live"></a><a href="https://pixels2genai.art/lessons/9.1.1"><img src=".github/readme/m09-dark.webp#gh-dark-mode-only" width="208" alt="M 09 Neural Networks: 12 lessons, 6 live"></a>
+<a href="https://pixels2genai.art/lessons/6.1.1"><img src=".github/readme/m06-light.webp#gh-light-mode-only" width="208" alt="M 06 Noise & Procedural Generation: 15 lessons"></a><a href="https://pixels2genai.art/lessons/6.1.1"><img src=".github/readme/m06-dark.webp#gh-dark-mode-only" width="208" alt="M 06 Noise & Procedural Generation: 15 lessons"></a>
+<a href="https://pixels2genai.art/lessons/8.1.1"><img src=".github/readme/m08-light.webp#gh-light-mode-only" width="208" alt="M 08 Animation & Time: 14 lessons"></a><a href="https://pixels2genai.art/lessons/8.1.1"><img src=".github/readme/m08-dark.webp#gh-dark-mode-only" width="208" alt="M 08 Animation & Time: 14 lessons"></a>
+<a href="https://pixels2genai.art/lessons/9.1.1"><img src=".github/readme/m09-light.webp#gh-light-mode-only" width="208" alt="M 09 Neural Networks: 12 lessons"></a><a href="https://pixels2genai.art/lessons/9.1.1"><img src=".github/readme/m09-dark.webp#gh-dark-mode-only" width="208" alt="M 09 Neural Networks: 12 lessons"></a>
 
 ### III · Generative AI
 
 The model makes the image, with PyTorch. Modules 12 to 15. Lessons include the outputs of their GPU runs.
 
-<a href="https://pixels2genai.art/lessons/12.1.1"><img src=".github/readme/m12-light.webp#gh-light-mode-only" width="208" alt="M 12 Generative AI Models: 15 lessons, 15 live"></a><a href="https://pixels2genai.art/lessons/12.1.1"><img src=".github/readme/m12-dark.webp#gh-dark-mode-only" width="208" alt="M 12 Generative AI Models: 15 lessons, 15 live"></a>
+<a href="https://pixels2genai.art/lessons/12.1.1"><img src=".github/readme/m12-light.webp#gh-light-mode-only" width="208" alt="M 12 Generative AI Models: 15 lessons"></a><a href="https://pixels2genai.art/lessons/12.1.1"><img src=".github/readme/m12-dark.webp#gh-dark-mode-only" width="208" alt="M 12 Generative AI Models: 15 lessons"></a>
 <a href="https://pixels2genai.art/#curriculum"><img src=".github/readme/m13-light.webp#gh-light-mode-only" width="205" alt="M 13 AI + TouchDesigner: 12 lessons, planned"></a><a href="https://pixels2genai.art/#curriculum"><img src=".github/readme/m13-dark.webp#gh-dark-mode-only" width="205" alt="M 13 AI + TouchDesigner: 12 lessons, planned"></a>
 <a href="https://pixels2genai.art/#curriculum"><img src=".github/readme/m14-light.webp#gh-light-mode-only" width="205" alt="M 14 Data as Material: 14 lessons, planned"></a><a href="https://pixels2genai.art/#curriculum"><img src=".github/readme/m14-dark.webp#gh-dark-mode-only" width="205" alt="M 14 Data as Material: 14 lessons, planned"></a>
 
