@@ -31,7 +31,7 @@ export const COVERS: Record<string, ModuleCover> = {
   '08': cover('08', 'Riso print of the infinite blossom still from lesson 8.2.2'),
   '09': cover('09', 'Riso print of the convolutional feature maps from lesson 9.2.2'),
   '10': cover('10', 'Riso print of the TouchDesigner node network output from lesson 10.1.1'),
-  '11': cover('11', 'Riso print of the face triangulation from lesson 11.2.3'),
+  '11': cover('11', 'Riso print of the moving ball in the webcam demo from lesson 11.1.1'),
   '12': cover('12', 'Riso print of the DreamBooth style grid from lesson 12.5.1'),
   // Planned modules with an own-work cover (ownCover in modules.ts), not a lesson output.
   '07': cover('07', 'Orbit Sediment, a print by Burak Kağan Yılmazer, in blue ink'),

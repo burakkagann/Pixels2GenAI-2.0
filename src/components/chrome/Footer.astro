@@ -19,7 +19,7 @@ const prefix = Astro.url.pathname === '/' ? '' : '/';
 
 <footer class="foot" id="colophon">
   <section class="gs" aria-label="Open source">
-    <div class="gs-strip"><b>Pixels2GenAI · Open source</b><span>▌ MIT code · CC BY 4.0 text</span></div>
+    <div class="gs-strip"><b>Pixels2GenAI · Open source</b><span>▌ MIT code · CC BY 4.0 own work</span></div>
     <div class="gs-row">
       <p class="gs-line">{lessonCount} free lessons, open source on GitHub. A star helps other learners find them.</p>
       <a
@@ -103,7 +103,7 @@ const prefix = Astro.url.pathname === '/' ? '' : '/';
     </div>
   </div>
   <div class="bottom">
-    <span>© Copyright 2026, Burak Kağan Yılmazer & Kristian Rother · MIT (code) · CC-BY 4.0 (text) · <a href="/imprint">Imprint</a> · <a href="/privacy">Privacy</a></span>
+    <span>© Copyright 2026, Burak Kağan Yılmazer & Kristian Rother · MIT (code) · CC-BY 4.0 (own text and figures; <a href={`https://github.com/${GITHUB_REPO}/blob/main/LICENSE-CONTENT.md#third-party-material`} target="_blank" rel="noopener">third-party items excepted</a>) · <a href="/imprint">Imprint</a> · <a href="/privacy">Privacy</a></span>
     <span>v2 · Pressmark P2GA-r · 2026</span>
   </div>
 </footer>

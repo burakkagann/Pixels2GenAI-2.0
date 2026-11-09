@@ -70,8 +70,8 @@ Click **Run** on the code above to compute the Fourier spectrum in your browser,
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/simple_fft_output.png"
-  alt="A side-by-side picture. Left: a black-and-white checkerboard with 16-pixel squares. Right: the FFT magnitude spectrum, mostly dark with a bright central cross and a regular lattice of bright dots radiating out, corresponding to the checkerboard's harmonics."
-  caption="Left: a checkerboard. Right: its magnitude spectrum. The dot lattice is the discrete frequencies a periodic pattern decomposes into — the lower-right dots are higher-frequency harmonics."
+  alt="A side-by-side picture. Left: a black-and-white checkerboard with 16-pixel squares. Right: the FFT magnitude spectrum, mostly dark with one bright dot at the centre and a regular lattice of small dots across the panel, corresponding to the checkerboard's harmonics."
+  caption="Left: a checkerboard. Right: its magnitude spectrum. The dot lattice is the discrete frequencies a periodic pattern decomposes into — the dots further from the centre are higher-frequency harmonics."
   num={1}
   role="output"
 />
@@ -79,7 +79,7 @@ Click **Run** on the code above to compute the Fourier spectrum in your browser,
 </Dropdown>
 
 <Admonition type="tip">
-The spectrum is *symmetric* around its centre because the input is real-valued. The bright cross through the centre comes from the DC component (mean brightness) and its low-order spatial harmonics; the off-centre dots are the higher-frequency content carrying the checkerboard's regular pattern.
+The spectrum is *symmetric* around its centre because the input is real-valued. The bright dot at the centre is the DC component (mean brightness); the off-centre dots are the checkerboard's harmonics, with higher frequencies further out.
 </Admonition>
 
 ## Core concepts
@@ -137,8 +137,8 @@ Drops both the DC and the noise tail; keeps the mid-frequency "texture" band [4]
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/frequency_effects_comparison.png"
-  alt="A two by two grid. Top-left: original photograph. Top-right: low-pass blurred version. Bottom-left: high-pass extracted edges on a near-black background. Bottom-right: band-pass result emphasising mid-frequency textures."
-  caption="The three canonical frequency filters on the same input: original, low-pass (blur), high-pass (edges), band-pass (texture)."
+  alt="A two by two grid of a synthetic starburst, eight white spokes over a soft radial glow. Top-left: the original pattern. Top-right: low-pass blurred version. Bottom-left and bottom-right: high-pass and band-pass results, the spokes as glowing shapes and thin outlines on a near-black background."
+  caption="The three canonical frequency filters on the same synthetic starburst: original, low-pass (blur), high-pass (edges), band-pass (mid frequencies)."
   num={2}
   role="output"
 />
@@ -267,6 +267,8 @@ Image.fromarray(np.hstack([img, glitched]).astype(np.uint8), 'L').save('glitch.p
 
 <Download href="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/3.4.4_glitch_art_starter.py" label="3.4.4_glitch_art_starter.py — Exercise 3 starter" />
 
+<PhotoCredit />
+
 <Dropdown summary="Hint 1 — asymmetric mask">
 
 ```python
@@ -352,8 +354,8 @@ Image.fromarray(side_by_side, 'L').save('glitch.png')
 
 <Figure
   src="/lesson-media/Module_03_transformations_effects/3.4_signal_processing/3.4.4_fourier_art/glitch_art_output.png"
-  alt="A side-by-side image. Left: the original Brandenburg Gate photograph in grayscale. Right: a glitched version where the left half looks heavily blurred and the right half shows only sharp edges, with horizontal and vertical banding artifacts visible across the picture."
-  caption="Asymmetric filtering + random glitch holes. The split between low-pass left and high-pass right reads as two layers of the same image; the holes produce horizontal banding artefacts."
+  alt="A side-by-side image of a synthetic test pattern. Left: nested white squares crossed by thin diagonal lines on black. Right: a glitched version where the squares and lines turn dim and ghosted, with horizontal and vertical banding artifacts across the picture."
+  caption="Asymmetric filtering + random glitch holes on a synthetic test pattern; the holes produce horizontal and vertical banding artefacts. Your run on `bbtor.jpg` shows the photo instead."
   num={3}
   role="output"
 />

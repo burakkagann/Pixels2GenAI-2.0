@@ -230,6 +230,7 @@ Run `3.4.1_exercise1_execute.py` (download it below, with the photo it reads). I
   caption="The same input under four kernels. The identity returns the original; the blur softens; the sharpen pops the columns and frieze; the edge detector reduces the photo to its outlines."
   num={4}
   role="output"
+  photoCredit
 />
 
 **Reflection questions**
@@ -398,6 +399,7 @@ Image.fromarray(np.clip(blurred, 0, 255).astype(np.uint8), 'L').save('gauss_blur
   caption="The 5×5 Gaussian kernel — Pascal's-triangle outer product — gives a softer, more natural blur than the box blur because the centre weight is highest and falls off radially."
   num={5}
   role="output"
+  photoCredit
 />
 
 **How it works:**

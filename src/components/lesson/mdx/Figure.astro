@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
 import { outputSize, outputSizeStyle } from '@/lib/outputSize';
+import PhotoCredit from './PhotoCredit.astro';
 
 /**
  * Lesson figure with two-axis sizing: `role` (semantic) + `size` (physical),
@@ -53,6 +54,8 @@ interface Props {
   pixelated?: boolean;
   /** Optional explicit width hint (fallback when the file can't be measured). */
   width?: number;
+  /** The figure is made from the Brandenburg Gate photo: print its credit line. */
+  photoCredit?: boolean;
 }
 
 const ROLE_SIZE: Record<FigureRole, FigureSize> = {
@@ -72,7 +75,7 @@ const SIZE_PX: Record<FigureSize, number | null> = {
   bleed: null,
 };
 
-const { src, alt, caption, num, role, size, pixelated, width } = Astro.props;
+const { src, alt, caption, num, role, size, pixelated, width, photoCredit } = Astro.props;
 
 const effectiveSize: FigureSize = size ?? (role ? ROLE_SIZE[role] : 'default');
 const sizeClass = effectiveSize !== 'default' ? effectiveSize : null;
@@ -158,10 +161,11 @@ const attrH = dims?.h;
       <img src={src} alt={alt} width={attrW} height={attrH} loading="lazy" />
     )}
   </button>
-  {(caption || num !== undefined) && (
+  {(caption || num !== undefined || photoCredit) && (
     <figcaption>
       {num !== undefined && <span class="fnum">Fig. {num}</span>}
       {caption && <Fragment set:html={inlineMarkdownHtml(caption)} />}
+      {photoCredit && <PhotoCredit />}
     </figcaption>
   )}
 </figure>
