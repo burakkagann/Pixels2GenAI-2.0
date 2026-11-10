@@ -39,7 +39,16 @@ const opens = day && new Date(day.getTime() - 28 * 86_400_000)
   </header>
 
   <figure class="sc-figure">
-    <img src={w.image.src} alt={w.image.alt} width="720" height="450" loading="lazy" decoding="async" />
+    <img
+      src={w.image.src}
+      srcset={`${w.image.src.replace('.webp', '-c360.webp')} 360w, ${w.image.src.replace('.webp', '-c540.webp')} 540w, ${w.image.src} 720w`}
+      sizes="(max-width: 640px) calc(100vw - 48px), (max-width: 1000px) 45vw, 380px"
+      alt={w.image.alt}
+      width="720"
+      height="450"
+      loading="lazy"
+      decoding="async"
+    />
     {tile && (
       <span class="sc-tile" aria-hidden="true">
         <span class="sc-tile-wd">{tile.wd}</span>

@@ -9,6 +9,9 @@ import Hero from 'p2g:workshop-brand/Hero.astro';
 import Series from 'p2g:workshop-brand/Series.astro';
 import Pilot from 'p2g:workshop-brand/Pilot.astro';
 import '@/styles/workshops.css';
+// The display face of the hero headline. Its late swap-in re-wraps the headline and
+// shifts the collage (CLS), so fetch it at once; same file the font CSS points to.
+import displayFontUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
 
 // The six-workshop series (BLD-09). Opt-in: only "true" shows it; off, the
 // page is exactly the pre-series version. Turned on once Kristian has seen
@@ -22,6 +25,7 @@ const pageDescription = series
 ---
 
 <Base title={pageTitle} description={pageDescription}>
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={displayFontUrl} crossorigin />
   <main id="main-content" class="workshops-page">
     <!-- ========== HERO ========== -->
     <Hero /> <Series /><Pilot />
