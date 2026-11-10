@@ -1,0 +1,6 @@
+# Pixels2GenAI model kit: add this for Module 12. Each lesson names any extra packages it needs.
+# This installs PyTorch's default build for your system. For an NVIDIA GPU, follow
+# the selector at https://pytorch.org/get-started/locally/ instead of this file.
+torch
+torchvision
+tqdm

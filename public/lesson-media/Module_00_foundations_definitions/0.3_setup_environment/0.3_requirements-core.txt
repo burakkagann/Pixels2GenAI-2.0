@@ -1,0 +1,9 @@
+# Pixels2GenAI core kit: enough for every script in Modules 0 to 10.
+# Install with: python -m pip install -r 0.3_requirements-core.txt
+numpy>=2.0
+pillow>=10.0
+matplotlib>=3.8
+scipy>=1.11
+imageio>=2.30
+pandas>=2.0
+opencv-python>=4.8

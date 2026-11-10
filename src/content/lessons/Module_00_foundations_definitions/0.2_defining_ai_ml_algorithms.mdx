@@ -1,0 +1,480 @@
+---
+module: "M 00"
+cycle: "I"
+title: "Defining AI, ML & Algorithms"
+objective: "Separate algorithm, machine learning and artificial intelligence by one practical question: who writes the rule?"
+description: "What algorithm, machine learning and AI each mean, how they nest, and how to tell them apart in code, using one question: who writes the rule?"
+framework: "conceptual"
+duration: "20–25 min"
+published: 2025-10-27
+level: "beginner"
+load: "4 core concepts"
+prereqs: "Lesson 0.1"
+prev:
+  slug: "0.1"
+  title: "What Is Generative Art"
+next:
+  slug: "0.3"
+  title: "Setup & Environment"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+Headlines often use "algorithm", "machine learning" and "AI" as if they were one thing. For someone making images they differ in a way you can see in the code: who writes the rule that turns input into output?
+
+You could make a gradient by writing its formula. You could also show a program thirty pixels and let it work the formula out. By the end of this lesson you will have done both, and you will be able to say which is which.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Define an algorithm, and show that a simple image script is one.</li>
+  <li>Use Mitchell's definition to say when a program is learning.</li>
+  <li>Explain how AI, machine learning, deep learning and generative models relate, and where algorithms fit.</li>
+  <li>Change a small learner, and write one that has no formula at all.</li>
+</ol>
+
+## Part 1 — Algorithm: exact steps <a id="part-1"></a>
+
+Long division is older than any computer. You follow fixed steps in a fixed order, use no judgment, and reach an answer. That is an algorithm: a finite list of exact steps from an input to an output. The word itself comes from the name of the ninth-century mathematician al-Khwarizmi [1]. This script draws a gradient, and every decision in it was made by the person who wrote it:
+
+<CodeBlock lang="python" file="0.2_part1_rule.py">
+```python
+"""
+A gradient written as an algorithm: a list of exact steps with nothing left to guess.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+WIDTH, HEIGHT = 256, 128
+
+# Step 1: start with a black canvas of the right size.
+canvas = np.zeros((HEIGHT, WIDTH), dtype=np.uint8)
+
+# Step 2: visit every pixel. Step 3: make it brighter the further right it sits.
+for y in range(HEIGHT):
+    for x in range(WIDTH):
+        canvas[y, x] = 255 * x / (WIDTH - 1)
+
+# Step 4: save the result. The same steps always give the same picture.
+Image.fromarray(canvas).save("gradient.png")
+print("Saved gradient.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/0.2_part1_rule.py" label="0.2_part1_rule.py — this script" />
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/gradient.png"
+  alt="A horizontal gradient from black on the left to white on the right."
+  caption="The output. Run the steps again and you get exactly this image."
+  num={1}
+  role="output"
+/>
+
+Algorithms reach far beyond AI: sorting a list is one, and so is the route your map app finds. The programs from [lesson 0.1](/lessons/0.1) are algorithms as well: random numbers add variety, but a person still wrote every rule.
+
+## Part 2 — Machine learning: the rule comes from examples <a id="part-2"></a>
+
+Machine learning changes who writes the rule. A widely quoted definition comes from Tom Mitchell [2]:
+
+> A computer program is said to learn from experience E with respect to some class of tasks T and performance measure P, if its performance at tasks in T, as measured by P, improves with experience E.
+
+Take the gradient. The task T is to predict a pixel's brightness from its position. The experience E is a set of pixels whose brightness is known. The measure P is the average error. A program that gets closer as it sees more pixels is learning, in this exact sense.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/who_writes_the_rule.png"
+  alt="Two flow diagrams. In the first, input and a rule go into a program, which gives output. In the second, input and examples of output go into a learning step, which gives a rule."
+  caption="The same parts, rearranged. In machine learning, the rule is what comes out. That learned rule is usually called a model."
+  num={2}
+  role="diagram"
+/>
+
+The learning step is still an algorithm, with exact steps a person wrote. The difference is that its output is a rule, and nobody typed that rule in.
+
+Learning comes in three broad kinds [3, 4]:
+
+| Kind | What the program gets | Example |
+|---|---|---|
+| Supervised | Inputs with the right answers | Predicting a pixel's brightness from examples, as in Exercise 1 |
+| Unsupervised | Inputs with no answers | Grouping an image's pixels into a palette of main colours |
+| Reinforcement | A score for the actions it tries | A program learning which moves win a game |
+
+## Part 3 — AI: the widest and most argued term <a id="part-3"></a>
+
+"Artificial intelligence" was coined for a 1955 proposal for a summer workshop at Dartmouth [5], and its meaning has been argued over ever since. A definition widely used in policy comes from the OECD [6]:
+
+> An AI system is a machine-based system that, for explicit or implicit objectives, infers, from the input it receives, how to generate outputs such as predictions, content, recommendations, or decisions that can influence physical or virtual environments.
+
+AI is wider than machine learning, because the field also includes programs built from hand-written rules. Harold Cohen's AARON, from [lesson 0.1](/lessons/0.1), drew for decades from rules he wrote himself [7]. Figure 3 shows how the terms relate.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/how_the_terms_nest.png"
+  alt="Nested ovals: artificial intelligence contains machine learning, which contains deep learning, which contains generative models. Beside them, a separate box labelled algorithms: precise steps, used at every level and well beyond AI."
+  caption="A simplified map. The inner ring shows today's deep generative models; older generative methods exist outside deep learning. Algorithms are not a ring, because they run at every level and far beyond AI."
+  num={3}
+  role="diagram"
+/>
+
+Deep learning means machine learning with many-layered neural networks [8]. A generative model learns what its training data is like and then produces new samples in that style. Latent diffusion models, the method behind Stable Diffusion, make images this way [9].
+
+This course follows the same order, and you can see the question of who writes the rule in its three paths:
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/three_paths.png"
+  alt="Three panels. Foundations, Modules 0 to 5: you write the rule. Machine Learning, Modules 6 to 11: the data writes the rule. Generative AI, Modules 12 to 15: the model makes the image."
+  caption="The three paths of Pixels2GenAI, as a broad arc. Not every module fits its line: Modules 6, 8 and 10, for example, teach noise, animation and TouchDesigner."
+  num={4}
+  role="diagram"
+/>
+
+Definitions don't settle every question. Hertzmann argues that art is a social act between people, so software is a tool and not yet an author [10]. Epstein and colleagues treat generative AI as a new medium, and they raise open issues of authorship, ownership and the labour behind training data [11]. That last issue is practical: Refik Anadol's *Unsupervised* drew on MoMA's own collection data [12], while many large models were trained on images collected from the web, and whether that is acceptable is still disputed [11]. Ask where a model's data came from, just as you would ask who wrote a rule.
+
+## Synthesis project <a id="synthesis"></a>
+
+<Admonition type="note" title="Where each exercise runs">
+Exercise 1 runs on this page: press Run. Exercises 2 and 3 ask you to edit a script, which needs Python on your computer. The next lesson, [0.3](/lessons/0.3), sets that up.
+</Admonition>
+
+<Exercise n={1} kicker="EXECUTE" title="One picture, two ways">
+
+The script makes a picture twice: once from a rule, and once from thirty examples. You don't need to follow every line yet. `np.meshgrid` lists every pixel's position, and `np.linalg.lstsq` finds the numbers that fit the examples best (a method called least squares).
+
+<CodeBlock lang="python" file="0.2_exercise1.py">
+```python
+"""
+The same picture made twice: once from a rule a person wrote, once from a rule
+the program worked out from thirty examples.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+SIZE = 256
+EXAMPLE_COUNT = 30
+random_numbers = np.random.default_rng(7)
+
+# Every pixel's position, from 0 to 1 across and down the canvas.
+axis = np.linspace(0, 1, SIZE)
+grid_x, grid_y = np.meshgrid(axis, axis)
+
+# ALGORITHM: a person writes the rule, and every pixel follows it.
+rule_image = 170 * grid_x + 85 * grid_y
+
+# EXAMPLES: thirty random pixels and the brightness each one should have.
+# The learning step below sees only these, never the rule itself.
+example_x = random_numbers.random(EXAMPLE_COUNT)
+example_y = random_numbers.random(EXAMPLE_COUNT)
+example_brightness = 170 * example_x + 85 * example_y
+
+# MACHINE LEARNING: find the three numbers a, b, c for which
+# a*x + b*y + c comes closest to the examples (the least-squares fit).
+inputs = np.column_stack([example_x, example_y, np.ones(EXAMPLE_COUNT)])
+weights = np.linalg.lstsq(inputs, example_brightness, rcond=None)[0]
+learned_image = weights[0] * grid_x + weights[1] * grid_y + weights[2]
+
+# Put the two pictures side by side, with a white gap between them.
+gap = np.full((SIZE, 12), 255.0)
+both = np.hstack([rule_image, gap, learned_image])
+Image.fromarray(np.clip(both, 0, 255).astype(np.uint8)).save("rule_vs_learned.png")
+
+print("The rule a person wrote: 170*x + 85*y + 0")
+print(f"The rule it learned:     {weights[0]:.1f}*x + {weights[1]:.1f}*y + {weights[2]:.1f}")
+print("Saved rule_vs_learned.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/0.2_exercise1.py" label="0.2_exercise1.py — this script" />
+
+**Reflection questions**
+
+1. Compare the two printed rules. How close are they, and why?
+2. Which single line does the learning?
+3. Is that line an algorithm or machine learning?
+
+<Dropdown summary="Answers">
+
+1. They match to one decimal place. The examples contain no error, and the learner needs three numbers, so thirty exact examples are more than enough.
+2. The line with `np.linalg.lstsq`. Everything before it prepares the examples, and everything after it uses the answer.
+3. Both. Least squares is an algorithm with exact steps. Using it to get a rule from examples is machine learning. The program improves with experience in Mitchell's sense, as Exercise 2 lets you test.
+
+</Dropdown>
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/rule_vs_learned.png"
+  alt="Two identical square gradients side by side, dark at the top left and bright at the bottom right."
+  caption="Left: the rule a person wrote. Right: the rule learned from thirty pixels."
+  num={5}
+  role="output"
+/>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="What the learner can and cannot do">
+
+Change the CONFIG values, run the script, and read the average error it prints. The left half of `what_it_learned.png` is the true picture, and the right half is the learned one.
+
+<CodeBlock lang="python" file="0.2_exercise2.py">
+```python
+"""
+Change what the learner sees, and watch how good the learned rule gets.
+
+Left: the true picture. Right: the picture learned from the examples.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: change these values ==========
+EXAMPLE_COUNT = 30      # How many pixels the learner gets to see
+NOISE = 0               # Random error added to each example's brightness
+RULE_SHAPE = "tilted"   # The true picture: "tilted" or "circle"
+# =================================================
+
+SIZE = 256
+random_numbers = np.random.default_rng(7)
+
+
+def true_brightness(x, y):
+    """The picture the examples come from."""
+    if RULE_SHAPE == "circle":
+        # 0.71 is about the distance from the centre to a corner, so corners reach full brightness.
+        return 255 * np.hypot(x - 0.5, y - 0.5) / 0.71
+    return 170 * x + 85 * y
+
+
+axis = np.linspace(0, 1, SIZE)
+grid_x, grid_y = np.meshgrid(axis, axis)
+true_image = true_brightness(grid_x, grid_y)
+
+# The examples: random pixels, with an error added to each brightness.
+example_x = random_numbers.random(EXAMPLE_COUNT)
+example_y = random_numbers.random(EXAMPLE_COUNT)
+errors = random_numbers.normal(0, NOISE, EXAMPLE_COUNT)
+example_brightness = true_brightness(example_x, example_y) + errors
+
+# The learner can only ever produce a*x + b*y + c: a flat, tilted surface.
+inputs = np.column_stack([example_x, example_y, np.ones(EXAMPLE_COUNT)])
+weights = np.linalg.lstsq(inputs, example_brightness, rcond=None)[0]
+learned_image = weights[0] * grid_x + weights[1] * grid_y + weights[2]
+
+# Average miss per pixel, on the 0 to 255 brightness scale.
+average_error = np.mean(np.abs(true_image - learned_image))
+
+gap = np.full((SIZE, 12), 255.0)
+both = np.hstack([true_image, gap, learned_image])
+Image.fromarray(np.clip(both, 0, 255).astype(np.uint8)).save("what_it_learned.png")
+
+print(f"Examples: {EXAMPLE_COUNT}, noise: {NOISE}, shape: {RULE_SHAPE}")
+print(f"Average error: {average_error:.1f} out of 255")
+print("Saved what_it_learned.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/0.2_exercise2.py" label="0.2_exercise2.py — this script" />
+
+**Goals**
+
+1. Set `EXAMPLE_COUNT = 3`.
+2. Set `EXAMPLE_COUNT = 5` and `NOISE = 40`.
+3. Keep the noise, and set `EXAMPLE_COUNT = 500`.
+4. Set `RULE_SHAPE = "circle"`, `NOISE = 0` and `EXAMPLE_COUNT = 500`.
+
+<Dropdown summary="Goal 1 — what to expect">
+The error stays at 0.0. The learner has three numbers to find, and three exact examples are enough to fix them.
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+The error jumps to about 14.7 and the tilt looks wrong. With few examples, the learner fits the errors along with the pattern.
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+The error falls to about 1.4 with the same noise. This is Mitchell's definition in action: more experience, better performance.
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+
+The error stays near 42, and more examples will not fix it. This learner can only produce a flat, tilted surface, so no data can make it draw a circle. What a model can represent limits what it can learn, and that is one reason deeper models exist.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/what_it_learned_circle.png"
+  alt="Left: a circular gradient, dark at the centre and bright at the corners. Right: a nearly flat grey square."
+  caption="Left: the true circular picture. Right: the best a flat surface can do, even with 500 examples."
+  num={6}
+  role="output"
+/>
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="A nearest-neighbour painter">
+
+Here is a learner with no formula at all. It keeps its examples, and each new pixel copies the colour of the example nearest to it. This is the nearest-neighbour method, one of the oldest in machine learning [13].
+
+<Dropdown summary="New functions used here">
+`np.hypot(a, b)` gives the length of the diagonal for sides `a` and `b`, which is the straight-line distance. Given arrays, it works on every pair at once. `np.argmin(values)` gives the position of the smallest value, not the value itself.
+</Dropdown>
+
+<CodeBlock lang="python" file="0.2_exercise3_starter.py">
+```python
+"""
+A nearest-neighbour painter: a learner with no formula at all. Each pixel copies
+the colour of the example closest to it. Fill in the TODOs.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+EXAMPLE_COUNT = 12   # How many coloured examples the painter gets
+SEED = 5             # Change it for new example positions and colours
+# =================================================================
+
+SIZE = 300
+random_numbers = np.random.default_rng(SEED)
+
+# The examples: a position and a colour for each. Think of them as training data.
+palette = np.array([[0, 131, 138], [61, 85, 136], [255, 72, 176], [243, 239, 231]])
+example_positions = random_numbers.uniform(0, SIZE, (EXAMPLE_COUNT, 2))
+example_colours = palette[random_numbers.integers(0, len(palette), EXAMPLE_COUNT)]
+
+image = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+
+for y in range(SIZE):
+    for x in range(SIZE):
+        # TODO 1: Measure how far this pixel is from every example.
+        # Why: "closest" needs a distance. np.hypot(across, down) gives one for each
+        # example when across and down are arrays. Column 0 of example_positions
+        # holds the x values and column 1 the y values.
+        distances = np.zeros(EXAMPLE_COUNT)
+
+        # TODO 2: Find the position of the smallest distance.
+        # Why: that example is this pixel's nearest neighbour. Use np.argmin.
+        nearest = 0
+
+        # TODO 3: Give this pixel the nearest example's colour.
+        # Why: this copy is the painter's whole "prediction". Assign to image[y, x].
+        pass
+
+Image.fromarray(image).save("nearest_painter.png")
+print("Saved nearest_painter.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/0.2_exercise3_starter.py" label="0.2_exercise3_starter.py — starter with TODOs" />
+
+The starter runs as it is and saves a black square. Your three TODOs add the painting.
+
+<Dropdown summary="Hint 1 — the distances">
+`across` is `example_positions[:, 0] - x` and `down` is `example_positions[:, 1] - y`. Pass both to `np.hypot`.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — the nearest example">
+`nearest = np.argmin(distances)`
+</Dropdown>
+
+<Dropdown summary="Hint 3 — the colour">
+`image[y, x] = example_colours[nearest]`
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="0.2_exercise3_solution.py">
+```python
+"""
+A nearest-neighbour painter: a learner with no formula at all. Each pixel copies
+the colour of the example closest to it.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+EXAMPLE_COUNT = 12   # How many coloured examples the painter gets
+SEED = 5             # Change it for new example positions and colours
+# =================================================================
+
+SIZE = 300
+random_numbers = np.random.default_rng(SEED)
+
+# The examples: a position and a colour for each. Think of them as training data.
+palette = np.array([[0, 131, 138], [61, 85, 136], [255, 72, 176], [243, 239, 231]])
+example_positions = random_numbers.uniform(0, SIZE, (EXAMPLE_COUNT, 2))
+example_colours = palette[random_numbers.integers(0, len(palette), EXAMPLE_COUNT)]
+
+image = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)
+
+for y in range(SIZE):
+    for x in range(SIZE):
+        distances = np.hypot(example_positions[:, 0] - x, example_positions[:, 1] - y)
+        nearest = np.argmin(distances)
+        image[y, x] = example_colours[nearest]
+
+Image.fromarray(image).save("nearest_painter.png")
+print("Saved nearest_painter.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/0.2_exercise3_solution.py" label="0.2_exercise3_solution.py — finished script" />
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.2_defining_ai_ml_algorithms/nearest_painter.png"
+  alt="A square divided into angular colour regions in teal, blue, pink and off-white."
+  caption="Output with twelve examples and SEED = 5. The straight borders are where two examples are equally near."
+  num={7}
+  role="output"
+/>
+
+</Dropdown>
+
+**Make It Your Own**
+
+- Set `EXAMPLE_COUNT` to 3, then to 200. How does the picture change as the learner gets more experience?
+- Colour each example by its position instead of at random, so the regions form a rough gradient. Have you made the learner recover a rule you had in mind?
+
+The shape you just made is a Voronoi diagram. [Lesson 2.2.4](/lessons/2.2.4) reaches a similar picture with distance fields.
+
+</Exercise>
+
+## Summary
+
+<Admonition title="Key takeaways">
+
+- **Algorithm:** exact steps, written by a person. It may or may not involve learning.
+- **Machine learning:** a program improves at a task with experience, so the rule comes from data.
+- **AI:** the widest term, which covers learned systems and hand-written ones.
+- **Generative models:** learned systems that produce new samples. Most current ones are deep learning.
+- A model can only learn what it can represent, and what it learns depends on the data it was given.
+
+</Admonition>
+
+[Lesson 0.3](/lessons/0.3) gets your computer ready for the Modify and Create exercises.
+
+## References
+
+<section class="refs">
+<ol>
+<li><span class="tag">[1]</span> Knuth, D. E. (1997). <em>The art of computer programming: Vol. 1. Fundamental algorithms</em> (3rd ed.). Addison-Wesley.</li>
+<li><span class="tag">[2]</span> Mitchell, T. M. (1997). <em>Machine learning</em>. McGraw-Hill.</li>
+<li><span class="tag">[3]</span> Bishop, C. M. (2006). <em>Pattern recognition and machine learning</em>. Springer.</li>
+<li><span class="tag">[4]</span> Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement learning: An introduction</em> (2nd ed.). MIT Press.</li>
+<li><span class="tag">[5]</span> McCarthy, J., Minsky, M. L., Rochester, N., &amp; Shannon, C. E. (2006). A proposal for the Dartmouth summer research project on artificial intelligence, August 31, 1955. <em>AI Magazine, 27</em>(4), 12–14.</li>
+<li><span class="tag">[6]</span> OECD. (2024). <em>Explanatory memorandum on the updated OECD definition of an AI system</em> (OECD Artificial Intelligence Papers). OECD Publishing. <a href="https://doi.org/10.1787/623da898-en">https://doi.org/10.1787/623da898-en</a></li>
+<li><span class="tag">[7]</span> Garcia, C. (2016, August 23). <em>Harold Cohen and AARON—A 40-year collaboration</em>. Computer History Museum. <a href="https://computerhistory.org/blog/harold-cohen-and-aaron-a-40-year-collaboration/">https://computerhistory.org/blog/harold-cohen-and-aaron-a-40-year-collaboration/</a></li>
+<li><span class="tag">[8]</span> Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). <em>Deep learning</em>. MIT Press. <a href="https://www.deeplearningbook.org/">https://www.deeplearningbook.org/</a></li>
+<li><span class="tag">[9]</span> Rombach, R., Blattmann, A., Lorenz, D., Esser, P., &amp; Ommer, B. (2022). High-resolution image synthesis with latent diffusion models. In <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em> (pp. 10674–10685). <a href="https://doi.org/10.1109/CVPR52688.2022.01042">https://doi.org/10.1109/CVPR52688.2022.01042</a></li>
+<li><span class="tag">[10]</span> Hertzmann, A. (2018). Can computers create art? <em>Arts, 7</em>(2), Article 18. <a href="https://doi.org/10.3390/arts7020018">https://doi.org/10.3390/arts7020018</a></li>
+<li><span class="tag">[11]</span> Epstein, Z., Hertzmann, A., &amp; the Investigators of Human Creativity. (2023). Art and the science of generative AI. <em>Science, 380</em>(6650), 1110–1111. <a href="https://doi.org/10.1126/science.adh4451">https://doi.org/10.1126/science.adh4451</a></li>
+<li><span class="tag">[12]</span> Anadol, R. (2022). <em>Unsupervised: Machine hallucinations, MoMA</em> [Installation]. <a href="https://refikanadol.com/works/unsupervised/">https://refikanadol.com/works/unsupervised/</a></li>
+<li><span class="tag">[13]</span> Cover, T., &amp; Hart, P. (1967). Nearest neighbor pattern classification. <em>IEEE Transactions on Information Theory, 13</em>(1), 21–27. <a href="https://doi.org/10.1109/TIT.1967.1053964">https://doi.org/10.1109/TIT.1967.1053964</a></li>
+</ol>
+</section>

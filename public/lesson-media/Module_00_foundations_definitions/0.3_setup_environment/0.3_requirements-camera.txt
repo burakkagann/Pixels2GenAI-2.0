@@ -1,0 +1,3 @@
+# Pixels2GenAI camera kit: add this for the Module 11 lessons that read a webcam.
+# Install it after the core kit: python -m pip install -r 0.3_requirements-camera.txt
+mediapipe

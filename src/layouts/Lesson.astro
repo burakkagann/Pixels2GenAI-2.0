@@ -55,9 +55,9 @@ const { slug, frontmatter, headings, mediaBase } = Astro.props;
 // In-browser Python runner (AI tutor Milestone 1b), live for everyone since 2026-09-27.
 // PUBLIC_PYTHON_RUNNER=false in Netlify is the emergency off switch; any other value
 // (or none) leaves it on. The ?runner=1 test mode was removed (follow-up #22).
-// Scope: Modules 1-8 (2026-09-25). Modules 9-12 need PyTorch or TouchDesigner, which
+// Scope: Modules 0-8. Modules 9-12 need PyTorch or TouchDesigner, which
 // can't run in the browser. Script-level results: ai-tutor-planning/launch-readiness/.
-const RUNNER_MODULES = new Set(['1', '2', '3', '4', '5', '6', '7', '8']);
+const RUNNER_MODULES = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8']);
 const runnerOn = import.meta.env.PUBLIC_PYTHON_RUNNER !== 'false'
   && RUNNER_MODULES.has(slug.split('.')[0]) && Boolean(mediaBase);
 

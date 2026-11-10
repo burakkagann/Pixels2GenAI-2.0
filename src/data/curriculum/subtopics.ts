@@ -25,13 +25,13 @@ export interface SubtopicEntry {
 export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
   '00': [
     { id: '0.1', title: 'What Is Generative Art', leaves: [
-      { id: '0.1', title: 'What Is Generative Art' },
+      { id: '0.1', title: 'What Is Generative Art', lessonSlug: '0.1' },
     ]},
     { id: '0.2', title: 'Defining AI / ML / Algorithms', leaves: [
-      { id: '0.2', title: 'Defining AI ML Algorithms' },
+      { id: '0.2', title: 'Defining AI, ML & Algorithms', lessonSlug: '0.2' },
     ]},
-    { id: '0.4', title: 'Setup & Environment', leaves: [
-      { id: '0.4', title: 'Setup Environment' },
+    { id: '0.3', title: 'Setup & Environment', leaves: [
+      { id: '0.3', title: 'Setup & Environment', lessonSlug: '0.3' },
     ]},
   ],
 

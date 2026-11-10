@@ -1,0 +1,472 @@
+---
+module: "M 00"
+cycle: "I"
+title: "What Is Generative Art"
+objective: "Define generative art by the role of the system, tell it apart from its neighbours, and make your first images from a written rule."
+description: "What makes art generative? Galanter's definition, order and disorder, a short history from Molnár to Anadol, and three Python exercises."
+framework: "conceptual"
+duration: "20–25 min"
+published: 2025-10-27
+level: "beginner"
+load: "3 core concepts"
+prereqs: "None to read; basic Python helps for the exercises"
+prev: null
+next:
+  slug: "0.2"
+  title: "Defining AI, ML & Algorithms"
+backLink:
+  href: "/#curriculum"
+  label: "Back to Curriculum"
+---
+
+## Big question <a id="big-question"></a>
+
+In 1971 Sol LeWitt gave a wall drawing its form as a few sentences of instruction [1]:
+
+> On a wall surface, any continuous stretch of wall, using a hard pencil, place fifty points at random. The points should be evenly distributed over the area of the wall. All of the points should be connected by straight lines.
+
+Anyone can carry that out, and no two walls will match. A program can carry it out too, and the figure below shows three of its attempts.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/three_runs.png"
+  alt="Three wide panels, each a dense web of thin grey lines joining fifty points. The webs share an overall texture and differ in every detail."
+  caption="Three runs of the short program you will meet in Exercise 1. It follows LeWitt's sentences, but these are coding output, not LeWitt works."
+  num={1}
+  role="output"
+/>
+
+So who made these pictures: the person who wrote the rule, or the thing that carried it out? This lesson gives you the vocabulary to argue either side.
+
+### Learning objectives
+
+<ol class="obj-list">
+  <li>Define generative art with Galanter's definition, and say what "some degree of autonomy" adds.</li>
+  <li>Place a borderline case on a scale instead of forcing a yes or no.</li>
+  <li>Explain why much generative work sits between total order and total disorder.</li>
+  <li>Change and write a small rule-based image system in Python.</li>
+</ol>
+
+## Part 1 — A system that runs on its own <a id="part-1"></a>
+
+A widely quoted definition comes from the artist and theorist Philip Galanter [2]:
+
+> Generative art refers to any art practice where the artist uses a system, such as a set of natural language rules, a computer program, a machine, or other procedural invention, which is set into motion with some degree of autonomy contributing to or resulting in a completed work of art.
+
+Notice what is missing: the word "digital". LeWitt's sentences are natural language rules, so they count, and a program counts for the same reason. What matters, Galanter writes, is "the system to which the artist cedes partial or total subsequent control" [2]. Figure 2 shows that handover.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/making_versus_system.png"
+  alt="Two flow diagrams. In the first, an artist makes every mark of one work. In the second, an artist writes rules for a system, and the system produces work 1, work 2 and work 3."
+  caption="The artist's job moves one step back: from making each mark to designing what makes the marks."
+  num={2}
+  role="diagram"
+/>
+
+Galanter also refuses a hard border: "generative art is a fuzzy set" [2]. Boden and Edmonds go further and split computer-based work into categories such as evolutionary art and robot art [3]. For a first map, one question sorts most cases: who decides each mark?
+
+| Case | Who decides each mark? | How generative? |
+|---|---|---|
+| A portrait painted by hand, stroke by stroke | The painter | Not generative |
+| The same portrait painted in a drawing app | The painter; the software is a tool | Digital, not generative |
+| A program whose every coordinate was typed in by hand | The author, in advance | Barely: nothing is left to the system |
+| LeWitt's sentences, carried out by a team | The rule, plus the people following it | Clearly generative, no computer involved |
+| A program that places fifty random points | The rule and its random numbers | Clearly generative |
+| An image made from a text prompt | A trained model; the person picks words and results | Generative, with authorship in dispute [4] |
+
+The last row is the one people argue about today, and the next lesson separates the terms that argument needs.
+
+## Part 2 — Between order and disorder <a id="part-2"></a>
+
+Once a system runs on its own, the artist's main choice is how much freedom to give it. Galanter maps that choice with the idea of effective complexity, borrowed from the physicist Murray Gell-Mann. Something "almost entirely random" scores near zero, and so does "something completely regular" [2]. Structure worth looking at lies in between.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/order_and_disorder_chart.png"
+  alt="A bell-shaped curve of effective complexity, low at total order, high in between and low at total disorder. Below it, three grids of nested squares: perfectly regular, slightly wobbling, and a tangle of lines."
+  caption="A sketch of the idea, not a measurement. The three panels come from one program with one number changed, and you will control that number in Exercise 2."
+  num={3}
+  role="diagram"
+/>
+
+Vera Molnár worked on this dial for decades. From the late 1950s she followed rules by hand, calling the method her "machine imaginaire". She reached a real computer in 1968 and became known for adding about one percent of disorder to an ordered structure [5, 6]. Georg Nees's plotter drawing *Schotter* (Gravel) shows the whole range at once: rows of squares that loosen from top to bottom [7]. Figure 4 is a study of that idea written for this lesson.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/rows_of_squares.png"
+  alt="Rows of black outlined squares. The top rows are neat and aligned; further down the squares shift and rotate until they overlap freely."
+  caption="One rule whose disorder grows with the row number. Written for this lesson after Nees's idea; it is not his work."
+  num={4}
+  role="diagram"
+/>
+
+Artists working now describe the same balance. Tyler Hobbs says that a totally predictable system would give him "perfect 'control'", but that this "usually leads to uninteresting results" [8].
+
+## Part 3 — A short history <a id="part-3"></a>
+
+The system has changed form many times: written instruction, plotter program, rule base, seeded script, trained model. The question of who decides has stayed the same.
+
+| When | Who | The system |
+|---|---|---|
+| 70,000+ years ago | Blombos Cave, South Africa | Patterned engravings on ochre. Galanter offers these as very early rule-like making and admits the claim is contested [2, 9] |
+| 1790s | A dice game printed under Mozart's name | Dice choose among prepared bars of music. The attribution to Mozart is doubtful [10] |
+| 1965 | Georg Nees, A. Michael Noll, Frieder Nake | Among the first public shows of computer-generated images, in Stuttgart and New York [11] |
+| 1967 | Sol LeWitt | The written instruction as artwork: "The idea becomes a machine that makes the art" [12] |
+| 1973 | Harold Cohen, AARON | A drawing program built from rules and forms Cohen defined, developed for four decades [13] |
+| 2001 | Casey Reas and Ben Fry, Processing | A programming language for visual artists that made code sketching widely available [14] |
+| 2020–21 | Art Blocks; Tyler Hobbs, *Fidenza* | The artist's script generates each piece from a seed at the moment of minting [15] |
+| 2022 | Refik Anadol, *Unsupervised* | A generative model trained on 138,151 images from MoMA's collection, moving continuously through its latent space [16] |
+
+Compare the last entry with AARON. Cohen wrote AARON's rules himself, whereas the rules behind *Unsupervised* came out of training on data, so nobody typed them in. Figure 5 marks that break, and [lesson 0.2](/lessons/0.2) takes it apart.
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/system_over_time.png"
+  alt="A timeline of six boxes: dice table, plotter program, written instruction, rule base, seeded script and trained model. A bar under the first five reads a person writes the rules; a bar under the last reads the rules come from data."
+  caption="The same idea in six forms. All but the last were written out by a person."
+  num={5}
+  role="diagram"
+/>
+
+## Synthesis project <a id="synthesis"></a>
+
+<Admonition type="note" title="Where each exercise runs">
+Exercise 1 runs on this page: press Run. Exercises 2 and 3 ask you to edit a script, which needs Python on your computer. [Lesson 0.3](/lessons/0.3) sets that up. Without it yet, read the "what to expect" answers now and come back later.
+</Admonition>
+
+<Exercise n={1} kicker="EXECUTE" title="Fifty points, connected">
+
+Run the script twice and compare the two pictures.
+
+<CodeBlock lang="python" file="0.1_exercise1.py">
+```python
+"""
+Fifty points, connected.
+
+A short program that carries out a written instruction: the one Sol LeWitt wrote
+for Wall Drawing #118 (1971). This is a coding exercise, not a LeWitt work.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image, ImageDraw
+
+WIDTH, HEIGHT = 1000, 500
+
+# No seed on purpose: every run gets new numbers, so every run makes a new drawing.
+random_numbers = np.random.default_rng()
+
+# "Evenly distributed" is left to whoever carries out the instruction.
+# This program's reading: split the wall into 50 equal cells, one point in each.
+columns, rows = 10, 5
+points = []
+for column in range(columns):
+    for row in range(rows):
+        x = (column + random_numbers.random()) * WIDTH / columns
+        y = (row + random_numbers.random()) * HEIGHT / rows
+        points.append((x, y))
+
+# "All of the points should be connected": one straight line for every pair.
+wall = Image.new("L", (WIDTH, HEIGHT), 245)
+pencil = ImageDraw.Draw(wall)
+line_count = 0
+for first in range(len(points)):
+    for second in range(first + 1, len(points)):
+        pencil.line([points[first], points[second]], fill=70, width=1)
+        line_count += 1
+
+wall.save("fifty_points.png")
+print(f"{len(points)} points, {line_count} lines, saved as fifty_points.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise1.py" label="0.1_exercise1.py — this script" />
+
+**Reflection questions**
+
+1. What stays the same between runs, and what changes?
+2. LeWitt's text says "evenly distributed". What did this program decide that the sentences left open?
+3. Where in the code does the "degree of autonomy" live?
+
+<Dropdown summary="Answers">
+
+1. The rule stays the same: fifty points, 1,225 lines, the same overall texture. Every position changes, so every detail changes.
+2. Quite a lot: a wall twice as wide as it is tall, a grid of 10 by 5 cells with one point in each, and the weight and grey of the line. Someone else could read "evenly" differently and still follow the text.
+3. In `random_numbers`. The author chose the range, and the program picks each value without asking.
+
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={2} kicker="MODIFY" title="Turn the disorder dial">
+
+The script draws an 8 by 8 grid of nested squares, each corner pushed by a random amount. Change the values in the CONFIG block, run it, and open `order_and_disorder.png`.
+
+<CodeBlock lang="python" file="0.1_exercise2.py">
+```python
+"""
+A grid of nested squares with a dial for disorder, written after Vera Molnar's
+idea of adding a small, controlled amount of disorder to an ordered structure.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image, ImageDraw
+
+# ========== CONFIG: change these values ==========
+DISORDER = 0.02      # How far corners may stray: 0 = none, 1 = a whole cell
+GRID_SIZE = 8        # Cells along each side of the canvas
+NESTED_SQUARES = 5   # Squares drawn inside each cell
+SEED = 1974          # Same seed, same drawing. Change it for a new one
+# =================================================
+
+CANVAS = 800
+cell_size = CANVAS / GRID_SIZE
+random_numbers = np.random.default_rng(SEED)
+
+image = Image.new("L", (CANVAS, CANVAS), 255)
+draw = ImageDraw.Draw(image)
+
+for row in range(GRID_SIZE):
+    for column in range(GRID_SIZE):
+        centre_x = (column + 0.5) * cell_size
+        centre_y = (row + 0.5) * cell_size
+
+        for square in range(1, NESTED_SQUARES + 1):
+            half_side = 0.45 * cell_size * square / NESTED_SQUARES
+
+            # The rule is fixed. Only the corners carry the randomness, which is
+            # why a small DISORDER still reads as a grid.
+            corners = []
+            for x_sign, y_sign in [(-1, -1), (1, -1), (1, 1), (-1, 1)]:
+                stray_x, stray_y = random_numbers.uniform(-1, 1, 2) * DISORDER * cell_size
+                corners.append((centre_x + x_sign * half_side + stray_x,
+                                centre_y + y_sign * half_side + stray_y))
+            draw.polygon(corners, outline=20)
+
+image.save("order_and_disorder.png")
+print(f"DISORDER = {DISORDER}, saved as order_and_disorder.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise2.py" label="0.1_exercise2.py — this script" />
+
+**Goals**
+
+1. Set `DISORDER = 0`.
+2. Set `DISORDER = 0.1`.
+3. Set `DISORDER = 1`.
+4. Go back to `DISORDER = 0.1`, then change `SEED` to any other whole number.
+5. Set `GRID_SIZE = 3` and `NESTED_SQUARES = 12`, then find the `DISORDER` value you like best.
+
+<Dropdown summary="Goal 1 — what to expect">
+A perfectly regular grid. The random numbers are still drawn, but they are multiplied by zero, so the system has no freedom left.
+</Dropdown>
+
+<Dropdown summary="Goal 2 — what to expect">
+Every square wobbles and the inner ones start to cross, yet you can still read eight rows and eight columns. Does this feel more alive to you than Goal 1 did?
+</Dropdown>
+
+<Dropdown summary="Goal 3 — what to expect">
+The grid disappears into a tangle of lines, because a corner can now stray a whole cell away. This is the third panel of Figure 3.
+</Dropdown>
+
+<Dropdown summary="Goal 4 — what to expect">
+A different drawing of the same family. Run it twice with one seed and you get the same drawing twice: a seed makes the randomness repeatable.
+</Dropdown>
+
+<Dropdown summary="Goal 5 — what to expect">
+Fewer, denser cells, which show the wobble more clearly. There is no right answer here, and choosing one is the artist's part of the job.
+</Dropdown>
+
+</Exercise>
+
+<Exercise n={3} kicker="CREATE" title="Radial Scatter">
+
+Finish a system of your own: circles scattered around a centre, one colour per wedge. Each wedge chooses how many circles it gets, and each circle chooses its own angle, distance and size. The order comes from the wedges, and the disorder comes from those choices.
+
+<Dropdown summary="New idea: angle and distance instead of x and y">
+A point can be given as an angle and a distance from a centre. The two lines marked "Given" in the starter turn those into x and y with cosine and sine. You don't need the trigonometry yet; Module 2 covers it.
+</Dropdown>
+
+<CodeBlock lang="python" file="0.1_exercise3_starter.py">
+```python
+"""
+Radial Scatter: a rule-based circle system. Fill in the TODOs to finish the rules.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image, ImageDraw
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+WEDGES = 8     # Slices of the canvas, like a pie
+SEED = 21      # Change it to let the same rules make another picture
+# =================================================================
+
+CANVAS = 800
+CENTRE = CANVAS / 2
+wedge_width = 2 * np.pi / WEDGES    # A full circle is 2 pi radians
+random_numbers = np.random.default_rng(SEED)
+
+image = Image.new("RGB", (CANVAS, CANVAS), "white")
+draw = ImageDraw.Draw(image)
+
+for wedge in range(WEDGES):
+    # One colour per wedge: this rule gives the picture its structure.
+    colour = tuple(int(value) for value in random_numbers.integers(40, 220, 3))
+
+    # TODO 1: Pick how many circles this wedge gets: a whole number from 5 to 10.
+    # Why: the count varies, so no two pictures have the same rhythm.
+    # Use random_numbers.integers(low, high), which leaves out high.
+    circle_count = 1
+
+    for circle in range(circle_count):
+        # TODO 2: Pick an angle inside this wedge.
+        # Why: circles stay in their slice. This is where order lives.
+        # The wedge starts at wedge * wedge_width. Add a random part of wedge_width.
+        angle = 0.0
+
+        # TODO 3: Pick a distance from the centre, from 60 to 340 pixels.
+        # Why: this is where disorder lives. Use random_numbers.uniform(low, high).
+        distance = 0.0
+
+        # Given: turn the angle and distance into a position on the canvas.
+        x = CENTRE + distance * np.cos(angle)
+        y = CENTRE + distance * np.sin(angle)
+
+        # TODO 4: Pick a radius from 10 to 40 pixels.
+        # Why: size carries the variation you see first.
+        radius = 1.0
+
+        # TODO 5: Draw the circle with draw.ellipse.
+        # It takes the box around the circle: [left, top, right, bottom].
+        # Why: nothing appears until this runs. fill=colour and outline="white"
+        # keep overlapping circles readable.
+        pass
+
+image.save("radial_scatter.png")
+print("Saved radial_scatter.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise3_starter.py" label="0.1_exercise3_starter.py — starter with TODOs" />
+
+The starter runs before you change anything, but it saves an empty white image. Your TODOs make the circles appear.
+
+<Dropdown summary="Hint 1 — the circle count">
+`circle_count = random_numbers.integers(5, 11)`. The upper limit is left out, so 11 gives values up to 10.
+</Dropdown>
+
+<Dropdown summary="Hint 2 — the angle">
+`wedge + random_numbers.random()` is a number somewhere between this wedge's start and the next one's. Multiply it by `wedge_width`.
+</Dropdown>
+
+<Dropdown summary="Hint 3 — distance and radius">
+Both use the same call with different limits, for example `random_numbers.uniform(60, 340)`.
+</Dropdown>
+
+<Dropdown summary="Hint 4 — the ellipse box">
+The box runs from `x - radius, y - radius` to `x + radius, y + radius`.
+</Dropdown>
+
+<Dropdown summary="Complete solution">
+
+<CodeBlock lang="python" file="0.1_exercise3_solution.py">
+```python
+"""
+Radial Scatter: the finished rule-based circle system.
+
+Author: Pixels2GenAI Project
+"""
+import numpy as np
+from PIL import Image, ImageDraw
+
+# ========== CONFIG: experiment after the TODOs are done ==========
+WEDGES = 8     # Slices of the canvas, like a pie
+SEED = 21      # Change it to let the same rules make another picture
+# =================================================================
+
+CANVAS = 800
+CENTRE = CANVAS / 2
+wedge_width = 2 * np.pi / WEDGES    # A full circle is 2 pi radians
+random_numbers = np.random.default_rng(SEED)
+
+image = Image.new("RGB", (CANVAS, CANVAS), "white")
+draw = ImageDraw.Draw(image)
+
+for wedge in range(WEDGES):
+    # One colour per wedge: this rule gives the picture its structure.
+    colour = tuple(int(value) for value in random_numbers.integers(40, 220, 3))
+
+    # high is left out, so 11 gives whole numbers from 5 to 10.
+    circle_count = random_numbers.integers(5, 11)
+
+    for circle in range(circle_count):
+        angle = (wedge + random_numbers.random()) * wedge_width
+        distance = random_numbers.uniform(60, 340)
+
+        # Given: turn the angle and distance into a position on the canvas.
+        x = CENTRE + distance * np.cos(angle)
+        y = CENTRE + distance * np.sin(angle)
+
+        radius = random_numbers.uniform(10, 40)
+        draw.ellipse([x - radius, y - radius, x + radius, y + radius],
+                     fill=colour, outline="white")
+
+image.save("radial_scatter.png")
+print("Saved radial_scatter.png")
+```
+</CodeBlock>
+
+<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise3_solution.py" label="0.1_exercise3_solution.py — finished script" />
+
+<Figure
+  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/radial_scatter.png"
+  alt="Coloured circles of different sizes scattered around a centre, each colour in its own wedge."
+  caption="Output with SEED = 21 and eight wedges."
+  num={6}
+  role="output"
+/>
+
+</Dropdown>
+
+**Make It Your Own**
+
+- Set `WEDGES` to 3, then to 24. At what point do you stop seeing wedges?
+- Let the radius shrink with distance from the centre, so the picture has a clear middle.
+- Choose four colours you like and pick from them, in place of random colours.
+
+</Exercise>
+
+## Summary
+
+<Admonition title="Key takeaways">
+
+- Generative art is defined by a system that runs with some autonomy, not by computers. Digital and generative are separate questions.
+- The label is a matter of degree. Ask who decides each mark.
+- Much of the craft lies in setting the amount of disorder: total order and total randomness both say little.
+- The system's form has changed from written rules to trained models, while the question of authorship has stayed open.
+
+</Admonition>
+
+[Lesson 0.2](/lessons/0.2) looks closely at that last change, and at what "algorithm", "machine learning" and "AI" each mean.
+
+## References
+
+<section class="refs">
+<ol>
+<li><span class="tag">[1]</span> LeWitt, S. (1971). <em>Wall drawing #118: 50 randomly placed points connected by straight lines</em> [Graphite on wall]. Art Institute of Chicago. <a href="https://www.artic.edu/artworks/196148/wall-drawing-118-50-randomly-placed-points-connected-by-straight-lines">https://www.artic.edu/artworks/196148/wall-drawing-118-50-randomly-placed-points-connected-by-straight-lines</a>. Instruction text as reproduced by V, R. (2021, January 12). <em>30SAL challenge: Instructions for drawing #118</em>. Seattle Artist League. <a href="https://www.seattleartistleague.com/2021/01/12/30sal-challenge-instructions-for-drawing-118/">https://www.seattleartistleague.com/2021/01/12/30sal-challenge-instructions-for-drawing-118/</a></li>
+<li><span class="tag">[2]</span> Galanter, P. (2003). What is generative art? Complexity theory as a context for art theory. In <em>Proceedings of GA2003, the 6th International Conference on Generative Art</em>. Generative Design Lab, Milan Polytechnic. <a href="https://www.philipgalanter.com/downloads/ga2003_paper.pdf">https://www.philipgalanter.com/downloads/ga2003_paper.pdf</a></li>
+<li><span class="tag">[3]</span> Boden, M. A., &amp; Edmonds, E. A. (2009). What is generative art? <em>Digital Creativity, 20</em>(1–2), 21–46. <a href="https://doi.org/10.1080/14626260902867915">https://doi.org/10.1080/14626260902867915</a></li>
+<li><span class="tag">[4]</span> Epstein, Z., Hertzmann, A., &amp; the Investigators of Human Creativity. (2023). Art and the science of generative AI. <em>Science, 380</em>(6650), 1110–1111. <a href="https://doi.org/10.1126/science.adh4451">https://doi.org/10.1126/science.adh4451</a></li>
+<li><span class="tag">[5]</span> Ludwig Museum – Museum of Contemporary Art. (2024). <em>À la recherche de Vera Molnar</em> [Exhibition booklet]. <a href="https://www.ludwigmuseum.hu/system/files/news/attachments/2024-02/LUDWIG_VeraMolnar_100x180_booklet_0125_III.pdf">https://www.ludwigmuseum.hu/system/files/news/attachments/2024-02/LUDWIG_VeraMolnar_100x180_booklet_0125_III.pdf</a></li>
+<li><span class="tag">[6]</span> Molnar, V. (1975). Toward aesthetic guidelines for paintings with the aid of a computer. <em>Leonardo, 8</em>(3), 185–189. <a href="https://doi.org/10.2307/1573236">https://doi.org/10.2307/1573236</a></li>
+<li><span class="tag">[7]</span> Nees, G. (1968–1970). <em>Schotter</em> [Lithograph from a computer-generated graphic, E.217-2008]. Victoria and Albert Museum. <a href="https://collections.vam.ac.uk/item/O221321/">https://collections.vam.ac.uk/item/O221321/</a></li>
+<li><span class="tag">[8]</span> OpenSea. (2025, September 24). <em>In conversation with Tyler Hobbs</em>. <a href="https://opensea.io/blog/articles/in-conversation-with-tyler-hobbs">https://opensea.io/blog/articles/in-conversation-with-tyler-hobbs</a></li>
+<li><span class="tag">[9]</span> Henshilwood, C. S., d'Errico, F., Yates, R., Jacobs, Z., Tribolo, C., Duller, G. A. T., Mercier, N., Sealy, J. C., Valladas, H., Watts, I., &amp; Wintle, A. G. (2002). Emergence of modern human behavior: Middle Stone Age engravings from South Africa. <em>Science, 295</em>(5558), 1278–1280. <a href="https://doi.org/10.1126/science.1067575">https://doi.org/10.1126/science.1067575</a></li>
+<li><span class="tag">[10]</span> Hedges, S. A. (1978). Dice music in the eighteenth century. <em>Music &amp; Letters, 59</em>(2), 180–187. <a href="https://doi.org/10.1093/ml/59.2.180">https://doi.org/10.1093/ml/59.2.180</a></li>
+<li><span class="tag">[11]</span> Norman, J. (n.d.). <em>The earliest public exhibitions of computer art</em>. HistoryofInformation.com. <a href="https://historyofinformation.com/detail.php?id=3466">https://historyofinformation.com/detail.php?id=3466</a></li>
+<li><span class="tag">[12]</span> LeWitt, S. (1967). Paragraphs on conceptual art. <em>Artforum, 5</em>(10), 79–83.</li>
+<li><span class="tag">[13]</span> Garcia, C. (2016, August 23). <em>Harold Cohen and AARON—A 40-year collaboration</em>. Computer History Museum. <a href="https://computerhistory.org/blog/harold-cohen-and-aaron-a-40-year-collaboration/">https://computerhistory.org/blog/harold-cohen-and-aaron-a-40-year-collaboration/</a></li>
+<li><span class="tag">[14]</span> Reas, C., &amp; Fry, B. (2007). <em>Processing: A programming handbook for visual designers and artists</em>. MIT Press.</li>
+<li><span class="tag">[15]</span> Hayward, A. (2021, August 26). <em>What is Art Blocks and why are these NFTs suddenly selling for millions in Ethereum?</em> Decrypt. <a href="https://decrypt.co/79534/what-is-art-blocks-why-nfts-suddenly-selling-millions-ethereum">https://decrypt.co/79534/what-is-art-blocks-why-nfts-suddenly-selling-millions-ethereum</a></li>
+<li><span class="tag">[16]</span> Anadol, R. (2022). <em>Unsupervised: Machine hallucinations, MoMA</em> [Installation]. <a href="https://refikanadol.com/works/unsupervised/">https://refikanadol.com/works/unsupervised/</a></li>
+</ol>
+</section>
