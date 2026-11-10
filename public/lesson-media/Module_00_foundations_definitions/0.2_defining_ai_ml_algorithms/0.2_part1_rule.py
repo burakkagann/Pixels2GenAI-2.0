@@ -1,8 +1,3 @@
-"""
-A gradient written as an algorithm: a list of exact steps with nothing left to guess.
-
-Author: Pixels2GenAI Project
-"""
 import numpy as np
 from PIL import Image
 

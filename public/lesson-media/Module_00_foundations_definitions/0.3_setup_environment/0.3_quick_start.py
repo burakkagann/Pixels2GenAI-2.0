@@ -1,8 +1,3 @@
-"""
-A first script: report which Python is running, then make and save one image.
-
-Author: Pixels2GenAI Project
-"""
 import sys
 
 import numpy as np

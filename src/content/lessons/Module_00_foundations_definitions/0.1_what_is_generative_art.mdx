@@ -3,13 +3,13 @@ module: "M 00"
 cycle: "I"
 title: "What Is Generative Art"
 objective: "Define generative art by the role of the system, tell it apart from its neighbours, and make your first images from a written rule."
-description: "What makes art generative? Galanter's definition, order and disorder, a short history from Molnár to Anadol, and three Python exercises."
+description: "What makes art generative? Galanter's definition, order and disorder, a short history from Molnár to Anadol."
 framework: "conceptual"
-duration: "20–25 min"
+duration: "10–15 min"
 published: 2025-10-27
 level: "beginner"
 load: "3 core concepts"
-prereqs: "None to read; basic Python helps for the exercises"
+prereqs: "None"
 prev: null
 next:
   slug: "0.2"
@@ -30,7 +30,7 @@ Anyone can carry that out, and no two walls will match. A program can carry it o
 <Figure
   src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/three_runs.png"
   alt="Three wide panels, each a dense web of thin grey lines joining fifty points. The webs share an overall texture and differ in every detail."
-  caption="Three runs of the short program you will meet in Exercise 1. It follows LeWitt's sentences, but these are coding output, not LeWitt works."
+  caption="Three runs of one short program. It follows LeWitt's sentences, but these are coding output, not LeWitt works."
   num={1}
   role="output"
 />
@@ -43,7 +43,6 @@ So who made these pictures: the person who wrote the rule, or the thing that car
   <li>Define generative art with Galanter's definition, and say what "some degree of autonomy" adds.</li>
   <li>Place a borderline case on a scale instead of forcing a yes or no.</li>
   <li>Explain why much generative work sits between total order and total disorder.</li>
-  <li>Change and write a small rule-based image system in Python.</li>
 </ol>
 
 ## Part 1 — A system that runs on its own <a id="part-1"></a>
@@ -82,7 +81,7 @@ Once a system runs on its own, the artist's main choice is how much freedom to g
 <Figure
   src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/order_and_disorder_chart.png"
   alt="A bell-shaped curve of effective complexity, low at total order, high in between and low at total disorder. Below it, three grids of nested squares: perfectly regular, slightly wobbling, and a tangle of lines."
-  caption="A sketch of the idea, not a measurement. The three panels come from one program with one number changed, and you will control that number in Exercise 2."
+  caption="A sketch of the idea, not a measurement. The three panels come from one program with one number changed."
   num={3}
   role="diagram"
 />
@@ -123,317 +122,6 @@ Compare the last entry with AARON. Cohen wrote AARON's rules himself, whereas th
   num={5}
   role="diagram"
 />
-
-## Synthesis project <a id="synthesis"></a>
-
-<Admonition type="note" title="Where each exercise runs">
-Exercise 1 runs on this page: press Run. Exercises 2 and 3 ask you to edit a script, which needs Python on your computer. [Lesson 0.3](/lessons/0.3) sets that up. Without it yet, read the "what to expect" answers now and come back later.
-</Admonition>
-
-<Exercise n={1} kicker="EXECUTE" title="Fifty points, connected">
-
-Run the script twice and compare the two pictures.
-
-<CodeBlock lang="python" file="0.1_exercise1.py">
-```python
-"""
-Fifty points, connected.
-
-A short program that carries out a written instruction: the one Sol LeWitt wrote
-for Wall Drawing #118 (1971). This is a coding exercise, not a LeWitt work.
-
-Author: Pixels2GenAI Project
-"""
-import numpy as np
-from PIL import Image, ImageDraw
-
-WIDTH, HEIGHT = 1000, 500
-
-# No seed on purpose: every run gets new numbers, so every run makes a new drawing.
-random_numbers = np.random.default_rng()
-
-# "Evenly distributed" is left to whoever carries out the instruction.
-# This program's reading: split the wall into 50 equal cells, one point in each.
-columns, rows = 10, 5
-points = []
-for column in range(columns):
-    for row in range(rows):
-        x = (column + random_numbers.random()) * WIDTH / columns
-        y = (row + random_numbers.random()) * HEIGHT / rows
-        points.append((x, y))
-
-# "All of the points should be connected": one straight line for every pair.
-wall = Image.new("L", (WIDTH, HEIGHT), 245)
-pencil = ImageDraw.Draw(wall)
-line_count = 0
-for first in range(len(points)):
-    for second in range(first + 1, len(points)):
-        pencil.line([points[first], points[second]], fill=70, width=1)
-        line_count += 1
-
-wall.save("fifty_points.png")
-print(f"{len(points)} points, {line_count} lines, saved as fifty_points.png")
-```
-</CodeBlock>
-
-<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise1.py" label="0.1_exercise1.py — this script" />
-
-**Reflection questions**
-
-1. What stays the same between runs, and what changes?
-2. LeWitt's text says "evenly distributed". What did this program decide that the sentences left open?
-3. Where in the code does the "degree of autonomy" live?
-
-<Dropdown summary="Answers">
-
-1. The rule stays the same: fifty points, 1,225 lines, the same overall texture. Every position changes, so every detail changes.
-2. Quite a lot: a wall twice as wide as it is tall, a grid of 10 by 5 cells with one point in each, and the weight and grey of the line. Someone else could read "evenly" differently and still follow the text.
-3. In `random_numbers`. The author chose the range, and the program picks each value without asking.
-
-</Dropdown>
-
-</Exercise>
-
-<Exercise n={2} kicker="MODIFY" title="Turn the disorder dial">
-
-The script draws an 8 by 8 grid of nested squares, each corner pushed by a random amount. Change the values in the CONFIG block, run it, and open `order_and_disorder.png`.
-
-<CodeBlock lang="python" file="0.1_exercise2.py">
-```python
-"""
-A grid of nested squares with a dial for disorder, written after Vera Molnar's
-idea of adding a small, controlled amount of disorder to an ordered structure.
-
-Author: Pixels2GenAI Project
-"""
-import numpy as np
-from PIL import Image, ImageDraw
-
-# ========== CONFIG: change these values ==========
-DISORDER = 0.02      # How far corners may stray: 0 = none, 1 = a whole cell
-GRID_SIZE = 8        # Cells along each side of the canvas
-NESTED_SQUARES = 5   # Squares drawn inside each cell
-SEED = 1974          # Same seed, same drawing. Change it for a new one
-# =================================================
-
-CANVAS = 800
-cell_size = CANVAS / GRID_SIZE
-random_numbers = np.random.default_rng(SEED)
-
-image = Image.new("L", (CANVAS, CANVAS), 255)
-draw = ImageDraw.Draw(image)
-
-for row in range(GRID_SIZE):
-    for column in range(GRID_SIZE):
-        centre_x = (column + 0.5) * cell_size
-        centre_y = (row + 0.5) * cell_size
-
-        for square in range(1, NESTED_SQUARES + 1):
-            half_side = 0.45 * cell_size * square / NESTED_SQUARES
-
-            # The rule is fixed. Only the corners carry the randomness, which is
-            # why a small DISORDER still reads as a grid.
-            corners = []
-            for x_sign, y_sign in [(-1, -1), (1, -1), (1, 1), (-1, 1)]:
-                stray_x, stray_y = random_numbers.uniform(-1, 1, 2) * DISORDER * cell_size
-                corners.append((centre_x + x_sign * half_side + stray_x,
-                                centre_y + y_sign * half_side + stray_y))
-            draw.polygon(corners, outline=20)
-
-image.save("order_and_disorder.png")
-print(f"DISORDER = {DISORDER}, saved as order_and_disorder.png")
-```
-</CodeBlock>
-
-<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise2.py" label="0.1_exercise2.py — this script" />
-
-**Goals**
-
-1. Set `DISORDER = 0`.
-2. Set `DISORDER = 0.1`.
-3. Set `DISORDER = 1`.
-4. Go back to `DISORDER = 0.1`, then change `SEED` to any other whole number.
-5. Set `GRID_SIZE = 3` and `NESTED_SQUARES = 12`, then find the `DISORDER` value you like best.
-
-<Dropdown summary="Goal 1 — what to expect">
-A perfectly regular grid. The random numbers are still drawn, but they are multiplied by zero, so the system has no freedom left.
-</Dropdown>
-
-<Dropdown summary="Goal 2 — what to expect">
-Every square wobbles and the inner ones start to cross, yet you can still read eight rows and eight columns. Does this feel more alive to you than Goal 1 did?
-</Dropdown>
-
-<Dropdown summary="Goal 3 — what to expect">
-The grid disappears into a tangle of lines, because a corner can now stray a whole cell away. This is the third panel of Figure 3.
-</Dropdown>
-
-<Dropdown summary="Goal 4 — what to expect">
-A different drawing of the same family. Run it twice with one seed and you get the same drawing twice: a seed makes the randomness repeatable.
-</Dropdown>
-
-<Dropdown summary="Goal 5 — what to expect">
-Fewer, denser cells, which show the wobble more clearly. There is no right answer here, and choosing one is the artist's part of the job.
-</Dropdown>
-
-</Exercise>
-
-<Exercise n={3} kicker="CREATE" title="Radial Scatter">
-
-Finish a system of your own: circles scattered around a centre, one colour per wedge. Each wedge chooses how many circles it gets, and each circle chooses its own angle, distance and size. The order comes from the wedges, and the disorder comes from those choices.
-
-<Dropdown summary="New idea: angle and distance instead of x and y">
-A point can be given as an angle and a distance from a centre. The two lines marked "Given" in the starter turn those into x and y with cosine and sine. You don't need the trigonometry yet; Module 2 covers it.
-</Dropdown>
-
-<CodeBlock lang="python" file="0.1_exercise3_starter.py">
-```python
-"""
-Radial Scatter: a rule-based circle system. Fill in the TODOs to finish the rules.
-
-Author: Pixels2GenAI Project
-"""
-import numpy as np
-from PIL import Image, ImageDraw
-
-# ========== CONFIG: experiment after the TODOs are done ==========
-WEDGES = 8     # Slices of the canvas, like a pie
-SEED = 21      # Change it to let the same rules make another picture
-# =================================================================
-
-CANVAS = 800
-CENTRE = CANVAS / 2
-wedge_width = 2 * np.pi / WEDGES    # A full circle is 2 pi radians
-random_numbers = np.random.default_rng(SEED)
-
-image = Image.new("RGB", (CANVAS, CANVAS), "white")
-draw = ImageDraw.Draw(image)
-
-for wedge in range(WEDGES):
-    # One colour per wedge: this rule gives the picture its structure.
-    colour = tuple(int(value) for value in random_numbers.integers(40, 220, 3))
-
-    # TODO 1: Pick how many circles this wedge gets: a whole number from 5 to 10.
-    # Why: the count varies, so no two pictures have the same rhythm.
-    # Use random_numbers.integers(low, high), which leaves out high.
-    circle_count = 1
-
-    for circle in range(circle_count):
-        # TODO 2: Pick an angle inside this wedge.
-        # Why: circles stay in their slice. This is where order lives.
-        # The wedge starts at wedge * wedge_width. Add a random part of wedge_width.
-        angle = 0.0
-
-        # TODO 3: Pick a distance from the centre, from 60 to 340 pixels.
-        # Why: this is where disorder lives. Use random_numbers.uniform(low, high).
-        distance = 0.0
-
-        # Given: turn the angle and distance into a position on the canvas.
-        x = CENTRE + distance * np.cos(angle)
-        y = CENTRE + distance * np.sin(angle)
-
-        # TODO 4: Pick a radius from 10 to 40 pixels.
-        # Why: size carries the variation you see first.
-        radius = 1.0
-
-        # TODO 5: Draw the circle with draw.ellipse.
-        # It takes the box around the circle: [left, top, right, bottom].
-        # Why: nothing appears until this runs. fill=colour and outline="white"
-        # keep overlapping circles readable.
-        pass
-
-image.save("radial_scatter.png")
-print("Saved radial_scatter.png")
-```
-</CodeBlock>
-
-<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise3_starter.py" label="0.1_exercise3_starter.py — starter with TODOs" />
-
-The starter runs before you change anything, but it saves an empty white image. Your TODOs make the circles appear.
-
-<Dropdown summary="Hint 1 — the circle count">
-`circle_count = random_numbers.integers(5, 11)`. The upper limit is left out, so 11 gives values up to 10.
-</Dropdown>
-
-<Dropdown summary="Hint 2 — the angle">
-`wedge + random_numbers.random()` is a number somewhere between this wedge's start and the next one's. Multiply it by `wedge_width`.
-</Dropdown>
-
-<Dropdown summary="Hint 3 — distance and radius">
-Both use the same call with different limits, for example `random_numbers.uniform(60, 340)`.
-</Dropdown>
-
-<Dropdown summary="Hint 4 — the ellipse box">
-The box runs from `x - radius, y - radius` to `x + radius, y + radius`.
-</Dropdown>
-
-<Dropdown summary="Complete solution">
-
-<CodeBlock lang="python" file="0.1_exercise3_solution.py">
-```python
-"""
-Radial Scatter: the finished rule-based circle system.
-
-Author: Pixels2GenAI Project
-"""
-import numpy as np
-from PIL import Image, ImageDraw
-
-# ========== CONFIG: experiment after the TODOs are done ==========
-WEDGES = 8     # Slices of the canvas, like a pie
-SEED = 21      # Change it to let the same rules make another picture
-# =================================================================
-
-CANVAS = 800
-CENTRE = CANVAS / 2
-wedge_width = 2 * np.pi / WEDGES    # A full circle is 2 pi radians
-random_numbers = np.random.default_rng(SEED)
-
-image = Image.new("RGB", (CANVAS, CANVAS), "white")
-draw = ImageDraw.Draw(image)
-
-for wedge in range(WEDGES):
-    # One colour per wedge: this rule gives the picture its structure.
-    colour = tuple(int(value) for value in random_numbers.integers(40, 220, 3))
-
-    # high is left out, so 11 gives whole numbers from 5 to 10.
-    circle_count = random_numbers.integers(5, 11)
-
-    for circle in range(circle_count):
-        angle = (wedge + random_numbers.random()) * wedge_width
-        distance = random_numbers.uniform(60, 340)
-
-        # Given: turn the angle and distance into a position on the canvas.
-        x = CENTRE + distance * np.cos(angle)
-        y = CENTRE + distance * np.sin(angle)
-
-        radius = random_numbers.uniform(10, 40)
-        draw.ellipse([x - radius, y - radius, x + radius, y + radius],
-                     fill=colour, outline="white")
-
-image.save("radial_scatter.png")
-print("Saved radial_scatter.png")
-```
-</CodeBlock>
-
-<Download href="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/0.1_exercise3_solution.py" label="0.1_exercise3_solution.py — finished script" />
-
-<Figure
-  src="/lesson-media/Module_00_foundations_definitions/0.1_what_is_generative_art/radial_scatter.png"
-  alt="Coloured circles of different sizes scattered around a centre, each colour in its own wedge."
-  caption="Output with SEED = 21 and eight wedges."
-  num={6}
-  role="output"
-/>
-
-</Dropdown>
-
-**Make It Your Own**
-
-- Set `WEDGES` to 3, then to 24. At what point do you stop seeing wedges?
-- Let the radius shrink with distance from the centre, so the picture has a clear middle.
-- Choose four colours you like and pick from them, in place of random colours.
-
-</Exercise>
 
 ## Summary
 
