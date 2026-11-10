@@ -1,0 +1,31 @@
+---
+/**
+ * Credit for the Brandenburg Gate photo (bbtor.jpg), in the form its Commons
+ * page asks for: named and linked at the image, not as a mouseover. Used under
+ * figures (Figure's `photoCredit` prop) and beside the photo's download.
+ * Goes away when the photo is replaced (OST-11).
+ */
+---
+
+<p class="photo-credit">
+  Source photo: Thomas Wolf, <a href="https://www.foto-tw.de" target="_blank" rel="noopener">www.foto-tw.de</a> / <a href="https://commons.wikimedia.org/wiki/File:Brandenburger_Tor_abends.jpg" target="_blank" rel="noopener">Wikimedia Commons</a> / <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.en" target="_blank" rel="noopener">CC&nbsp;BY-SA&nbsp;3.0</a>
+</p>
+
+<style>
+  .photo-credit {
+    font-family: var(--serif);
+    font-style: normal;
+    font-size: calc(14px * var(--t-scale));
+    line-height: 1.45;
+    color: var(--fg-2);
+    margin: 6px 0 12px;
+  }
+  .photo-credit a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+  }
+  .photo-credit a:hover { color: var(--cycle, var(--accent)); }
+  :global(figcaption) .photo-credit { margin: 6px 0 0; }
+</style>

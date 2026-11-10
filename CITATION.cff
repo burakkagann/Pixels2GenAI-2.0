@@ -31,7 +31,8 @@ keywords:
   - "PyTorch"
   - "design-based research"
 license: MIT
-# Lesson prose and figures are licensed CC-BY-4.0 (see LICENSE-CONTENT.md);
+# Our own lesson prose and figures are licensed CC-BY-4.0, third-party items
+# excepted (see LICENSE-CONTENT.md#third-party-material);
 # the site/tooling code is MIT (see LICENSE).
 version: "2.0.0"
 date-released: "2026-06-17"   # TODO: set to the date of the release/tag you cut
