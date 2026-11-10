@@ -14,6 +14,12 @@ import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
 import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/workshops.css';
 import '@/styles/exhibitions.css';
+// Fonts the cover paints with (headline, serif lede, stat values, mono stat labels). Their late swap-in
+// re-wraps the cover and moves the actions (CLS), so fetch them at once; same files the font CSS points to.
+import sansFontUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
+import serifFontUrl from '@fontsource-variable/literata/files/literata-latin-standard-normal.woff2?url';
+import serifItalicFontUrl from '@fontsource-variable/literata/files/literata-latin-standard-italic.woff2?url';
+import monoFontUrl from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 // Entity graph for the homepage: a named author (Person) and the project
 // (Organization) cross-linked by @id, then referenced as the author/provider of
@@ -64,7 +70,7 @@ const courseJsonLd = {
   '@id': `${SITE}/#course`,
   name: 'Pixels2GenAI',
   description:
-    'A free, open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, across fifteen progressive modules.',
+    'Free, open-source Python lessons in generative art. Set a pixel, draw a fractal, train a network, guide a diffusion model. 15 modules and a capstone.',
   provider: { '@id': ORG_ID },
   author: { '@id': AUTHOR_ID },
   image: `${SITE}/exhibitions/prints/orbit-sediment-trichrome.jpg`,
@@ -120,37 +126,33 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
   onLanding={true}
   jsonLd={siteJsonLd}
 >
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={sansFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={serifFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={serifItalicFontUrl} crossorigin />
+  <link slot="head" rel="preload" as="font" type="font/woff2" href={monoFontUrl} crossorigin />
   <main id="main-content">
   <!-- ========== COVER ========== -->
   <header class="cover">
     <div>
-      {/* Author and affiliation, like a paper's title page: the name in the
-          serif (Kağan, the name the author goes by, set bold), the thesis
-          context below in the mono label style. */}
-      <div class="eyebrow"><span><span class="eb-name"><span class="given">Burak</span> <span class="called">Kağan</span> <span class="family">Yılmazer</span></span><span class="eb-aff">MA Thesis · Design-Based Research · Cycle ii</span></span></div>
-      <h1 class="cover-title">
-        <span class="px">Pixels</span> <span class="am">to</span> <span class="it">generative AI,</span><br />
-        one continuous journey.
-      </h1>
-      {/* M-3: phones get the one-sentence lead (draft copy, for Kağan to reword). */}
-      <p class="cover-lead">
-        <span class="lead-long">An open-source curriculum that takes you from a single array element to building, training, and reasoning about modern generative models, <em>across fifteen progressive modules</em>, each producing a visual artifact.</span>
-        <span class="lead-short">An open-source curriculum from a single array element to modern generative models, in fifteen modules that each end in an image you made.</span>
-      </p>
+      <h1 class="cover-title">Write the code behind <span class="cover-mark">generative art.</span></h1>
+      <p class="cover-sub">Set a pixel. Draw a fractal. Train a network. Guide a diffusion model.</p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
         <div><b>Method</b><span>DBR · 3 cycles</span></div>
         <div><b>Theory / Practice</b><span>40 / 60</span></div>
-        <div><b>License</b><span>Open source · MIT + CC-BY</span></div>
+        <div><b>License</b><span>Open source · <span class="nw">MIT + CC-BY</span></span></div>
       </div>
       <div class="cover-actions">
-        {/* Curriculum first and in colour: visitors see what they would learn
-            before being asked to start. */}
-        <a class="btn btn-pri" href="#curriculum">See the curriculum</a>
-        {/* Workshops pink (BT6). Stays on the page: the script below scrolls
-            to § 2 and moves focus to its heading; without JS the hash jumps. */}
-        <a class="btn btn-pri btn-workshop" href="#workshops" data-cover-jump="workshops">See the workshops ↓</a>
+        {/* SC-A: the curriculum is the one primary, in ink. The workshops
+            button is paper with a pink hard shadow (BC-3). It stays on the
+            page: the script below scrolls to § 2 and moves focus to its
+            heading; without JS the hash jumps. */}
+        <a class="btn btn-pri btn-exhibition" href="#curriculum">See the curriculum</a>
+        <a class="btn btn-sec btn-shadow-studio" href="#workshops" data-cover-jump="workshops">See the workshops ↓</a>
       </div>
+      <p class="cover-facts"><span>Free · Python</span> · <span>{LIVE_TOTAL} of {ALL_LEAVES.length} lessons live</span> · <span>run in your browser</span></p>
+      {/* AU-1: the author as a signed byline (DEC-114 words kept). */}
+      <p class="cover-by"><span class="nm">By Burak <b>Kağan</b> Yılmazer</span><span class="aff"><span class="nw">MA thesis</span> · <span class="nw">Design-based research</span> · <span class="nw">Cycle ii</span></span></p>
     </div>
 
     <!-- CUBE — React island on an exhibit plate, captioned like a
@@ -158,11 +160,11 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="cube-plate">
       <div class="cube-caption">
         <span class="fig-num">Fig. 0</span>
-        <span>The journey object · M 01 → M 12</span>
+        <span>Drag from pixels to GenAI · M 01 → M 12</span>
       </div>
       {/* M-1: the plate is hidden under 641 px, and client:media keeps React
           and the island's JS off phones entirely (BLD-35 measured the cost). */}
-      <JourneyCube client:media="(min-width: 641px)" />
+      <JourneyCube lite client:media="(min-width: 641px)" />
     </div>
   </header>
 

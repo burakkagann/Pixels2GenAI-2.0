@@ -37,7 +37,7 @@ interface Props {
 
 const {
   title,
-  description = 'An open curriculum that takes a learner from a single array element to building, training, and reasoning about modern generative models.',
+  description = 'Free, open-source Python lessons in generative art. Set a pixel, draw a fractal, train a network, guide a diffusion model.',
   onLanding = false,
   ogImage = '/og/home.png',
   jsonLd,
@@ -119,6 +119,9 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImageUrl} />
+
+  {/* Optional per-page extras (e.g. a font preload), see /workshops. */}
+  <slot name="head" />
 
   {jsonLdBlocks.map((block) => (
     <script type="application/ld+json" set:html={JSON.stringify(block)} />

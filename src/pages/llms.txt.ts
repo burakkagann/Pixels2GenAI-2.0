@@ -32,10 +32,9 @@ export async function GET(context: APIContext) {
   lines.push('# Pixels2GenAI');
   lines.push('');
   lines.push(
-    '> A free, open-source curriculum that takes a learner from a single array ' +
-      'element to building, training, and reasoning about modern generative models, ' +
-      'across fifteen progressive modules and a capstone. Developed as a Master’s ' +
-      'thesis using Design-Based Research.',
+    '> Free, open-source Python lessons in generative art and AI, from a single ' +
+      'pixel to diffusion models, across fifteen progressive modules and a capstone. ' +
+      "Developed as a Master's thesis using design-based research.",
   );
   lines.push('');
   lines.push(
