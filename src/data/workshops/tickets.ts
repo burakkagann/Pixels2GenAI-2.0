@@ -29,8 +29,8 @@ export const TICKETS = {
   time: '11:00–15:30',
   terms: '/workshops/terms',
   /** The label shown in place of a ticket button while its shop link above is null. Wed 11 Nov: fill in `pretix.w1`, `pretix.pass` (and `luma.w1`) and the buttons return; this line is then unused. */
-  notReady: 'Tickets open Wed 11 Nov',
+  notReady: 'Tickets open soon',
   /** Open once the W1 shop link is filled in; the labels below follow it, so filling the link brings back 'On sale'. */
   get open() { return Boolean(this.pretix.w1); },
-  get saleTag() { return this.open ? 'On sale' : 'Tickets Wed 11'; },
+  get saleTag() { return this.open ? 'On sale' : 'Tickets soon'; },
 };

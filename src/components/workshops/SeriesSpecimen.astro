@@ -3,7 +3,7 @@
  * The workshop series as the newest row of the landing § 2 archive (BLD-30,
  * DEC-98/99): same <details> specimen as the pilot above it, open by default,
  * with the six workshops as small versions of the /workshops cards (band
- * header, date tile, image, title and one line of context, DEC-100; the
+ * header, image, title and one line of context, DEC-100, no date; the
  * cards are MiniCards.astro, shared with the pilot row). Rendered only when
  * PUBLIC_WORKSHOP_SERIES=true. Data: src/data/workshops/series.ts, tickets.ts.
  */
@@ -23,11 +23,6 @@ const indexDisplay = String(index).padStart(2, '0');
 const first = SERIES[0];
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`);
 const startLong = day(first.dateIso!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-const tile = (iso: string) => {
-  const d = day(iso);
-  const part = (o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' }).toUpperCase();
-  return { wd: part({ weekday: 'short' }), d: d.getUTCDate(), m: part({ month: 'short' }) };
-};
 const onSale = (id: WorkshopId) => TICKETS.onSale.includes(id);
 const P = TICKETS.price;
 const late = new Date().toISOString().slice(0, 10) >= TICKETS.passLate.from;
@@ -39,10 +34,9 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
   head: `W${w.n} ${w.verb.toUpperCase()}`,
   now: onSale(w.id),
   image: w.image.src,
-  tile: w.dateIso ? tile(w.dateIso) : undefined,
+  // No date on the home cards (Kağan, 10 Nov): the dates are on /workshops.
   title: w.title,
   line: w.homeLine,
-  srLabel: w.date,
 }));
 ---
 
@@ -82,7 +76,7 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
         <a class="btn btn-sec" href="/workshops">See the series →</a>
       </>
     ) : (
-      <a class="btn btn-pri btn-workshop" href="/workshops">See the workshops →</a>
+      <a class="btn btn-sec btn-shadow-studio" href="/workshops">See the workshops →</a>
     )}
   </div>
 </details>

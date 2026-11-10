@@ -152,6 +152,8 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         <a class="btn btn-sec btn-shadow-studio" href="#workshops" data-cover-jump="workshops">See the workshops ↓</a>
       </div>
       <p class="cover-facts"><span>Free · Python</span> · <span>{LIVE_TOTAL} of {ALL_LEAVES.length} lessons live</span> · <span>run in your browser</span></p>
+      {/* Phones show this one line in place of the stat grid and the facts line above. */}
+      <p class="cover-facts cover-facts-phone">Open source · MIT + CC-BY · Run in your browser</p>
       {/* AU-1: the author as a signed byline (DEC-114 words kept). */}
       <p class="cover-by"><span class="nm">By Burak <b>Kağan</b> Yılmazer</span><span class="aff"><span class="nw">MA thesis</span> · <span class="nw">Design-based research</span> · <span class="nw">Cycle ii</span></span></p>
     </div>
@@ -313,8 +315,9 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                   type="button"
                   class:list={['mod-card', live > 0 ? 'has-live' : 'no-live']}
                   data-m={m.idx}
-                  aria-expanded="false"
-                  aria-controls={`panel-${m.idx}`}
+                  aria-expanded={live > 0 ? 'false' : undefined}
+                  aria-controls={live > 0 ? `panel-${m.idx}` : undefined}
+                  disabled={live === 0}
                 >
                   <div class="card-top">
                     <b>M {m.idx}</b>
@@ -328,7 +331,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                       name stays "M nn, title, lessons"; the alt text is kept for
                       wherever the covers appear outside a control. */}
                   {COVERS[m.idx] && (live > 0 || m.ownCover)
-                    ? <span class="mod-fig" aria-hidden="true"><img src={COVERS[m.idx].src} width={COVERS[m.idx].width} height={COVERS[m.idx].height} alt={COVERS[m.idx].alt} loading="lazy" decoding="async" />{live === 0 && <b class="mod-tag">Planned</b>}</span>
+                    ? <span class="mod-fig" aria-hidden="true"><img src={COVERS[m.idx].src} width={COVERS[m.idx].width} height={COVERS[m.idx].height} alt={COVERS[m.idx].alt} loading="lazy" decoding="async" />{live === 0 ? <b class="mod-tag">Planned</b> : <b class="mod-tag mod-tag-live">{live} live</b>}</span>
                     : <span class="mod-fig mod-plan" aria-hidden="true">
                         <b>Planned</b>
                         <span class="mod-plan-list">{(PLANNED_TOPICS[m.idx] ?? (SUBTOPICS[m.idx] ?? []).map((s) => s.title)).map((t) => <span>{t}</span>)}</span>
@@ -337,7 +340,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
                   {/* span, not h4: a <button> may only hold phrasing content. */}
                   <span class="card-title">{m.title}<br /><em>{m.em}</em></span>
                   <span class="card-short" aria-hidden="true">{SHORT_TITLE[m.idx] ?? m.title}</span>
-                  <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons{live > 0 && <> · <b class="cm-live">{live} live</b></>}</div>
+                  <div class="card-meta"><span class="cm-subs">{c.subs} sub · </span>{c.leaves} lessons{live > 0 && <span class="sr-only"> · {live} live</span>}</div>
                 </button>
               );
             })}
@@ -850,7 +853,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="workshops-archive">
       <div class="archive-head">
         <span class="archive-org">Pixels2GenAI · Workshop archive</span>
-        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {seriesOn ? (TICKETS.open ? '1 on sale' : 'tickets Wed 11') : `${UPCOMING_WORKSHOPS.length} in planning`}</span>
+        <span class="archive-count">▌ {PAST_WORKSHOPS.length} completed · {seriesOn ? (TICKETS.open ? '1 on sale' : 'tickets soon') : `${UPCOMING_WORKSHOPS.length} in planning`}</span>
       </div>
 
       {/* Oldest first and collapsed; the active workshop last and open (DEC-98). */}
