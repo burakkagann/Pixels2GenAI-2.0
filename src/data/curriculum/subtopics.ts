@@ -256,7 +256,7 @@ export const SUBTOPICS: Record<string, SubtopicEntry[]> = {
     ]},
     { id: '10.2', title: 'Recreating Static Exercises', leaves: [
       { id: '10.2.1', title: 'Core Exercises Realtime' },
-      { id: '10.2.2', title: 'Boids in TouchDesigner', lessonSlug: '10.2.2' },
+      { id: '10.2.2', title: 'Boids in TouchDesigner' },
       { id: '10.2.3', title: 'Planet Simulation TD' },
       { id: '10.2.4', title: 'Fractals Realtime' },
     ]},
@@ -407,3 +407,12 @@ export function leavesFor(moduleIdx: string): LeafEntry[] {
   const subs = SUBTOPICS[moduleIdx] ?? [];
   return subs.flatMap(s => s.leaves);
 }
+
+/** Lesson ids wired with a `lessonSlug`. Only these get a page, a feed item,
+ *  an llms.txt line and an OG card; an MDX file that is not wired yet (e.g.
+ *  10.2.2, held back 11 Nov) stays unpublished. */
+export const WIRED_LESSONS: ReadonlySet<string> = new Set(
+  Object.values(SUBTOPICS).flatMap((subs) =>
+    subs.flatMap((sub) => sub.leaves.flatMap((leaf) => (leaf.lessonSlug ? [leaf.lessonSlug] : []))),
+  ),
+);

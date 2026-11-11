@@ -1,3 +1,4 @@
+import { WIRED_LESSONS } from '@/data/curriculum/subtopics';
 /**
  * Build-time Open Graph image generation.
  *
@@ -13,7 +14,7 @@ import { getCollection } from 'astro:content';
 import { inlineMarkdownText } from '@/lib/inlineMarkdown';
 import { OGImageRoute } from 'astro-og-canvas';
 
-const lessons = await getCollection('lessons');
+const lessons = await getCollection('lessons', ({ id }) => WIRED_LESSONS.has(id));
 
 // One entry per generated image. Keys become the URL path under /og/.
 const pages: Record<string, { title: string; description: string }> = {

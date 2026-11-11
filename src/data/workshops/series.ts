@@ -149,7 +149,7 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '12.3.2', title: 'A real model', sub: 'your sketch or style, turned into an image', minutes: 55, source: 'live' },
     ],
     make: 'Your sketch or your style turned into an image, labelled as AI-made',
-    cardMake: 'Your sketch turned into an image by a real model, labelled AI-made',
+    cardMake: 'Your sketch turned into an image by a real model',
     homeLine: 'A model turns your sketch into an image',
     needs: 'A laptop with a GPU, or a free Google Colab account',
     warmup: '3 questions on learning',

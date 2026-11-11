@@ -1,3 +1,4 @@
+import { WIRED_LESSONS } from '@/data/curriculum/subtopics';
 import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
 import { MODULES, moduleIndexFromLabel } from '@/data/curriculum/modules';
@@ -9,7 +10,7 @@ import { MODULES, moduleIndexFromLabel } from '@/data/curriculum/modules';
 // treat it as a low-cost, forward-looking hint, not a primary discovery channel.
 export async function GET(context: APIContext) {
   const site = context.site!.origin;
-  const lessons = await getCollection('lessons');
+  const lessons = await getCollection('lessons', ({ id }) => WIRED_LESSONS.has(id));
 
   // Natural sort on the dotted id ("2.1.1") so lessons read in curriculum order.
   const segs = (id: string) => id.split('.').map(Number);

@@ -1,4 +1,5 @@
 ---
+import { WIRED_LESSONS } from '@/data/curriculum/subtopics';
 import { getCollection, render } from 'astro:content';
 import Lesson from '@/layouts/Lesson.astro';
 import Admonition from '@/components/lesson/mdx/Admonition.astro';
@@ -10,7 +11,7 @@ import Download from '@/components/lesson/mdx/Download.astro';
 import PhotoCredit from '@/components/lesson/mdx/PhotoCredit.astro';
 
 export async function getStaticPaths() {
-  const lessons = await getCollection('lessons');
+  const lessons = await getCollection('lessons', ({ id }) => WIRED_LESSONS.has(id));
   // lesson.id is the numeric leaf id (e.g. "2.1.1") via the glob loader's
   // generateId — independent of where the MDX file lives on disk.
   return lessons.map((lesson) => ({

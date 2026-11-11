@@ -1,3 +1,4 @@
+import { WIRED_LESSONS } from '@/data/curriculum/subtopics';
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
@@ -8,7 +9,7 @@ import { inlineMarkdownText } from '@/lib/inlineMarkdown';
 // Lessons carry no date field yet, so items are ordered by their numeric leaf
 // id (1.1.1 < 1.2.1 < 2.1.1 …) rather than by pubDate.
 export async function GET(context: APIContext) {
-  const lessons = await getCollection('lessons');
+  const lessons = await getCollection('lessons', ({ id }) => WIRED_LESSONS.has(id));
 
   // Natural sort on the dotted numeric id ("2.1.1") so the feed reads in
   // curriculum order, not lexicographically ("10.1.1" before "2.1.1").
