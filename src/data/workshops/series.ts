@@ -75,7 +75,7 @@ export const SERIES: SeriesWorkshop[] = [
     threadText: 'The start of the series: no earlier idea needed.',
     cores: [
       { id: '1.1.1', title: 'Colour as numbers', sub: 'a pixel is three numbers; a channel-shift poster', minutes: 45, source: 'live' },
-      { id: '3.4.1', title: 'Convolution', sub: 'a kernel reads the neighbours; you write the loop yourself', minutes: 55, source: 'live' },
+      { id: '3.4.1', title: 'Convolution', sub: 'a kernel reads the neighbours; you write the rule inside the loop', minutes: 55, source: 'live' },
       { id: '3.4.5', title: 'Dithering and halftone', sub: 'kernels for print', minutes: 50, source: 'new' },
     ],
     make: 'A print-ready riso-style image of your own photo; a photo print follows by post if you want one',
@@ -107,7 +107,7 @@ export const SERIES: SeriesWorkshop[] = [
     date: 'Sat 6 Feb 2027', dateIso: '2027-02-06',
     idea: 'Pixels are points: similar ones are close, and you can measure how wrong a summary is.',
     thread: 'w2',
-    threadText: 'From W2, iteration: k-means repeats one rule until the error stops falling.',
+    threadText: 'From W2, iteration: k-means repeats one rule until the error stops falling; from W1, the error you passed on.',
     cores: [
       { id: '3.3.4', title: 'Voronoi and stippling', sub: 'every pixel belongs to its nearest point', minutes: 50, source: 'leaf' },
       { id: '7.1.1', title: 'K-means palette', sub: 'move the points to lower the error', minutes: 50, source: 'leaf' },
