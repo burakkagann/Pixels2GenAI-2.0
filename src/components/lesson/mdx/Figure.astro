@@ -77,6 +77,16 @@ const SIZE_PX: Record<FigureSize, number | null> = {
 
 const { src, alt, caption, num, role, size, pixelated, width, photoCredit } = Astro.props;
 
+// A single [n] in a caption links to References entry n, like the ones in the
+// text (rehype-citations). The caption is a prop, so the plugin cannot reach it;
+// the Citations script drops the link again if the page has no entry n.
+const captionHtml = caption
+  ? inlineMarkdownHtml(caption).replace(
+      /\s?\[([1-9]\d?)\]/g,
+      (_m, n) => `<sup class="cite"><a class="cite-ref" href="#ref-${n}" data-ref="${n}">[${n}]</a></sup>`,
+    )
+  : '';
+
 const effectiveSize: FigureSize = size ?? (role ? ROLE_SIZE[role] : 'default');
 const sizeClass = effectiveSize !== 'default' ? effectiveSize : null;
 
@@ -164,7 +174,7 @@ const attrH = dims?.h;
   {(caption || num !== undefined || photoCredit) && (
     <figcaption>
       {num !== undefined && <span class="fnum">Fig. {num}</span>}
-      {caption && <Fragment set:html={inlineMarkdownHtml(caption)} />}
+      {caption && <Fragment set:html={captionHtml} />}
       {photoCredit && <PhotoCredit />}
     </figcaption>
   )}

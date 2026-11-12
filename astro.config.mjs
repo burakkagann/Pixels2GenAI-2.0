@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeCitations from './src/plugins/rehype-citations.mjs';
 import workshopArea, { isWorkshopAreaPath } from './src/integrations/workshop-area.mjs';
 
 // Wrap content from each h2 to the next h2 in a <section class="lesson-section">.
@@ -84,9 +85,11 @@ export default defineConfig({
     // MDX escape handling, so `\,` and `\theta` survive); rehype-katex renders
     // them to static HTML at build time, no client JS. KaTeX CSS is imported
     // by Lesson.astro. A literal dollar sign in prose must be written `\$`.
+    // rehypeCitations links every [n] in the prose to its References entry
+    // (after KaTeX so rendered math is skipped).
     // Frontmatter strings and component props (objective, caption=…) are not
     // Markdown and are not rendered: keep them plain text.
-    mdx({ remarkPlugins: [remarkSectionize, remarkMath], rehypePlugins: [rehypeKatex] }),
+    mdx({ remarkPlugins: [remarkSectionize, remarkMath], rehypePlugins: [rehypeKatex, rehypeCitations] }),
     sitemap({
       // The /og/*.png endpoints are social-card images, not crawlable pages.
       // /announce/thanks (form confirmation) and /404 are noindex pages.

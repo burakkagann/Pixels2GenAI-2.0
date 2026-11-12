@@ -1165,7 +1165,7 @@
    and the "Star on GitHub" split button (count attached). Selectors start
    with `.foot` so they beat `.foot a` / `.foot p` (the footer's 11 px mono).
    The pixel star in the button assembles once, when the strip is >= 60 % in
-   view (Footer.astro script adds .gs-lit); static under reduced motion. */
+   view (StarStrip.astro script adds .gs-lit); static under reduced motion. */
 .gs, .gs * { box-sizing: border-box; }
 .foot .gs {
   margin-bottom: 46px;

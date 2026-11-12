@@ -5,7 +5,9 @@ import LessonHead from '@/components/lesson/LessonHead.astro';
 import OnThisPage from '@/components/lesson/OnThisPage.astro';
 import ContinueInModule from '@/components/lesson/ContinueInModule.astro';
 import PrevNext from '@/components/lesson/PrevNext.astro';
+import StarStrip from '@/components/chrome/StarStrip.astro';
 import StageTracker from '@/components/lesson/StageTracker.astro';
+import Citations from '@/components/lesson/Citations.astro';
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS } from '@/data/curriculum/subtopics';
 import { curriculumOrder, lessonNav } from '@/lib/lessonNav';
@@ -198,5 +200,10 @@ const jsonLdBlocks = [lessonJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd
       <ContinueInModule slug={slug} currentModule={f.module} />
     </aside>
   </main>
+  {/* Same star strip as the home footer; `.foot` carries its scoped styles. */}
+  <div class="foot lesson-star">
+    <StarStrip />
+  </div>
+  <Citations />
   {TutorDev && <TutorDev lessonId={slug} lessonTitle={f.title} />}
 </Base>

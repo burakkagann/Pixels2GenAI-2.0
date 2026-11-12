@@ -244,3 +244,8 @@
   .tick:last-child::before { right: var(--pad-x); }
 }
 
+
+/* Star strip at the bottom of a lesson (StarStrip inside a `.foot` wrapper):
+   the strip is the last thing on the page, so drop the footer's extra gap. */
+.foot.lesson-star { padding-top: 0; padding-bottom: 56px; border-top: 0; }
+.foot.lesson-star .gs { margin-bottom: 0; }

@@ -2,14 +2,9 @@
 // Site footer. Rendered on the landing page and the standalone pages
 // (research, workshops, exhibition, announce, imprint, privacy, 404).
 // Styles live in src/styles/landing.css under `.foot*`
-// (open-source strip with the star button under `.gs*`).
-import { getStarCount, formatStars, shippedLessonCount, GITHUB_REPO } from '@/lib/github';
-import { STAR_PIXELS } from '@/lib/pixelGlyphs';
-
-// Build-time star count — memoised module-wide, so this shares FrameTop's
-// single fetch rather than adding one.
-const stars = await getStarCount();
-const lessonCount = shippedLessonCount();
+// (open-source strip with the star button: StarStrip.astro, `.gs*`).
+import StarStrip from './StarStrip.astro';
+import { GITHUB_REPO } from '@/lib/github';
 
 // The "Manual" links target sections on the landing page. On any other page an
 // in-page "#curriculum" anchor is dead, so prefix with "/" off-landing (mirrors
@@ -18,41 +13,7 @@ const prefix = Astro.url.pathname === '/' ? '' : '/';
 ---
 
 <footer class="foot" id="colophon">
-  <section class="gs" aria-label="Open source">
-    <div class="gs-strip"><b>Pixels2GenAI · Open source</b><span>▌ MIT code · CC BY 4.0 own work</span></div>
-    <div class="gs-row">
-      <p class="gs-line">{lessonCount} free lessons, open source on GitHub. A star helps other learners find them.</p>
-      <a
-        class="btn btn-pri gs-btn colo-link"
-        href={`https://github.com/${GITHUB_REPO}`}
-        target="_blank"
-        rel="noopener"
-        aria-label={stars !== null
-          ? `Star Pixels2GenAI on GitHub — currently ${stars} ${stars === 1 ? 'star' : 'stars'}`
-          : 'Star Pixels2GenAI on GitHub'}
-      >
-        <span class="gs-face">
-          {/* The same 11 x 11 pixel star as the header chip: a base layer in
-              the button ink and a yellow layer that wipes in once (below). */}
-          <span class="gs-px" aria-hidden="true">
-            <svg class="px-base" viewBox="0 0 11 11" width="16" height="16" shape-rendering="crispEdges">
-              {STAR_PIXELS.map((p) => <rect x={p.x} y={p.y} width="1" height="1" />)}
-            </svg>
-            <span class="px-lit-wrap">
-              <svg class="px-lit" viewBox="0 0 11 11" width="16" height="16" shape-rendering="crispEdges">
-                {STAR_PIXELS.map((p) => <rect x={p.x} y={p.y} width="1" height="1" />)}
-              </svg>
-            </span>
-          </span>
-          Star on GitHub
-        </span>
-        {/* Count segment: build-time fallback, refreshed client-side by the
-            FrameTop script. Hidden while :empty, so a failed load leaves the
-            plain button. */}
-        <span class="gs-n colo-count">{stars !== null ? formatStars(stars) : ''}</span>
-      </a>
-    </div>
-  </section>
+  <StarStrip />
   <div class="foot-grid">
     <div>
       <h4>Pixels2GenAI</h4>
@@ -107,29 +68,3 @@ const prefix = Astro.url.pathname === '/' ? '' : '/';
     <span>v2 · Pressmark P2GA-r · 2026</span>
   </div>
 </footer>
-
-<script>
-  // The pixel star assembles once per page view, when the strip is at least
-  // 60 % on screen; it pauses while off screen and stays static under
-  // prefers-reduced-motion (the CSS also disables it).
-  const strip = document.querySelector<HTMLElement>('.foot .gs');
-  if (strip && !matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
-    let played = false;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.intersectionRatio >= 0.6) {
-          strip.classList.remove('gs-paused');
-          if (!played) {
-            played = true;
-            strip.classList.add('gs-lit');
-            window.setTimeout(() => strip.classList.remove('gs-lit'), 1400);
-          }
-        } else {
-          strip.classList.add('gs-paused');
-        }
-      },
-      { threshold: [0, 0.6] },
-    );
-    io.observe(strip);
-  }
-</script>

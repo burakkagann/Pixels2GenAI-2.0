@@ -1,0 +1,202 @@
+---
+// Citation behaviour for lesson pages (BLD-150, picks CIT-1b, 3a, 4a).
+// The markers and back links are made at build time by src/plugins/rehype-citations.mjs;
+// this adds the small preview card on top. Without the script every marker still
+// jumps to its entry in References.
+//   Desktop: hover or keyboard focus shows a card; click jumps. Phone: tap opens a bottom sheet.
+//   Esc closes the card and the sheet. After a jump, focus moves to the entry;
+//   the back link moves it back to the marker. Sources with no URL say so (4a).
+import '@/styles/citations.css';
+---
+
+<script>
+  const list = document.querySelector<HTMLElement>('.refs ol');
+  if (list) {
+    const entry = (n: string) => document.getElementById('ref-' + n);
+    const isSheetMode = () => matchMedia('(hover: none), (max-width: 640px)').matches;
+    let card: HTMLElement | null = null;
+    let active: HTMLElement | null = null;
+    let timer = 0;
+
+    const focusHash = (hash: string) => {
+      const t = document.getElementById(hash.slice(1));
+      if (!t || !/^#(ref|cite)-/.test(hash)) return;
+      t.focus({ preventScroll: true });
+      // Base.astro scrolls with replaceState, which never sets :target, so the tint is a class here.
+      list.querySelectorAll('.cite-hit').forEach((x) => x.classList.remove('cite-hit'));
+      if (t.parentElement === list) {
+        void t.offsetWidth; // restart the fade on a repeat jump
+        t.classList.add('cite-hit');
+      }
+    };
+
+    // Every entry can take focus after a jump; caption markers get a name or fall back to text.
+    list.querySelectorAll<HTMLElement>(':scope > li').forEach((li) => li.setAttribute('tabindex', '-1'));
+    document.querySelectorAll<HTMLElement>('a.cite-ref').forEach((a) => {
+      const li = entry(a.dataset.ref || '');
+      if (!li) {
+        const sup = a.closest('sup.cite') || a;
+        sup.replaceWith(document.createTextNode(a.textContent || ''));
+      } else if (!a.hasAttribute('aria-label')) {
+        const t = (li.textContent || '').replace(/^\s*\[\d+\]\s*/, '').replace(/\s+/g, ' ');
+        const m = t.match(/^(.*?\(\s*(?:\d{4}|n\.d\.)[^)]*\))/);
+        a.setAttribute('aria-label', 'Source ' + a.dataset.ref + ': ' + (m ? m[1] : t).slice(0, 70));
+      }
+    });
+
+    const closeCard = (restore = false) => {
+      clearTimeout(timer);
+      const sheet = card?.classList.contains('cite-sheet');
+      card?.remove();
+      card = null;
+      active?.classList.remove('cite-active');
+      if (restore && sheet) active?.focus();
+      active = null;
+    };
+
+    const arrowSpan = (ch: string) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.setAttribute('aria-hidden', 'true');
+      return s;
+    };
+
+    const openCard = (marker: HTMLElement, kind: 'pop' | 'sheet') => {
+      if (active === marker && card?.classList.contains('cite-' + kind)) return;
+      closeCard();
+      const n = marker.dataset.ref || '';
+      const li = entry(n);
+      if (!li) return;
+      const el = document.createElement('div');
+      el.className = 'cite-card cite-' + kind;
+      const head = document.createElement('div');
+      head.className = 'cite-card-head';
+      const tag = document.createElement('span');
+      tag.className = 'cite-card-tag';
+      tag.textContent = 'Source ' + n;
+      head.append(tag);
+      if (kind === 'sheet') {
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'cite-close';
+        close.textContent = 'Close';
+        close.addEventListener('click', () => closeCard(true));
+        head.append(close);
+      }
+      // The card shows the entry itself, minus its tag, back links and URLs.
+      const clone = li.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('.tag, .cite-back, a').forEach((x) => x.remove());
+      const text = document.createElement('p');
+      text.className = 'cite-card-text';
+      text.append(...Array.from(clone.childNodes));
+      const actions = document.createElement('div');
+      actions.className = 'cite-card-actions';
+      const url = li.querySelector<HTMLAnchorElement>('a[href^="http"]');
+      if (url) {
+        const go = document.createElement('a');
+        go.className = 'cite-go';
+        go.href = url.href;
+        go.target = '_blank';
+        go.rel = 'noopener';
+        go.append('Open source ', arrowSpan('↗'));
+        actions.append(go);
+      } else {
+        // 4a: no online link yet.
+        const none = document.createElement('span');
+        none.className = 'cite-nolink';
+        none.textContent = 'Print source, no online link';
+        actions.append(none);
+      }
+      const jump = document.createElement('a');
+      jump.className = 'cite-jump';
+      jump.href = '#ref-' + n;
+      jump.append('In references ', arrowSpan('↓'));
+      jump.addEventListener('click', () => {
+        closeCard();
+        setTimeout(() => focusHash('#ref-' + n), 0);
+      });
+      actions.append(jump);
+      el.append(head, text, actions);
+      // Inherit the module colour from the marker.
+      const cs = getComputedStyle(marker);
+      ['--cycle', '--cycle-soft', '--cycle-tint'].forEach((v) => {
+        const val = cs.getPropertyValue(v);
+        if (val) el.style.setProperty(v, val);
+      });
+
+      if (kind === 'sheet') {
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-label', 'Source ' + n);
+      } else {
+        // The hover/focus card is a visual copy: the marker's label and the entry itself are what is read.
+        el.setAttribute('aria-hidden', 'true');
+        el.querySelectorAll('a').forEach((a) => a.setAttribute('tabindex', '-1'));
+        el.addEventListener('mouseenter', () => clearTimeout(timer));
+        el.addEventListener('mouseleave', () => closeCard());
+      }
+      document.body.append(el);
+      if (kind === 'pop') {
+        const r = marker.getBoundingClientRect();
+        const w = Math.min(380, innerWidth - 32);
+        const col = (document.querySelector('.col-main') || document.body).getBoundingClientRect();
+        const left = Math.max(16, Math.min(r.left + scrollX - 24, Math.min(innerWidth - 16, col.right) - w));
+        el.style.width = w + 'px';
+        el.style.left = left + 'px';
+        el.style.top = r.bottom + scrollY + 8 + 'px';
+        el.style.setProperty('--ax', r.left + scrollX + r.width / 2 - left + 'px');
+      } else {
+        el.querySelector<HTMLElement>('.cite-close')?.focus();
+      }
+      marker.classList.add('cite-active');
+      card = el;
+      active = marker;
+    };
+
+    const markerOf = (t: EventTarget | null) => (t as HTMLElement | null)?.closest?.('a.cite-ref') as HTMLElement | null;
+
+    document.addEventListener('mouseover', (e) => {
+      const m = markerOf(e.target);
+      if (!m || isSheetMode()) return;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => openCard(m, 'pop'), 150);
+    });
+    document.addEventListener('mouseout', (e) => {
+      if (!markerOf(e.target) || card?.classList.contains('cite-sheet')) return;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => closeCard(), 250);
+    });
+    document.addEventListener('focusin', (e) => {
+      const m = markerOf(e.target);
+      if (m && !isSheetMode() && m.matches(':focus-visible')) openCard(m, 'pop');
+    });
+    document.addEventListener('focusout', (e) => {
+      if (markerOf(e.target) && card?.classList.contains('cite-pop')) closeCard();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && card) closeCard(true);
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (card?.classList.contains('cite-sheet') && !card.contains(e.target as Node) && !markerOf(e.target)) closeCard(true);
+    });
+    document.addEventListener('click', (e) => {
+      const m = markerOf(e.target);
+      if (m) {
+        if (isSheetMode()) {
+          // Capture phase: stop Base.astro's anchor handler from scrolling away.
+          e.preventDefault();
+          e.stopPropagation();
+          openCard(m, 'sheet');
+        } else {
+          closeCard();
+          setTimeout(() => focusHash('#ref-' + m.dataset.ref), 0);
+        }
+        return;
+      }
+      // Back links: focus returns to the marker in the text.
+      const back = (e.target as HTMLElement).closest?.('.cite-back a') as HTMLAnchorElement | null;
+      if (back) setTimeout(() => focusHash(back.getAttribute('href') || ''), 0);
+    }, true);
+    addEventListener('hashchange', () => focusHash(location.hash));
+    if (location.hash) focusHash(location.hash);
+  }
+</script>
