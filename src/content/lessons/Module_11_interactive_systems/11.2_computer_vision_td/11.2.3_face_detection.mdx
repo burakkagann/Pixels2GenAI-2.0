@@ -119,7 +119,7 @@ for face in result.face_landmarks:
 The 478 points are organised into named regions: 27 around each eye, 80 around the mouth, 40 along the jawline, etc. Face Mesh's documentation [3] includes a connectivity diagram showing which points form which features. You can filter to specific regions (jawline only, eyes only) by indexing the landmarks array with the published index ranges.
 
 <Admonition type="dyk" title="Did you know · Snapchat invented the modern face filter">
-Snapchat Lenses launched in 2015 with face-tracking-driven AR filters — sunglasses pasted onto your eyes, dog ears on your head, face swaps. The underlying technology was an Israeli company (Looksery) that Snapchat acquired in 2015 for \$150M [4]. Their detection model used a similar landmark architecture to MediaPipe's. By 2024, every major social platform (Instagram, TikTok, BeReal, Threads) has integrated face filters built on the same primitive: detect landmarks, render geometry anchored to them.
+Snapchat Lenses launched in 2015 with face-tracking-driven AR filters — sunglasses pasted onto your eyes, dog ears on your head, face swaps. The technology came from Looksery, a face-tracking start-up that Snapchat bought in 2015 [4]. By 2024, every major social platform (Instagram, TikTok, BeReal, Threads) has integrated face filters built on the same primitive: detect landmarks, render geometry anchored to them.
 </Admonition>
 
 <Download href="/lesson-media/Module_11_interactive_systems/11.2_computer_vision_td/11.2.3_face_detection/11.2.3_face_landmarks.py" label="11.2.3_face_landmarks.py — landmark detection only" />
@@ -308,9 +308,9 @@ Face *detection* finds where faces are; face *recognition* identifies who they a
     <li><span class="tag">[1]</span> Viola, P., & Jones, M. J. (2004). Robust real-time face detection. *International Journal of Computer Vision*, 57(2), 137–154. <a href="https://doi.org/10.1023/B:VISI.0000013087.49260.fb" target="_blank" rel="noopener">doi:10.1023/B:VISI.0000013087.49260.fb</a></li>
     <li><span class="tag">[2]</span> Lugaresi, C., Tang, J., Nash, H., et al. (2019). MediaPipe: A framework for building perception pipelines. *arXiv preprint*, arXiv:1906.08172. <a href="https://arxiv.org/abs/1906.08172" target="_blank" rel="noopener">arxiv.org/abs/1906.08172</a></li>
     <li><span class="tag">[3]</span> Google. (2024). *MediaPipe Face Mesh Documentation*. <a href="https://developers.google.com/mediapipe/solutions/vision/face_landmarker" target="_blank" rel="noopener">developers.google.com</a></li>
-    <li><span class="tag">[4]</span> Snap Inc. (2015). *Snap acquires Looksery for Lenses launch*. Snap Inc. press release.</li>
-    <li><span class="tag">[5]</span> Bazarevsky, V., Kartynnik, Y., Vakunov, A., Raveendran, K., & Grundmann, M. (2019). BlazeFace: Sub-millisecond neural face detection on mobile GPUs. *arXiv preprint*, arXiv:1907.05047.</li>
-    <li><span class="tag">[6]</span> Delaunay, B. (1934). Sur la sphère vide. *Bulletin de l'Académie des Sciences de l'URSS*, 793–800.</li>
-    <li><span class="tag">[7]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer. ISBN 978-3-030-34371-2.</li>
+    <li><span class="tag">[4]</span> Constine, J. (2015, September 15). Snapchat acquires Looksery to power its animated Lenses. *TechCrunch*. <a href="https://techcrunch.com/2015/09/15/snapchat-looksery/" target="_blank" rel="noopener">techcrunch.com</a></li>
+    <li><span class="tag">[5]</span> Bazarevsky, V., Kartynnik, Y., Vakunov, A., Raveendran, K., & Grundmann, M. (2019). BlazeFace: Sub-millisecond neural face detection on mobile GPUs. *arXiv preprint*, arXiv:1907.05047. <a href="https://doi.org/10.48550/arXiv.1907.05047" target="_blank" rel="noopener">doi:10.48550/arXiv.1907.05047</a></li>
+    <li><span class="tag">[6]</span> Delaunay, B. (1934). Sur la sphère vide. *Bulletin de l'Académie des Sciences de l'URSS*, 793–800. <a href="https://www.mathnet.ru/eng/izv4937" target="_blank" rel="noopener">mathnet.ru</a></li>
+    <li><span class="tag">[7]</span> Szeliski, R. (2022). *Computer Vision: Algorithms and Applications* (2nd ed.). Springer. ISBN 978-3-030-34371-2. <a href="https://doi.org/10.1007/978-3-030-34372-9" target="_blank" rel="noopener">doi:10.1007/978-3-030-34372-9</a></li>
   </ol>
 </section>

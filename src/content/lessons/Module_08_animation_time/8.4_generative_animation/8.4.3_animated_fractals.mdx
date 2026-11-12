@@ -123,7 +123,7 @@ Rule of thumb: for zoom factor $Z$, use roughly $\log_2(Z) \cdot 50$ iterations 
 You can also scale iterations *per frame* — start at 150 for the wide view and ramp up to 450 by the final frame. This saves CPU on the early frames where detail isn't needed.
 
 <Admonition type="dyk" title="Did you know · zoom videos can be hours long">
-The Mandelbrot zoom community on YouTube produces videos with zoom factors up to $10^{300}$ — beyond IEEE 754 double precision. Those productions use arbitrary-precision arithmetic libraries (`mpmath`, `gmpy2`) and dedicated zoom-rendering engines like Kalles Fraktaler or Mandel Machine. A single 30-minute zoom video at 4K can take a week to render on a modern GPU [1]. Mathematicians use these renderings to discover and catalogue new "neighbourhoods" of the Mandelbrot boundary.
+The Mandelbrot zoom community on YouTube produces videos with zoom factors up to $10^{300}$ — beyond IEEE 754 double precision. Those productions use arbitrary-precision arithmetic libraries (`mpmath`, `gmpy2`) and dedicated zoom-rendering engines like Kalles Fraktaler or Mandel Machine [1]. Mathematicians use these renderings to discover and catalogue new "neighbourhoods" of the Mandelbrot boundary.
 </Admonition>
 
 ### Concept 3 — Colour palette and rendering
@@ -326,12 +326,12 @@ Adding time to a fractal renders an infinite zoom. Exponential interpolation of 
 
 <section class="refs">
   <ol>
-    <li><span class="tag">[1]</span> Auger, K. (2020). *Deep Mandelbrot Zoom Rendering*. deepfractal.com</li>
-    <li><span class="tag">[2]</span> Peitgen, H.-O., & Richter, P. H. (1986). *The Beauty of Fractals: Images of Complex Dynamical Systems*. Springer-Verlag. ISBN 978-3-540-15851-8.</li>
+    <li><span class="tag">[1]</span> Heiland-Allen, C. (2021, May 14). *Deep zoom theory and practice*. mathr. <a href="https://mathr.co.uk/blog/2021-05-14_deep_zoom_theory_and_practice.html" target="_blank" rel="noopener">mathr.co.uk</a></li>
+    <li><span class="tag">[2]</span> Peitgen, H.-O., & Richter, P. H. (1986). *The Beauty of Fractals: Images of Complex Dynamical Systems*. Springer-Verlag. ISBN 978-3-540-15851-8. <a href="https://doi.org/10.1007/978-3-642-61717-1" target="_blank" rel="noopener">doi:10.1007/978-3-642-61717-1</a></li>
     <li><span class="tag">[3]</span> Mandelbrot, B. B. (1982). *The Fractal Geometry of Nature*. W. H. Freeman. ISBN 978-0-7167-1186-5.</li>
-    <li><span class="tag">[4]</span> Devaney, R. L. (1992). *A First Course in Chaotic Dynamical Systems: Theory and Experiment*. Westview Press. ISBN 978-0-201-55406-9.</li>
-    <li><span class="tag">[5]</span> Douady, A., & Hubbard, J. H. (1984). Exploring the Mandelbrot set: The Orsay Notes. *Publications Mathematiques d'Orsay*, 84-02.</li>
-    <li><span class="tag">[6]</span> Falconer, K. (2003). *Fractal Geometry: Mathematical Foundations and Applications* (2nd ed.). Wiley. ISBN 978-0-470-84862-3.</li>
+    <li><span class="tag">[4]</span> Devaney, R. L. (1992). *A First Course in Chaotic Dynamical Systems: Theory and Experiment*. Westview Press. ISBN 978-0-201-55406-9. <a href="https://doi.org/10.1201/9780429503481" target="_blank" rel="noopener">doi:10.1201/9780429503481</a></li>
+    <li><span class="tag">[5]</span> Douady, A., & Hubbard, J. H. (1984). Exploring the Mandelbrot set: The Orsay Notes. *Publications Mathematiques d'Orsay*, 84-02. <a href="https://pi.math.cornell.edu/~hubbard/OrsayEnglish.pdf" target="_blank" rel="noopener">pi.math.cornell.edu/~hubbard</a></li>
+    <li><span class="tag">[6]</span> Falconer, K. (2003). *Fractal Geometry: Mathematical Foundations and Applications* (2nd ed.). Wiley. ISBN 978-0-470-84862-3. <a href="https://doi.org/10.1002/0470013850" target="_blank" rel="noopener">doi:10.1002/0470013850</a></li>
     <li><span class="tag">[7]</span> Pillow Contributors. (2024). *Pillow Documentation: Image.save and animated GIF*. <a href="https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif" target="_blank" rel="noopener">pillow.readthedocs.io</a></li>
   </ol>
 </section>
