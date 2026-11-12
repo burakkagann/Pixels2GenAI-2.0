@@ -1,11 +1,3 @@
-"""
-Draws the diagrams for lesson 0.2: who writes the rule, how the terms nest, and
-the course's three paths.
-
-Run it in the lesson's folder. It needs Matplotlib.
-
-Author: Pixels2GenAI Project
-"""
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt

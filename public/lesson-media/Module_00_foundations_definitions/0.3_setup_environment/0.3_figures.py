@@ -1,11 +1,3 @@
-"""
-Draws the diagrams for lesson 0.3: what each stage of the course needs, and what a
-virtual environment keeps apart.
-
-Run it in the lesson's folder. It needs Matplotlib.
-
-Author: Pixels2GenAI Project
-"""
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt

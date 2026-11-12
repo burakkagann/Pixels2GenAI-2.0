@@ -1,12 +1,3 @@
-"""
-Draws the figures for lesson 0.1: three runs of the fifty-point rule, the
-making-versus-system diagram, the order-to-disorder chart, the rows-of-squares study
-and the timeline.
-
-Run it in the lesson's folder. It needs NumPy, Pillow and Matplotlib.
-
-Author: Pixels2GenAI Project
-"""
 import numpy as np
 from PIL import Image, ImageDraw
 import matplotlib
