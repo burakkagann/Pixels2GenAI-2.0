@@ -2,6 +2,9 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeCitations from './src/plugins/rehype-citations.mjs';
@@ -41,6 +44,56 @@ function remarkSectionize() {
     tree.children = newChildren;
   };
 }
+
+// Sitemap lastmod: each lesson MDX's last git commit date, falling back to the
+// frontmatter `published` date when git or history is unavailable (no repo,
+// shallow clone without that file's history). Keyed by numeric id (filename
+// prefix, same rule as the content loader). No build-clock dates.
+// A shallow clone gives every file the same (latest) commit date, which would
+// tell Google that every lesson changed on each deploy, so it falls back too.
+let shallowRepo = null;
+function isShallow() {
+  if (shallowRepo === null) {
+    try {
+      shallowRepo = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim() === 'true';
+    } catch {
+      shallowRepo = true;
+    }
+  }
+  return shallowRepo;
+}
+function gitDate(file) {
+  if (isShallow()) return null;
+  try {
+    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', file], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    return /^\d{4}-\d{2}-\d{2}/.test(out) ? out : null;
+  } catch {
+    return null;
+  }
+}
+function lessonDates(dir) {
+  const dates = new Map();
+  const walk = (d) => {
+    for (const entry of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.mdx')) {
+        const id = entry.name.match(/^(\d+\.\d+\.\d+)/)?.[1];
+        const date = readFileSync(full, 'utf8').match(/^published:\s*(\d{4}-\d{2}-\d{2})/m)?.[1];
+        if (id && (date || gitDate(full))) dates.set(id, gitDate(full) ?? date);
+      }
+    }
+  };
+  walk(dir);
+  return dates;
+}
+const LESSON_DATES = lessonDates('./src/content/lessons');
 
 export default defineConfig({
   site: 'https://pixels2genai.art',
@@ -99,6 +152,12 @@ export default defineConfig({
         !page.includes('/og/') &&
         !/\/(announce\/thanks|404)(\.html)?$/.test(page) &&
         !isWorkshopAreaPath(new URL(page).pathname),
+      serialize: (item) => {
+        const id = new URL(item.url).pathname.match(/^\/lessons\/(\d+\.\d+\.\d+)$/)?.[1];
+        const date = id && LESSON_DATES.get(id);
+        if (date) item.lastmod = new Date(date).toISOString();
+        return item;
+      },
     }),
     // After sitemap: its build:done leak check reads the finished sitemap.
     workshopArea(),

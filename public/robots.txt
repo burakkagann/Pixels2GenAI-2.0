@@ -65,5 +65,9 @@ Allow: /
 # Everyone else
 User-agent: *
 Allow: /
+# Downloadable lesson scripts: save crawl time for the lessons (images stay crawlable).
+Disallow: /lesson-media/*.py$
+Disallow: /lesson-media/*.txt$
+Disallow: /lesson-media/*.pth$
 
 Sitemap: https://pixels2genai.art/sitemap-index.xml
