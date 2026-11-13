@@ -1,0 +1,42 @@
+---
+/**
+ * RS-2c (13 Nov): the one pilot result on the landing § 4, drawn to scale.
+ * Two small bar charts: the mean test score out of 24 and the share of "I don't
+ * know" answers, each before and after. Numbers come from PILOT
+ * (src/data/site/research.ts; thesis Table 5.2 and §5.2). The bars are
+ * decorative (aria-hidden); one visually hidden sentence carries the numbers.
+ */
+import { PILOT } from '@/data/site/research';
+
+const one = (n: number) => n.toFixed(1);
+const pct = (v: number, max: number) => (v / max) * 100;
+const scoreTicks = [0, 6, 12, 18, 24];
+const idkTicks = [0, 50, 100];
+const sr =
+  `Average test score out of ${PILOT.scoreMax}, ${PILOT.paired} learners who took both tests: ` +
+  `before ${one(PILOT.before)}, after ${one(PILOT.after)}. ` +
+  `Share of answers that were "I don't know": before ${PILOT.idkBefore}%, after ${PILOT.idkAfter}%.`;
+---
+
+<div class="rsp">
+  <div class="rsp-text">
+    <h3>Did people learn in one day?</h3>
+    <p>Average score on a {PILOT.scoreMax}-question test, before and after the day. All {PILOT.paired} who took both tests scored higher.</p>
+    <p class="rsp-src">Source: MA thesis, {PILOT.source} · group averages, {PILOT.paired} learners</p>
+  </div>
+  <figure class="rsp-chart" aria-label="Pilot result: test scores and I don't know answers, before and after">
+    <figcaption>Test score, out of {PILOT.scoreMax}</figcaption>
+    <div aria-hidden="true">
+      <div class="rsp-row">Before<div class="rsp-track"><div class="rsp-fill" style={`width:${pct(PILOT.before, PILOT.scoreMax)}%`}></div><span class="rsp-val" style={`left:${pct(PILOT.before, PILOT.scoreMax)}%`}>{one(PILOT.before)}</span></div></div>
+      <div class="rsp-row">After<div class="rsp-track"><div class="rsp-fill after" style={`width:${pct(PILOT.after, PILOT.scoreMax)}%`}></div><span class="rsp-val in" style={`left:${pct(PILOT.after, PILOT.scoreMax)}%`}>{one(PILOT.after)}</span></div></div>
+      <div class="rsp-axis"><span></span><div class="rsp-ticks">{scoreTicks.map((v) => <span style={`left:${pct(v, PILOT.scoreMax)}%`}>{v}</span>)}</div></div>
+    </div>
+    <p class="rsp-cap2">“I don't know” answers, % of all</p>
+    <div aria-hidden="true">
+      <div class="rsp-row">Before<div class="rsp-track"><div class="rsp-fill" style={`width:${PILOT.idkBefore}%`}></div><span class="rsp-val in rsp-grey" style={`left:${PILOT.idkBefore}%`}>{PILOT.idkBefore}%</span></div></div>
+      <div class="rsp-row">After<div class="rsp-track"><div class="rsp-fill after" style={`width:${PILOT.idkAfter}%`}></div><span class="rsp-val" style={`left:${PILOT.idkAfter}%`}>{PILOT.idkAfter}%</span></div></div>
+      <div class="rsp-axis"><span></span><div class="rsp-ticks">{idkTicks.map((v) => <span style={`left:${v}%`}>{v}%</span>)}</div></div>
+    </div>
+    <p class="sr-only">{sr}</p>
+  </figure>
+</div>

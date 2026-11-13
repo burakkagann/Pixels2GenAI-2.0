@@ -7,7 +7,8 @@ import SeriesSpecimen from '@/components/workshops/SeriesSpecimen.astro';
 import ExhibitionSpecimen from '@/components/exhibitions/ExhibitionSpecimen.astro';
 import { MODULES } from '@/data/curriculum/modules';
 import { SUBTOPICS, countLeaves } from '@/data/curriculum/subtopics';
-import { RQS, CYCLES } from '@/data/site/research';
+import { PILOT, CYCLES } from '@/data/site/research';
+import PilotResult from '@/components/research/PilotResult.astro';
 import { COVERS, PLANNED_TOPICS, lessonPrint, LESSON_PRINT_SIZE, breakTitle, panelTitle } from '@/data/curriculum/covers';
 import { PAST_WORKSHOPS, UPCOMING_WORKSHOPS } from '@/data/site/workshops';
 import { PAST_EXHIBITIONS } from '@/data/site/exhibitions';
@@ -131,6 +132,8 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
   <link slot="head" rel="preload" as="font" type="font/woff2" href={serifFontUrl} crossorigin />
   <link slot="head" rel="preload" as="font" type="font/woff2" href={serifItalicFontUrl} crossorigin />
   <link slot="head" rel="preload" as="font" type="font/woff2" href={monoFontUrl} crossorigin />
+  {/* CUR-1b: without JS the folded paths cannot open, so show their bodies. */}
+  <noscript slot="head"><style>.cx-body[hidden] { display: block; }</style></noscript>
   <main id="main-content">
   <!-- ========== COVER ========== -->
   <header class="cover">
@@ -139,7 +142,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <p class="cover-sub">Set a pixel. Draw a fractal. Train a network. Guide a diffusion model.</p>
       <div class="cover-meta">
         <div><b>Modules</b><span>15 + Capstone</span></div>
-        <div><b>Method</b><span>DBR · 3 cycles</span></div>
+        <div><b>Method</b><span>Design-based research</span></div>
         <div><b>Theory / Practice</b><span>40 / 60</span></div>
         <div><b>License</b><span>Open source · <span class="nw">MIT + CC-BY</span></span></div>
       </div>
@@ -148,8 +151,8 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
             button is paper with a pink hard shadow (BC-3). It stays on the
             page: the script below scrolls to § 2 and moves focus to its
             heading; without JS the hash jumps. */}
-        <a class="btn btn-pri btn-exhibition" href="#curriculum">See the curriculum</a>
-        <a class="btn btn-sec btn-shadow-studio" href="#workshops" data-cover-jump="workshops">See the workshops ↓</a>
+        <a class="btn btn-pri" href="#curriculum">Try a free lesson</a>
+        <a class="btn btn-sec btn-shadow-studio" href={seriesOn ? '#series' : '#workshops'} data-cover-jump={seriesOn ? 'series' : 'workshops'}>{seriesOn ? 'Join the Berlin workshops' : 'See the workshops ↓'}</a>
       </div>
       <p class="cover-facts"><span>Free · Python</span> · <span>{LIVE_TOTAL} of {ALL_LEAVES.length} lessons live</span> · <span>run in your browser</span></p>
       {/* Phones show this one line in place of the stat grid and the facts line above. */}
@@ -163,7 +166,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="cube-plate">
       <div class="cube-caption">
         <span class="fig-num">Fig. 0</span>
-        <span>Drag from pixels to GenAI · M 01 → M 12</span>
+        <span>Drag to see a picture turn from pixels into AI-made art.</span>
       </div>
       {/* M-1: the plate is hidden under 641 px, and client:media keeps React
           and the island's JS off phones entirely (BLD-35 measured the cost). */}
@@ -177,7 +180,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <div class="section-num">§ 1 · <span>Curriculum</span></div>
       <div>
         <h2 class="section-title">From pixels, <em>to inference.</em></h2>
-        <p class="section-desc">Three paths, each a few modules deep, building lesson by lesson. Linear by design, but experienced coders can jump to a later path. Open any module to see inside.</p>
+        <p class="section-desc">Three paths, from pixels to generative AI. Open a path to see its modules.</p>
       </div>
     </div>
 
@@ -256,21 +259,6 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       <span class="archive-org">Pixels2GenAI · Curriculum</span>
       <span class="archive-count">▌ {MODULES.length} modules · {ALL_LEAVES.length} lessons · {LIVE_TOTAL} live</span>
     </div>
-    {/* PR2: one thin bar per path under its label, sized by its lessons, live part filled; the count sits beside the name, never on the fill. */}
-    <div class="path-bar">
-      {PATH_PROGRESS.map((p) => (
-        <div class="pr-path" style={`--cycle: var(--${p.cy.cycle}); flex: ${p.total};`}>
-          <div class="pr-lab">
-            <span class="pr-n" aria-hidden="true">{p.n}</span>
-            <span class="pr-name">{p.cy.name}</span>
-            <span class="pr-count"><b>{p.live}</b> / {p.total}<span class="pr-w"> live</span></span>
-          </div>
-          <div class="pr-bar" role="img" aria-label={`Path ${p.n} ${p.cy.name}: ${p.live} of ${p.total} lessons live`}>
-            <i style={`width: ${Math.round((100 * p.live) / p.total)}%;`}></i>
-          </div>
-        </div>
-      ))}
-    </div>
     <div class="stations" data-stations>
     {CYCLES.map(cy => {
       const cyc = cy.cycle === 'c1' ? 'I' : cy.cycle === 'c2' ? 'II' : 'III';
@@ -285,19 +273,30 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
       );
       return (
         <div class="station" id={`station-${cy.cycle}`} style={`--cycle: var(--${cy.cycle});`}>
-          <div class="station-head">
-            <div class="station-left">
-              {/* PB2: the path stamp (numeral + "Path"); the label stays for screen readers. */}
-              <span class="path-stamp" aria-hidden="true"><b>{cyc}</b><span>Path</span></span>
-              <span class="station-label sr-only">Path {cyc}</span>
-              <h3 class="station-title">{cy.name}<em>.</em></h3>
-            </div>
-            <div class="station-right">
-              <span><b>{mods.length}</b> modules</span>
-              <span><b>{totals.leaves}</b> lessons</span>
-              <span class="station-done" data-station-done hidden></span>
-            </div>
-          </div>
+          {/* CUR-1b: each path is one folded row (disclosure button, W3C APG): stamp,
+              name and rule, a thumbnail per module, counts, chevron. The facts, cards
+              and panels stay in the HTML inside the body, so lesson links remain
+              crawlable; without JS the body is shown (noscript style in the head). */}
+          <h3 class="cx-h">
+            <button type="button" class="cx-row" aria-expanded="false" aria-controls={`cx-body-${cy.cycle}`} data-cx>
+              <span class="path-stamp cx-stamp" aria-hidden="true"><b>{cyc}</b><span>Path</span></span>
+              <span class="cx-name">
+                <span class="cx-title"><span class="sr-only">Path {cyc}: </span>{cy.name}<em>.</em></span>
+                <span class="cx-rule">{cy.rule}</span>
+              </span>
+              <span class="cx-thumbs" aria-hidden="true">
+                {mods.map((m) => {
+                  const liveN = LIVE_BY_MODULE[m.idx] ?? 0;
+                  return COVERS[m.idx] && (liveN > 0 || m.ownCover)
+                    ? <span class="cx-th"><img src={COVERS[m.idx].src} alt="" width="38" height="38" loading="lazy" decoding="async" /></span>
+                    : <span class="cx-th cx-th-plan"></span>;
+                })}
+              </span>
+              <span class="cx-meta">{mods.length} modules · {totals.leaves} lessons · <b>{PATH_PROGRESS.find((p) => p.n === cyc)?.live} live</b><span class="station-done" data-station-done hidden></span></span>
+              <span class="cx-chev" aria-hidden="true"><svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,2 6,6 10,2"></polyline></svg></span>
+            </button>
+          </h3>
+          <div class="cx-body" id={`cx-body-${cy.cycle}`} hidden>
 
           {/* PB2: the path's fact row (draft copy, research.ts CYCLES). */}
           <dl class="path-facts">
@@ -411,6 +410,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
               );
             })}
           </div>
+          </div>
         </div>
       );
     })}
@@ -436,7 +436,7 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
         history.replaceState(null, '', '#' + id);
-        const heading = section.querySelector('h2');
+        const heading = section.querySelector('h2, summary');
         if (heading) {
           if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
           heading.focus({ preventScroll: true });
@@ -458,6 +458,18 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     // .station-panels block so it spans full-width beneath the card grid.
     const stationMq = matchMedia('(max-width: 540px)');
     document.querySelectorAll('.station').forEach((station) => {
+      // CUR-1b: the path row is a disclosure button (W3C APG): Enter/Space
+      // (native button) toggle aria-expanded and the body's hidden state.
+      const cx = station.querySelector('[data-cx]');
+      const cxBody = station.querySelector('.cx-body');
+      if (cx && cxBody) {
+        cx.addEventListener('click', () => {
+          const open = cx.getAttribute('aria-expanded') === 'true';
+          cx.setAttribute('aria-expanded', String(!open));
+          cxBody.hidden = open;
+          station.classList.toggle('cx-open', !open);
+        });
+      }
       const cards = Array.from(station.querySelectorAll('.mod-card'));
       const panels = station.querySelectorAll('.station-panel');
       const panelHome = station.querySelector('.station-panels');
@@ -912,28 +924,19 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
     <div class="section-head">
       <div class="section-num">§ 4 · <span>Research</span></div>
       <div>
-        <h2 class="section-title">Five questions, <em>three cycles.</em></h2>
-        <p class="section-desc">The curriculum is the artifact of a design-based research thesis. Three cycles, the same five questions; this is the second.</p>
+        <h2 class="section-title">Tested with <em>nine learners.</em></h2>
+        <p class="section-desc">Before the workshop series, nine learners tried six lessons in one day. The pilot is part of an MA thesis.</p>
       </div>
     </div>
 
-    {/* H2-research: an archive of five finding cards. Each shows its question's
-        title and what the Cycle i pilot found (research.ts → research.mdx);
-        the full questions stay on /research. */}
+    {/* RS-2c: one pilot result drawn to scale, in the archive frame. The five
+        questions stay on /research. */}
     <div class="workshops-archive research-archive">
       <div class="archive-head">
-        <span class="archive-org">Pixels2GenAI · Research</span>
-        <span class="archive-count">▌ {RQS.length} questions · pilot n = 9</span>
+        <span class="archive-org">Pilot · {PILOT.date}</span>
+        <span class="archive-count">▌ {PILOT.learners} learners · {PILOT.lessons} lessons · 1 day</span>
       </div>
-      <div class="rqs">
-        {RQS.map(rq => (
-          <div class:list={['rq', rq.finding.pending && 'is-pending']}>
-            <div class="tag">{rq.tag}</div>
-            <h4>{rq.title}</h4>
-            <p class="rq-find"><b>{rq.finding.value}</b><span>{rq.finding.line}</span></p>
-          </div>
-        ))}
-      </div>
+      <PilotResult />
     </div>
 
     <div class="research-cta">
@@ -948,11 +951,89 @@ const seriesOn = import.meta.env.PUBLIC_WORKSHOP_SERIES === 'true';
   <div class="announce-band" id="announcements">
     <aside class="announce-strip" aria-label="Event announcements">
       <span class="strip-eyebrow"><span class="dot" aria-hidden="true"></span>§ Announcements</span>
-      <p>One mail when the next workshop or exhibition is confirmed. No newsletter, no sharing, opt out anytime.</p>
-      <a class="btn btn-pri btn-signup" href="/announce" data-announce data-topic="both">Leave your email →</a>
+      {/* BR-12: while the series is announced and not yet on sale, the band says what it does for it. */}
+      <p>{seriesOn && !TICKETS.open ? 'One email when tickets open.' : 'One mail when the next workshop or exhibition is confirmed.'} No newsletter, no sharing, opt out anytime.</p>
+      {/* E2c: the field sits in the strip, no pop-up step. Same Netlify form
+          ("announcements", topic Both) as the pop-up and /announce; without JS
+          it posts natively to /announce/thanks. The inline check comes from
+          AnnounceForm's script (form.signup-form), the send is the script below. */}
+      <form
+        class="signup-form strip-form"
+        name="announcements"
+        method="POST"
+        action="/announce/thanks"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        aria-label="Event announcements sign-up"
+      >
+        <input type="hidden" name="form-name" value="announcements" />
+        <input type="hidden" name="topics" value="both" />
+        <p class="honeypot" aria-hidden="true">
+          <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+        </p>
+        <label class="sr-only" for="strip-email">Your email</label>
+        <div class="strip-row">
+          <input
+            id="strip-email"
+            type="email"
+            name="email"
+            required
+            placeholder="you@example.com"
+            autocomplete="email"
+            inputmode="email"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-describedby="strip-email-err"
+          />
+          <button type="submit" class="btn btn-pri btn-signup">Add me →</button>
+        </div>
+        <p class="sf-err" id="strip-email-err" hidden></p>
+        <p class="am-error" role="alert" hidden>Sending failed. Check your connection and try again.</p>
+        <p class="strip-done" role="status" tabindex="-1" hidden>Thanks. You are on the list.</p>
+      </form>
+      <p class="sf-consent strip-consent">
+        We keep your email only to send these announcements: by hand, BCC, never shared. Reply to any of them to leave
+        <span class="consent-tail">the list. <a href="/privacy">Privacy note</a></span>
+      </p>
     </aside>
   </div>
   </main>
 
   <Footer />
+
+<script>
+  // Home strip sign-up (E2c): Netlify AJAX post, the same as the pop-up. The
+  // inline email check (AnnounceForm.astro, capture phase) has already passed
+  // when this runs. On success the field is replaced by a thanks line.
+  const form = document.querySelector<HTMLFormElement>('form.strip-form');
+  if (form) {
+    const sendError = form.querySelector<HTMLElement>('.am-error')!;
+    const done = form.querySelector<HTMLElement>('.strip-done')!;
+    const row = form.querySelector<HTMLElement>('.strip-row')!;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      sendError.hidden = true;
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        const body = new URLSearchParams();
+        new FormData(form).forEach((value, key) => body.append(key, String(value)));
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!res.ok) throw new Error(`Netlify form post failed: ${res.status}`);
+        row.hidden = true;
+        done.hidden = false;
+        form.reset();
+        done.focus();
+      } catch {
+        sendError.hidden = false;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  }
+</script>
 </Base>

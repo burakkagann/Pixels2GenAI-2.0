@@ -13,13 +13,16 @@
 
 @import './tokens-workshop.css';
 
+/* UX-6 (12 Nov): frames take --frame and the hard shadow of cards,
+   panels, chips and tiles is the grey --depth (tokens.css): grey means
+   depth. Buttons keep an ink line and an ink drop: ink means press. */
 .ws {
-  --ws-ink: var(--fg);
+  --ws-ink: var(--frame);
   --ws-paper: var(--bg);
   --ws-border: 3px;
   --ws-shadow: 6px;
   --ws-display: var(--sans);
-  --ws-hard-shadow: var(--ws-shadow) var(--ws-shadow) 0 var(--ws-ink);
+  --ws-hard-shadow: var(--ws-shadow) var(--ws-shadow) 0 var(--depth);
 }
 
 @media (max-width: 640px) {
@@ -49,7 +52,7 @@
 
 .ws .ws-label {
   font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
+  font-size: max(12px, var(--fs-min)); /* BF-1: small labels at 12 px */
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -109,15 +112,18 @@
 /* ---------- Button: the press effect is half the style ----------
    The shape, hover lift, press and focus come from the site's shared
    button base (landing.css "Buttons", BT6). The brand only scales it up
-   (3 px border, 6 px shadow; 2 px / 4 px on phones) and fills it from the
-   fill-* classes above. Unfilled buttons are paper. */
+   (3 px border, 6 px shadow; 2 px / 4 px on phones).
+   UX-6: an unfilled button is a card with an ink line and a 4 px ink drop;
+   the primary (.fill-studio) is the site's ink fill with a grey drop,
+   never pink. On the yellow tickets panel the primary takes the panel's
+   own ink (--ws-on-yellow) with a grey drop. */
 .ws .ws-btn {
-  --btn-fill: var(--ws-paper);
+  --btn-fill: var(--card);
   --btn-on: var(--fg);
-  --btn-line: var(--ws-ink);
-  --btn-drop: var(--ws-ink);
+  --btn-line: var(--fg);
+  --btn-drop: var(--fg);
   --btn-border: var(--ws-border);
-  --btn-shadow: var(--ws-shadow);
+  --btn-shadow: 4px;
   padding: 14px 22px;
   letter-spacing: 0.12em;
 }
@@ -125,6 +131,23 @@
 .ws .ws-btn[class*="fill-"] {
   --btn-fill: var(--fill);
   --btn-on: var(--on-fill);
+  --btn-shadow: var(--ws-shadow);
+}
+
+.ws .ws-btn.fill-studio {
+  --btn-fill: var(--fg);
+  --btn-on: var(--bg);
+  --btn-fill-hover: var(--fg);
+  --btn-line: var(--fg);
+  --btn-drop: var(--fg-3);
+}
+
+.ws .series-cta .ws-btn.fill-studio {
+  --btn-fill: var(--ws-on-yellow);
+  --btn-on: var(--ws-yellow);
+  --btn-fill-hover: var(--ws-on-yellow);
+  --btn-line: var(--ws-on-yellow);
+  --btn-drop: var(--fg-4);
 }
 
 /* ---------- Toggle: a <summary> styled as a small button ---------- */
@@ -134,9 +157,9 @@
   gap: 8px;
   padding: 7px 12px;
   border: 2px solid var(--ws-ink);
-  background: var(--ws-paper);
+  background: var(--card);
   color: var(--fg);
-  box-shadow: 3px 3px 0 var(--ws-ink);
+  box-shadow: 3px 3px 0 var(--depth);
   font-family: var(--mono);
   font-size: max(11px, var(--fs-min));
   font-weight: 700;
@@ -168,12 +191,19 @@
   box-shadow: 0 0 0 var(--ws-ink);
 }
 
-/* ---------- Focus: one visible ring for everything interactive ---------- */
+/* ---------- Focus: one visible ring for everything interactive ----------
+   BF-2: full ink (not the dimmer frame) and 10 px out, so the ring clears
+   the hard shadow. On the yellow tickets panel the ring is the panel's ink. */
 .ws a:focus-visible,
 .ws button:focus-visible,
 .ws summary:focus-visible {
-  outline: 3px solid var(--ws-ink);
-  outline-offset: 4px;
+  outline: 3px solid var(--fg);
+  outline-offset: 10px;
+}
+
+.ws .series-cta a:focus-visible {
+  outline-color: var(--ws-on-yellow);
+  outline-offset: 3px;
 }
 
 /* ============================================================

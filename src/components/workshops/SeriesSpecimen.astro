@@ -40,7 +40,7 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
 }));
 ---
 
-<details class="workshop-specimen series-specimen" open>
+<details class="workshop-specimen series-specimen" id="series" open>
   <summary class="specimen-summary">
     <span class="summary-index">{indexDisplay}</span>
     <span class="summary-status sale">{TICKETS.saleTag}</span>
@@ -66,6 +66,13 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
         <dd>8 people at most · 18+ · English · your own laptop</dd>
         <dt>Price</dt>
         <dd>€{P.standard} · €{P.reduced} reduced · series pass €{passPrice}</dd>
+        {/* BR-7: what to bring and how the days work. The line "No coding experience
+            needed" is left out until Kağan confirms the wording. */}
+        <dt>Good to know</dt>
+        <dd class="know">
+          <span>Bring a laptop with Chrome or Firefox. Nothing to install; a two-minute check comes by email a week before.</span>
+          <span>Join one Saturday or all six</span>
+        </dd>
       </dl>
     </div>
   </article>
@@ -76,7 +83,11 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
         <a class="btn btn-sec" href="/workshops">See the series →</a>
       </>
     ) : (
-      <a class="btn btn-sec btn-shadow-studio" href="/workshops">See the workshops →</a>
+      <>
+        {/* BR-12: the notify action sits in the workshop block, not only at the page foot. */}
+        <a class="btn btn-pri" href="/announce?topic=workshops" data-announce data-topic="workshops">Email me when tickets open</a>
+        <a class="btn btn-sec btn-shadow-studio" href="/workshops">See the workshops →</a>
+      </>
     )}
   </div>
 </details>
@@ -89,5 +100,6 @@ const cards: MiniCardItem[] = SERIES.map((w) => ({
     font-weight: 700;
   }
   .series-body { grid-template-columns: minmax(0, 1fr); }
+  .know { display: grid; gap: 2px; }
 
 </style>

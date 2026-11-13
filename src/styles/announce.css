@@ -20,7 +20,7 @@
      - landing.css → .btn / .btn-pri / .btn-sec (global via Base)
    Pink stays a brand moment: eyebrows, ems and required asterisks,
    as text always via --studio-ink. The sign-up buttons are the
-   yellow .btn-signup primary (BT6).
+   site's ink .btn-pri (UX-6; .btn-signup is kept as a hook).
    ============================================================ */
 
 /* Theme-aware inks, derived from tokens only — same derivation as
@@ -97,7 +97,20 @@
   max-width: 64ch;
 }
 
-@media (max-width: 720px) {
+/* E2c: the email field in the home strip. The form takes the button's
+   column; the consent line runs under the whole row. */
+.announce-strip .strip-form { gap: 6px; min-width: 0; }
+.announce-strip .strip-row { display: flex; gap: 12px; align-items: stretch; }
+.announce-strip .strip-row[hidden] { display: none; }
+.announce-strip .strip-row input[type="email"] { border: 2px solid var(--fg); background: var(--card); font: 14px var(--mono); width: 240px; max-width: 100%; min-width: 0; min-height: 44px; }
+.announce-strip .strip-done { margin: 0; font-style: normal; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--fg); }
+.announce-strip .strip-consent { grid-column: 1 / -1; font-size: 13px; }
+/* Kağan, 13 Nov: the consent sentence on one line on desktop (no 64ch cap); where it wraps, the last
+   words stay with "Privacy note", so the link never sits alone on a line. */
+.announce-strip p.strip-consent { max-width: none; text-wrap: pretty; }
+.announce-strip .consent-tail { white-space: nowrap; }
+
+@media (max-width: 900px) {
   .announce-strip {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -113,6 +126,8 @@
     width: 100%;
     justify-content: center;
   }
+  .announce-strip .strip-row { flex-direction: column; }
+  .announce-strip .strip-row input[type="email"] { width: 100%; }
 }
 
 /* ---------- Pop-up · native <dialog> (design A1a "Slip") ---------- */

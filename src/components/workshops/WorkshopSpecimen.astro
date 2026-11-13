@@ -45,7 +45,6 @@ const isPast = w.status === 'past';
 const pilotCards: MiniCardItem[] | null =
   bridge && isPast && w.modules.length > 0 && w.modules.every((m) => m.card)
     ? w.modules.map((m) => ({
-        href: `/lessons/${m.idx}`,
         band: m.card!.band,
         head: m.idx,
         image: m.card!.image,

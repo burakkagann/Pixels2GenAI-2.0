@@ -449,9 +449,10 @@
   color: var(--fg-3);
   border: 1px solid var(--line-2);
   font: inherit;
-  font-size: max(9px, var(--fs-min));
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
   letter-spacing: 0.08em;
-  padding: 3px 8px;
+  padding: 6px 12px;
+  min-height: 32px;
   cursor: pointer;
   flex-shrink: 0;
   transition: color .15s, border-color .15s;
@@ -463,23 +464,26 @@
 }
 
 /* In-browser Python runner (AI tutor Milestone 1b): the Run button sits before
-   Copy and uses the cycle accent so it reads as the primary action. */
+   Copy. UX-6: it is the site's primary, an ink fill with a small grey drop. */
 .code .chrome .run {
   margin-left: auto;
-  background: transparent;
-  color: var(--cycle, var(--accent));
-  border: 1px solid var(--cycle, var(--accent));
+  background: var(--fg);
+  color: var(--bg);
+  border: 1px solid var(--fg);
+  box-shadow: 2px 2px 0 var(--fg-3);
   font: inherit;
-  font-size: max(9px, var(--fs-min));
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
+  font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 3px 8px;
+  padding: 6px 12px;
+  min-height: 32px;
   cursor: pointer;
   flex-shrink: 0;
   transition: color .15s, background .15s;
 }
 
 .code .chrome .run:hover:not(:disabled) {
-  background: var(--cycle, var(--accent));
+  background: var(--fg);
   color: var(--bg);
 }
 

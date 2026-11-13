@@ -1,0 +1,118 @@
+---
+/**
+ * "How a workshop works" on /workshops (BLD-183, layout WL-1b): the three roles (final copy 1b), the four
+ * steps (1c) as numbered stickers on a line, the day timeline, and why this format works (1d) as four
+ * striped lead cards whose evidence sits in the FAQ. Brand look: riso fills on the role headers, round
+ * stickers for the steps, colour stripes as on the day timeline. Copy: workshop-planning/review/
+ * workshop-format-2026-11-12/final-copy.md (WC picks), split into short bullets without changing a fact.
+ * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
+ */
+import WorkshopDay from '@/components/workshops/WorkshopDay.astro';
+import { PILOT } from '@/data/site/research';
+
+// The pilot's group results (thesis Table 5.2, §5.2), from the same data as the home page chart.
+const one = (n: number) => n.toFixed(1);
+
+const ROLES = [
+  { fill: 'fill-c1', who: 'You', line: 'Type real code, get it wrong, fix it, at your own pace.' },
+  { fill: 'fill-c2', who: 'The platform', line: 'Runs your code, checks every step, gives hints, then the solution.' },
+  // Kağan, 13 Nov: the role, not his name ("my name would confuse people").
+  { fill: 'fill-c3', who: 'Facilitator', line: "In the room when you're stuck." },
+];
+
+const STEPS = [
+  {
+    fill: 'fill-c1',
+    title: 'Before',
+    points: [
+      'Seven days before your workshop: an email with your personal code.',
+      'Open the Get ready page and test your laptop; it takes two minutes.',
+      'Never written Python? An optional 15-minute warm-up.',
+    ],
+  },
+  {
+    fill: 'fill-c2',
+    title: 'On the day, 11:00–15:30',
+    points: [
+      'A 15-minute start, then three lessons of about 55 minutes, with breaks.',
+      'Each lesson starts with the finished piece, then opens it up step by step.',
+      'You predict, change, write and fix real Python; the platform checks your code.',
+      '30 minutes to make your own piece, then a short show and tell.',
+    ],
+  },
+  {
+    fill: 'fill-c3',
+    title: "If you're stuck",
+    points: [
+      'Every step has two hints, then the solution.',
+      'Errors come with a plain explanation.',
+      'An AI tutor gives hints rather than answers.',
+      'The facilitator, who builds the platform, is in the room: look up and they come over.',
+    ],
+  },
+  {
+    fill: 'fill-yellow',
+    title: 'After',
+    points: [
+      'Your code keeps the lessons open for two weeks after the workshop.',
+      'With the series pass, until two weeks after the sixth workshop.',
+      'The piece is yours.',
+    ],
+  },
+];
+
+// 1d in four lines; the full text with the studies is the FAQ answer "Why this format?".
+const WHY = [
+  { stripe: 'c1', lead: 'You learn by doing.', ref: 1 },
+  { stripe: 'c2', lead: 'You read code before you write it.', ref: 2 },
+  { stripe: 'c3', lead: 'You see the result first.' },
+  { stripe: 'make', lead: 'One idea per Saturday, nothing to install.' },
+];
+---
+
+<section class="ws fmt-band how-band" id="how-it-works" aria-labelledby="how-it-works-title">
+  <div class="series-head">
+    <h2 class="ws-display series-title" id="how-it-works-title">How a workshop works</h2>
+    <p class="series-deck">No slides, no lecture. <span class="fmt-mark">You leave with a piece.</span></p>
+  </div>
+
+  <ul class="fmt-roles" aria-label="Who does what">
+    {ROLES.map((r) => (
+      <li class={`ws-card fmt-role ${r.fill}`}>
+        <p class="ws-display fmt-role-head">{r.who}</p>
+        <p class="fmt-role-line">{r.line}</p>
+      </li>
+    ))}
+  </ul>
+
+  <h3 class="ws-display fmt-sub">Step by step</h3>
+  <ol class="fmt-steps">
+    {STEPS.map((s, i) => (
+      <li class={`fmt-step ${s.fill}`}>
+        <span class="ws-sticker fmt-step-num" aria-hidden="true">{i + 1}</span>
+        <div class="ws-card fmt-step-card">
+          <h4 class="ws-label fmt-step-title">{s.title}</h4>
+          <ul class="fmt-points">
+            {s.points.map((p) => <li>{p}</li>)}
+          </ul>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <WorkshopDay />
+
+  <h3 class="ws-display fmt-sub">Why this format</h3>
+  <ul class="fmt-why">
+    {WHY.map((w) => (
+      <li class="ws-card fmt-why-card" data-stripe={w.stripe}>
+        {w.lead}{w.ref && <sup><a href={`#fmt-ref-${w.ref}`} aria-label={`Reference ${w.ref}`}>{w.ref}</a></sup>}
+      </li>
+    ))}
+  </ul>
+  <ul class="fmt-points fmt-proof fill-yellow">
+    <li>Tested first: in our pilot ({PILOT.date}), all {PILOT.paired} who took both tests scored higher; the average rose from {one(PILOT.before)} to {one(PILOT.after)} out of {PILOT.scoreMax}.</li>
+    <li>"I don't know" answers fell from {PILOT.idkBefore}% to {PILOT.idkAfter}%. Source: MA thesis, {PILOT.source}, group averages · <a href="/research">The findings</a> · <a href="/research/thesis.pdf">Thesis PDF</a></li>
+  </ul>
+  <a class="fmt-evidence" href="#faq-why">The evidence ↓</a>
+</section>

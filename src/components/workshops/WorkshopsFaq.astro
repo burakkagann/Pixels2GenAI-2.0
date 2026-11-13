@@ -1,0 +1,153 @@
+---
+/**
+ * The /workshops FAQ (BLD-183, layout WL-1b, WL-2a: after the tickets, before the pilot). Final copy 1g,
+ * the full "Why this format works" (1d) as "Why this format?", and the gap answers Q5, Q7, Q9, Q14, Q16,
+ * Q20, Q22 and Q29 from the rollout map §3. Three groups, each with a riso chip; every question has a
+ * numbered square in its group colour, as the lesson numbers on the cards. Long answers are bullets.
+ * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
+ */
+import { TICKETS } from '@/data/workshops/tickets';
+import { PILOT } from '@/data/site/research';
+
+interface Item { q: string; id?: string; open?: boolean; lines?: string[]; points?: string[]; html?: string }
+interface Group { name: string; fill: string; items: Item[] }
+
+const cite = (n: number) => `<sup><a href="#fmt-ref-${n}" aria-label="Reference ${n}">${n}</a></sup>`;
+
+const GROUPS: Group[] = [
+  {
+    name: 'The lessons',
+    fill: 'fill-c1',
+    items: [
+      {
+        q: 'Who teaches?',
+        points: [
+          'The lessons do.',
+          'You learn through the platform on your laptop: it runs, checks and explains your code.',
+          'The facilitator, who builds the platform, is in the room to help.',
+        ],
+      },
+      {
+        q: 'Why this format?',
+        id: 'faq-why',
+        open: true,
+        html:
+          '<ul class="fmt-points">' +
+          `<li><b>You learn by doing.</b> Across 225 studies, students in lecture-only courses were 1.5 times as likely to fail as students in courses where they worked actively (Freeman et al., 2014).${cite(1)} So the teaching sits in the lessons, and the room is for doing.</li>` +
+          `<li><b>You read code before you write it.</b> Each step asks you to predict, change, write or fix, an order designed for programming beginners (Sentance, Waite &amp; Kallia, 2019).${cite(2)}</li>` +
+          "<li><b>You see the result first.</b> Every lesson starts by running the finished piece, so you know what you're building before the steps open it up.</li>" +
+          '<li><b>One idea per Saturday, nothing to install.</b> Our pilot in February 2026 taught us this: six topics in one day was too fast, and installing Python cost time. Everything now runs in your browser.</li>' +
+          '</ul>' +
+          `<p>In that pilot, all ${PILOT.paired} people who took both tests scored higher; the average went from ${PILOT.before.toFixed(1)} to ${PILOT.after.toFixed(1)} out of ${PILOT.scoreMax}. The series is built on what that day taught us.</p>` +
+          `<p>"I don't know" answers fell from ${PILOT.idkBefore}% to ${PILOT.idkAfter}% (MA thesis, ${PILOT.source}, group averages). <a href="/research">The findings</a> · <a href="/research/thesis.pdf">Thesis PDF</a></p>`,
+      },
+      { q: 'What if I get stuck?', lines: ['Every step has two hints, then the solution, and errors come with a plain explanation. Look up, and the facilitator comes over.'] },
+      {
+        q: "What if I'm faster or slower than the others?",
+        points: [
+          'Inside a lesson you go at your own pace.',
+          'If you\'re fast, there are "Go further" tasks.',
+          "If you're stuck on one screen for 10 minutes, you can move on.",
+          'The next lesson opens for everyone together.',
+        ],
+      },
+      { q: 'I already code. Will I be bored?', lines: ["The steps are short, so you'll move fast. Every lesson has \"Go further\" tasks and an open brief at the end that goes as far as you like."] },
+      { q: "Is it for artists who don't want to code?", lines: ["You will write code; that's the craft here. Each step is small, and your own photos and ideas drive the piece."] },
+      { q: 'Are these the lessons on pixels2genai.art?', lines: ['No. The workshop lessons are new and made for the series: short screens, code on every one, checks and hints.'] },
+      { q: "Can't I learn this from videos?", lines: ["Parts of it, yes. Here you get the order, the code from the inside, help when you're stuck and a finished piece on the day."] },
+    ],
+  },
+  {
+    name: 'Before you book',
+    fill: 'fill-c2',
+    items: [
+      {
+        q: 'Do I need to know Python?',
+        points: [
+          'Not for W1; there is an optional 15-minute warm-up.',
+          'Later workshops build on earlier ones and assume beginner Python (variables, loops, functions).',
+          'With a single ticket you get a short recap page.',
+        ],
+      },
+      {
+        q: 'Will my laptop work?',
+        points: [
+          'Any Windows, Mac or Linux laptop with a current Chrome or Firefox.',
+          "Tablets and phones don't work for the lessons.",
+          'The 2-minute laptop check in your setup email tells you for sure.',
+        ],
+      },
+      { q: 'Can I come to just one?', lines: ['Yes. Each workshop stands on its own and starts with a 15-minute recap.'] },
+      {
+        q: 'Can I get a refund?',
+        html:
+          '<ul class="fmt-points">' +
+          '<li>Full refund up to 7 days before.</li>' +
+          '<li>After that, send someone in your place or move to another workshop with a free seat.</li>' +
+          `<li>Details in the <a href="${TICKETS.terms}">ticket terms</a>.</li>` +
+          '</ul>',
+      },
+      {
+        q: 'What if I miss one on the pass?',
+        points: [
+          'Send someone in your place (tell us by 12:00 the day before).',
+          "Your code still opens that workshop's lessons from its day until two weeks after W6.",
+        ],
+      },
+      { q: 'Can my teenager come?', lines: ['Everyone must be 18 or older.'] },
+    ],
+  },
+  {
+    name: 'On the day',
+    fill: 'fill-c3',
+    items: [
+      {
+        q: 'What do I need to bring?',
+        points: [
+          'Your own laptop with a current Chrome or Firefox, and its charger.',
+          'One photo of your own. The photo stays on your laptop unless you choose to upload it.',
+          'W5 and W6 run a real image model: you need a free Google account (for Google Colab, run by Google in the US) or a laptop with an NVIDIA graphics card. On a Mac, use Colab.',
+          "Without either you can still follow every step, and the model's results are made for you.",
+        ],
+      },
+      { q: 'Is there food?', lines: ["There's no lunch break. Snacks and water are there all day; bring your own food in a sealed box."] },
+      { q: 'Will I be photographed?', lines: ['We may photograph prints, screens and hands. Your face only if you say yes.'] },
+    ],
+  },
+];
+
+let n = 0;
+const numbered = GROUPS.map((g) => ({ ...g, items: g.items.map((it) => ({ ...it, num: String(++n).padStart(2, '0') })) }));
+---
+
+<section class="ws fmt-band faq-band" id="faq" aria-labelledby="faq-title">
+  <div class="series-head">
+    <h2 class="ws-display series-title" id="faq-title">Questions</h2>
+  </div>
+
+  <div class="fmt-faq">
+    {numbered.map((g) => (
+      <div class={`fmt-faq-group ${g.fill}`}>
+        <h3 class="ws-chip fmt-faq-chip">{g.name}</h3>
+        {g.items.map((it) => (
+          <details id={it.id} open={it.open}>
+            <summary><span class="fmt-q-num" aria-hidden="true">{it.num}</span><span class="fmt-q">{it.q}</span></summary>
+            <div class="fmt-a">
+              {it.lines?.map((l) => <p>{l}</p>)}
+              {it.points && <ul class="fmt-points">{it.points.map((p) => <li>{p}</li>)}</ul>}
+              {it.html && <Fragment set:html={it.html} />}
+            </div>
+          </details>
+        ))}
+      </div>
+    ))}
+  </div>
+
+  <div class="fmt-refs">
+    <p class="ws-label">References</p>
+    <ol>
+      <li id="fmt-ref-1">Freeman, S., Eddy, S. L., McDonough, M., Smith, M. K., Okoroafor, N., Jordt, H., &amp; Wenderoth, M. P. (2014). Active learning increases student performance in science, engineering, and mathematics. <i>PNAS, 111</i>(23), 8410–8415. <a href="https://doi.org/10.1073/pnas.1319030111">https://doi.org/10.1073/pnas.1319030111</a></li>
+      <li id="fmt-ref-2">Sentance, S., Waite, J., &amp; Kallia, M. (2019). Teaching computer programming with PRIMM: A sociocultural perspective. <i>Computer Science Education, 29</i>(2–3), 136–176. <a href="https://doi.org/10.1080/08993408.2019.1608781">https://doi.org/10.1080/08993408.2019.1608781</a></li>
+    </ol>
+  </div>
+</section>

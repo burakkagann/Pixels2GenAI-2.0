@@ -12,7 +12,8 @@ import '@/styles/tokens-workshop.css';
 export type MiniCardBand = 'foundations' | 'ml' | 'genai';
 
 export interface MiniCardItem {
-  href: string;
+  /** Omit for a plain card (the pilot row is not a link). */
+  href?: string;
   band: MiniCardBand;
   /** Text in the coloured header ("W1 PIXELS", "1.1.1"). */
   head: string;
@@ -38,9 +39,11 @@ const { items, label } = Astro.props;
 ---
 
 <ol class="mini-cards" aria-label={label}>
-  {items.map((c) => (
+  {items.map((c) => {
+    const Tag = c.href ? 'a' : 'div';
+    return (
     <li data-band={c.band} class:list={[{ now: c.now }]}>
-      <a href={c.href}>
+      <Tag href={c.href} class="mc-card">
         <span class="mc-head">{c.head}{c.now && <em>{TICKETS.saleTag}</em>}</span>
         <span class="mc-fig">
           <img src={c.image} alt={c.alt ?? ''} width="720" height="450" loading="lazy" decoding="async" />
@@ -48,9 +51,9 @@ const { items, label } = Astro.props;
         </span>
         <span class="mc-text"><b>{c.title}</b><span>{c.line}</span></span>
         {c.srLabel && <span class="sr-only">{c.srLabel}</span>}
-      </a>
+      </Tag>
     </li>
-  ))}
+  );})}
 </ol>
 
 <style>
@@ -67,22 +70,23 @@ const { items, label } = Astro.props;
   .mini-cards [data-band='genai'] { --fill: var(--c3); }
   /* relative: keeps each card's sr-only label positioned inside its card. */
   .mini-cards li { min-width: 0; position: relative; }
-  .mini-cards a {
+  .mini-cards .mc-card {
     display: grid;
     height: 100%;
     grid-template-rows: auto auto 1fr;
     /* minmax(0, 1fr): a long word cannot widen the card past its grid track. */
     grid-template-columns: minmax(0, 1fr);
-    background: var(--bg);
+    /* UX-6: a card takes --card, the frame and the grey depth shadow. */
+    background: var(--card);
     color: var(--fg);
-    border: 2px solid var(--fg);
-    box-shadow: 3px 3px 0 var(--fg);
+    border: 2px solid var(--frame);
+    box-shadow: 3px 3px 0 var(--depth);
     text-decoration: none;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .mini-cards a:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--fg); }
-  .mini-cards a:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
-  .mini-cards .now a { box-shadow: 4px 4px 0 var(--ws-yellow), 4px 4px 0 2px var(--fg); }
+  .mini-cards a.mc-card:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--depth); }
+  .mini-cards a.mc-card:focus-visible { outline: 2px solid var(--c2); outline-offset: 3px; }
+  .mini-cards .now .mc-card { box-shadow: 4px 4px 0 var(--ws-yellow), 4px 4px 0 2px var(--frame); }
   .mc-head {
     display: flex;
     justify-content: space-between;
@@ -153,7 +157,7 @@ const { items, label } = Astro.props;
     .mc-text { padding-inline: 5px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mini-cards a { transition: none; }
-    .mini-cards a:hover { transform: none; }
+    .mini-cards .mc-card { transition: none; }
+    .mini-cards a.mc-card:hover { transform: none; }
   }
 </style>

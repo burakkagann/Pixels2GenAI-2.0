@@ -42,8 +42,10 @@
 
   /* ---------- Foreground — warm paper ---------- */
   --fg:   #F2EEE6;
-  --fg-2: #ACA8A0;
-  --fg-3: #8C8880;
+  /* BF-1 (UX-6, 12 Nov): --fg-2 and --fg-3 one step brighter, so small
+     labels read in dark as they do in light (APCA parity). */
+  --fg-2: #D2CEC6;
+  --fg-3: #ACA8A0;
   --fg-4: #686661;
 
   /* ---------- Lines ---------- */
@@ -118,6 +120,8 @@
   --on-action:        #F6F3EC;   /* fixed paper label, never flips */
   --action-yellow:    #F2D14B;   /* = --ws-yellow; fills only, never text */
   --on-action-bright: var(--bg); /* near-black label on pink and yellow */
+  /* YS-1 (pale butter, 13 Nov): the ticket button fill, yellow softened toward the paper. Dark: 45 % yellow in the light ink. */
+  --action-butter:    color-mix(in srgb, var(--action-yellow) 45%, var(--fg));
   /* Secondary: paper fill with a small shadow in light; in dark an outline
      with no resting shadow, so it never matches a dark primary beside it. */
   --btn-sec-fill:     transparent;
@@ -130,13 +134,26 @@
   --path-2-action:    var(--c2-dim);
   --path-3-action:    var(--c3-dim);
 
+  /* ---------- Surfaces and depth (UX-6, 12 Nov; one rule for home,
+     lessons, workshops and research) ----------
+     --band   the tone band behind alternate sections (UX-5)
+     --card   a card, panel, chip or tile one step off the band
+     --frame  the frame of a card or panel (7.4:1 on the band in dark)
+     --depth  the hard shadow of a card, panel, chip or tile: grey means depth
+     Buttons keep an ink line and an ink drop: ink means press. The primary
+     is an ink fill with a grey (--fg-3) drop, never a colour. */
+  --band:  var(--bg-2);
+  --card:  var(--bg-3);
+  --frame: var(--fg-3);
+  --depth: var(--fg-4);
+
   /* ---------- Admonition · note (promoted from prose.css hardcodes) ---------- */
   --note-border: #5d6878;
   --note-title:  #8a95a5;
 
-  /* ---------- Grain overlay (white noise, overlay blend) ---------- */
-  --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.08'/></svg>");
-  --grain-blend: overlay;
+  /* ---------- Grain overlay (DM-5: warm light noise, normal blend; overlay is invisible on near-black) ---------- */
+  --grain-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.93 0 0 0 0 0.88 0 0 0 0.3 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.16'/></svg>");
+  --grain-blend: normal;
 
   /* ---------- Figure frame ----------
      A light-touch plate behind lesson outputs / research PNGs. Dark theme:
@@ -281,11 +298,16 @@
   --action:           #2D52A8;   /* = --c2, 6.57:1 with --on-action */
   --action-hover:     #1E3A7A;
   --on-action-bright: var(--fg);
+  --action-butter:    color-mix(in srgb, var(--action-yellow) 45%, var(--card));
   --btn-sec-fill:     var(--bg);
   --btn-sec-shadow:   2px;
   --path-1-action:    #074B43;   /* path ink at 68 % toward black */
   --path-2-action:    #1F3872;
   --path-3-action:    #781F44;
+
+  /* ---------- Surfaces and depth (see :root) ---------- */
+  --card:  var(--bg-deep);
+  --frame: var(--fg);
 
   /* ---------- Admonition note ---------- */
   --note-border: #6F7A8C;

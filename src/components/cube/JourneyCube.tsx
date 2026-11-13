@@ -560,12 +560,10 @@ export default function JourneyCube({ lite = false }: JourneyCubeProps) {
                   }}
                   data-face={key}
                 />
-                {/* M-14: the face codes ("F · front · 0°", "f 1 / 6") were
-                    unreadable over the noise and meant nothing to a learner;
-                    only the stage name stays. */}
-                <div className={styles['lbl-bot']}>
-                  <span className={styles.ttl}>{currentStage.code} · {currentStage.name}</span>
-                </div>
+                {/* M-14: the face codes were unreadable over the noise. BR-13: the
+                    stage name is gone from the face too ("Distance Fields" meant
+                    nothing to a newcomer); it stays in the slider's value text and
+                    shows on hover or focus under the ticks. */}
               </div>
             ))}
           </div>

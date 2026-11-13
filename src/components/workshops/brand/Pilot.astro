@@ -54,7 +54,7 @@ const peopleWord = WORDS[past.participants ?? 0] ?? String(past.participants);
 
       <ul class="pilot-lessons" aria-label="The lessons of the pilot">
         {past.modules.map((m) => (
-          <li><a class="ws-chip pilot-lesson" href={`/lessons/${m.idx}`}><b>{m.idx}</b> {m.title}</a></li>
+          <li><span class="ws-chip pilot-lesson"><b>{m.idx}</b> {m.title}</span></li>
         ))}
       </ul>
 
@@ -81,10 +81,10 @@ const peopleWord = WORDS[past.participants ?? 0] ?? String(past.participants);
   )}
 
   <div class="pilot-ack">
-    <p class="ws-label">Co-organised with Academis</p>
+    <p class="ws-label">Hosted at Academis</p>
     <p>
-      The workshops are run with <a href={past.supervisorHref} target="_blank" rel="noopener">Kristian Rother</a> and
-      Academis, who bring the venue, the recruitment and the facilitation experience that makes a draft curriculum teachable. They are part of a Master's thesis;
+      The workshops take place at the Academis studio, hosted by <a href={past.supervisorHref} target="_blank" rel="noopener">Kristian Rother</a>
+      and run by Kağan. They are part of a Master's thesis;
       anonymous session feedback is used for research with participants' consent.
     </p>
   </div>

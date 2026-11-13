@@ -151,14 +151,15 @@ export const SERIES: SeriesWorkshop[] = [
     make: 'Your sketch or your style turned into an image, labelled as AI-made',
     cardMake: 'Your sketch turned into an image by a real model',
     homeLine: 'A model turns your sketch into an image',
-    needs: 'A laptop with a GPU, or a free Google Colab account',
+    needs: 'A free Google account (for Colab), or a laptop with an NVIDIA graphics card. Macs: use Colab. Without either you can still follow every step.',
     warmup: '3 questions on learning',
     image: { src: '/workshops/series/one-photo/w5.webp', alt: "The Berliner Dom and the Fernsehturm in six vertical bands, from pure noise on the left to the clear photo on the right.", credit: "Made with W5's maths, from one photo" },
   },
   {
     id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Live', band: 'Generative AI',
     date: 'Sat 8 May 2027', dateIso: '2027-05-08',
-    idea: 'Input, process, output: every frame, in TouchDesigner.',
+    // Stopgap 13 Nov (Kağan: "W6 stopgap yes"): no TouchDesigner; title, cores and image follow the W6 picks (R-17).
+    idea: 'Everything so far comes together in one piece of your own.',
     thread: 'w5',
     threadText: 'Everything so far, running live.',
     cores: [
@@ -169,7 +170,7 @@ export const SERIES: SeriesWorkshop[] = [
     make: 'A recording of you inside your piece, plus a one-page capstone plan',
     cardMake: 'A recording of you inside your piece',
     homeLine: 'Real-time art you play with your body',
-    needs: 'The free TouchDesigner on a laptop with a dedicated graphics card or a newer Mac. Setup steps follow before the workshop.',
+    needs: 'A free Google account (for Colab), or a laptop with an NVIDIA graphics card. Without either you can still follow every step.',
     needsOnCard: true,
     warmup: '3 questions on the whole series',
     image: { src: '/workshops/series/one-photo/w6.webp', alt: "The Berliner Dom and the Fernsehturm as glowing particles in the photo's colours on a dark background.", credit: "Concept · particles in the photo's colours" },

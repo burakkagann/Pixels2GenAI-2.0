@@ -392,6 +392,8 @@
    neighbours touched; at 8px they are ~54px, leaving a visible gap. */
 .journey-ticks .tick .tname {
   display: block;
+  /* BR-13: stage names show only on hover or keyboard focus; the code stays. */
+  visibility: hidden;
   font-size: 10px;
   line-height: 1.25;
   letter-spacing: 0;
@@ -664,3 +666,6 @@
     text-overflow: ellipsis;
   }
 }
+
+.journey-ticks .tick:hover .tname,
+.journey-ticks .tick:focus-visible .tname { visibility: visible; }

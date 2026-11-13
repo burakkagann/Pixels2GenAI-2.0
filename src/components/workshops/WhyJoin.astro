@@ -1,0 +1,65 @@
+---
+/**
+ * "See how it all connects." on /workshops (BLD-183, layout WL-1b): why join (final copy 1e, WC-15 v2) as
+ * three cards with riso headers, and where you can go next (1f, WC-14 a) as rows tagged with the
+ * workshops they build on, each tag in its band colour as on the arc. Copy: final-copy.md, unchanged.
+ * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
+ */
+import { SERIES } from '@/data/workshops/series';
+import { bandKey } from '@/components/workshops/seriesFormat';
+
+const JOIN = [
+  { fill: 'fill-c1', word: 'Connect', line: 'Each Saturday adds a link, from pixels to generative models.' },
+  { fill: 'fill-c2', word: 'Carry', line: 'The ideas under the tools, for art, design, data or code.' },
+  { fill: 'fill-c3', word: 'Make', line: 'Six pieces of your own, one per Saturday.' },
+];
+
+// `from`/`to` are workshop numbers; null = the free lessons (a yellow "Free" tag).
+const NEXT = [
+  { title: 'Generative art and print', from: 1, to: 3, text: 'Your own series for prints, pen plotters or riso.' },
+  { title: 'Data and visualisation', from: 3, to: 3, text: 'Cluster and map your own image or data collections.' },
+  { title: 'Machine learning', from: 4, to: 4, text: 'A first full course in neural networks, with the basics already in hand.' },
+  { title: 'Your own AI tools', from: 5, to: 6, text: 'Train and steer models on your own work.' },
+  { title: 'The rest of Pixels2GenAI', from: null, to: null, text: 'The free lessons on this site, in an order you now understand.' },
+];
+
+const tagsFor = (from: number | null, to: number | null) =>
+  from === null ? [] : SERIES.filter((w) => w.n >= from && w.n <= (to ?? from));
+const rangeLabel = (from: number | null, to: number | null) =>
+  from === null ? 'Free' : from === to ? `W${from}` : `W${from}–W${to}`;
+---
+
+<section class="ws fmt-band join-band" id="why-join" aria-labelledby="why-join-title">
+  <div class="series-head">
+    <h2 class="ws-display series-title" id="why-join-title">See how it all connects.</h2>
+  </div>
+
+  <ul class="fmt-join">
+    {JOIN.map((j) => (
+      <li class={`ws-card fmt-join-card ${j.fill}`}>
+        <p class="ws-display fmt-join-word">{j.word}</p>
+        <p class="fmt-join-line">{j.line}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="fmt-note">About 27 hours in the room won't make you an expert. You'll know how each step works, and you'll have the code to keep going.</p>
+
+  <h3 class="ws-display fmt-sub">Where you can go next</h3>
+  <ul class="fmt-next">
+    {NEXT.map((n) => (
+      <li>
+        <b class="fmt-next-title">{n.title}</b>
+        <span class="fmt-next-tags">
+          <span class="sr-only">{rangeLabel(n.from, n.to)}</span>
+          {n.from === null ? (
+            <span class="fmt-tag fill-yellow" aria-hidden="true">Free</span>
+          ) : (
+            tagsFor(n.from, n.to).map((w) => <span class="fmt-tag" data-band={bandKey(w.band)} aria-hidden="true">W{w.n}</span>)
+          )}
+        </span>
+        <span class="fmt-next-text">{n.text}</span>
+      </li>
+    ))}
+  </ul>
+  <p class="fmt-note">These are directions, not promises.</p>
+</section>

@@ -252,6 +252,6 @@ const tPath = (a: number, b: number) => {
   .ca-sale text { fill: var(--ws-on-yellow); font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-anchor: middle; }
   .ca-node { cursor: pointer; }
   .ca-node:hover .ca-dot, .ca-node:focus-visible .ca-dot { stroke-width: 4; }
-  .ca-node:focus-visible { outline: none; }
+  /* BF-2: the brand's 3 px ring (workshop-brand.css) shows on the node too. */
   .ca-node:focus-visible .ca-shadow { fill: var(--link, var(--ws-ink)); }
 </style>

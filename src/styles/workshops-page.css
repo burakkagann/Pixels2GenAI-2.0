@@ -78,7 +78,7 @@
   aspect-ratio: 1;
   object-fit: cover;
   border: var(--ws-border) solid var(--ws-ink);
-  box-shadow: 4px 4px 0 var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--depth);
   background: var(--bg-2);
 }
 
@@ -100,6 +100,24 @@
 .series {
   padding: 56px 0 72px;
   border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+/* UX-6 (from UX-5): tone bands. The series and the pilot gallery sit on
+   --band, full bleed; the cards on them take --card. */
+.ws.series,
+.ws.pilot .pilot-gallery-wrap {
+  background: var(--band);
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
+}
+
+.ws .series-card,
+.ws .pilot-stat,
+.ws .series-showcase,
+.ws .sc-body,
+.ws .sc-tile,
+.ws .sc-credit {
+  background: var(--card);
 }
 
 .series-head {
@@ -209,7 +227,7 @@
   background: var(--ws-paper);
   border: 2px solid var(--ws-ink);
   font-family: var(--mono);
-  font-size: max(9.5px, var(--fs-min));
+  font-size: max(11px, var(--fs-min)); /* BF-1 */
   letter-spacing: 0.06em;
   color: var(--fg);
 }
@@ -237,7 +255,7 @@
 .sc-fact .ws-label {
   display: block;
   margin-bottom: 2px;
-  font-size: max(10px, var(--fs-min));
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
   color: var(--fg-3);
 }
 
@@ -316,8 +334,8 @@
   grid-column: 3;
   grid-row: 1;
   font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
-  color: var(--fg-3);
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
+  color: var(--fg-2);
 }
 
 .sc-l-sub {
@@ -360,7 +378,7 @@
   place-items: center;
   aspect-ratio: 16 / 10;
   padding: 8px;
-  background: var(--ws-paper);
+  background: var(--band);
   border: 2px dashed var(--ws-ink);
   font-family: var(--mono);
   font-size: max(11px, var(--fs-min));
@@ -502,8 +520,8 @@
   padding: 0;
   list-style: none;
   font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
-  color: var(--fg-3);
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
+  color: var(--fg-2);
 }
 
 .day-ruler li {
@@ -534,7 +552,7 @@
   padding: 0;
   list-style: none;
   border: var(--ws-border) solid var(--ws-ink);
-  box-shadow: var(--ws-hard-shadow);
+  box-shadow: 4px 4px 0 var(--depth);
   background: var(--ws-paper);
 }
 
@@ -581,8 +599,8 @@
 
 .day-min {
   font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
-  color: var(--fg-3);
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
+  color: var(--fg-2);
   white-space: nowrap;
 }
 
@@ -682,8 +700,8 @@
     width: auto;
     height: auto;
     clip: auto;
-    font-size: max(10px, var(--fs-min));
-    color: var(--fg-3);
+    font-size: max(12px, var(--fs-min)); /* BF-1 */
+    color: var(--fg-2);
   }
   .day-break .day-text { display: none; }
 }
@@ -763,7 +781,7 @@
   max-width: 340px;
   transform: rotate(-2deg);
   border: var(--ws-border) solid var(--ws-ink);
-  box-shadow: var(--ws-hard-shadow);
+  box-shadow: 4px 4px 0 var(--depth);
   transition: transform .15s ease;
 }
 
@@ -818,9 +836,9 @@
 .pilot-fine {
   margin: 14px 0 26px;
   font-family: var(--mono);
-  font-size: max(11px, var(--fs-min));
+  font-size: max(12px, var(--fs-min)); /* BF-1 */
   line-height: 1.6;
-  color: var(--fg-3);
+  color: var(--fg-2);
 }
 
 .pilot-lessons {
@@ -832,15 +850,10 @@
   list-style: none;
 }
 
+/* Plain label, not a link (Kağan, 13 Nov): no hover, no pointer. */
 .ws .pilot-lesson {
-  text-decoration: none;
-  box-shadow: 3px 3px 0 var(--ws-ink);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-
-.ws .pilot-lesson:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--depth);
+  cursor: default;
 }
 
 .pilot-lesson b {
@@ -879,7 +892,7 @@
 .pilot-tile {
   padding: 0;
   border: var(--ws-border) solid var(--ws-ink);
-  box-shadow: 4px 4px 0 var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--depth);
   background: var(--bg-2);
   cursor: zoom-in;
   transition: transform .12s ease, box-shadow .12s ease;
@@ -890,7 +903,7 @@
 
 .pilot-tile:hover {
   transform: rotate(0deg) translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--ws-ink);
+  box-shadow: 6px 6px 0 var(--depth);
 }
 
 .pilot-tile img {
@@ -948,9 +961,12 @@
   color: var(--fg-2);
 }
 
+/* BF-3: links in a panel are underlined. */
 .pilot-ack a {
   color: var(--link);
-  border-bottom: 1px solid currentColor;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 
 /* ============================================================
@@ -959,18 +975,19 @@
 .ws .sc-later { margin: 8px 0 0; font-size: 14px; }
 .ws .sc-price { margin: 0; font-size: 17px; }
 .ws .sc-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-/* "Tickets open ..." while a shop link is null: a flat paper label with a thin ink border, not a button
-   (no shadow, no arrow, default cursor). Gone once the link is filled in. */
+/* "Tickets open ..." while a shop link is null. BF-4: a status is text,
+   not a box: no border, no fill, a yellow dot before it (the panel's ink
+   on the yellow tickets panel). Gone once the link is filled in. */
 .ws .tk-later {
   display: inline-block;
   margin: 0;
   align-self: start;
   justify-self: start;
   width: fit-content;
-  padding: 10px 16px;
-  background: var(--ws-paper);
-  color: var(--fg);
-  border: 2px solid var(--ws-ink);
+  padding: 0;
+  background: none;
+  color: var(--fg-2);
+  border: 0;
   font-family: var(--mono);
   font-size: max(13px, var(--fs-min));
   font-weight: 700;
@@ -979,6 +996,18 @@
   line-height: 1.2;
   cursor: default;
 }
+.ws .tk-later::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--ws-yellow);
+  vertical-align: 1px;
+}
+.ws .series-cta .tk-later { color: var(--ws-on-yellow); }
+.ws .series-cta .tk-later::before { background: var(--ws-on-yellow); }
 .ws .sc-foot .tk-later { margin: 0; }
 .ws .tk-wrap { display: grid; gap: 18px; width: 100%; }
 .ws .tk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px 32px; }
@@ -988,12 +1017,17 @@
 .ws .tk-sub { margin: 0; font-family: var(--serif); font-size: 15.5px; }
 .ws .tk-facts { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-family: var(--serif); font-size: 15.5px; }
 .ws .tk-small { margin: 0; font-size: 13.5px; }
-.ws .tk-small a { color: inherit; }
+/* BF-3: links in a panel are underlined. */
+.ws .tk-small a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
 /* ============================================================
    Round 2 (BLD-21, DEC-81 to DEC-85): practical line,
    card date tile, aligned rows, action pinned to the bottom
    ============================================================ */
+/* E3a: the tickets button under the practical line, shown once the shop link is set: the yellow sale
+   button (.btn-sale) to #tickets. */
+.ws .series-buy { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 24px; }
+
 .ws .series-practical {
   margin: 8px 0 20px;
   padding: 4px 0 4px 14px;
@@ -1011,10 +1045,10 @@
   display: grid;
   justify-items: center;
   padding: 4px 10px 5px;
-  background: var(--ws-paper);
+  background: var(--card);
   color: var(--fg);
   border: 2px solid var(--ws-ink);
-  box-shadow: 3px 3px 0 var(--ws-ink);
+  box-shadow: 4px 4px 0 var(--depth);
 }
 .ws .sc-tile-wd, .ws .sc-tile-m { font-family: var(--mono); font-size: max(10px, var(--fs-min)); letter-spacing: .1em; }
 .ws .sc-tile-d { font-family: var(--ws-display); font-weight: 800; font-size: 24px; line-height: 1; }
@@ -1029,7 +1063,7 @@
   font-size: 15px;
   line-height: 1.4;
 }
-.ws .sc-rows dt { padding-top: 3px; font-size: max(10px, var(--fs-min)); color: var(--fg-3); white-space: nowrap; }
+.ws .sc-rows dt { padding-top: 3px; font-size: max(12px, var(--fs-min)); color: var(--fg-2); white-space: nowrap; } /* BF-1 */
 .ws .sc-rows dd { margin: 0; }
 .ws .sc-inside-body .sc-fact { margin: 12px 0 0; }
 
@@ -1051,7 +1085,6 @@
 @media (max-width: 640px) {
   /* M-18 (taps): pilot lesson chips, the hero text link, the pilot poster
      and the toggles reach 44 px. */
-  .ws a.pilot-lesson,
   .series-hero .hero-link,
   .ws a.pilot-poster,
   .ws .ws-toggle { min-height: 44px; display: inline-flex; align-items: center; }
@@ -1066,4 +1099,435 @@
     padding: 12px 14px;
   }
   .pilot-num { font-size: 36px; line-height: 1; margin: 0; }
+}
+
+/* ============================================================
+   BLD-183 (WL-1b, WL-2a): how a workshop works, see how it all
+   connects, tickets band, FAQ. Each section takes a brand element:
+   riso fill headers (roles, join), numbered stickers on a line
+   (steps), colour stripes (why), band-coloured W tags (next),
+   group chips and numbered squares (FAQ). Tokens only.
+   ============================================================ */
+.ws.fmt-band {
+  padding: 56px 0 72px;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+/* Bands alternate as on the rest of the page: join and FAQ on --band. */
+.ws.join-band,
+.ws.faq-band {
+  background: var(--band);
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
+}
+
+.ws.fmt-band .ws-card { background: var(--card); }
+.ws.tix-band .series-cta { margin-top: 0; background: var(--ws-yellow); }
+
+/* The deck's last words on a yellow block, like the hero's riso highlight. */
+.fmt-mark {
+  background: var(--ws-yellow);
+  color: var(--ws-on-yellow);
+  padding: 0 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.fmt-sub {
+  font-size: clamp(24px, 2.6vw, 32px);
+  margin: 52px 0 20px;
+}
+
+/* Bullets: small squares in the colour of their block. */
+.fmt-points {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fmt-points li {
+  position: relative;
+  padding-left: 18px;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.fmt-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 8px;
+  height: 8px;
+  background: var(--fill, var(--fg-3));
+  border: 1.5px solid var(--ws-ink);
+}
+
+/* ---------- Roles (1b) and join (1e): cards with a riso header ---------- */
+.fmt-roles,
+.fmt-join {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ws .fmt-role,
+.ws .fmt-join-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fmt-role-head,
+.fmt-join-word {
+  margin: 0;
+  padding: 12px 18px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border-bottom: var(--ws-border) solid var(--ws-ink);
+}
+
+.ws .fmt-role-head { font-size: clamp(22px, 2.2vw, 28px); }
+.ws .fmt-join-word { font-size: clamp(26px, 3vw, 36px); }
+
+.fmt-role-line,
+.fmt-join-line {
+  margin: 0;
+  padding: 14px 18px 18px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+/* ---------- Steps (1c): numbered stickers on one line ---------- */
+.fmt-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The line runs through the sticker centres (52 px stickers). */
+.fmt-steps::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  top: 25px;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.fmt-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ws .fmt-step-num {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+}
+
+.ws .fmt-step-card {
+  align-self: stretch;
+  flex: 1;
+  padding: 16px 18px 18px;
+}
+
+.ws .fmt-step-title {
+  margin: 0 0 12px;
+  color: var(--fg);
+}
+
+/* The day timeline sits under the steps; the steps already head it. */
+.how-band .series-day { margin-top: 48px; }
+.how-band .day-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Why this format (1d, four lines): stripe cards ---------- */
+.fmt-why {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ws .fmt-why-card {
+  padding: 16px 18px 18px;
+  border-top: 12px solid var(--stripe);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.ws .fmt-why-card sup a,
+.ws .fmt-a sup a {
+  font: 600 12px var(--mono);
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ws .fmt-evidence {
+  display: inline-block;
+  margin-top: 18px;
+  padding-bottom: 2px;
+  border-bottom: 2px solid currentColor;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+.ws .fmt-evidence:hover { color: var(--fg); }
+
+/* ---------- Join (1e) and where next (1f) ---------- */
+.fmt-note {
+  margin: 18px 0 0;
+  max-width: 60ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.fmt-next {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.fmt-next li {
+  display: grid;
+  grid-template-columns: minmax(0, 15em) 9.5em minmax(0, 1fr);
+  gap: 6px 20px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--frame);
+}
+
+.fmt-next-title {
+  font-family: var(--sans);
+  font-size: 17px;
+  color: var(--fg);
+}
+
+.fmt-next-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* W tags in the band colour, as the tags on the W7 wall. */
+.fmt-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--ws-display);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.fmt-next-text {
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+/* ---------- FAQ (1g + the gap answers) ---------- */
+.fmt-faq {
+  max-width: 860px;
+  display: grid;
+  gap: 36px;
+}
+
+.ws .fmt-faq-chip {
+  margin: 0 0 12px;
+  background: var(--fill);
+  color: var(--on-fill);
+  font-size: max(12px, var(--fs-min));
+  box-shadow: 3px 3px 0 var(--depth);
+}
+
+.fmt-faq-group details {
+  border-bottom: 1px solid var(--frame);
+}
+
+.fmt-faq-group details:first-of-type {
+  border-top: var(--ws-border) solid var(--ws-ink);
+}
+
+.fmt-faq-group summary {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fmt-faq-group summary::-webkit-details-marker { display: none; }
+.fmt-faq-group summary::marker { content: ""; }
+
+/* Numbered squares in the group colour, as the lesson numbers on the cards. */
+.fmt-q-num {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--fill);
+  color: var(--on-fill);
+  border: 2px solid var(--ws-ink);
+  font-family: var(--mono);
+  font-size: max(11px, var(--fs-min));
+  font-weight: 700;
+}
+
+.fmt-q {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.fmt-faq-group summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--ws-ink);
+  background: var(--card);
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.fmt-faq-group details[open] > summary::after { content: "–"; }
+
+.fmt-a {
+  max-width: 66ch;
+  padding: 0 0 18px 46px;
+}
+
+.fmt-a p {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.fmt-a p:last-child { margin-bottom: 0; }
+.fmt-a .fmt-points { margin-bottom: 10px; }
+.fmt-a .fmt-points:last-child { margin-bottom: 0; }
+.fmt-a b { font-family: var(--sans); color: var(--fg); }
+
+/* BF-3: links in a panel are underlined. */
+.fmt-a p a,
+.fmt-a li > a,
+.fmt-refs a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  overflow-wrap: anywhere;
+}
+
+.fmt-refs {
+  max-width: 860px;
+  margin-top: 32px;
+}
+
+.ws .fmt-refs .ws-label { margin: 0; color: var(--fg-2); }
+
+.fmt-refs ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-family: var(--serif);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+/* ---------- Narrower screens ---------- */
+@media (max-width: 1000px) {
+  .fmt-steps,
+  .fmt-why { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fmt-steps::before { display: none; }
+}
+
+@media (max-width: 640px) {
+  .ws.fmt-band { padding: 44px 0 56px; }
+  .fmt-roles,
+  .fmt-join,
+  .fmt-why { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .fmt-sub { margin: 40px 0 16px; }
+
+  /* Steps: one column, stickers on a vertical line to the left. */
+  .fmt-steps { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .fmt-steps::before {
+    display: block;
+    left: 19px;
+    right: auto;
+    top: 20px;
+    bottom: 20px;
+    border-top: 0;
+    border-left: var(--ws-border) solid var(--ws-ink);
+  }
+  .fmt-step { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .ws .fmt-step-num { width: 40px; height: 40px; font-size: 17px; }
+
+  .fmt-next li { grid-template-columns: minmax(0, 1fr) auto; }
+  .fmt-next-text { grid-column: 1 / -1; }
+
+  .fmt-faq-group summary { grid-template-columns: 30px minmax(0, 1fr) 26px; gap: 10px; min-height: 44px; }
+  .fmt-a { padding-left: 0; }
+}
+
+/* R-50f5-05: the pilot result and the thesis under "Why this format" (yellow bullets). */
+.ws .fmt-proof { margin-top: 22px; max-width: 80ch; }
+.ws .fmt-proof li { color: var(--fg); }
+.ws .fmt-proof a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
