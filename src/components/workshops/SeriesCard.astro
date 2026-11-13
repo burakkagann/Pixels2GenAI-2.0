@@ -91,8 +91,8 @@ const opens = day && new Date(day.getTime() - 28 * 86_400_000)
           <p class="sc-price"><b>€{TICKETS.price.standard}</b> · €{TICKETS.price.reduced} reduced</p>
           {shop ? (
             <div class="sc-btns">
-              <a class="ws-btn fill-studio" href={shop}>Get a ticket →</a>
-              {luma && <a class="ws-btn" href={luma}>Also on Luma</a>}
+              <a class="ws-btn btn-sale" href={shop}>Get a ticket →</a>
+              {luma && <a class="ws-btn btn-pink" href={luma}>Also on Luma</a>}
             </div>
           ) : (
             <p class="tk-later">{TICKETS.notReady}</p>

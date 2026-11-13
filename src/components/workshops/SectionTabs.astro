@@ -1,0 +1,297 @@
+---
+/**
+ * Section navigation on /workshops (SH-1, R-50f5-16 options page; Kağan 13 Nov:
+ * "center the text to the page", every label a link; and the version under the
+ * hero "more highlighted, so people can notice that this is a button").
+ *
+ * Two parts sharing one list:
+ * - Under the hero: "Jump to" + six chips in the site's secondary-button style
+ *   (landing.css .btn.btn-sec), centred; a 2-column grid on phones.
+ * - Once those chips have scrolled away: a slim fixed bar of numbered tabs under the
+ *   site header, centred; the section in view gets aria-current and the yellow fill.
+ *   Fixed rather than sticky, so swapping chips for tabs never shifts the page.
+ *   Touch widths: 44 px tap targets, no numbers; <=760 px short labels in one
+ *   centred row that wraps rather than swiping sideways.
+ * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
+ * Pixels2GenAI Project.
+ */
+interface Tab { id: string; label: string; short: string }
+
+// Labels from the options page (Draft). `short` is the narrow-screen label in the bar.
+// It is a word of the full label, so the accessible name contains what is shown; FAQ
+// is not, so that one short label stays in the name too ("Questions FAQ").
+const TABS: Tab[] = [
+  { id: 'series', label: 'The arc', short: 'Arc' },
+  { id: 'how-it-works', label: 'How it works', short: 'How' },
+  { id: 'why-join', label: 'Why join', short: 'Why' },
+  { id: 'tickets', label: 'Tickets', short: 'Tickets' },
+  { id: 'faq', label: 'Questions', short: 'FAQ' },
+  { id: 'past', label: 'The pilot', short: 'Pilot' },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<nav class="sh-jump" aria-labelledby="sh-jump-label" data-sh-jump>
+  <p class="sh-lead" id="sh-jump-label">Jump to</p>
+  <ol class="sh-chips">
+    {TABS.map((t) => (
+      <li>
+        <a class="btn btn-sec sh-chip" href={`#${t.id}`} data-sec={t.id}>
+          {t.label}<span class="sh-arrow" aria-hidden="true">↓</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<nav class="sh-bar" aria-label="Sections on this page" data-sh-tabs>
+  <div class="sh-in">
+    <ol class="sh-tabs">
+      {TABS.map((t, i) => (
+        <li>
+          <a href={`#${t.id}`} data-sec={t.id}>
+            <span class="sh-n" aria-hidden="true">{pad(i + 1)}</span>
+            {t.short === t.label ? (
+              <span>{t.label}</span>
+            ) : (
+              <>
+                <span class="sh-full">{t.label}</span>
+                <span class="sh-short" aria-hidden={t.label.includes(t.short) ? 'true' : undefined}>{t.short}</span>
+              </>
+            )}
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</nav>
+
+<style>
+  /* ---- Under the hero: "Jump to" + chips that read as buttons ---- */
+  .sh-jump {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px 18px;
+    padding: 12px 0 32px;
+  }
+  .sh-lead {
+    margin: 0;
+    font: 600 max(12px, var(--fs-min))/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .sh-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  /* The site's secondary button (ink line, ink drop, here 3 px, lift on hover) on the page
+     fill; hover and focus fill it with ink, the way the primary looks. */
+  .sh-chip {
+    --btn-fill: var(--bg);
+    --btn-shadow: 3px;
+    padding: 0 14px;
+    font-size: 12px;
+    gap: 8px;
+  }
+  .sh-chip:hover,
+  .sh-chip:focus-visible {
+    --btn-fill-hover: var(--fg);
+    --btn-drop: var(--fg-3); /* as the primary: grey drop under an ink fill */
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .sh-arrow { font-weight: 400; }
+
+  @media (max-width: 640px) {
+    .sh-jump { flex-direction: column; gap: 12px; padding: 4px 0 28px; }
+    /* Phones: a 2 x 3 grid, never a sideways row. */
+    .sh-chips {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      width: 100%;
+      padding-right: 3px; /* room for the drop shadow */
+      box-sizing: border-box;
+    }
+    .sh-chip { width: 100%; padding: 0 10px; }
+  }
+
+  /* ---- The slim bar: fixed under the site header once the chips are gone ---- */
+  .sh-bar {
+    position: fixed;
+    top: var(--sh-head, var(--frame-h));
+    left: 0;
+    right: 0;
+    z-index: 40; /* under the site header (50) */
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  /* Out of sight, out of the tab order and the accessibility tree until it is needed;
+     visibility (not display) so the script can still measure it. */
+  .sh-bar:not(.is-on) { visibility: hidden; }
+  .sh-in {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-inline: var(--pad-x);
+    box-sizing: border-box;
+  }
+  .sh-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+  }
+  .sh-tabs a {
+    display: block;
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    text-decoration: none;
+    padding: 9px 11px;
+    border: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .sh-tabs a:hover { color: var(--fg); border-color: var(--line); }
+  .sh-tabs a:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+  .sh-tabs a[aria-current] { background: var(--ws-yellow); color: var(--ws-on-yellow); border-color: var(--frame); }
+  .sh-n { color: var(--fg-3); margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .sh-tabs a[aria-current] .sh-n { color: var(--ws-on-yellow); }
+  .sh-short { display: none; }
+
+  /* Touch screens wider than 920 px (landscape tablets): 44 px tall tabs too. */
+  @media (pointer: coarse) {
+    .sh-tabs a { display: flex; align-items: center; min-height: 44px; box-sizing: border-box; padding-block: 0; }
+  }
+
+  /* Touch widths (<=920 px): no numbers, 44 px tap targets, still one centred row. */
+  @media (max-width: 920px) {
+    .sh-tabs { gap: 2px; padding: 4px 0; }
+    .sh-tabs a {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      box-sizing: border-box;
+      padding: 0 9px;
+    }
+    .sh-n { display: none; }
+  }
+  /* Narrow (<=760 px): short labels so all six fit one centred row down to 360 px
+     (and to 345 px, a desktop window with a scrollbar) with
+     44 x 44 px tap targets; below that the row wraps to a second centred row, never a
+     sideways swipe. */
+  @media (max-width: 760px) {
+    .sh-tabs { gap: 0; }
+    /* Spare width goes between the labels, evenly, so the row stays centred and airy. */
+    .sh-tabs li { flex: 1 1 auto; }
+    /* The 2 px frame is drawn inside (inset shadow) instead of a border: 24 px back for the row. */
+    .sh-tabs a { justify-content: center; min-width: 44px; padding: 0 5px; letter-spacing: 0; border: 0; }
+    .sh-tabs a:hover { box-shadow: inset 0 0 0 2px var(--line); }
+    .sh-tabs a[aria-current] { box-shadow: inset 0 0 0 2px var(--frame); }
+    /* The full label stays in the accessible name; the short one is what shows. */
+    .sh-full {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+    .sh-short { display: inline; }
+  }
+  /* Phones: the site header scrolls away, so the bar sits at the top. */
+  @media (max-width: 640px) {
+    .sh-bar { top: 0; }
+  }
+
+  /* Anchor targets land below the header and the bar (both measured by the script). */
+  :global(.workshops-page [id]) {
+    scroll-margin-top: calc(var(--sh-head, var(--sticky-off)) + var(--sh-h, 52px) + 12px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:has(.sh-bar)) { scroll-behavior: smooth; }
+  }
+</style>
+
+<script>
+  // Measures the sticky site header and the bar (their heights change with the
+  // breakpoint), shows the bar once the "Jump to" chips reach it
+  // (and hides it again past the page's end), and marks the section in view in both
+  // lists: the last one whose top has passed the line under the bar, or the last one
+  // when the page is scrolled to the end.
+  const bar = document.querySelector<HTMLElement>('[data-sh-tabs]');
+  const jump = document.querySelector<HTMLElement>('[data-sh-jump]');
+  if (bar && jump) {
+    const root = document.documentElement;
+    const header = document.querySelector<HTMLElement>('.frame-top');
+    const main = jump.closest('main');
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-sh-jump] a[data-sec], [data-sh-tabs] a[data-sec]')];
+    const ids = [...bar.querySelectorAll<HTMLAnchorElement>('a[data-sec]')].map((a) => a.dataset.sec || '');
+    // #tickets is the card inside its band; the band is what the reader sees.
+    const blocks = ids.map((id) => {
+      const target = document.getElementById(id);
+      return target?.closest('section') ?? target;
+    });
+    let headH = 0;
+    let barH = 0;
+
+    const measure = () => {
+      const stuck = header && getComputedStyle(header).position === 'sticky';
+      headH = stuck ? header.getBoundingClientRect().height : 0;
+      barH = bar.getBoundingClientRect().height;
+      root.style.setProperty('--sh-head', `${headH}px`);
+      root.style.setProperty('--sh-h', `${barH}px`);
+    };
+
+    const update = () => {
+      // The bar takes over as soon as it would sit on the chips row; a link to The arc
+      // (scroll margin = header + bar + 12) lands exactly there, so the bar shows.
+      const chipsGone = jump.getBoundingClientRect().bottom <= headH + barH + 13;
+      const pageLeft = main ? main.getBoundingClientRect().bottom > headH + barH : true;
+      bar.classList.toggle('is-on', chipsGone && pageLeft);
+
+      const line = headH + barH + 24;
+      let idx = -1;
+      blocks.forEach((b, i) => {
+        if (b && b.getBoundingClientRect().top <= line) idx = i;
+      });
+      if (idx >= 0 && innerHeight + scrollY >= root.scrollHeight - 2) idx = ids.length - 1;
+      links.forEach((a) => {
+        if (idx >= 0 && a.dataset.sec === ids[idx]) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      });
+    };
+
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        update();
+      });
+    };
+
+    measure();
+    update();
+    addEventListener('scroll', onScroll, { passive: true });
+    const ro = new ResizeObserver(() => {
+      measure();
+      update();
+    });
+    ro.observe(bar);
+    if (header) ro.observe(header);
+  }
+</script>

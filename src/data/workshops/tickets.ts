@@ -9,8 +9,8 @@ import type { WorkshopId } from '@/data/workshops/series';
 export const TICKETS = {
   /** Workshops whose single tickets are on sale now. */
   onSale: ['w1'] as WorkshopId[],
-  pretix: { w1: null, pass: null } as Record<string, string | null>,
-  luma: { w1: null } as Record<string, string | null>,
+  pretix: { w1: 'https://pretix.eu/pg2/workshop/5248802/', pass: 'https://pretix.eu/pg2/workshop/5245243/' } as Record<string, string | null>,
+  luma: { w1: 'https://luma.com/j0htoz0q' } as Record<string, string | null>,
   price: { standard: 90, reduced: 60, passStandard: 450, passReduced: 300 },
   /** After W1 the pass covers W2–W6 at 10% off five singles (BIZ-15). The site picks the price at build
    *  time, so it needs a redeploy on this date (BIZ-16). */

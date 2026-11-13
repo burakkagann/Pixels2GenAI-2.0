@@ -377,6 +377,18 @@
   --btn-drop: var(--fg);
 }
 
+/* TB-1 (13 Nov): one rule for ticket buttons. Buy = .btn-sale (butter, above);
+   the secondary beside it ("See the series", "Also on Luma") = .btn-pink: a
+   pink-tinted fill on the brand pink (--studio), ink line and ink drop. */
+.btn.btn-pink,
+.ws .ws-btn.btn-pink {
+  --btn-fill: color-mix(in srgb, var(--studio) 30%, var(--card));
+  --btn-on: var(--fg);
+  --btn-fill-hover: color-mix(in srgb, var(--studio) 30%, var(--card));
+  --btn-line: var(--fg);
+  --btn-drop: var(--fg);
+}
+
 /* Phones: one notch smaller and tighter so labels stay on one line at
    360 px (the longest, "The pilot on /workshops →", was shortened for it).
    A label that still breaks wraps into balanced lines inside the 44 px minimum. */

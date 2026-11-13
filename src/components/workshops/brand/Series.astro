@@ -14,6 +14,7 @@ import SeriesCard from '@/components/workshops/SeriesCard.astro';
 import HowItWorks from '@/components/workshops/HowItWorks.astro';
 import WhyJoin from '@/components/workshops/WhyJoin.astro';
 import WorkshopsFaq from '@/components/workshops/WorkshopsFaq.astro';
+import SectionTabs from '@/components/workshops/SectionTabs.astro';
 import { bandKey, shortDate } from '@/components/workshops/seriesFormat';
 import { TICKETS } from '@/data/workshops/tickets';
 import '@/styles/workshop-brand.css';
@@ -31,6 +32,9 @@ const pass = late
   : { label: 'Series pass · all six Saturdays', standard: P.passStandard, reduced: P.passReduced, until: TICKETS.passAllSixUntil };
 ---
 
+{/* SH-1 (13 Nov): "Jump to" chips, then a fixed slim tab bar; centred, every label a link. */}
+<SectionTabs />
+
 <section class="ws series" id="series" aria-labelledby="series-title">
   <div class="series-head">
     <h2 class="ws-display series-title" id="series-title">The arc</h2>
@@ -39,12 +43,6 @@ const pass = late
 
   <SeriesCalendarArc />
   <p class="series-practical">Every workshop is a Saturday, {TICKETS.time}, with eight people at most.<br />{TICKETS.venueLine}</p>
-  {/* Kağan, 13 Nov: no "Tickets open" placeholder under the arc (repeats the hero); the button shows once the shop link is set. */}
-  {w1Shop && (
-    <div class="series-buy">
-      <a class="ws-btn btn-sale" href="#tickets">Get tickets ↓</a>
-    </div>
-  )}
 
   <div class="series-grid">
     {SERIES.map((w) => <SeriesCard workshop={w} />)}
@@ -82,8 +80,8 @@ const pass = late
           <p class="tk-price">€{P.standard}</p>
           <p class="tk-sub">€{P.reduced} reduced for {TICKETS.reducedFor}. No proof needed.</p>
           <div class="sc-btns">
-            {w1Shop ? <a class="ws-btn fill-studio" href={w1Shop}>Get a ticket →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
-            {w1Luma && <a class="ws-btn" href={w1Luma}>Also on Luma</a>}
+            {w1Shop ? <a class="ws-btn btn-sale" href={w1Shop}>Get a ticket →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
+            {w1Luma && <a class="ws-btn btn-pink" href={w1Luma}>Also on Luma</a>}
           </div>
         </div>
         <div class="tk-col">
@@ -92,7 +90,7 @@ const pass = late
           <p class="tk-sub">€{pass.reduced} reduced. Limited, until {pass.until}. One code for the whole series.</p>
           <p class="tk-sub">{TICKETS.singlesLater}</p>
           <div class="sc-btns">
-            {passShop ? <a class="ws-btn fill-studio" href={passShop}>Get the pass →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
+            {passShop ? <a class="ws-btn btn-sale" href={passShop}>Get the pass →</a> : <p class="tk-later">{TICKETS.notReady}</p>}
           </div>
         </div>
       </div>

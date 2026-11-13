@@ -1024,9 +1024,6 @@
    Round 2 (BLD-21, DEC-81 to DEC-85): practical line,
    card date tile, aligned rows, action pinned to the bottom
    ============================================================ */
-/* E3a: the tickets button under the practical line, shown once the shop link is set: the yellow sale
-   button (.btn-sale) to #tickets. */
-.ws .series-buy { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 24px; }
 
 .ws .series-practical {
   margin: 8px 0 20px;
