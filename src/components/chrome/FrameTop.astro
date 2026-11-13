@@ -15,6 +15,16 @@ const prefix = onLanding ? '' : '/';
 // Build-time GitHub star count (memoised across pages; null if unreachable).
 const stars = await getStarCount();
 
+// HF-3: the header marks the site section you are in. The links are anchors
+// (/#curriculum ...), not this page's URL, so aria-current is "true", not "page".
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, ''); // build.format 'file' adds .html at build time
+const inSection = (root: string) => path === root || path.startsWith(`${root}/`);
+const currentLabel = inSection('/workshops') ? 'Workshops'
+  : inSection('/lessons') ? 'Curriculum'
+  : inSection('/exhibitions') ? 'Exhibition'
+  : inSection('/research') ? 'Research'
+  : null;
+
 const navItems = [
   { label: 'Curriculum', href: `${prefix}#curriculum` },
   { label: 'Workshops', href: `${prefix}#workshops` },
@@ -122,7 +132,9 @@ const navItems = [
     <span class="px">Pixels</span><span class="x">2</span><span class="ai">GenAI</span>
   </a>
   <nav class="nav-mid" aria-label="Primary">
-    {navItems.map(item => <a href={item.href}>{item.label}</a>)}
+    {navItems.map(item => (
+      <a href={item.href} aria-current={item.label === currentLabel ? 'true' : undefined}>{item.label}</a>
+    ))}
   </nav>
   <div class="nav-r">
     <span class="ed">Ed. ii · 2026</span>
@@ -460,3 +472,21 @@ const navItems = [
     document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
   });
 </script>
+
+
+<style is:global>
+  /* HF-3: header links take the SH-1 bar's type (mono 12 px, 600, 0.1em); the
+     current site section is underlined. Phones drop the tracking so four links
+     fit one row at 360 px. */
+  .frame-top .nav-mid { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; }
+  .frame-top .nav-mid a { letter-spacing: 0.1em; }
+  .frame-top .nav-mid a[aria-current] {
+    color: var(--fg);
+    text-decoration: underline 2px;
+    text-underline-offset: 6px;
+    text-decoration-color: var(--fg);
+  }
+  @media (max-width: 760px) {
+    .frame-top .nav-mid a { letter-spacing: 0; }
+  }
+</style>
