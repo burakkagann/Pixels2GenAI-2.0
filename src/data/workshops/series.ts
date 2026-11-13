@@ -76,7 +76,7 @@ export const SERIES: SeriesWorkshop[] = [
     cores: [
       { id: '1.1.1', title: 'Colour as numbers', sub: 'a pixel is three numbers; a channel-shift poster', minutes: 45, source: 'live' },
       { id: '3.4.1', title: 'Convolution', sub: 'a kernel reads the neighbours; you write the rule inside the loop', minutes: 55, source: 'live' },
-      { id: '3.4.5', title: 'Dithering and halftone', sub: 'kernels for print', minutes: 50, source: 'new' },
+      { id: '3.4.5', title: 'Dithering and halftone', sub: 'kernels for print', minutes: 45, source: 'new' },
     ],
     make: 'A print-ready riso-style image of your own photo; a photo print follows by post if you want one',
     cardMake: 'A riso-style print of your own photo',
