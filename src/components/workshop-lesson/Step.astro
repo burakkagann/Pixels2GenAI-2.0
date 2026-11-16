@@ -1,0 +1,22 @@
+---
+/** One step (framework v2): one idea, one action. kind: predict | change | write | fix | make. */
+import Screen from './Screen.astro';
+
+interface Props {
+  n: number;
+  kind: 'predict' | 'change' | 'write' | 'fix' | 'make';
+  title: string;
+  earlier?: [string, string][];
+}
+
+const KIND_LABEL = { predict: 'Predict', change: 'Change', write: 'Write', fix: 'Fix', make: 'Make' } as const;
+const { n, kind, title, earlier } = Astro.props;
+---
+
+<Screen phase="steps" kind={kind} kicker={`Step ${n} · ${KIND_LABEL[kind]}`} title={title} theoryFor={`step ${n}`} earlier={earlier}>
+  <slot />
+  <slot name="task" slot="task" />
+  <slot name="theory" slot="theory" />
+  <slot name="after" slot="after" />
+  <slot name="work" slot="work" />
+</Screen>

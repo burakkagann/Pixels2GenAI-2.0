@@ -32,6 +32,18 @@ export const isWorkshopAreaPath = (pathname) =>
   /^\/workshops\/[^/]/.test(pathname) && !PUBLIC_WORKSHOP_PAGES.includes(pathname.replace(/(\.html|\/)$/, ''));
 
 const SITE = 'https://pixels2genai.art';
+
+// The public sample lesson (/try, picks LS-6 and RT-1, 15 Nov 2026) is not part of the participant area: it runs the
+// lesson player in public mode, with no tutor and no answers stored, and its files live in public/try-media/.
+// The guard requires it in the sitemap and keeps tutor markup, workshop media, area links and answer-check
+// files out of it, whatever the flags.
+const TRY_PAGE = '/try';
+const TRY_MEDIA_PY = ['helpers.py'];
+const TRY_FORBIDDEN = [
+  { name: 'tutor markup', re: /data-tutor|class="[^"]*wb-tutor|TutorPanel|tutor isn't connected/i },
+  { name: 'workshop media path', re: /\/workshop-media\//i },
+  { name: 'participant-area link', re: /\/workshops\/(?!terms\b)[^\s/)"'<>]/ },
+];
 // "/workshops/" followed by anything but a delimiter, inside text files (the public terms page excepted).
 const AREA_PATH_IN_TEXT = /\/workshops\/(?!terms\b)[^\s/)"'<>]/;
 
@@ -116,6 +128,24 @@ function checkForLeaks(distDir, logger) {
     if (isWorkshopAreaPath(new URL(loc).pathname)) errors.push(`Participant-area path in the sitemap: ${loc}`);
   }
   if (!locs.includes(`${SITE}/workshops`)) errors.push(`The public page ${SITE}/workshops is missing from the sitemap.`);
+  if (!locs.includes(`${SITE}${TRY_PAGE}`)) errors.push(`The public sample ${SITE}${TRY_PAGE} is missing from the sitemap.`);
+  const tryPage = path.join(distDir, 'try.html');
+  if (!fs.existsSync(tryPage)) {
+    errors.push('dist/try.html is missing.');
+  } else {
+    const tryHtml = fs.readFileSync(tryPage, 'utf8');
+    for (const rule of TRY_FORBIDDEN) {
+      if (rule.re.test(tryHtml)) errors.push(`dist/try.html contains ${rule.name}.`);
+    }
+  }
+  // Only the helper module and the figures may sit in try-media: no answer-check or other Python file.
+  const tryMedia = path.join(distDir, 'try-media');
+  if (fs.existsSync(tryMedia)) {
+    for (const file of filesUnder(tryMedia)) {
+      const name = path.basename(file);
+      if (/\.py$/i.test(name) && !TRY_MEDIA_PY.includes(name)) errors.push(`try-media holds a Python file that is not the helpers: ${name}`);
+    }
+  }
 
   for (const file of ['llms.txt', 'feed.xml']) {
     const full = path.join(distDir, file);

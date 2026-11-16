@@ -1,0 +1,50 @@
+---
+/**
+ * The free sample lesson at /try, in the workbench layout (DEC-41). PUBLIC MODE of the workshop lesson
+ * player (copied from workshop-area c901d51, see src/try/README.md): no door, no tutor, no saved output images (screen progress stays in this browser),
+ * the way back is /workshops. lesson.ts is the unchanged player runtime; it reads the data
+ * attributes below. Python runs in the browser; the code never leaves it.
+ */
+import Base from '@/layouts/Base.astro';
+import '@/styles/tokens-workshop.css';
+import '@/styles/workshop-lesson.css';
+import '@/styles/workshop-lesson-b.css';
+import '@/styles/try.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<Base title={`${title}: a free sample step`} description={description} focus announceModal={false}>
+  <div class="wb" data-lesson-key="try/print-the-berliner-dom" data-helpers="/try-media/helpers.py" data-arc="/workshops" data-public="true">
+    <header class="wb-bar">
+      <a class="wb-bar-back" href="/workshops">← Workshops</a>
+      <span class="wb-bar-title">Free sample<span class="wb-bar-more"> · Dom poster</span></span>
+      <ol class="wb-progress" data-progress aria-label="Screens of this lesson"></ol>
+      <span class="wb-where" data-where></span>
+      <span class="wb-py" data-py-status data-ready="false"><i aria-hidden="true"></i><span data-py-label>Python loads on first run</span></span>
+      <button type="button" class="wb-theme" data-theme-toggle aria-label="Switch light or dark">◐</button>
+    </header>
+
+    <main id="main-content" class="wb-main">
+      <slot />
+    </main>
+
+    <nav class="wb-phonebar" data-phonebar aria-label="Lesson navigation (phone)" hidden>
+      <button type="button" class="wb-link" data-phone-back>← Back</button>
+      <button type="button" class="wb-btn wb-btn--run" data-phone-run>▶ Run</button>
+      <button type="button" class="wb-link wb-phone-next" data-phone-next>Next →</button>
+    </nav>
+  </div>
+</Base>
+
+<script>
+  import { startLesson } from '@/lib/workshop/lesson';
+
+  const root = document.querySelector<HTMLElement>('.wb');
+  if (root) startLesson(root);
+</script>

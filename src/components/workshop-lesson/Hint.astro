@@ -1,0 +1,22 @@
+---
+/**
+ * Help on a screen.
+ *   <Hint>…</Hint>                      a hint (shown one at a time, in order)
+ *   <Hint kind="solution">…</Hint>      the last level
+ *   <Hint kind="explain">…</Hint>       "Explain it another way"
+ *   <Hint kind="note" label="…">…</Hint> a plain collapsible (a side question, references)
+ * Without JavaScript all of them are plain <details>.
+ */
+interface Props {
+  kind?: 'hint' | 'solution' | 'explain' | 'note';
+  label?: string;
+}
+
+const { kind = 'hint', label } = Astro.props;
+const DEFAULT_LABEL = { hint: 'Hint', solution: 'Solution', explain: 'Explain it another way', note: 'More' } as const;
+---
+
+<details class="wb-hint" data-kind={kind}>
+  <summary>{label ?? DEFAULT_LABEL[kind]}</summary>
+  <div class="wb-hint-body"><slot /></div>
+</details>

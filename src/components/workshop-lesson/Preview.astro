@@ -1,0 +1,19 @@
+---
+/** A picture of the finished piece, e.g. "What you'll make" on Make it first. */
+interface Props {
+  src: string;
+  alt: string;
+  label?: string;
+  caption?: string;
+}
+
+const { src, alt, label = "What you'll make", caption } = Astro.props;
+---
+
+<figure class="wb-preview">
+  <img src={src} alt={alt} width="256" height="256" loading="lazy" decoding="async" />
+  <figcaption>
+    <span class="wb-label">{label}</span>
+    {caption && <span class="wb-preview-caption">{caption}</span>}
+  </figcaption>
+</figure>

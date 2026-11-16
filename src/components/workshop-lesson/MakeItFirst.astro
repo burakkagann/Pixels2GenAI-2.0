@@ -1,0 +1,17 @@
+---
+/** "Make it first" (framework v2): run the finished piece, change one value. */
+import Screen from './Screen.astro';
+
+interface Props {
+  title: string;
+  minutes?: number;
+}
+
+const { title, minutes = 3 } = Astro.props;
+---
+
+<Screen phase="first" kind="first" kicker={`Make it first · ${minutes} min`} title={title}>
+  <slot />
+  <slot name="task" slot="task" />
+  <slot name="work" slot="work" />
+</Screen>

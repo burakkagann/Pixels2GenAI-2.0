@@ -1,0 +1,56 @@
+---
+/**
+ * The code cell of a screen, in the workbench (lesson page standard, DEC-41):
+ * file + Run, the editor (14 lines minimum on every screen, grows to about 22,
+ * then scrolls), the verdict (always in this place), then the output.
+ *   <Cell slot="work" file="step2_kernel.py" />          code only
+ *   <Cell slot="work" file="step2_kernel.py" check />    with step2_kernel.check.py
+ *
+ * Code and check are real files in `folder` (public mode, /try: src/try/cells/, never copied to the
+ * site), read at build time (tested offline by tests/try/run_try.py). Without
+ * JavaScript the code shows in a plain textarea; lesson.ts adds the editor.
+ * The check source sits in a hidden textarea (HTML-escaped text, never markup).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  file: string;
+  check?: boolean;
+  /** PUBLIC MODE: the folder of the cell files, relative to the repo root (the player copy read workshop-media/<workshop>/<lesson>/). */
+  folder?: string;
+}
+
+const { file, check = false, folder = 'src/try/cells' } = Astro.props;
+if (!/^[\w.-]+\.py$/.test(file)) throw new Error(`Cell file must be a plain .py name: ${file}`);
+
+if (!/^src\/[\w/-]+$/.test(folder)) throw new Error(`Cell folder must be a plain path under src/: ${folder}`);
+const dir = path.join(process.cwd(), folder);
+const read = (name: string) => {
+  const full = path.join(dir, name);
+  if (!fs.existsSync(full)) throw new Error(`Missing cell file: ${folder}/${name}`);
+  return fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n').trimEnd();
+};
+const code = read(file);
+const checkSource = check ? read(file.replace(/\.py$/, '.check.py')) : '';
+---
+
+<div class="wb-cell" data-file={file} data-has-check={check ? '' : undefined}>
+  <div class="wb-cell-bar">
+    <span class="wb-file">{file}</span>
+    <span class="wb-keys">Ctrl+Enter runs</span>
+    <button type="button" class="wb-btn wb-btn--quiet" data-reset title="Put the original code back">Reset</button>
+    <button type="button" class="wb-btn wb-btn--run" data-run>▶ Run</button>
+  </div>
+  <div class="wb-editor">
+    <textarea class="wb-code" data-code spellcheck="false" rows="14" aria-label={`Code: ${file}`}>{code}</textarea>
+  </div>
+  {check && <textarea data-check hidden aria-hidden="true" tabindex="-1">{checkSource}</textarea>}
+  <div class="wb-verdict" data-verdict data-state="idle" role="status">
+    {check ? 'Run your code to check it.' : 'No check on this screen: run it and play with it.'}
+  </div>
+  <div class="wb-output">
+    <span class="wb-label">Output</span>
+    <div class="wb-out" data-out><p class="wb-quiet">What your code prints and draws appears here.</p></div>
+  </div>
+</div>

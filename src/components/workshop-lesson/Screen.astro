@@ -1,0 +1,122 @@
+---
+/**
+ * One screen of a workshop lesson, in the workbench layout (lesson page
+ * standard, DEC-41; mockup: DEC-41 workbench).
+ *
+ * Left, the BRIEF, always in this order: kind tag + title, the task (named
+ * slot "task", the one strong box), the idea (default slot), help (hints,
+ * "explain it another way", the tutor), then Back / Next.
+ * Right, the WORKBENCH (named slot "work"): the code cell.
+ * Used through MakeItFirst, Step, MakeItYours and WrapUp, not directly.
+ * Without JavaScript the hints stay plain <details> inside the idea.
+ *
+ * Theory on the step (TH1, approved 5 Nov): the parts in the named slots
+ * "theory" (For this task) and "after" (Once it works). A row in the task box
+ * (TV-1, DEC-179; lesson.ts moves it in) names them; they open straight under
+ * the box, where the idea and help step aside, so the task and the code stay
+ * in view. "Once it works" stays locked until the step's check passes (TD-1). `earlier` links to parts on earlier
+ * steps: [id, label] pairs; an id that starts with "/" is a path to a part in an earlier lesson
+ * (/workshops/w1-see/3.4.1#theory-padding) and opens in a new tab. Without JavaScript the panel stays open in the
+ * flow and the strip stays hidden.
+ */
+interface Props {
+  phase: 'first' | 'steps' | 'yours' | 'wrap';
+  kind: 'first' | 'predict' | 'change' | 'write' | 'fix' | 'make' | 'yours' | 'wrap';
+  kicker: string;
+  title: string;
+  /** Names the screen in "Theory for step 4". */
+  theoryFor?: string;
+  earlier?: [string, string][];
+}
+
+const { phase, kind, kicker, title, theoryFor, earlier = [] } = Astro.props;
+const hasWork = Astro.slots.has('work');
+// PUBLIC MODE (/try): no tutor. The button and the panel are not rendered; one quiet line stands in their place.
+const publicMode = Astro.url.pathname.replace(/\.html$/, '') === '/try';
+
+const slotHtml = async (name: string) => (Astro.slots.has(name) ? ((await Astro.slots.render(name)) ?? '').trim() : '');
+const forTask = await slotHtml('theory');
+const onceItWorks = await slotHtml('after');
+const hasTheory = Boolean(theoryFor && (forTask || onceItWorks));
+const noteCount = (onceItWorks.match(/data-part/g) ?? []).length;
+---
+
+<section class:list={['wb-screen', { 'wb-screen--single': !hasWork }]} data-phase={phase} data-kind={kind} data-title={title} aria-label={title}>
+  <div class="wb-brief">
+    <div class="wb-brief-scroll">
+      <div class="wb-head">
+        <span class="wb-kind">{kicker}</span>
+        <h2 class="wb-title">{title}</h2>
+      </div>
+      <slot name="task" />
+
+      {hasTheory && (
+        <section class="wb-theory" data-theory aria-label={`Theory for ${theoryFor}`}>
+          <div class="wb-theory-head">
+            <b>Theory for {theoryFor}</b>
+            <button type="button" class="wb-btn wb-btn--small" data-theory-close aria-label="Close the theory" hidden>Close</button>
+          </div>
+          {forTask && (
+            <div class="wb-theory-group">
+              <div class="wb-theory-when">For this task</div>
+              <Fragment set:html={forTask} />
+            </div>
+          )}
+          {onceItWorks && (
+            <details class="wb-theory-group" data-theory-after>
+              <summary>Once it works · {noteCount} {noteCount === 1 ? 'note' : 'notes'}<span class="wb-lock-note" data-lock-note hidden> · opens when the step passes</span></summary>
+              <Fragment set:html={onceItWorks} />
+            </details>
+          )}
+          {earlier.length > 0 && (
+            <div class="wb-theory-earlier">
+              <span>Earlier</span>
+              {earlier.map(([id, label]) => (id.startsWith('/')
+                ? <a href={id} target="_blank" rel="noopener">{label}</a>
+                : <a href={`#theory-${id}`}>{label}</a>))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <div class="wb-idea"><slot /></div>
+
+      <!-- Help: lesson.ts moves the hints here and reveals them one at a time. -->
+      <div class="wb-help" data-help hidden>
+        <div class="wb-help-items" data-help-items></div>
+        <div class="wb-help-actions">
+          <button type="button" class="wb-btn wb-btn--outline" data-reveal hidden>Stuck? Show a hint</button>
+          <button type="button" class="wb-link" data-explain-toggle hidden>Explain it another way</button>
+          {!publicMode && <button type="button" class="wb-btn wb-btn--tutor" data-tutor-open>✦ Ask the tutor</button>}
+        </div>
+        {publicMode && <p class="try-tutor-line"><span aria-hidden="true">✦</span> In the workshops, an AI tutor helps here.</p>}
+      </div>
+
+      {!publicMode && (
+        <div class="wb-tutor" data-tutor hidden>
+          <div class="wb-tutor-head">
+            <span class="wb-tutor-name">✦ Tutor</span>
+            <span class="wb-tutor-about" data-tutor-about>about this step</span>
+            <button type="button" class="wb-btn wb-btn--small" data-tutor-close>Close</button>
+          </div>
+          <p class="wb-tutor-body">The tutor isn't connected yet. In the workshop it explains this step another way, answers your questions and helps with errors, using this lesson. It gives hints, never a step's solution.</p>
+          <p class="wb-tutor-note">AI tutor: answers come from an AI model and can be wrong. Your question goes to our server; your code is only sent when you ask about an error.</p>
+        </div>
+      )}
+    </div>
+
+    {hasTheory && (
+      <button type="button" class="wb-theory-strip" data-theory-strip aria-label={`Read the theory for ${theoryFor}`} aria-expanded="false" hidden>
+        <b>{forTask ? 'Theory for this task' : 'Theory once it works'}</b>
+        <span class="wb-theory-names" data-theory-names></span>
+        <span class="wb-theory-open">Read</span>
+      </button>
+    )}
+
+    <nav class="wb-nav" aria-label="Lesson navigation" data-nav hidden>
+      <button type="button" class="wb-link wb-back" data-back>← Back</button>
+      <button type="button" class="wb-btn wb-btn--next" data-next>Next →</button>
+    </nav>
+  </div>
+  {hasWork && <div class="wb-bench"><slot name="work" /></div>}
+</section>

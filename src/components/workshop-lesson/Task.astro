@@ -1,0 +1,13 @@
+---
+/** The one action of a screen: use it as <Task slot="task">…</Task> so it shows first. */
+interface Props {
+  label?: string;
+}
+
+const { label = 'Your task' } = Astro.props;
+---
+
+<div class="wb-task">
+  <span class="wb-label">{label}</span>
+  <div class="wb-task-body"><slot /></div>
+</div>

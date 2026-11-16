@@ -1,0 +1,382 @@
+/* ============================================================
+   Workshop lesson page, design B (BLD-37, DEC-128): the pixel window (B2),
+   theory on the step (TH1, replaces the Concepts tab B3 and "Why this
+   works"), the outputs row (B5), "Go further", and themed diagrams. Loaded
+   after workshop-lesson.css by layouts/WorkshopLesson.astro. Tokens only.
+   ============================================================ */
+
+/* ---------- Folded notes in the brief ---------- */
+.wb-further {
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+}
+.wb-further > summary {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+.wb-further > summary { border-left: 3px solid var(--studio); }
+.wb-further[open] > summary { border-bottom: 1px solid var(--line); }
+.wb-further-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+.wb-further-body p,
+.wb-further-body ul,
+.wb-further-body ol { margin: 0; }
+.wb-further-body ul,
+.wb-further-body ol { padding-left: 20px; }
+.wb-deeper {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--link);
+}
+
+/* ---------- Themed diagrams (Diagram.astro) ---------- */
+.wb-dg { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.wb-dg-frame { border: 1px solid var(--line-2); background: var(--figure-frame-bg); }
+.wb-dg-img img { display: block; width: 100%; height: auto; }
+.wb-dg-img--light { display: none; }
+[data-theme="light"] .wb-dg-img--light { display: block; }
+[data-theme="light"] .wb-dg-img--dark { display: none; }
+.wb-dg figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  font-size: 14.5px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+.wb-dg figcaption .wb-btn { font-style: normal; }
+
+/* ---------- Pixel window (B2) ---------- */
+.wb-pw {
+  --pw-cell: 30px;
+  --pw-out: 44px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+}
+.wb-pw-head { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; align-items: center; }
+.wb-pw-head img { display: block; width: 132px; height: auto; border: 1px solid var(--line-2); }
+.wb-pw-head span { font-size: 13.5px; line-height: 1.45; color: var(--fg-2); }
+.wb-pw-grids { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.wb-pw-block { display: flex; flex-direction: column; gap: 4px; }
+.wb-pw-block--out { flex-basis: 100%; }
+.wb-pw-op { font-family: var(--mono); font-size: 18px; color: var(--fg-2); }
+.wb-pw-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--pw-cell));
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.wb-pw-grid span {
+  height: var(--pw-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg-2);
+}
+.wb-pw-grid span.is-in {
+  background: color-mix(in oklab, var(--c1) 18%, var(--bg));
+  color: var(--fg);
+  border-color: var(--c1);
+}
+.wb-pw-grid span.is-centre { font-weight: 700; outline: 2px solid var(--c1); outline-offset: -2px; }
+.wb-pw-grid--k span { background: color-mix(in oklab, var(--c2) 14%, var(--bg)); color: var(--fg); }
+.wb-pw-grid--out { grid-template-columns: repeat(var(--cols), var(--pw-out)); }
+.wb-pw-grid--out span.is-done { color: var(--fg); }
+.wb-pw-grid--out span.is-now {
+  background: color-mix(in oklab, var(--c3) 20%, var(--bg));
+  color: var(--fg);
+  font-weight: 700;
+  border-color: var(--c3);
+}
+.wb-pw-sum {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.wb-pw-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.wb-pw-controls input[type="range"] { flex: 1 1 140px; min-width: 0; accent-color: var(--c1); }
+.wb-pw-kinds { display: inline-flex; gap: 6px; }
+.wb-pw-controls .wb-btn[aria-pressed="true"] { border-color: var(--fg); color: var(--fg); background: var(--bg); font-weight: 700; }
+.wb-pw figcaption { font-size: 14px; font-style: italic; line-height: 1.5; color: var(--fg-2); }
+
+/* ---------- Theory on the step (TH1) ---------- */
+/* The row in the task box (TV-1, DEC-179): its last line, tinted, one tap to read. */
+.wb-theory-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  margin: 14px 0 0;
+  padding: 9px 12px;
+  border: 0;
+  border-top: 1px solid var(--line-2);
+  background: var(--c2-tint);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.wb-task .wb-theory-strip { width: auto; align-self: stretch; margin: 8px -18px -16px; }
+.wb .wb-theory-strip:focus-visible { outline-offset: -3px; }
+.wb-theory-strip b { flex: none; font-weight: 700; color: var(--c2); }
+.wb-theory-names { min-width: 0; flex: 1 1 140px; color: var(--fg-2); }
+.wb .wb-theory-names { order: 3; flex-basis: 100%; }
+.wb .wb-theory-open { flex: none; margin-left: auto; padding: 0; border: 0; color: var(--c2); font-weight: 700; }
+
+/* The locked fold: no hand cursor, the note says when it opens. */
+details.wb-theory-group[data-locked="true"] > summary { cursor: default; color: var(--fg-3); }
+.wb-lock-note { font-style: italic; }
+
+/* Opened, it takes the place of the idea and help; the task and the code stay. */
+.wb-screen.is-theory .wb-idea,
+.wb-screen.is-theory .wb-help,
+.wb-screen.is-theory .wb-theory-strip { display: none; }
+
+.wb-theory {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+}
+.wb-theory-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.wb-theory-head b { font-weight: 700; }
+.wb-theory-head .wb-btn { margin-left: auto; }
+.wb-theory-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
+.wb-theory-group + .wb-theory-group,
+.wb-theory-earlier { border-top: 1px solid var(--line); }
+.wb-theory-when {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+details.wb-theory-group { display: block; }
+details.wb-theory-group > summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+details.wb-theory-group[open] > summary { margin-bottom: 14px; }
+details.wb-theory-group > .wb-part + .wb-part { margin-top: 14px; }
+.wb-theory-earlier {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 11px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+.wb-theory-earlier a { color: var(--link); }
+
+/* One part: a title, where it is in the code, the text. */
+.wb-part {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  transition: outline-color 0.3s ease;
+}
+.wb-part.is-flash { outline-color: var(--c2); }
+.wb-part-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+.wb-part-head h3 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--fg);
+}
+.wb-part-line {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--c2);
+  white-space: nowrap;
+}
+.wb-part-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+.wb-part-body p,
+.wb-part-body ul,
+.wb-part-body ol { margin: 0; }
+.wb-part-body ul,
+.wb-part-body ol { padding-left: 20px; }
+.wb-part-body .wb-kfigure { margin: 2px 12px 2px 0; }
+.wb-part-kernels { display: flex; flex-wrap: wrap; gap: 10px 4px; }
+.wb-formula {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  background: var(--code-surface);
+  border: 1px solid var(--code-border);
+  font-family: var(--mono);
+  font-size: 13.5px;
+}
+
+/* All the theory on Wrap up: one row per step. */
+.wb-theory-all { display: flex; flex-direction: column; }
+.wb-theory-all > h3 {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+.wb-theory-row { border-top: 1px solid var(--line); }
+.wb-theory-row:last-child { border-bottom: 1px solid var(--line); }
+.wb-theory-row > summary {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.wb-theory-row > summary b { color: var(--fg); font-weight: 700; }
+.wb-theory-rowbody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px 0 16px 136px;
+}
+
+/* ---------- Outputs row (B5) ---------- */
+.wb-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-2);
+}
+.wb-outputs-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.wb-outputs-actions { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.wb-outputs-row {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  list-style: none;
+}
+.wb-outputs-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-2);
+  cursor: zoom-in;
+  text-align: left;
+}
+.wb-outputs-item canvas {
+  display: block;
+  width: 96px;
+  height: 64px;
+  object-fit: contain;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+}
+.wb-outputs-item:hover canvas,
+.wb-outputs-item:focus-visible canvas { border-color: var(--fg); }
+.wb-outputs-cap {
+  max-width: 96px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.wb-outputs-dialog {
+  width: min(1100px, 94vw);
+  max-height: 92vh;
+  padding: 0;
+  border: 2px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+}
+.wb-outputs-dialog::backdrop { background: color-mix(in oklab, var(--bg) 70%, transparent); }
+.wb-outputs-dialog-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.wb-outputs-dialog-head .wb-label { flex: 1; }
+.wb-outputs-dialog-body { padding: 14px; overflow: auto; }
+.wb-outputs-dialog-body canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.wb-outputs-note { margin: 0; padding: 0 14px 14px; font-family: var(--mono); font-size: 12px; color: var(--fg-2); }
+
+
+@media (max-width: 900px) {
+  .wb-pw { --pw-cell: 27px; --pw-out: 40px; padding: 12px; }
+  .wb-pw-head { grid-template-columns: 96px minmax(0, 1fr); }
+  .wb-pw-head img { width: 96px; }
+  .wb-pw-op { display: none; }
+
+  .wb-theory-strip { min-height: 44px; }
+  .wb-theory-head .wb-btn { min-height: 44px; padding: 4px 14px; }
+  details.wb-theory-group > summary { padding-block: 12px; margin-block: -12px; }
+  .wb-theory-earlier { padding-block: 0; }
+  .wb-theory-earlier a { display: inline-block; padding-block: 12px; }
+  .wb-theory-row > summary { grid-template-columns: 96px minmax(0, 1fr); }
+  .wb-theory-rowbody { padding-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-part { transition: none; }
+}

@@ -1,0 +1,82 @@
+<MakeItFirst title="Print the Berliner Dom as a poster" minutes={3}>
+
+<Task slot="task">Run the code (Ctrl+Enter). Change `DARK` on line 4 to `60`, run, then `120`, run. Which poster has the most blue?</Task>
+
+<Preview src="/try-media/hero.webp" alt="The Berliner Dom and the TV tower as a three-colour poster: dark stone in blue ink, mid tones in pink, the sky mostly cream paper with a pink band." caption="Every pixel becomes one of three flat inks, by how dark it is: a screen-print look." />
+
+**In this lesson you**
+
+- ask a yes/no question about a number;
+- write the rule that inks a pixel;
+- fix a rule whose blue never shows.
+
+<p class="try-note">Best on a laptop. <span class="try-draft">Draft</span></p>
+
+<Hint>`DARK` is a brightness from 0 (black) to 255 (white). Pixels darker than it get the blue ink.</Hint>
+<Hint>A higher `DARK` inks more of the photo. Keep it below `MID`.</Hint>
+
+<Cell slot="work" file="poster_dom.py" />
+
+</MakeItFirst>
+
+<TryStep n={1} kind="predict" title="Ask a yes/no question" minutes={2}>
+
+`light < THRESHOLD` asks "is this number smaller?" and the answer is `True` or `False`. Four pixels, four answers: a `True` square gets ink.
+
+<Task slot="task">Before you run: which numbers will print `True`? Run. Then change `THRESHOLD` on line 1 so exactly three squares get ink.</Task>
+
+<Hint>`30 < 100` is `True`; `200 < 100` is `False`. Do the other two the same way.</Hint>
+<Hint>The three darkest numbers are 30, 90 and 120. The threshold must be above 120 and no more than 200.</Hint>
+<Hint kind="solution">`THRESHOLD = 150`</Hint>
+
+<Cell slot="work" file="step1_compare.py" check />
+
+</TryStep>
+
+<TryStep n={2} kind="write" title="Ink the dark pixels" minutes={3}>
+
+A rule is a small function: it gets one brightness and returns a colour. `paint` uses it to colour every pixel of the photo, all 144,000, and builds the poster.
+
+<Task slot="task">Replace `___` so that dark pixels (below `THRESHOLD`) return the ink.</Task>
+
+<Hint>You wrote this question in step 1. Which two names does it compare?</Hint>
+<Hint>The name on line 6 is `light`; the number to compare it with is on line 2.</Hint>
+<Hint kind="solution">`if light < THRESHOLD:`</Hint>
+
+<Cell slot="work" file="step2_rule.py" check />
+
+</TryStep>
+
+<TryStep n={3} kind="fix" title="The blue that never shows" minutes={3}>
+
+<Task slot="task">This rule should give three tones: blue ink, pink, paper. No blue shows. Change the order of the two `if`s so the blue appears.</Task>
+
+<div class="wb-wrap-status try-wrap" data-state="done">
+  <p><span class="wb-wrap-title">✓ Sample done.</span> That was one lesson in the workshop format: three new lessons per Saturday, one Saturday a month, six times from 5 Dec.</p>
+  <a class="wb-btn wb-btn--next" href="/workshops">See the workshops →</a>
+</div>
+
+<div class="try-own">
+  <span class="wb-label">In your own words</span>
+  <p>A pixel at brightness 10 is below 90 and below 150. Why did the blue ink never show when 150 came first?</p>
+</div>
+
+Python reads the `if`s from the top and stops at the first one that is `True`. So the narrow question (below 90) must come before the wide one (below 150).
+
+<Hint>Brightness 10 is below 150, so the first `if` already answers for it. Which `if` should come first?</Hint>
+<Hint>Check `light < 90` first, then `light < 150`. Keep the numbers.</Hint>
+<Hint kind="solution">Move `if light < 90:` and its `return INK` above `if light < 150:`.</Hint>
+
+<div class="try-after">
+  <p class="try-credit">Photo: Ansgar Koreng, Berliner Dom und Fernsehturm, 2017, CC0.</p>
+  <Hint kind="note" label="References (2)">
+    <ol>
+      <li>Harris, C. R., Millman, K. J., van der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., van Kerkwijk, M. H., Brett, M., Haldane, A., del Río, J. F., Wiebe, M., Peterson, P., … Oliphant, T. E. (2020). Array programming with NumPy. *Nature, 585*, 357–362. https://doi.org/10.1038/s41586-020-2649-2</li>
+      <li>Koreng, A. (2017). *Berliner Dom und Fernsehturm, 170117, ako.jpg* [Photograph]. Wikimedia Commons. https://commons.wikimedia.org/wiki/File:Berliner_Dom_und_Fernsehturm,_170117,_ako.jpg (CC0 1.0)</li>
+    </ol>
+  </Hint>
+</div>
+
+<Cell slot="work" file="step3_fix.py" check />
+
+</TryStep>

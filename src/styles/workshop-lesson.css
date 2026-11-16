@@ -1,0 +1,636 @@
+/* ============================================================
+   Workshop lesson page: the workbench (lesson page standard, DEC-41;
+   mockup approved 2026-10-12, DEC-41 workbench).
+
+   Calm by design: 1 px rules, sentence case, Literata for reading and
+   JetBrains Mono for code and small labels. The brand shows in four
+   places only: the progress line, the step-kind tag, Run and Next.
+   Tokens only (tokens.css + tokens-workshop.css), no hex.
+   ============================================================ */
+
+.wb [hidden] { display: none !important; }
+
+.wb {
+  --wb-bar: 56px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--serif);
+}
+
+/* Step-kind colours. */
+.wb [data-kind="first"], .wb [data-kind="make"] { --kind: var(--c1); --on-kind: var(--bg); }
+.wb [data-kind="predict"] { --kind: var(--c2); --on-kind: var(--bg); }
+.wb [data-kind="change"]  { --kind: var(--ws-yellow); --on-kind: var(--ws-on-yellow); }
+.wb [data-kind="write"]   { --kind: var(--c3); --on-kind: var(--bg); }
+.wb [data-kind="fix"]     { --kind: var(--warn); --on-kind: var(--bg); }
+.wb [data-kind="yours"]   { --kind: var(--studio); --on-kind: var(--bg); }
+[data-theme="light"] .wb [data-kind="yours"] { --on-kind: var(--fg); }
+
+/* ---------- Lesson bar ---------- */
+.wb-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--wb-bar);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.wb-bar-back { color: var(--fg-2); white-space: nowrap; }
+.wb-bar-back:hover { color: var(--fg); }
+.wb-bar-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wb-progress {
+  flex: 1;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wb-progress li { flex: 1; display: flex; }
+.wb-progress .wb-progress-gap { flex: 0 0 6px; }
+
+.wb-seg {
+  flex: 1;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  background: var(--line-2);
+  cursor: pointer;
+}
+
+.wb-seg[data-seen][data-phase="first"] { background: var(--c1); }
+.wb-seg[data-seen][data-phase="steps"] { background: var(--c3); }
+.wb-seg[data-seen][data-phase="yours"] { background: var(--studio); }
+.wb-seg[data-seen][data-phase="wrap"]  { background: var(--fg); }
+.wb-seg[aria-current="step"] { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+.wb-where { color: var(--fg-2); white-space: nowrap; }
+
+/* "Draft for review" badge: lessons with draft: true in their frontmatter. */
+.wb-draft {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid var(--stage-modify);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.wb-py {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.wb-py i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+.wb-py[data-ready="true"] i { background: var(--c1); }
+
+.wb-theme {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--fg);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* ---------- Screen: brief | workbench ---------- */
+.wb-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+}
+
+.wb.is-stepping .wb-screen {
+  height: calc(100vh - var(--wb-bar));
+}
+
+.wb:not(.is-stepping) .wb-screen + .wb-screen {
+  border-top: 1px solid var(--line-2);   /* without JS all screens show in order */
+}
+
+.wb-brief {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+}
+
+.wb-brief-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 36px 44px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.wb-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wb-kind {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background: var(--kind, var(--bg));
+  color: var(--on-kind, var(--fg));
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wb-screen[data-kind="wrap"] .wb-kind { border: 2px solid var(--fg); }
+
+.wb-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.wb-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+}
+
+/* The task: the one strong box in the brief. */
+.wb-task {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 2px solid var(--fg);
+}
+
+.wb-task .wb-label { color: var(--fg-2); }
+.wb-task-body { font-size: 18px; line-height: 1.5; }
+.wb-task-body p { margin: 0; }
+
+.wb-idea {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.wb-idea > p, .wb-idea > ul { margin: 0; max-width: 62ch; }
+.wb-idea ul { padding-left: 20px; }
+
+.wb code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  padding: 1px 4px;
+  background: var(--bg-2);
+}
+
+.wb-kfigure {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin: 0 22px 0 0;
+}
+
+.wb-kgrid { display: grid; border: 1px solid var(--line-2); }
+.wb-kgrid--c3 { grid-template-columns: repeat(3, auto); }
+.wb-kgrid--c4 { grid-template-columns: repeat(4, auto); }
+.wb-kgrid--c5 { grid-template-columns: repeat(5, auto); }
+
+.wb-kgrid span {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-align: center;
+}
+
+.wb-kfigure figcaption,
+.wb-preview-caption {
+  font-size: 14.5px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.wb-preview {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin: 0;
+}
+
+.wb-preview img {
+  display: block;
+  width: 200px;
+  height: auto;
+  border: 1px solid var(--line-2);
+}
+
+.wb-preview figcaption { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Help ---------- */
+.wb-help {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.wb-help-items { display: flex; flex-direction: column; gap: 10px; }
+.wb-help-items:empty { display: none; }
+
+.wb-hint { margin: 0; }
+
+.wb-hint > summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+
+/* Once moved into the help area, a hint is a quiet box with a label. */
+.wb-help-items .wb-hint {
+  padding: 12px 14px;
+  background: var(--bg-2);
+}
+
+.wb-help-items .wb-hint > summary {
+  list-style: none;
+  pointer-events: none;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.wb-help-items .wb-hint > summary::-webkit-details-marker { display: none; }
+
+.wb-hint-body { font-size: 15.5px; line-height: 1.55; }
+.wb-hint-body p { margin: 0 0 8px; }
+.wb-hint-body p:last-child, .wb-hint-body ol:last-child { margin-bottom: 0; }
+
+.wb-idea .wb-hint[data-kind="note"] > summary { margin-bottom: 6px; }
+
+.wb-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+/* ---------- Buttons ---------- */
+.wb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wb-btn--quiet { border-color: var(--line-2); color: var(--fg-2); }
+.wb-btn--small { padding: 4px 10px; font-size: 12px; border-color: var(--line-2); color: var(--fg-2); }
+.wb-btn--tutor { border-color: var(--c2); color: var(--c2); }
+
+/* The two primary actions carry the brand: thick ink border, hard shadow, press. */
+.wb-btn--run,
+.wb-btn--next {
+  padding: 10px 20px;
+  border: 2px solid var(--fg);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 4px 4px 0 var(--fg);
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+
+.wb-btn--run { background: var(--c1); color: var(--bg); }
+.wb-btn--next { background: var(--bg); color: var(--fg); }
+.wb-btn--next[data-ready="true"] { background: var(--c1); color: var(--bg); }
+
+.wb-btn--run:active,
+.wb-btn--next:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--fg);
+}
+
+.wb-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--link);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.wb-link--tutor { color: var(--c2); text-decoration: none; }
+
+.wb button:focus-visible,
+.wb a:focus-visible,
+.wb summary:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 3px;
+}
+
+/* ---------- Tutor panel (in the brief) ---------- */
+.wb-tutor {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c2);
+}
+
+.wb-tutor-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.wb-tutor-name { color: var(--c2); font-weight: 700; }
+.wb-tutor-about { color: var(--fg-3); }
+.wb-tutor-head .wb-btn { margin-left: auto; }
+
+.wb-tutor-body {
+  margin: 0;
+  padding: 14px;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.wb-tutor-note {
+  margin: 0;
+  padding: 8px 14px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--fg-3);
+}
+
+/* ---------- Back / Next ---------- */
+.wb-nav {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 44px;
+  border-top: 1px solid var(--line);
+}
+
+.wb-back { color: var(--fg-2); text-decoration: none; font-size: 14px; padding: 10px 4px; }
+.wb-back:disabled { visibility: hidden; }
+
+/* ---------- Workbench ---------- */
+.wb-bench {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 28px 32px;
+  background: var(--bg-2);
+}
+
+.wb-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wb-cell-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+}
+
+.wb-file { font-size: 13px; font-weight: 700; }
+.wb-keys { font-size: 12px; color: var(--fg-3); }
+.wb-cell-bar .wb-btn--quiet { margin-left: auto; }
+
+/* The editor: the same minimum on every screen (14 lines), grows to about
+   22 lines, then scrolls. */
+.wb-editor {
+  min-width: 0;
+  overflow: hidden;   /* long lines scroll inside the editor, never the page */
+  border: 1px solid var(--code-border);
+  background: var(--code-surface);
+}
+
+.wb-editor .cm-editor,
+.wb-code {
+  min-height: 384px;
+  max-height: 590px;
+}
+
+.wb-editor .cm-scroller { overflow: auto; }
+
+.wb-code {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  resize: vertical;
+  background: var(--code-surface);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.75;
+  tab-size: 4;
+}
+
+/* ---------- Verdict: always in this place ---------- */
+.wb-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line-2);
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.wb-verdict[data-state="ran"] { border-style: solid; color: var(--fg); background: var(--bg); }
+.wb-verdict[data-state="notyet"] { border: 2px solid var(--warn); background: var(--bg); color: var(--fg); }
+.wb-verdict[data-state="pass"] { border: 2px solid var(--fg); background: var(--c1); color: var(--bg); }
+.wb-verdict[data-state="error"] { border: 2px solid var(--c3); background: var(--bg); color: var(--fg); flex-direction: column; align-items: stretch; }
+
+.wb-verdict-tag { font-family: var(--mono); font-weight: 700; white-space: nowrap; }
+.wb-verdict[data-state="notyet"] .wb-verdict-tag { color: var(--warn); }
+.wb-verdict[data-state="error"] .wb-verdict-tag { color: var(--c3); }
+
+.wb-verdict-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+.wb-verdict-code { font-family: var(--mono); font-size: 13.5px; overflow-wrap: anywhere; }
+.wb-verdict-text { margin: 0; }
+
+.wb-verdict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.wb-error-full summary { cursor: pointer; color: var(--fg-3); }
+.wb-error-full pre { margin: 8px 0 0; max-height: 200px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
+
+/* ---------- Output ---------- */
+.wb-output { display: flex; flex-direction: column; gap: 8px; }
+.wb-out { display: flex; flex-direction: column; gap: 12px; }
+
+.wb-stdout {
+  margin: 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.wb-quiet { margin: 0; font-size: 15px; font-style: italic; color: var(--fg-3); }
+
+.wb-images { display: flex; flex-wrap: wrap; gap: 14px; }
+.wb-figure { margin: 0; display: grid; gap: 6px; }
+
+.wb-figure canvas {
+  display: block;
+  width: min(256px, 100%);
+  height: auto;
+  border: 1px solid var(--line-2);
+  image-rendering: pixelated;
+}
+
+.wb-figure figcaption { font-family: var(--mono); font-size: 12px; color: var(--fg-2); }
+
+/* ---------- Wrap up (one column) ---------- */
+.wb-screen--single { grid-template-columns: minmax(0, 1fr); }
+.wb-screen--single .wb-brief { border-right: 0; }
+
+.wb-screen--single .wb-brief-scroll,
+.wb-screen--single .wb-nav {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.wb-screen--single .wb-nav { border-top: 0; }
+
+.wb-wrap-status:empty { display: none; }
+
+.wb-wrap-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  padding: 18px 20px;
+}
+
+.wb-wrap-status p { margin: 0; font-size: 16px; line-height: 1.5; }
+.wb-wrap-title { font-family: var(--mono); font-weight: 700; }
+.wb-wrap-status[data-state="done"] { border: 2px solid var(--fg); background: var(--c1); color: var(--bg); }
+.wb-wrap-status[data-state="done"] .wb-btn--next { background: var(--bg); color: var(--fg); }
+.wb-wrap-status[data-state="open"] { flex-direction: column; align-items: flex-start; border: 2px solid var(--warn); }
+.wb-wrap-status[data-state="open"] .wb-wrap-title { color: var(--warn); }
+.wb-wrap-status ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* ---------- Phone bar (hidden on wide screens) ---------- */
+.wb-phonebar { display: none; }
+
+/* ---------- Narrow screens: one column, brief first ---------- */
+@media (max-width: 900px) {
+  .wb-bar { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 8px 14px; }
+  .wb-bar-title { flex: 1; }
+  .wb-progress { order: 10; flex: 1 0 100%; max-width: none; }
+  .wb-py { display: none; }
+
+  .wb.is-stepping .wb-screen { height: auto; }
+  .wb-screen { grid-template-columns: minmax(0, 1fr); }
+  .wb-brief { border-right: 0; }
+  .wb-brief-scroll { padding: 22px 16px; overflow: visible; }
+  .wb-title { font-size: 25px; }
+  .wb-task-body { font-size: 16.5px; }
+  .wb-bench { padding: 16px; overflow: visible; }
+  .wb-nav { display: none !important; }
+  .wb-editor .cm-editor, .wb-code { min-height: 240px; }
+  .wb-cell-bar { flex-wrap: wrap; }
+  .wb-keys { display: none; }
+  .wb-cell-bar .wb-btn--run { box-shadow: 3px 3px 0 var(--fg); margin-right: 3px; }
+  .wb-preview { grid-template-columns: 120px minmax(0, 1fr); }
+  .wb-preview img { width: 120px; }
+
+  .wb-phonebar:not([hidden]) {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+
+  .wb-phonebar .wb-link { min-height: 44px; color: var(--fg-2); text-decoration: none; font-size: 14px; text-align: left; }
+  .wb-phonebar .wb-phone-next { text-align: right; color: var(--fg); font-weight: 700; }
+  .wb-phonebar .wb-btn--run { min-height: 44px; padding: 8px 10px; box-shadow: 3px 3px 0 var(--fg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-btn--run, .wb-btn--next { transition: none; }
+}
+
+/* A blank named in the brief, styled like the blank in the editor. */
+.wb code.wb-blank {
+  background: var(--ws-yellow);
+  color: var(--ws-on-yellow);
+}

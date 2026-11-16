@@ -33,6 +33,9 @@ interface Props {
   /** Render the register-interest pop-up (default). Only /announce turns it
    *  off: that page holds the same form in the page itself. */
   announceModal?: boolean;
+  /** Focus mode (the /try sample lesson): no site header; the page brings its
+   *  own slim bar. Default false. Same prop as on the workshop-area branch. */
+  focus?: boolean;
 }
 
 const {
@@ -43,6 +46,7 @@ const {
   jsonLd,
   noindex = false,
   announceModal = true,
+  focus = false,
 } = Astro.props;
 
 const fullTitle = onLanding ? title : `${title} · Pixels2GenAI`;
@@ -138,7 +142,7 @@ const UMAMI_WEBSITE_ID = 'ce720437-0271-4626-b1cf-84d9f6b1a40c';
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
   <GrainOverlay />
-  <FrameTop onLanding={onLanding} />
+  {!focus && <FrameTop onLanding={onLanding} />}
 
   <slot />
 

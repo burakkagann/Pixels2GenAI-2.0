@@ -1,0 +1,23 @@
+---
+/**
+ * A /try screen with its minutes in the kicker ("Step 1 · Predict · 2 min"), as in the approved mock.
+ * The player's Step takes no minutes, so this wraps Screen the same way Step does (player files stay as copied).
+ */
+import Screen from '@/components/workshop-lesson/Screen.astro';
+
+interface Props {
+  n: number;
+  kind: 'predict' | 'write' | 'fix';
+  title: string;
+  minutes: number;
+}
+
+const KIND_LABEL = { predict: 'Predict', write: 'Write', fix: 'Fix' } as const;
+const { n, kind, title, minutes } = Astro.props;
+---
+
+<Screen phase="steps" kind={kind} kicker={`Step ${n} · ${KIND_LABEL[kind]} · ${minutes} min`} title={title}>
+  <slot />
+  <slot name="task" slot="task" />
+  <slot name="work" slot="work" />
+</Screen>

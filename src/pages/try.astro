@@ -1,0 +1,23 @@
+---
+/**
+ * /try: the free sample lesson "Print the Berliner Dom as a poster" (picks TP-4, RT-1, MK-1, 15 Nov 2026).
+ * Public, in the workbench layout, no login, no tutor, no stored answers. Python runs in the browser.
+ * Linked from the /workshops sample card and the home workshop row. Copy is Draft until Kağan's
+ * learner run changes it. Notes: src/try/README.md.
+ */
+import TryLesson from '@/layouts/TryLesson.astro';
+import MakeItFirst from '@/components/workshop-lesson/MakeItFirst.astro';
+import Task from '@/components/workshop-lesson/Task.astro';
+import Hint from '@/components/workshop-lesson/Hint.astro';
+import Cell from '@/components/workshop-lesson/Cell.astro';
+import Preview from '@/components/workshop-lesson/Preview.astro';
+import TryStep from '@/try/TryStep.astro';
+import Lesson from '@/try/print-the-berliner-dom.mdx';
+---
+
+<TryLesson
+  title="Print the Berliner Dom as a poster"
+  description="A free 10-minute sample of a Pixels2GenAI workshop step: predict, write and fix real Python in your browser, and print a photo of the Berliner Dom as a three-colour poster."
+>
+  <Lesson components={{ MakeItFirst, Task, Hint, Cell, Preview, TryStep }} />
+</TryLesson>
