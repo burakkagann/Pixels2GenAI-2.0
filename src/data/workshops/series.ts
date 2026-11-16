@@ -56,12 +56,10 @@ export interface SeriesWorkshop {
   homeLine: string;
   /** Equipment beyond a laptop with a browser (shown as "You need"). */
   needs?: string;
-  /** Show "You need" on the card itself, not only behind "Inside" (W6: TouchDesigner, DEC-44). */
-  needsOnCard?: boolean;
   /** Card image (public/workshops/series/one-photo/, 720 × 450 WebP): one source photo through each
    *  workshop's technique (DEC-90). Source: "Berliner Dom und Fernsehturm, 170117, ako.jpg", Ansgar Koreng,
    *  Wikimedia Commons, CC0. W5 shows the flow-matching path from noise to the photo (a real model image
-   *  follows, BLD-23); W6 is a concept still until W6 is designed (BLD-25). */
+   *  follows, BLD-23); W6 is a concept still until the real image after the GPU proof (BLD-196). */
   image: { src: string; alt: string; credit: string };
   warmup: string;
 }
@@ -146,9 +144,9 @@ export const SERIES: SeriesWorkshop[] = [
       { id: '12.2.4', title: 'Latent space by hand', sub: 'images as points on a learned map', minutes: 50, source: 'new' },
       { id: '12.7.2', title: 'Flow matching from scratch', sub: 'noise becomes points, then pictures', minutes: 55, source: 'new' },
       // ControlNet until decided; a LoRA core would become a new leaf (e.g. 12.5.2).
-      { id: '12.3.2', title: 'A real model', sub: 'your sketch or style, turned into an image', minutes: 55, source: 'live' },
+      { id: '12.3.2', title: 'A real model', sub: 'your sketch, turned into an image', minutes: 55, source: 'live' },
     ],
-    make: 'Your sketch or your style turned into an image, labelled as AI-made',
+    make: 'Your sketch turned into an image, labelled as AI-made',
     cardMake: 'Your sketch turned into an image by a real model',
     homeLine: 'A model turns your sketch into an image',
     needs: 'A free Google account (for Colab), or a laptop with an NVIDIA graphics card. Macs: use Colab. Without either you can still follow every step.',
@@ -156,24 +154,22 @@ export const SERIES: SeriesWorkshop[] = [
     image: { src: '/workshops/series/one-photo/w5.webp', alt: "The Berliner Dom and the Fernsehturm in six vertical bands, from pure noise on the left to the clear photo on the right.", credit: "Made with W5's maths, from one photo" },
   },
   {
-    id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Live', band: 'Generative AI',
+    id: 'w6', slug: 'w6-play', n: 6, verb: 'Play', title: 'Your own model', band: 'Generative AI',
     date: 'Sat 8 May 2027', dateIso: '2027-05-08',
-    // Stopgap 13 Nov (Kağan: "W6 stopgap yes"): no TouchDesigner; title, cores and image follow the W6 picks (R-17).
-    idea: 'Everything so far comes together in one piece of your own.',
+    idea: 'A model can learn your style from a few of your pieces; then you steer it and edit what it makes.',
     thread: 'w5',
-    threadText: 'Everything so far, running live.',
+    threadText: 'From W5, a real model and its flow; from W4, nudging weights; from W1, the weighted sum.',
     cores: [
-      { id: '10.1.1', title: 'Node networks', sub: 'the real-time loop', minutes: 45, source: 'live' },
-      { id: '13.2.3', title: 'Your body drives the particles', sub: 'pose tracking meets GPU particles', minutes: 55, source: 'leaf' },
-      { id: '13.3.4', title: 'Real-time diffusion', sub: 'your W5 style on the live camera', minutes: 55, source: 'new' },
+      { id: '12.5.2', title: 'Teach it your style', sub: 'a LoRA trained on your own pieces, called by a trigger word', minutes: 55, source: 'new' },
+      { id: '12.5.3', title: 'Steer it with images', sub: 'a reference image steers the model, with a weight', minutes: 55, source: 'new' },
+      { id: '12.3.3', title: 'Edit what it made', sub: "W5's flow run backwards, then one edit by strength or by instruction", minutes: 55, source: 'new' },
     ],
-    make: 'A recording of you inside your piece, plus a one-page capstone plan',
-    cardMake: 'A recording of you inside your piece',
-    homeLine: 'Real-time art you play with your body',
-    needs: 'A free Google account (for Colab), or a laptop with an NVIDIA graphics card. Without either you can still follow every step.',
-    needsOnCard: true,
-    warmup: '3 questions on the whole series',
-    image: { src: '/workshops/series/one-photo/w6.webp', alt: "The Berliner Dom and the Fernsehturm as glowing particles in the photo's colours on a dark background.", credit: "Concept · particles in the photo's colours" },
+    make: 'A short series in your own style, one image edited, labelled as AI-made',
+    cardMake: 'A short series in your own style, one image edited',
+    homeLine: 'Teach a model your own style',
+    needs: 'A free Google account (for Colab), or a laptop with an NVIDIA graphics card. Without either you can still follow every step and get your images, made for you before the day. Optional: send 10–20 of your own pieces a week before.',
+    warmup: '3 questions on noise, flow and a real model',
+    image: { src: '/workshops/series/one-photo/w6.webp', alt: 'The Berliner Dom and the Fernsehturm in six vertical bands, from a few low-rank layers on the left to the full photo on the right: the maths behind a LoRA.', credit: "Concept · W6's maths, from one photo" },
   },
 ];
 
@@ -186,7 +182,6 @@ export const SHOWCASE = {
   date: 'June 2027',
   price: 'Free',
   note: 'Date and venue are not fixed yet.',
-  cta: 'Hear when the date is set →', // no-break space keeps the arrow with its word
   frameText: 'your piece here',
 };
 
