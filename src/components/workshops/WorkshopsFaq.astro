@@ -1,15 +1,16 @@
 ---
 /**
  * The /workshops FAQ (BLD-183, layout WL-1b, WL-2a: after the tickets, before the pilot). Final copy 1g,
- * the full "Why this format works" (1d) as "Why this format?", and the gap answers Q5, Q7, Q9, Q14, Q16,
+ * "Why this format works" (1d) as "Why this format?" (the pilot result lives in the Pilot section only), "What comes after W6?" (CR-4) and the gap answers Q5, Q7, Q9, Q14, Q16,
  * Q20, Q22 and Q29 from the rollout map §3. Three groups, each with a riso chip; every question has a
  * numbered square in its group colour, as the lesson numbers on the cards. Long answers are bullets.
  * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
  */
 import { TICKETS } from '@/data/workshops/tickets';
-import { PILOT } from '@/data/site/research';
+import { SERIES } from '@/data/workshops/series';
+import { bandKey } from '@/components/workshops/seriesFormat';
 
-interface Item { q: string; id?: string; open?: boolean; lines?: string[]; points?: string[]; html?: string }
+interface Item { q: string; id?: string; open?: boolean; lines?: string[]; points?: string[]; html?: string; next?: boolean }
 interface Group { name: string; fill: string; items: Item[] }
 
 const cite = (n: number) => `<sup><a href="#fmt-ref-${n}" aria-label="Reference ${n}">${n}</a></sup>`;
@@ -20,26 +21,15 @@ const GROUPS: Group[] = [
     fill: 'fill-c1',
     items: [
       {
-        q: 'Who teaches?',
-        points: [
-          'The lessons do.',
-          'You learn through the platform on your laptop: it runs, checks and explains your code.',
-          'The facilitator, who builds the platform, is in the room to help.',
-        ],
-      },
-      {
         q: 'Why this format?',
         id: 'faq-why',
-        open: true,
         html:
           '<ul class="fmt-points">' +
           `<li><b>You learn by doing.</b> Across 225 studies, students in lecture-only courses were 1.5 times as likely to fail as students in courses where they worked actively (Freeman et al., 2014).${cite(1)} So the teaching sits in the lessons, and the room is for doing.</li>` +
           `<li><b>You read code before you write it.</b> Each step asks you to predict, change, write or fix, an order designed for programming beginners (Sentance, Waite &amp; Kallia, 2019).${cite(2)}</li>` +
           "<li><b>You see the result first.</b> Every lesson starts by running the finished piece, so you know what you're building before the steps open it up.</li>" +
           '<li><b>One idea per Saturday, nothing to install.</b> Our pilot in February 2026 taught us this: six topics in one day was too fast, and installing Python cost time. Everything now runs in your browser.</li>' +
-          '</ul>' +
-          `<p>In that pilot, all ${PILOT.paired} people who took both tests scored higher; the average went from ${PILOT.before.toFixed(1)} to ${PILOT.after.toFixed(1)} out of ${PILOT.scoreMax}. The series is built on what that day taught us.</p>` +
-          `<p>"I don't know" answers fell from ${PILOT.idkBefore}% to ${PILOT.idkAfter}% (MA thesis, ${PILOT.source}, group averages). <a href="/research">The findings</a> · <a href="/research/thesis.pdf">Thesis PDF</a></p>`,
+          '</ul>',
       },
       { q: 'What if I get stuck?', lines: ['Every step has two hints, then the solution, and errors come with a plain explanation. Look up, and the facilitator comes over.'] },
       {
@@ -55,6 +45,7 @@ const GROUPS: Group[] = [
       { q: "Is it for artists who don't want to code?", lines: ["You will write code; that's the craft here. Each step is small, and your own photos and ideas drive the piece."] },
       { q: 'Are these the lessons on pixels2genai.art?', lines: ['No. The workshop lessons are new and made for the series: short screens, code on every one, checks and hints.'] },
       { q: "Can't I learn this from videos?", lines: ["Parts of it, yes. Here you get the order, the code from the inside, help when you're stuck and a finished piece on the day."] },
+      { q: 'What comes after W6?', next: true },
     ],
   },
   {
@@ -116,6 +107,20 @@ const GROUPS: Group[] = [
   },
 ];
 
+// "What comes after W6?" (CR-4): the rows that were the "Where you can go next" section. `from`/`to` are
+// workshop numbers; null = the free lessons (a yellow "Free" tag).
+const NEXT = [
+  { title: 'Generative art and print', from: 1, to: 3, text: 'Your own series for prints, pen plotters or riso.' },
+  { title: 'Data and visualisation', from: 3, to: 3, text: 'Cluster and map your own image or data collections.' },
+  { title: 'Machine learning', from: 4, to: 4, text: 'A first full course in neural networks, with the basics already in hand.' },
+  { title: 'Your own AI tools', from: 5, to: 6, text: 'Train and steer models on your own work.' },
+  { title: 'The rest of Pixels2GenAI', from: null, to: null, text: 'The free lessons on this site, in an order you now understand.' },
+];
+const tagsFor = (from: number | null, to: number | null) =>
+  from === null ? [] : SERIES.filter((w) => w.n >= from && w.n <= (to ?? from));
+const rangeLabel = (from: number | null, to: number | null) =>
+  from === null ? 'Free' : from === to ? `W${from}` : `W${from}–W${to}`;
+
 let n = 0;
 const numbered = GROUPS.map((g) => ({ ...g, items: g.items.map((it) => ({ ...it, num: String(++n).padStart(2, '0') })) }));
 ---
@@ -136,6 +141,27 @@ const numbered = GROUPS.map((g) => ({ ...g, items: g.items.map((it) => ({ ...it,
               {it.lines?.map((l) => <p>{l}</p>)}
               {it.points && <ul class="fmt-points">{it.points.map((p) => <li>{p}</li>)}</ul>}
               {it.html && <Fragment set:html={it.html} />}
+              {it.next && (
+                <>
+                  <ul class="fmt-next">
+                    {NEXT.map((r) => (
+                      <li>
+                        <b class="fmt-next-title">{r.title}</b>
+                        <span class="fmt-next-tags">
+                          <span class="sr-only">{rangeLabel(r.from, r.to)}</span>
+                          {r.from === null ? (
+                            <span class="fmt-tag fill-yellow" aria-hidden="true">Free</span>
+                          ) : (
+                            tagsFor(r.from, r.to).map((w) => <span class="fmt-tag" data-band={bandKey(w.band)} aria-hidden="true">W{w.n}</span>)
+                          )}
+                        </span>
+                        <span class="fmt-next-text">{r.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p class="fmt-note">These are directions, not promises.</p>
+                </>
+              )}
             </div>
           </details>
         ))}

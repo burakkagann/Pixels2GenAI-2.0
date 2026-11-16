@@ -1,8 +1,8 @@
 ---
 /**
  * The February 2026 pilot (research cycle i) on the /workshops page, in the
- * workshop brand (05b): the poster, three plain-language results, the six
- * lessons it used (linked), the participants' fractals with a lightbox, and
+ * workshop brand (05b): the poster, three plain-language results
+ * (the six lessons are the third stat, CR-11), the participants' fractals with a lightbox, and
  * the Academis acknowledgement. Same facts as the pre-series page; figures
  * come from src/data/site/workshops.ts and the /research findings.
  * Rendered only when PUBLIC_WORKSHOP_SERIES=true.
@@ -52,12 +52,6 @@ const peopleWord = WORDS[past.participants ?? 0] ?? String(past.participants);
       </div>
       <p class="pilot-fine">Cohen's d = 1.615 on the 24-item test · prior experience × load: Spearman's rho = −0.857, p = .007</p>
 
-      <ul class="pilot-lessons" aria-label="The lessons of the pilot">
-        {past.modules.map((m) => (
-          <li><span class="ws-chip pilot-lesson"><b>{m.idx}</b> {m.title}</span></li>
-        ))}
-      </ul>
-
       {past.researchLink && <a class="ws-btn pilot-findings" href="/research">Read the findings →</a>}
     </div>
   </div>
@@ -84,8 +78,9 @@ const peopleWord = WORDS[past.participants ?? 0] ?? String(past.participants);
     <p class="ws-label">Hosted at Academis</p>
     <p>
       The workshops take place at the Academis studio, hosted by <a href={past.supervisorHref} target="_blank" rel="noopener">Kristian Rother</a>
-      and run by Kağan. They are part of a Master's thesis;
-      anonymous session feedback is used for research with participants' consent.
+      and run by Kağan. The pilot was part of a Master's thesis. This series is not: it is independent research
+      that continues the thesis, so the curriculum and its structure keep improving. Anonymous session feedback is
+      used for research with participants' consent.
     </p>
   </div>
 </section>

@@ -22,11 +22,12 @@ import '@/styles/workshops-page.css';
       Write the code behind <span class="hero-mark">generative art.</span>
     </h1>
     <p class="hero-sub">Beyond prompting. Six Saturdays in Berlin, from a single pixel to a model that paints.</p>
+    <p class="hero-new"><span class="ws-chip fill-c1">New lesson framework</span>tailored to workshops.</p>
     <div class="hero-actions">
       {ticketsOpen ? (
         <>
           <a class="ws-btn btn-sale" href={w1Shop!}>Get a W1 ticket →</a>
-          <a class="ws-btn" href="#tickets">Series pass</a>
+          <a class="hero-link" href="#tickets">Series pass</a>
         </>
       ) : (
         <p class="tk-later">{TICKETS.notReady}</p>

@@ -4,12 +4,9 @@
  * "center the text to the page", every label a link; and the version under the
  * hero "more highlighted, so people can notice that this is a button").
  *
- * Two parts sharing one list:
- * - Under the hero: "Jump to" + six chips in the site's secondary-button style
- *   (landing.css .btn.btn-sec), centred; a 2-column grid on phones.
- * - Once those chips have scrolled away: a slim fixed bar of numbered tabs under the
- *   site header, centred; the section in view gets aria-current and the yellow fill.
- *   Fixed rather than sticky, so swapping chips for tabs never shifts the page.
+ * CR-9 (15 Nov): the "Jump to" chips under the hero are cut; the bar does the same job.
+ * A slim fixed bar of numbered tabs under the site header, centred, shown once the hero
+ * has scrolled away; the section in view gets aria-current and the yellow fill.
  *   Touch widths: 44 px tap targets, no numbers; <=760 px short labels in one
  *   centred row that wraps rather than swiping sideways.
  * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
@@ -23,26 +20,12 @@ interface Tab { id: string; label: string; short: string }
 const TABS: Tab[] = [
   { id: 'series', label: 'The arc', short: 'Arc' },
   { id: 'how-it-works', label: 'How it works', short: 'How' },
-  { id: 'why-join', label: 'Why join', short: 'Why' },
   { id: 'tickets', label: 'Tickets', short: 'Tickets' },
   { id: 'faq', label: 'Questions', short: 'FAQ' },
   { id: 'past', label: 'The pilot', short: 'Pilot' },
 ];
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-
-<nav class="sh-jump" aria-labelledby="sh-jump-label" data-sh-jump>
-  <p class="sh-lead" id="sh-jump-label">Jump to</p>
-  <ol class="sh-chips">
-    {TABS.map((t) => (
-      <li>
-        <a class="btn btn-sec sh-chip" href={`#${t.id}`} data-sec={t.id}>
-          {t.label}<span class="sh-arrow" aria-hidden="true">↓</span>
-        </a>
-      </li>
-    ))}
-  </ol>
-</nav>
 
 <nav class="sh-bar" aria-label="Sections on this page" data-sh-tabs>
   <div class="sh-in">
@@ -67,64 +50,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 </nav>
 
 <style>
-  /* ---- Under the hero: "Jump to" + chips that read as buttons ---- */
-  .sh-jump {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px 18px;
-    padding: 12px 0 32px;
-  }
-  .sh-lead {
-    margin: 0;
-    font: 600 max(12px, var(--fs-min))/1 var(--mono);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--fg-2);
-  }
-  .sh-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px 12px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  /* The site's secondary button (ink line, ink drop, here 3 px, lift on hover) on the page
-     fill; hover and focus fill it with ink, the way the primary looks. */
-  .sh-chip {
-    --btn-fill: var(--bg);
-    --btn-shadow: 3px;
-    padding: 0 14px;
-    font-size: 12px;
-    gap: 8px;
-  }
-  .sh-chip:hover,
-  .sh-chip:focus-visible {
-    --btn-fill-hover: var(--fg);
-    --btn-drop: var(--fg-3); /* as the primary: grey drop under an ink fill */
-    background: var(--fg);
-    color: var(--bg);
-  }
-  .sh-arrow { font-weight: 400; }
-
-  @media (max-width: 640px) {
-    .sh-jump { flex-direction: column; gap: 12px; padding: 4px 0 28px; }
-    /* Phones: a 2 x 3 grid, never a sideways row. */
-    .sh-chips {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      width: 100%;
-      padding-right: 3px; /* room for the drop shadow */
-      box-sizing: border-box;
-    }
-    .sh-chip { width: 100%; padding: 0 10px; }
-  }
-
-  /* ---- The slim bar: fixed under the site header once the chips are gone ---- */
+  /* ---- The slim bar: fixed under the site header once the hero is gone ---- */
   .sh-bar {
     position: fixed;
     top: var(--sh-head, var(--frame-h));
@@ -227,17 +153,17 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 <script>
   // Measures the sticky site header and the bar (their heights change with the
-  // breakpoint), shows the bar once the "Jump to" chips reach it
-  // (and hides it again past the page's end), and marks the section in view in both
-  // lists: the last one whose top has passed the line under the bar, or the last one
+  // breakpoint), shows the bar once the hero has scrolled up to it
+  // (and hides it again past the page's end), and marks the section in view:
+  // the last one whose top has passed the line under the bar, or the last one
   // when the page is scrolled to the end.
   const bar = document.querySelector<HTMLElement>('[data-sh-tabs]');
-  const jump = document.querySelector<HTMLElement>('[data-sh-jump]');
-  if (bar && jump) {
+  const hero = document.querySelector<HTMLElement>('.series-hero');
+  if (bar && hero) {
     const root = document.documentElement;
     const header = document.querySelector<HTMLElement>('.frame-top');
-    const main = jump.closest('main');
-    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-sh-jump] a[data-sec], [data-sh-tabs] a[data-sec]')];
+    const main = hero.closest('main');
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-sh-tabs] a[data-sec]')];
     const ids = [...bar.querySelectorAll<HTMLAnchorElement>('a[data-sec]')].map((a) => a.dataset.sec || '');
     // #tickets is the card inside its band; the band is what the reader sees.
     const blocks = ids.map((id) => {
@@ -256,11 +182,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
     };
 
     const update = () => {
-      // The bar takes over as soon as it would sit on the chips row; a link to The arc
-      // (scroll margin = header + bar + 12) lands exactly there, so the bar shows.
-      const chipsGone = jump.getBoundingClientRect().bottom <= headH + barH + 13;
+      // The bar shows once the hero's bottom edge reaches it; a link to The arc
+      // (scroll margin = header + bar + 12) lands just below, so the bar shows.
+      const heroGone = hero.getBoundingClientRect().bottom <= headH + barH + 13;
       const pageLeft = main ? main.getBoundingClientRect().bottom > headH + barH : true;
-      bar.classList.toggle('is-on', chipsGone && pageLeft);
+      bar.classList.toggle('is-on', heroGone && pageLeft);
 
       const line = headH + barH + 24;
       let idx = -1;

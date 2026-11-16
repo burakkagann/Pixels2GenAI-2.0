@@ -1,14 +1,14 @@
 ---
 /**
  * One workshop card (DEC-83): a colour band (number, verb, band), the image
- * with a calendar tile, the title, the idea, aligned "You make" / "When" rows,
+ * with a calendar tile, the title, the idea, an aligned "You make" row,
  * "What you'll learn" (native <details>, no client JS) and the action pinned
  * to the bottom so a row of cards lines up. A buy button appears only once
  * the shop link exists; later workshops name the day their tickets open.
  * The id is the arc's anchor.
  */
 import type { SeriesWorkshop } from '@/data/workshops/series';
-import { bandKey, cardDate } from '@/components/workshops/seriesFormat';
+import { bandKey } from '@/components/workshops/seriesFormat';
 import { TICKETS } from '@/data/workshops/tickets';
 
 interface Props {
@@ -18,7 +18,6 @@ interface Props {
 const { workshop: w } = Astro.props;
 const onSale = TICKETS.onSale.includes(w.id);
 const shop = TICKETS.pretix[w.id] ?? null;
-const luma = TICKETS.luma[w.id] ?? null;
 
 // Calendar tile parts, and the day single tickets open (four weeks before).
 const day = w.dateIso ? new Date(`${w.dateIso}T12:00:00Z`) : null;
@@ -64,8 +63,6 @@ const opens = day && new Date(day.getTime() - 28 * 86_400_000)
     <p class="sc-idea">{w.idea}</p>
     <dl class="sc-rows">
       <dt class="ws-label">You make</dt><dd>{w.cardMake}</dd>
-      {w.dateIso && <><dt class="ws-label">When</dt><dd>{cardDate(w.dateIso)} · {TICKETS.time}</dd></>}
-      {w.needs && w.needsOnCard && <><dt class="ws-label">You need</dt><dd>{w.needs}</dd></>}
     </dl>
 
     <details class="sc-inside">
@@ -81,7 +78,7 @@ const opens = day && new Date(day.getTime() - 28 * 86_400_000)
           ))}
         </ol>
         {w.thread && <p class="sc-fact"><span class="ws-label">Builds on</span> {w.threadText}</p>}
-        {w.needs && !w.needsOnCard && <p class="sc-fact"><span class="ws-label">You need</span> {w.needs}</p>}
+        {w.needs && <p class="sc-fact"><span class="ws-label">You need</span> {w.needs}</p>}
       </div>
     </details>
 
@@ -92,7 +89,6 @@ const opens = day && new Date(day.getTime() - 28 * 86_400_000)
           {shop ? (
             <div class="sc-btns">
               <a class="ws-btn btn-sale" href={shop}>Get a ticket →</a>
-              {luma && <a class="ws-btn btn-pink" href={luma}>Also on Luma</a>}
             </div>
           ) : (
             <p class="tk-later">{TICKETS.notReady}</p>

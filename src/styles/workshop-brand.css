@@ -201,6 +201,15 @@
   outline-offset: 10px;
 }
 
+/* Ticket buttons on the yellow panel: the page ink (light in dark mode) drew
+   a pale line and drop on yellow, about 1.2:1. The panel's own ink keeps the
+   butter fill and the press, and the edge reads at 3:1 or more. */
+.ws .series-cta .ws-btn.btn-sale {
+  --btn-on: var(--ws-on-yellow);
+  --btn-line: var(--ws-on-yellow);
+  --btn-drop: var(--ws-on-yellow);
+}
+
 .ws .series-cta a:focus-visible {
   outline-color: var(--ws-on-yellow);
   outline-offset: 3px;

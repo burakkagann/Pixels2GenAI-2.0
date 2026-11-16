@@ -3,7 +3,7 @@
  * The six-workshop series on the public /workshops page (BLD-09), in the
  * workshop brand (05b): the arc over the calendar with the dates on it
  * (DEC-81, DEC-82), the six cards and W7; then (BLD-183, WL-1b) how a workshop
- * works (with the workshop day), see how it all connects, the tickets block
+ * works (with the workshop day), the tickets block
  * and the FAQ (WL-2a: after the tickets, before the pilot).
  * Rendered only when
  * PUBLIC_WORKSHOP_SERIES=true. Data: src/data/workshops/series.ts.
@@ -12,7 +12,6 @@ import { SERIES, SHOWCASE } from '@/data/workshops/series';
 import SeriesCalendarArc from '@/components/workshops/SeriesCalendarArc.astro';
 import SeriesCard from '@/components/workshops/SeriesCard.astro';
 import HowItWorks from '@/components/workshops/HowItWorks.astro';
-import WhyJoin from '@/components/workshops/WhyJoin.astro';
 import WorkshopsFaq from '@/components/workshops/WorkshopsFaq.astro';
 import SectionTabs from '@/components/workshops/SectionTabs.astro';
 import { bandKey, shortDate } from '@/components/workshops/seriesFormat';
@@ -32,7 +31,7 @@ const pass = late
   : { label: 'Series pass · all six Saturdays', standard: P.passStandard, reduced: P.passReduced, until: TICKETS.passAllSixUntil };
 ---
 
-{/* SH-1 (13 Nov): "Jump to" chips, then a fixed slim tab bar; centred, every label a link. */}
+{/* SH-1 (13 Nov): a fixed slim tab bar, shown after the hero (CR-9); centred, every label a link. */}
 <SectionTabs />
 
 <section class="ws series" id="series" aria-labelledby="series-title">
@@ -62,13 +61,11 @@ const pass = late
       <h3 class="ws-display showcase-title" id="showcase-title">{SHOWCASE.title}</h3>
       <p class="showcase-text">{SHOWCASE.idea}</p>
       <p class="showcase-note">{SHOWCASE.note}</p>
-      <a class="ws-btn" href="/announce?topic=workshops" data-announce data-topic="workshops">{SHOWCASE.cta}</a>
     </div>
   </article>
 </section>
 
 <HowItWorks />
-<WhyJoin />
 
 <section class="ws fmt-band tix-band" aria-labelledby="tickets-title">
   <div class="ws-card series-cta" id="tickets">
@@ -96,9 +93,9 @@ const pass = late
       </div>
       <ul class="tk-facts">
         <li>Max 8 people · 18+ · English</li>
-        <li>Your own laptop is a must (Chrome or Firefox, and the charger)</li>
-        <li>Bring one photo of your own. It stays on your laptop unless you choose to upload it.</li>
-        <li>Beginner Python (variables, loops, functions). Each workshop builds on the ones before; with a single ticket you get a short recap page.</li>
+        <li>Your own laptop is a must</li>
+        <li>Bring one photo of your own.</li>
+        <li>Beginner Python (variables, loops, functions).</li>
         <li>{TICKETS.venueLine} · hosted by {TICKETS.host} · run by Kağan</li>
         <li>Your personal code arrives by email seven days before your workshop</li>
       </ul>
