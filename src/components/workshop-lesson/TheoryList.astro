@@ -1,0 +1,20 @@
+---
+/**
+ * "All the theory in this lesson" on Wrap up (TH1): one row per step, then the
+ * row "After this lesson". lesson.ts fills it from the parts on the steps, so
+ * each idea is written once. Without JavaScript it stays hidden: every step
+ * and its theory are on the page anyway.
+ *   <TheoryList open={[3]} />    the steps whose rows start open
+ * PUBLIC MODE (/try, concept framework, 16 Nov 2026): a slot for <ConceptRows>, the concept rows before the step rows.
+ */
+interface Props {
+  open?: number[];
+}
+
+const { open = [] } = Astro.props;
+---
+
+<section class="wb-theory-all" data-theory-all data-open={open.join(' ')} aria-label="All the theory in this lesson" hidden>
+  <h3>All the theory in this lesson</h3>
+  <slot />
+</section>

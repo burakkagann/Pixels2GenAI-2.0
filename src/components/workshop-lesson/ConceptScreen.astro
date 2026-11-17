@@ -1,0 +1,73 @@
+---
+/**
+ * A concept screen (TT-A, picked 16 Nov 2026; framework FW-1 to FW-6): one idea between two task screens.
+ * Left, the brief: kicker "Concept 1 of 3 · 1 min", title, the Explain text (the concept file's body), the
+ * worked example, one Check yourself question (Predict). Right, where the code sits on a step: the figure, a
+ * still in light, dark and phone, or the one interactive figure of the lesson (ThresholdExplorer).
+ *   <ConceptScreen id="brightness" n={1} of={3} minutes={1} />
+ * Reads src/content/concepts/<id>.mdx and throws on the faults scripts/check-concepts.mjs reports.
+ * Uses the player's screen markup (.wb-screen, .wb-nav), so lesson.ts steps through it like any screen; it counts
+ * in "3 / 8". No code cell, no check, Next never blocks. A step's ConceptLink jumps here and "Back to step n"
+ * returns (src/lib/workshop/concepts.ts). New file on purpose: workshop-area has its own Screen.astro (merge risk).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { getEntry, render } from 'astro:content';
+import { conceptErrors } from '@/lib/concepts/rules.mjs';
+import Cite from './Cite.astro';
+import Predict from './Predict.astro';
+import ConceptFigure from './ConceptFigure.astro';
+import ThresholdExplorer from './ThresholdExplorer.astro';
+
+interface Props {
+  id: string;
+  n: number;
+  of: number;
+  minutes: number;
+  /** The Next button's label; the task screen that follows. Default "step <n>". */
+  next?: string;
+}
+
+const { id, n, of, minutes, next = `step ${n}` } = Astro.props;
+const entry = await getEntry('concepts', id);
+if (!entry) throw new Error(`ConceptScreen: unknown concept "${id}" (src/content/concepts/${id}.mdx)`);
+const exists = (relative: string) => fs.existsSync(path.join(process.cwd(), relative));
+const errors = conceptErrors({ id, data: entry.data, body: entry.body ?? '' }, exists);
+if (errors.length) throw new Error(`ConceptScreen:\n${errors.join('\n')}`);
+
+const { Content } = await render(entry);
+const { title, figure, worked, predict, deeper, deeperLabel } = entry.data;
+const lessonId = deeper?.match(/^\/lessons\/([\d.]+)/)?.[1];
+---
+
+<section class="wb-screen wb-screen--concept" id={`concept-${id}`} data-phase="steps" data-kind="concept" data-concept={id} data-title={title} aria-label={title}>
+  <div class="wb-brief">
+    <div class="wb-brief-scroll">
+      <div class="wb-head">
+        <span class="wb-kind">Concept {n} of {of} · {minutes} min</span>
+        <h2 class="wb-title">{title}</h2>
+      </div>
+      <button type="button" class="wb-link wb-concept-return" data-concept-return hidden></button>
+      <div class="wb-concept-explain"><Content components={{ Cite }} /></div>
+      <div class="wb-worked">
+        <span class="wb-label">Worked example</span>
+        <p>{worked}</p>
+      </div>
+      <Predict q={predict.q} options={predict.options} />
+      {deeper && (
+        <p class="wb-concept-foot">
+          <a href={deeper} target="_blank" rel="noopener">Go deeper: {deeperLabel ?? `the full lesson ${lessonId} on the site`} <span aria-hidden="true">↗</span></a>
+        </p>
+      )}
+    </div>
+    <nav class="wb-nav" aria-label="Lesson navigation" data-nav hidden>
+      <button type="button" class="wb-link wb-back" data-back>← Back</button>
+      <button type="button" class="wb-btn wb-btn--next" data-next>Next: {next} →</button>
+    </nav>
+  </div>
+  <div class="wb-concept-bench">
+    {figure.kind === 'interactive' && figure.explore
+      ? <ThresholdExplorer figure={figure} />
+      : <ConceptFigure figure={figure} />}
+  </div>
+</section>

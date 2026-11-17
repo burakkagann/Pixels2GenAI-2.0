@@ -1,0 +1,47 @@
+---
+/**
+ * One tap question with feedback per option (FW-4): "Check yourself" on a concept screen, or one Recall question
+ * on Wrap up. 2-4 options; a tap shows one sentence of feedback, "Right:" or "Not quite:", so colour never carries
+ * the meaning alone. It never blocks Next, and the answer stays in this page's memory only (public mode: nothing
+ * stored). src/lib/workshop/concepts.ts wires the taps. Without JavaScript the buttons are inert and a plain
+ * "Show the answer" fold gives the right option and why.
+ */
+interface Option {
+  text: string;
+  correct?: boolean;
+  why: string;
+}
+
+interface Props {
+  q: string;
+  /** Optional code shown as a code block under the question. */
+  code?: string;
+  options: Option[];
+  label?: string;
+  /** Recall: the question counts towards opening the rest of Wrap up. */
+  recall?: boolean;
+}
+
+const { q, code, options, label = 'Check yourself', recall = false } = Astro.props;
+const correct = options.find((option) => option.correct);
+if (!correct || options.filter((option) => option.correct).length !== 1) throw new Error(`Predict: exactly one correct option: ${q}`);
+if (options.length < 2 || options.length > 4) throw new Error(`Predict: 2-4 options: ${q}`);
+---
+
+<div class="wb-predict" data-predict data-recall={recall ? '' : undefined}>
+  <span class="wb-label">{label}</span>
+  <p class="wb-predict-q">{q}</p>
+  {code && <pre class="wb-predict-code"><code>{code}</code></pre>}
+  <div class="wb-predict-opts" role="group" aria-label={q}>
+    {options.map((option) => (
+      <button type="button" class="wb-predict-opt" data-option data-correct={option.correct ? 'true' : 'false'} data-why={option.why} aria-pressed="false" disabled>
+        {option.text}
+      </button>
+    ))}
+  </div>
+  <p class="wb-predict-why" data-feedback aria-live="polite"></p>
+  <details class="wb-predict-answer" data-answer>
+    <summary>Show the answer</summary>
+    <p>{correct.text}: {correct.why}</p>
+  </details>
+</div>

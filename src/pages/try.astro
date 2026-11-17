@@ -1,6 +1,9 @@
 ---
 /**
- * /try: the free sample lesson "Print the Berliner Dom as a poster" (picks TP-4, RT-1, MK-1, 15 Nov 2026).
+ * /try: the free sample lesson "Print the Berliner Dom as a poster" (picks TP-4, RT-1, MK-1, 15 Nov 2026;
+ * TF-3 + HA-1, 16 Nov 2026: an idea and a figure per step, theory one tap away, its own Wrap up, explain texts;
+ * TT-A + FW-1..6, 16 Nov 2026: three concept screens between the steps, a recall on Wrap up; screens sum to 15 min, as the public pages say;
+ * 16 Nov test run: recall only on Wrap up, the done box on its own last screen, TryDone).
  * Public, in the workbench layout, no login, no tutor, no stored answers. Python runs in the browser.
  * Linked from the /workshops sample card and the home workshop row. Copy is Draft until Kağan's
  * learner run changes it. Notes: src/try/README.md.
@@ -11,13 +14,21 @@ import Task from '@/components/workshop-lesson/Task.astro';
 import Hint from '@/components/workshop-lesson/Hint.astro';
 import Cell from '@/components/workshop-lesson/Cell.astro';
 import Preview from '@/components/workshop-lesson/Preview.astro';
+import Theory from '@/components/workshop-lesson/Theory.astro';
+import TheoryList from '@/components/workshop-lesson/TheoryList.astro';
+import Cite from '@/components/workshop-lesson/Cite.astro';
+import Diagram from '@/components/workshop-lesson/Diagram.astro';
 import TryStep from '@/try/TryStep.astro';
+import TryWrap from '@/try/TryWrap.astro';
+import TryDone from '@/try/TryDone.astro';
+import ConceptScreen from '@/components/workshop-lesson/ConceptScreen.astro';
+import ConceptRows from '@/components/workshop-lesson/ConceptRows.astro';
 import Lesson from '@/try/print-the-berliner-dom.mdx';
 ---
 
 <TryLesson
   title="Print the Berliner Dom as a poster"
-  description="A free 10-minute sample of a Pixels2GenAI workshop step: predict, write and fix real Python in your browser, and print a photo of the Berliner Dom as a three-colour poster."
+  description="A free 15-minute sample of a Pixels2GenAI workshop step: predict, write and fix real Python in your browser, and print a photo of the Berliner Dom as a three-colour poster."
 >
-  <Lesson components={{ MakeItFirst, Task, Hint, Cell, Preview, TryStep }} />
+  <Lesson components={{ MakeItFirst, Task, Hint, Cell, Preview, Theory, TheoryList, Diagram, TryStep, TryWrap, TryDone, ConceptScreen, ConceptRows, Cite }} />
 </TryLesson>

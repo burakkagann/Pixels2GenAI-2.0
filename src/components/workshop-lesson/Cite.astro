@@ -1,0 +1,23 @@
+---
+/**
+ * An inline citation marker (CT-2, picked 16 Nov 2026): a superscript [n] that opens a card with the full APA
+ * reference on hover, keyboard focus, click and tap. Reusable on any workshop lesson page.
+ *   <Cite c="Gonzalez & Woods, 2018" />
+ * `c` is the same "Name & Name, 2018" string as a concept file's `cite` list. The number is the entry's place in
+ * the lesson's one Sources list on Wrap up (<ol data-sources>), so it is the same on every screen. The runtime
+ * (src/lib/workshop/cite.ts, started by the page) fills in the number, the accessible name and the card text from
+ * that list; the rules in src/lib/concepts/rules.mjs fail the build when the entry is missing.
+ * Renders a <button>, not a link: Base.astro's anchor handler must not see it, and it opens a card, not a page.
+ */
+import { parseCite } from '@/lib/concepts/rules.mjs';
+
+interface Props {
+  /** "Gonzalez & Woods, 2018" */
+  c: string;
+}
+
+const { c } = Astro.props;
+if (!parseCite(c)) throw new Error(`Cite: "${c}" is not "Name & Name, 2018"`);
+---
+
+<sup class="wb-cite"><button type="button" class="wb-cite-ref" data-cite={c} aria-label={`Source: ${c}`} aria-expanded="false">[•]</button></sup>

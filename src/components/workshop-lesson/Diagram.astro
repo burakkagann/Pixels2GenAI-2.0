@@ -1,0 +1,72 @@
+---
+/**
+ * A concept diagram in the workshop diagram theme (CNT-07, P3), drawn twice:
+ * <name>.light.<ext> and <name>.dark.<ext>; the page shows the one for its
+ * theme. An animated GIF also needs <name>.<theme>.still.png: it is shown under
+ * prefers-reduced-motion, and the Pause button swaps to it (pilot: GIFs "too
+ * fast"; thesis T5/T6).
+ *   <Diagram name="padding" ext="gif" alt="…" caption="…" />
+ *
+ * PUBLIC MODE (/try, TF-3, 16 Nov 2026): `folder` names the folder under public/ ("/try-media/fig") instead of
+ * the workshop lesson's media folder. `phone` adds <name>.<theme>.phone.<ext>, a stacked drawing 800 px wide that
+ * screens up to 600 px get, so the labels stay readable (the wide drawing shrinks them to about 7 px at 390 px).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
+
+interface Props {
+  name: string;
+  ext?: 'png' | 'gif' | 'webp';
+  alt: string;
+  caption: string;
+  width?: number;
+  height?: number;
+  /** PUBLIC MODE: the folder under public/, e.g. "/try-media/fig". */
+  folder?: string;
+  /** PUBLIC MODE: the height of the 800 px wide phone drawing, if there is one. */
+  phoneHeight?: number;
+}
+
+const { name, ext = 'png', alt, caption, width = 700, height = 380, folder, phoneHeight } = Astro.props;
+if (!/^[\w-]+$/.test(name)) throw new Error(`Diagram name must be a plain name: ${name}`);
+let base: string;
+let onDisk: (url: string) => string;
+if (folder) {
+  if (!/^\/[\w/-]+$/.test(folder)) throw new Error(`Diagram folder must be a plain path under public/: ${folder}`);
+  base = `${folder}/${name}`;
+  onDisk = (url) => path.join(process.cwd(), 'public', url.replace(/^\//, ''));
+} else {
+  const [, workshop, lesson] = Astro.url.pathname.replace(/\.html$/, '').match(/^\/workshops\/([\w-]+)\/([\d.]+)(?:\/card)?$/) ?? [];
+  if (!workshop || !lesson) throw new Error(`Diagram used outside a workshop lesson page: ${Astro.url.pathname}`);
+  base = `/workshop-media/${workshop}/${lesson}/${name}`;
+  onDisk = (url) => path.join(process.cwd(), url.replace(/^\//, ''));
+}
+const variants = (['light', 'dark'] as const).map((theme) => {
+  const src = `${base}.${theme}.${ext}`;
+  const still = ext === 'gif' ? `${base}.${theme}.still.png` : null;
+  const phone = phoneHeight ? `${base}.${theme}.phone.${ext}` : null;
+  for (const file of [src, still, phone]) {
+    if (file && !fs.existsSync(onDisk(file))) throw new Error(`Missing diagram file: ${file.replace(/^\//, '')}`);
+  }
+  return { theme, src, still, phone };
+});
+const animated = ext === 'gif';
+const phoneShown = phoneHeight ? { width: 400, height: phoneHeight / 2 } : null;
+---
+
+<figure class="wb-dg" data-dg={animated ? '' : undefined}>
+  <div class="wb-dg-frame">
+    {variants.map(({ theme, src, still, phone }) => (
+      <picture class={`wb-dg-img wb-dg-img--${theme}`}>
+        {still && <source media="(prefers-reduced-motion: reduce)" srcset={still} />}
+        {phone && phoneShown && <source media="(max-width: 600px)" srcset={phone} width={phoneShown.width} height={phoneShown.height} />}
+        <img src={src} data-gif={animated ? src : undefined} data-still={still ?? undefined} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
+      </picture>
+    ))}
+  </div>
+  <figcaption>
+    {animated && <button type="button" class="wb-btn wb-btn--small" data-dg-pause hidden aria-pressed="false">❚❚ Pause</button>}
+    <span set:html={inlineMarkdownHtml(caption)} />
+  </figcaption>
+</figure>

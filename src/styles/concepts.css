@@ -1,0 +1,155 @@
+/* ============================================================
+   Concept framework (TT-A + FW-1 to FW-6, 16 Nov 2026): concept screens, Check yourself / Recall questions,
+   the step's concept link, the threshold slider, and the concept rows on Wrap up. Values follow the approved
+   TT-A mock (theory options page, shots A-1440 / A-390). Tokens only. New file on purpose: workshop-area has its
+   own workshop-lesson CSS (merge risk).
+   ============================================================ */
+
+/* Kind tag: ink on paper, like the mock. */
+.wb [data-kind="concept"] { --kind: var(--fg); --on-kind: var(--bg); }
+
+/* The figure sits where the code sits on a step. */
+.wb-concept-bench {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 36px 40px;
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wb-concept-fig { margin: 0; }
+.wb-concept-fig .wb-dg-frame { border: 1px solid var(--line); }
+.wb-concept-fig figcaption { font-family: var(--mono); font-size: 12px; color: var(--fg-3); margin-top: 6px; line-height: 1.45; }
+
+/* The Explain text: the reading measure of the brief (≤ 62ch). */
+.wb-concept-explain { max-width: 62ch; }
+.wb-concept-explain p { margin: 0; font-size: 17px; line-height: 1.55; }
+.wb-concept-explain p + p { margin-top: 10px; }
+.wb-concept-explain code { font-family: var(--mono); font-size: .88em; }
+
+.wb-concept-return { align-self: flex-start; font-size: 13.5px; }
+
+/* Worked example: a quiet block with a left rule. */
+.wb-worked {
+  border-left: 3px solid var(--c2);
+  padding: 8px 12px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wb-worked .wb-label,
+.wb-predict .wb-label { color: var(--fg-2); text-transform: uppercase; }   /* as the mock: IN THIS PHOTO, CHECK YOURSELF */
+.wb-worked p { margin: 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; }
+
+/* Check yourself / Recall: dashed box, tap options. */
+.wb-predict {
+  border: 1px dashed var(--line-2);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wb-predict-q { margin: 0; font-size: 16px; line-height: 1.5; }
+.wb-predict-code { margin: 0; padding: 10px 12px; overflow-x: auto; font: 14px/1.5 var(--mono); border: 1px solid var(--line); }
+.wb-predict-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.wb-predict-opt {
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.wb-predict-opt:disabled { cursor: default; opacity: .7; }
+.wb-predict-opt[aria-pressed="true"] { border-width: 2px; font-weight: 700; padding: 5px 11px; }
+.wb-predict[data-state="right"] .wb-predict-opt[aria-pressed="true"] { border-color: var(--c1); }
+.wb-predict[data-state="wrong"] .wb-predict-opt[aria-pressed="true"] { border-color: var(--warn); }
+.wb-predict-why { margin: 0; font-size: 15px; line-height: 1.5; }
+.wb-predict-why:empty { display: none; }
+.wb-predict[data-state="right"] .wb-predict-why b { color: var(--c1); }
+.wb-predict[data-state="wrong"] .wb-predict-why b { color: var(--warn); }
+.wb-predict-answer summary { font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); cursor: pointer; }
+.wb-predict-answer p { margin: 6px 0 0; font-size: 15px; }
+
+.wb-concept-foot { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
+.wb-concept-foot a { color: var(--link); }
+
+/* The one line under a step's task. */
+.wb-concept-link { margin: -12px 0 0; font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); }
+.wb-concept-link a { color: var(--link); }
+.wb-concept-link-key { font-family: var(--serif); font-size: 14px; color: var(--fg-2); }
+
+/* The Concept row of a step's notes panel (CR-2, mock concept-row-2026-11-16): 72 px thumb, then title, key idea, link. */
+.wb-concept-card { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; align-items: start; }
+.wb-concept-card .wb-concept-fig { width: 72px; }
+.wb-concept-card-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 15.5px; line-height: 1.55; }
+.wb-concept-card-title { font-weight: 600; color: var(--fg); }
+.wb-concept-card-key { margin: 0; }
+.wb-concept-card-key code { font-family: var(--mono); font-size: .88em; }
+.wb-concept-card-open { align-self: flex-start; color: var(--link); font-weight: 600; font-size: 14px; }
+
+/* Recall on Wrap up. */
+.wb-recall { display: flex; flex-direction: column; gap: 12px; }
+.wb-recall-lead { margin: 0; font-size: 16px; line-height: 1.5; color: var(--fg-2); }
+.wb-recall-skip { align-self: flex-start; }
+.wb-idea > [data-recall-rest] { display: contents; }
+
+/* The threshold slider. */
+.wb-explore { display: flex; flex-direction: column; gap: 16px; }
+.wb-explore-live { margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.wb-explore-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.wb-explore-pair > div { display: flex; flex-direction: column; gap: 6px; }
+.wb-explore-pair img,
+.wb-explore-pair canvas { display: block; width: 100%; height: auto; aspect-ratio: 240 / 150; border: 1px solid var(--line); }
+.wb-explore-tag { font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
+.wb-explore-control { display: flex; flex-direction: column; gap: 6px; }
+.wb-explore-control label { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.wb-explore-control output { display: inline-block; min-width: 3ch; }
+.wb-explore-control input[type="range"] { width: 100%; min-height: 32px; accent-color: var(--fg); margin: 0; }
+.wb-explore-control input[type="range"]:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+.wb-explore-scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
+.wb-explore-share { margin: 0; font-size: 16px; }
+.wb-explore-live figcaption { font-family: var(--mono); font-size: 12px; color: var(--fg-3); }
+
+/* Concept rows on Wrap up: as the step rows (workshop-lesson-b.css), with a thumb. */
+.wb-concept-row { border-top: 1px solid var(--line); }
+.wb-concept-row > summary {
+  display: grid;
+  grid-template-columns: 124px 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.wb-concept-row > summary b { color: var(--fg); font-weight: 700; }
+.wb-concept-row-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wb-concept-row-key { font-family: var(--serif); font-size: 14px; line-height: 1.45; color: var(--fg-2); }
+.wb-concept-row-key code { font-family: var(--mono); font-size: .9em; }
+.wb-concept-row-thumb .wb-concept-fig { width: 72px; }
+.wb-concept-rowbody { display: flex; flex-direction: column; gap: 10px; padding: 2px 0 16px 136px; }
+.wb-concept-rowbody p { margin: 0; font-size: 15.5px; line-height: 1.55; }
+.wb-concept-rowbody .wb-concept-row-worked { font-family: var(--mono); font-size: 13px; color: var(--fg-2); }
+
+/* No code on a concept screen: the phone bar's Run steps aside. */
+.wb:has(.wb-screen[data-kind="concept"]:not([hidden])) .wb-phonebar [data-phone-run] { visibility: hidden; }
+
+@media (max-width: 900px) {
+  .wb-concept-bench { padding: 16px; overflow: visible; }
+  .wb-concept-explain p { font-size: 16px; }
+  .wb-concept-row > summary { grid-template-columns: 84px 56px minmax(0, 1fr); }
+  .wb-concept-row-thumb .wb-concept-fig { width: 56px; }
+  .wb-concept-rowbody { padding-left: 0; }
+}
+
+/* Notes on a step (SN-1): the row's name is the part's title ("Watch out", "Why it worked"), shown once, with the code line it ties to. */
+.wb-theory[data-notes] .wb-part-head h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.wb-theory[data-notes] .wb-part-head { justify-content: flex-start; }

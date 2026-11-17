@@ -1,0 +1,59 @@
+---
+/**
+ * The lesson's one interactive figure (FW-6): a threshold slider, 0 to 255 in steps of 5 (arrow keys too), on a
+ * small grey copy of the Dom. Beside it the two-ink poster that threshold makes, and the share of the photo's
+ * 144,000 pixels that get ink. No Python and nothing fetched but the grey image (same site): the poster is drawn
+ * on a canvas, and the shares come from figures.py (the lesson's own rule on the full photo, light < threshold),
+ * embedded here at build time, so the percentage matches the code.
+ * Without JavaScript the still (the mask figure) shows instead. src/lib/workshop/concepts.ts runs it.
+ * The two inks are the lesson's own ink and paper (src/try/cells/*.py), not page colours: they stay in both themes.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import ConceptFigure from './ConceptFigure.astro';
+
+interface Props {
+  figure: {
+    name: string; folder: string; ext?: string; phoneHeight: number; alt: string; caption: string;
+    explore?: { image: string; shares: string; start: number; alt: string };
+  };
+}
+
+const { figure } = Astro.props;
+const explore = figure.explore;
+if (!explore) throw new Error('ThresholdExplorer: the figure has no explore settings');
+const sharesFile = path.join(process.cwd(), explore.shares);
+if (!fs.existsSync(sharesFile)) throw new Error(`ThresholdExplorer: missing ${explore.shares} (python src/try/figures.py)`);
+const { shares, pixels } = JSON.parse(fs.readFileSync(sharesFile, 'utf8')) as { shares: number[]; pixels: number };
+if (!Array.isArray(shares) || shares.length !== 257) throw new Error('ThresholdExplorer: shares must hold 257 values (thresholds 0-256)');
+const start = Math.round(explore.start / 5) * 5;
+const percent = (t: number) => Math.round(shares[t] * 100);
+const inputId = `explore-${figure.name}`;
+---
+
+<div class="wb-explore" data-explore data-shares={JSON.stringify(shares)} data-image={explore.image} data-ink="32,40,120" data-paper="246,238,222">
+  <figure class="wb-explore-live" data-explore-live hidden>
+    <div class="wb-explore-pair">
+      <div>
+        <img src={explore.image} alt="" width="240" height="150" class="wb-explore-img" />
+        <span class="wb-explore-tag">brightness</span>
+      </div>
+      <div>
+        <canvas width="240" height="150" role="img" aria-label={explore.alt} data-explore-canvas></canvas>
+        <span class="wb-explore-tag">light &lt; <span data-explore-value-copy>{start}</span>: ink</span>
+      </div>
+    </div>
+    <div class="wb-explore-control">
+      <label for={inputId}>Threshold <output for={inputId} data-explore-value>{start}</output></label>
+      <input id={inputId} type="range" min="0" max="255" step="5" value={start} data-explore-input aria-describedby={`${inputId}-share`} />
+      <span class="wb-explore-scale" aria-hidden="true"><span>0 black</span><span>255 white</span></span>
+    </div>
+    <p class="wb-explore-share" id={`${inputId}-share`} aria-live="polite" data-explore-share>
+      <b>{percent(start)} %</b> of the {pixels.toLocaleString('en-US')} pixels get ink
+    </p>
+    <figcaption>Move the threshold: the blue grows as it rises.</figcaption>
+  </figure>
+  <div data-explore-still>
+    <ConceptFigure figure={figure} />
+  </div>
+</div>

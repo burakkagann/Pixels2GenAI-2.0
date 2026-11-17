@@ -99,4 +99,55 @@ const workshopLessons = defineCollection({
   }),
 });
 
-export const collections = { lessons, workshopLessons };
+// The concept library (TRB-3 a, 16 Nov 2026; framework FW-1 to FW-6): one file per concept,
+// src/content/concepts/<id>.mdx, body = the Explain text (at most 70 words). Shown by <ConceptScreen>, linked from
+// a step by <ConceptLink>, recalled on Wrap up. Figures live in public/concepts/ when a public page uses the
+// concept, else in workshop-media/concepts/. The rules (scripts/check-concepts.mjs, src/lib/concepts/rules.mjs)
+// check what the schema cannot: word counts, one correct option, figure files, citations, lesson order.
+const conceptOption = z.object({
+  text: z.string(),
+  correct: z.boolean().optional(),
+  /** One sentence of feedback, shown when this option is tapped (FW-4). */
+  why: z.string(),
+});
+const conceptQuestion = z.object({ q: z.string(), code: z.string().optional(), options: z.array(conceptOption) });
+const concepts = defineCollection({
+  loader: glob({ pattern: '*.mdx', base: './src/content/concepts' }),
+  schema: z.object({
+    id: z.string(),
+    title: z.string(),
+    /** The short name in the step's link: "Concept: brightness numbers". */
+    short: z.string(),
+    /** One sentence (at most 20 words) that brings the idea back (CR-2, 16 Nov 2026): the step's Concept row, the
+     *  "Earlier" link and the Wrap up theory list. Never a step's code answer (critic). Checked by rules.mjs. */
+    keyIdea: z.string(),
+    /** The concept-map rows it covers (K1, K2, ...). */
+    covers: z.array(z.string()),
+    /** The lesson that first teaches it; a later lesson shows "Earlier: <short> (<label>)". */
+    introduced: z.object({ lesson: z.string(), label: z.string().optional() }),
+    figure: z.object({
+      kind: z.enum(['still', 'interactive']),
+      name: z.string(),
+      folder: z.string(),
+      ext: z.enum(['webp', 'png']).default('webp'),
+      /** Height of the 800 px wide phone drawing. */
+      phoneHeight: z.number(),
+      alt: z.string(),
+      caption: z.string(),
+      /** Interactive (FW-6): the threshold slider's grey image, its ink shares per threshold, and its start. */
+      explore: z
+        .object({ image: z.string(), shares: z.string(), start: z.number().int().min(0).max(255), alt: z.string() })
+        .optional(),
+    }),
+    worked: z.string(),
+    predict: conceptQuestion,
+    recall: conceptQuestion,
+    /** "Gonzalez & Woods, 2018": each must be in the References of every lesson that uses the concept. */
+    cite: z.array(z.string()),
+    /** A /lessons/<id> link to the full site lesson. */
+    deeper: z.string().optional(),
+    deeperLabel: z.string().optional(),
+  }),
+});
+
+export const collections = { lessons, workshopLessons, concepts };

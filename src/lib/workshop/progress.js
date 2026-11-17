@@ -32,8 +32,8 @@ const LESSON_FIELDS = /** @type {const} */ ({
   checksMask: 'number',
 });
 
-/** Lesson keys look like "w1-see/3.4.1": a workshop slug and a lesson id. */
-const KEY_RE = /^w[1-6]-[a-z]+\/\d+(?:\.\d+)*$/;
+/** Lesson keys look like "w1-see/3.4.1" (a workshop slug and a lesson id) or "try/print-the-berliner-dom" (the free /try lesson). */
+const KEY_RE = /^(?:w[1-6]-[a-z]+\/\d+(?:\.\d+)*|try\/[a-z0-9-]+)$/;
 
 /**
  * Keep only known fields of the right type, with sane numbers.

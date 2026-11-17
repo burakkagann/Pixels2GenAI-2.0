@@ -481,7 +481,11 @@ export function startLesson(root: HTMLElement) {
     const startedAt = typeof record().startedAt === 'number' ? record().startedAt : now;
     store.update(key, { reached, total: screens.length, startedAt, screenSince: now });
     if (screens[current].dataset.phase === 'wrap') showWrap();
+    // Concept framework (16 Nov 2026): concepts.ts follows the current screen for its "Back to step n" link.
+    root.dispatchEvent(new CustomEvent('wb:screen', { detail: current }));
   }
+  // Concept framework (16 Nov 2026): concepts.ts asks for a screen by index (a step's ConceptLink, Back to step n).
+  root.addEventListener('wb:go', (event) => go((event as CustomEvent<number>).detail));
 
   screens.forEach((screen, i) => {
     const nav = screen.querySelector<HTMLElement>('[data-nav]');
@@ -542,7 +546,7 @@ export function startLesson(root: HTMLElement) {
       const a = document.createElement('a');
       a.className = 'wb-btn wb-btn--next';
       a.href = arc;
-      a.textContent = 'Back to the arc →';
+      a.textContent = root.dataset.doneLink || 'Back to the arc →'; // PUBLIC MODE (/try): "See the workshops →"
       return a;
     };
 

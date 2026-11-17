@@ -1,0 +1,32 @@
+---
+id: brightness
+title: "A photo is a grid of brightness numbers"
+short: "brightness numbers"
+keyIdea: "Every pixel holds three numbers, red, green and blue, from 0 to 255; their average is its brightness."
+covers: [K1, K2, K3, K4]
+introduced: { lesson: try, label: "the free sample" }
+figure:
+  kind: still
+  name: grid-zoom
+  folder: /concepts/fig
+  phoneHeight: 1340
+  alt: "The Berliner Dom photo with a small square marked on the dome's lantern. Beside it the 6 by 6 pixels of that square, enlarged, each in its real colour with its brightness number, from 58 to 218. One is marked: (90 + 88 + 83) / 3 = 87."
+  caption: "A 6 × 6 corner of the Dom, enlarged. Each square is one pixel; the number is its brightness."
+worked: "The marked pixel is (90, 88, 83): (90 + 88 + 83) / 3 = 87, a dark grey."
+predict:
+  q: "A pixel is (90, 30, 0). What is its brightness?"
+  options:
+    - { text: "40", correct: true, why: "(90 + 30 + 0) / 3 = 40." }
+    - { text: "120", why: "That is the sum; brightness divides it by 3." }
+    - { text: "90", why: "That is the red number alone; brightness averages all three." }
+recall:
+  q: "What is the brightness of the pixel (200, 40, 60)?"
+  options:
+    - { text: "100", correct: true, why: "(200 + 40 + 60) / 3 = 100: the weak green and blue pull the strong red down." }
+    - { text: "300", why: "That is the sum of the three numbers; brightness divides it by 3." }
+    - { text: "200", why: "That is the red number alone; brightness averages all three, not the biggest one." }
+cite: ["Gonzalez & Woods, 2018"]
+deeper: /lessons/1.1.1
+---
+
+A digital photo is a grid of tiny squares called pixels. This one has 300 rows and 480 columns, 144,000 pixels. Each pixel stores three numbers, for red, green and blue light, each from 0 (none) to 255 (full)<Cite c="Gonzalez & Woods, 2018" />. Here a pixel's brightness is the average of its three numbers. 0 is black, 255 is white.

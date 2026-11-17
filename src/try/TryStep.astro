@@ -1,23 +1,37 @@
 ---
 /**
- * A /try screen with its minutes in the kicker ("Step 1 · Predict · 2 min"), as in the approved mock.
+ * A /try screen with its minutes in the kicker ("Step 1 · Predict · 3 min"), as in the approved mock.
  * The player's Step takes no minutes, so this wraps Screen the same way Step does (player files stay as copied).
+ * Notes on the step (SN-1, 16 Nov 2026; was "Theory", TF-3): at most three optional rows, each tied to the step's code.
+ * (a) Concept: the ConceptLink, first row of the panel (CL b). (b) <Theory slot="theory" title="Watch out" line="…">: one code detail,
+ * shown before running. (c) <Theory slot="after" title="Why it worked" line="…">: opens only after the check passes.
+ * Screen names the panel "Notes for step <n>". No theory here: it lives on the concept screens.
+ * Concept framework (TT-A, 16 Nov 2026): `concept` names the concept the step uses; the ConceptLink in the panel
+ * reopens its concept screen (condition 3).
  */
 import Screen from '@/components/workshop-lesson/Screen.astro';
+import ConceptLink from '@/components/workshop-lesson/ConceptLink.astro';
 
 interface Props {
   n: number;
   kind: 'predict' | 'write' | 'fix';
   title: string;
   minutes: number;
+  /** The concept this step uses (src/content/concepts/<id>.mdx). */
+  concept: string;
+  /** Links to theory parts on earlier steps: [id, label] pairs. */
+  earlier?: [string, string][];
 }
 
 const KIND_LABEL = { predict: 'Predict', write: 'Write', fix: 'Fix' } as const;
-const { n, kind, title, minutes } = Astro.props;
+const { n, kind, title, minutes, concept, earlier } = Astro.props;
 ---
 
-<Screen phase="steps" kind={kind} kicker={`Step ${n} · ${KIND_LABEL[kind]} · ${minutes} min`} title={title}>
+<Screen phase="steps" kind={kind} kicker={`Step ${n} · ${KIND_LABEL[kind]} · ${minutes} min`} title={title} theoryFor={`step ${n}`} notes earlier={earlier}>
   <slot />
   <slot name="task" slot="task" />
+  <ConceptLink slot="concept" id={concept} lesson="try" inPanel />
+  <slot name="theory" slot="theory" />
+  <slot name="after" slot="after" />
   <slot name="work" slot="work" />
 </Screen>

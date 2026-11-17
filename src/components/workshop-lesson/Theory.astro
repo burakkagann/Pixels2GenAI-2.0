@@ -1,0 +1,47 @@
+---
+/**
+ * One part of a step's theory (TH1, approved 5 Nov): replaces the Concepts tab
+ * (B3, DEC-128) and the "Why this works" fold (DEC-119). Written on its step:
+ *   <Theory slot="theory" title="Padding" line="line 6">…</Theory>   For this task
+ *   <Theory slot="after" title="Speed" line="line 8">…</Theory>      Once it works
+ * Anything that gives the step's answer goes in "after": it stays folded until
+ * the step's check passes.
+ *   id      anchor #theory-<id>, for the Earlier row and links in hints
+ *   line    where it is in the code, as shown ("lines 2 and 10")
+ *   name    the name on the strip, if not the title; "" leaves it off
+ *   list    the name in the Wrap up list, if not the title; "" leaves it off
+ *   wrap    "after" puts it in the row "After this lesson"; "skip" leaves it
+ *           out of the list (a part already listed on an earlier step)
+ *   deeper  a /lessons/<id> link to the full site lesson
+ */
+interface Props {
+  id?: string;
+  title: string;
+  line?: string;
+  name?: string;
+  list?: string;
+  wrap?: 'after' | 'skip';
+  deeper?: string;
+  deeperLabel?: string;
+}
+
+const { id, title, line, name, list, wrap, deeper, deeperLabel } = Astro.props;
+if (id && !/^[a-z0-9-]+$/.test(id)) throw new Error(`Theory id must be lower-case words with dashes: ${id}`);
+if (deeper && !/^\/lessons\/[\d.]+(#[\w-]+)?$/.test(deeper)) throw new Error(`Theory: deeper must be a /lessons/<id> link: ${deeper}`);
+const lessonId = deeper?.match(/^\/lessons\/([\d.]+)/)?.[1];
+---
+
+<section class="wb-part" id={id ? `theory-${id}` : undefined} data-part data-name={name ?? title} data-list={list ?? title} data-wrap={wrap}>
+  <div class="wb-part-head">
+    <h3>{title}</h3>
+    {line && <span class="wb-part-line">{line}</span>}
+  </div>
+  <div class="wb-part-body">
+    <slot />
+    {deeper && (
+      <a class="wb-deeper" href={deeper} target="_blank" rel="noopener">
+        Go deeper: {deeperLabel ?? `the full lesson ${lessonId} on the site`} <span aria-hidden="true">↗</span>
+      </a>
+    )}
+  </div>
+</section>

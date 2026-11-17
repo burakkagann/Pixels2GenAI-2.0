@@ -1,0 +1,52 @@
+---
+/**
+ * The concept link of a step (condition 3).
+ * In the notes panel (CR-2, 16 Nov 2026; the first row of "Notes for step n", CL b): a 72 px thumbnail of the
+ * concept's figure (light and dark; an interactive concept shows its static figure), the title, the key idea (one
+ * sentence) and "Open the concept ↗", which opens the concept screen; there "Back to step n" returns
+ * (src/lib/workshop/concepts.ts). Without JavaScript the link is a plain jump to #concept-<id>, which stays on the page.
+ * A concept first taught in an earlier lesson shows "Earlier: <short> (<label>) ↗" with its key idea; the link opens
+ * its Go deeper page in a new tab.
+ * Outside the panel: one line under the task, "Concept: <short> ↩" (or the Earlier line with its key idea).
+ *   <ConceptLink id="brightness" lesson="try" inPanel />
+ */
+import { getEntry } from 'astro:content';
+import ConceptFigure from './ConceptFigure.astro';
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
+
+interface Props {
+  id: string;
+  /** This lesson's id, as in the concept's `introduced.lesson`. */
+  lesson: string;
+  /** In the notes panel: the CR-2 row (thumbnail, title, key idea, link); the row label says "Concept". */
+  inPanel?: boolean;
+}
+
+const { id, lesson, inPanel = false } = Astro.props;
+const entry = await getEntry('concepts', id);
+if (!entry) throw new Error(`ConceptLink: unknown concept "${id}"`);
+const { title, short, keyIdea, introduced, deeper, figure } = entry.data;
+const earlier = introduced.lesson !== lesson;
+if (earlier && !deeper) throw new Error(`ConceptLink: "${id}" comes from an earlier lesson but has no deeper link`);
+const earlierLabel = `${short} (${introduced.label ?? introduced.lesson})`;
+const keyHtml = inlineMarkdownHtml(keyIdea);
+---
+
+{inPanel ? (
+  <div class="wb-concept-card">
+    <ConceptFigure figure={figure} thumb alt={figure.alt} />
+    <div class="wb-concept-card-text">
+      <span class="wb-concept-card-title">{title}</span>
+      <p class="wb-concept-card-key" set:html={keyHtml} />
+      {earlier
+        ? <a class="wb-concept-card-open" href={deeper} target="_blank" rel="noopener">Earlier: {earlierLabel}<span aria-hidden="true">{" ↗"}</span><span class="sr-only"> (opens in a new tab)</span></a>
+        : <a class="wb-concept-card-open" href={`#concept-${id}`} data-concept-link={id}>Open the concept<span class="sr-only">: {title}</span><span aria-hidden="true">{" ↗"}</span></a>}
+    </div>
+  </div>
+) : (
+  <p class="wb-concept-link">
+    {earlier
+      ? <>Earlier: <a href={deeper} target="_blank" rel="noopener">{earlierLabel} <span aria-hidden="true">↗</span></a> <span class="wb-concept-link-key" set:html={keyHtml} /></>
+      : <>Concept: <a href={`#concept-${id}`} data-concept-link={id}>{short} <span aria-hidden="true">↩</span></a></>}
+  </p>
+)}

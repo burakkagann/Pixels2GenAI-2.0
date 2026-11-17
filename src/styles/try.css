@@ -1,8 +1,5 @@
 /* /try only: the few things the workbench CSS does not cover (public mode). Tokens only. */
 
-/* The tutor line that stands in for the tutor button (public mode). */
-.try-tutor-line { margin: 0; font-family: var(--mono); font-size: 12.5px; color: var(--fg-3); }
-
 /* Public mode has no tutor: the error box's "Ask about this error" button (cells.ts, unchanged) stays hidden. */
 .wb [data-tutor-error] { display: none; }
 
@@ -14,18 +11,17 @@
 .wb-idea .try-swatch { display: block; }
 .wb-idea .try-swatch img { width: 100%; max-width: 420px; height: auto; image-rendering: pixelated; }
 
-/* The wrap (done box + own-words question) shows once the last step's check has passed; the hints go. */
-.try-wrap, .try-own, .try-after { display: none; }
-.wb-screen:has([data-verdict][data-state="pass"]) .try-wrap { display: flex; }
-.wb-screen:has([data-verdict][data-state="pass"]) .try-own { display: flex; }
-.wb-screen:has([data-verdict][data-state="pass"]) .try-after { display: flex; flex-direction: column; gap: 10px; }
-.wb-screen:has([data-verdict][data-state="pass"]) .wb-help { display: none; }
-.try-own { flex-direction: column; gap: 6px; padding: 14px 16px; background: var(--bg-2); }
-.try-own p { margin: 0; font-size: 17px; line-height: 1.55; }
-
 .try-draft { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px dashed currentColor; padding: 0 4px; opacity: .8; }
 
 /* The bar title is "Free sample · Dom poster"; on phones only "Free sample" fits next to the back link. */
 @media (max-width: 520px) {
   .wb-bar-more { display: none; }
 }
+
+/* The references hold long URLs: let them break, so the Wrap up does not scroll sideways on a phone. */
+.wb-idea .wb-hint[data-kind="note"] li { overflow-wrap: anywhere; }
+
+/* No code on Wrap up or on the last screen (TryDone): the phone bar's Run steps aside, and Next on the last screen,
+   as the brief's Next is hidden there (lesson.ts). */
+.wb:has(.wb-screen[data-phase="wrap"]:not([hidden])) .wb-phonebar [data-phone-run] { visibility: hidden; }
+.wb:has(.wb-main > .wb-screen:last-of-type:not([hidden])) .wb-phonebar [data-phone-next] { visibility: hidden; }

@@ -1,0 +1,39 @@
+---
+/**
+ * A concept figure (still): <name>.<light|dark>.<ext> for wide screens and <name>.<theme>.phone.<ext>, a stacked
+ * drawing 800 px wide, for screens up to 600 px. The page shows the one for its theme (workshop-lesson-b.css).
+ * As the player's Diagram, but for the concept library's folders: /concepts/fig (public, under public/) or
+ * /workshop-media/concepts/... (gated, TRB-3 a). The files are checked by ConceptScreen (rules.mjs).
+ *   thumb  a small copy for the Wrap up list and the step's Concept row: no caption, no phone source
+ *   alt    with thumb: the image's alt text (the step's Concept row, CR-2); without it a thumb is decorative (alt="")
+ * An interactive concept (threshold) passes its static figure here, so a thumb never needs the slider.
+ */
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
+
+interface Props {
+  figure: { name: string; folder: string; ext?: string; phoneHeight: number; alt: string; caption: string };
+  thumb?: boolean;
+  alt?: string;
+}
+
+const { figure, thumb = false, alt } = Astro.props;
+const ext = figure.ext ?? 'webp';
+const base = `${figure.folder}/${figure.name}`;
+const variants = (['light', 'dark'] as const).map((theme) => ({
+  theme,
+  src: `${base}.${theme}.${ext}`,
+  phone: `${base}.${theme}.phone.${ext}`,
+}));
+---
+
+<figure class:list={['wb-dg', 'wb-concept-fig', { 'wb-concept-fig--thumb': thumb }]}>
+  <div class="wb-dg-frame">
+    {variants.map(({ theme, src, phone }) => (
+      <picture class={`wb-dg-img wb-dg-img--${theme}`}>
+        {!thumb && <source media="(max-width: 600px)" srcset={phone} width={400} height={figure.phoneHeight / 2} />}
+        <img src={src} alt={thumb ? (alt ?? '') : figure.alt} width="700" height="380" loading="lazy" decoding="async" />
+      </picture>
+    ))}
+  </div>
+  {!thumb && <figcaption><span set:html={inlineMarkdownHtml(figure.caption)} /></figcaption>}
+</figure>

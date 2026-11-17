@@ -10,6 +10,8 @@ import '@/styles/tokens-workshop.css';
 import '@/styles/workshop-lesson.css';
 import '@/styles/workshop-lesson-b.css';
 import '@/styles/try.css';
+import '@/styles/concepts.css';
+import '@/styles/cite.css';
 
 interface Props {
   title: string;
@@ -20,7 +22,10 @@ const { title, description } = Astro.props;
 ---
 
 <Base title={`${title}: a free sample step`} description={description} focus announceModal={false}>
-  <div class="wb" data-lesson-key="try/print-the-berliner-dom" data-helpers="/try-media/helpers.py" data-arc="/workshops" data-public="true">
+  <div class="wb" data-lesson-key="try/print-the-berliner-dom" data-helpers="/try-media/helpers.py" data-arc="/workshops" data-public="true"
+    data-done-title="✓ Sample done."
+    data-done-text="That was one lesson in the workshop format: three new lessons per Saturday, one Saturday a month, six times from 5 Dec. In the workshops, an AI tutor also explains each step."
+    data-done-link="See the workshops →">
     <header class="wb-bar">
       <a class="wb-bar-back" href="/workshops">← Workshops</a>
       <span class="wb-bar-title">Free sample<span class="wb-bar-more"> · Dom poster</span></span>
@@ -44,7 +49,14 @@ const { title, description } = Astro.props;
 
 <script>
   import { startLesson } from '@/lib/workshop/lesson';
+  import { startConcepts } from '@/lib/workshop/concepts';
+  import { startCites } from '@/lib/workshop/cite';
 
   const root = document.querySelector<HTMLElement>('.wb');
-  if (root) startLesson(root);
+  if (root) {
+    const hash = window.location.hash;   // lesson.ts rewrites it to #s<n>; a #concept-<id> link needs the original
+    startLesson(root);
+    startConcepts(root, hash);
+    startCites(root);
+  }
 </script>

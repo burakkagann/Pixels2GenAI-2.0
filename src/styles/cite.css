@@ -1,0 +1,114 @@
+/* ============================================================
+   Inline citations (CT-2, 16 Nov 2026): the [n] marker, its card and the numbered Sources list on Wrap up.
+   Values follow the approved mock (w1-structure, Part B). Tokens only. Runtime: src/lib/workshop/cite.ts.
+   ============================================================ */
+
+sup.wb-cite { font-size: .72em; line-height: 0; vertical-align: super; white-space: nowrap; margin-left: 1px; }
+.wb-cite-ref {
+  position: relative;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0 1px;
+  margin: 0;
+  font: inherit;
+  font-family: var(--mono);
+  color: var(--link);
+  cursor: pointer;
+}
+.wb-cite-ref::after { content: ""; position: absolute; inset: -12px -8px; }   /* a bigger tap target than the digits */
+.wb-cite-ref:hover { color: var(--link-hover); text-decoration: underline; }
+.wb-cite-ref:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.wb-cite-ref.is-open { background: var(--bg-3); outline: 1px solid var(--link); }
+
+/* The card: a pop over the text, or a sheet along the bottom where there is no hover or the window is narrow. */
+.wb-cite-card {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  gap: 8px;
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+  padding: 12px 14px;
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--line-2);
+  border-top: 2px solid var(--link);
+  box-shadow: 4px 4px 0 var(--line);
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: left;
+  vertical-align: baseline;
+}
+.wb-cite-card.wb-cite-sheet {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+  max-width: none;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: none;
+}
+.wb-cite-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--link);
+}
+.wb-cite-text { color: var(--fg-2); overflow-wrap: anywhere; }
+.wb-cite-text em { font-style: italic; }
+.wb-cite-act {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg-3);
+  border-top: 1px dotted var(--line-2);
+  padding-top: 8px;
+}
+a.wb-cite-act { color: var(--link); text-decoration: none; }
+a.wb-cite-act:hover { color: var(--link-hover); text-decoration: underline; }
+a.wb-cite-act:focus-visible, .wb-cite-close:focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
+.wb-cite-close {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  background: none;
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  padding: 6px 12px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+/* The one numbered list, in Wrap up: [1] before each reference, as the cards and markers say. */
+.wb-hint-body ol[data-sources] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  counter-reset: wb-source;
+}
+ol[data-sources] > li {
+  position: relative;
+  padding-left: 3em;
+  counter-increment: wb-source;
+  overflow-wrap: anywhere;
+}
+ol[data-sources] > li::before {
+  content: "[" counter(wb-source) "]";
+  position: absolute;
+  left: 0;
+  font-family: var(--mono);
+  font-size: .85em;
+  color: var(--fg-3);
+}

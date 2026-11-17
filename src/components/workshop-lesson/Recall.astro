@@ -1,0 +1,30 @@
+---
+/**
+ * Recall on Wrap up (FW-3, TRB-2 b): one question per concept screen, from memory, before the summary. The rest of
+ * Wrap up (the three lines, the theory list, the sources) opens when every question is answered
+ * or on "Skip". Answers stay in this page's memory (src/lib/workshop/concepts.ts). Without JavaScript all of
+ * Wrap up shows at once and each question has its "Show the answer" fold.
+ *   <Recall ids={['brightness', 'threshold', 'bands']} />
+ */
+import { getEntry } from 'astro:content';
+import Predict from './Predict.astro';
+
+interface Props {
+  ids: string[];
+}
+
+const { ids } = Astro.props;
+const questions = await Promise.all(ids.map(async (id) => {
+  const entry = await getEntry('concepts', id);
+  if (!entry) throw new Error(`Recall: unknown concept "${id}"`);
+  return entry.data.recall;
+}));
+---
+
+<section class="wb-recall" data-recall-block aria-label="Recall">
+  <p class="wb-recall-lead">From memory first: one question for each concept, no looking back.</p>
+  {questions.map((question, i) => (
+    <Predict q={question.q} code={question.code} options={question.options} label={`Recall ${i + 1} of ${questions.length}`} recall />
+  ))}
+  <button type="button" class="wb-link wb-recall-skip" data-recall-skip hidden>Skip to the summary</button>
+</section>

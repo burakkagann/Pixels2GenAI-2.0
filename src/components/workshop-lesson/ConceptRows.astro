@@ -1,0 +1,41 @@
+---
+/**
+ * The concept rows of "All the theory in this lesson" on Wrap up: one row per concept screen, with a thumb of its
+ * figure, its title and key idea (CR-2: the same sentence as the step's Concept row), then its Explain text and worked example. Placed inside <TheoryList> (its slot), before the step notes that
+ * lesson.ts adds. Its own class (wb-concept-row), so lesson.ts's rebuild of the step rows leaves it alone.
+ *   <TheoryList><ConceptRows ids={['brightness', 'threshold', 'bands']} /></TheoryList>
+ */
+import { getEntry, render } from 'astro:content';
+import Cite from './Cite.astro';
+import ConceptFigure from './ConceptFigure.astro';
+import { inlineMarkdownHtml } from '@/lib/inlineMarkdown';
+
+interface Props {
+  ids: string[];
+}
+
+const { ids } = Astro.props;
+const rows = await Promise.all(ids.map(async (id, i) => {
+  const entry = await getEntry('concepts', id);
+  if (!entry) throw new Error(`ConceptRows: unknown concept "${id}"`);
+  const { Content } = await render(entry);
+  return { n: i + 1, data: entry.data, Content };
+}));
+---
+
+{rows.map(({ n, data, Content }) => (
+  <details class="wb-concept-row">
+    <summary>
+      <b>Concept {n}</b>
+      <span class="wb-concept-row-thumb"><ConceptFigure figure={data.figure} thumb /></span>
+      <span class="wb-concept-row-name">
+        <span>{data.title}</span>
+        <span class="wb-concept-row-key" set:html={inlineMarkdownHtml(data.keyIdea)} />
+      </span>
+    </summary>
+    <div class="wb-concept-rowbody">
+      <Content components={{ Cite }} />
+      <p class="wb-concept-row-worked">{data.worked}</p>
+    </div>
+  </details>
+))}

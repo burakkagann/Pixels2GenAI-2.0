@@ -1,0 +1,25 @@
+---
+/**
+ * The /try Wrap up screen (TF-3, 16 Nov 2026), as the player's WrapUp: the three lines, the theory list, credit and
+ * references. The done box is its own last screen, <TryDone /> (Kağan's test run, 16 Nov 2026).
+ * Recall only (FW-3, TRB-2, 16 Nov 2026; the own-words task was dropped on Kağan's test run): one question per concept
+ * screen (`recall`, in screen order), then the rest (everything in the body) opens after the answers or "Skip"
+ * (src/lib/workshop/concepts.ts).
+ */
+import Screen from '@/components/workshop-lesson/Screen.astro';
+import Recall from '@/components/workshop-lesson/Recall.astro';
+
+interface Props {
+  title?: string;
+  minutes: number;
+  /** The concept ids of the lesson's concept screens, in order. */
+  recall: string[];
+}
+
+const { title = 'What you can do now', minutes, recall } = Astro.props;
+---
+
+<Screen phase="wrap" kind="wrap" kicker={`Wrap up · ${minutes} min`} title={title}>
+  <div data-recall-rest><slot /></div>
+  <Recall slot="task" ids={recall} />
+</Screen>

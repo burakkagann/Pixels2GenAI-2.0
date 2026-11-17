@@ -1,4 +1,4 @@
-<MakeItFirst title="Print the Berliner Dom as a poster" minutes={3}>
+<MakeItFirst title="Print the Berliner Dom as a poster" minutes={2}>
 
 <Task slot="task">Run the code (Ctrl+Enter). Change `DARK` on line 4 to `60`, run, then `120`, run. Which poster has the most blue?</Task>
 
@@ -14,69 +14,97 @@
 
 <Hint>`DARK` is a brightness from 0 (black) to 255 (white). Pixels darker than it get the blue ink.</Hint>
 <Hint>A higher `DARK` inks more of the photo. Keep it below `MID`.</Hint>
+<Hint kind="explain">Think of paint by numbers: every square of the photo already has a number. The code only decides which of three pots each number dips into.</Hint>
 
 <Cell slot="work" file="poster_dom.py" />
 
 </MakeItFirst>
 
-<TryStep n={1} kind="predict" title="Ask a yes/no question" minutes={2}>
+<ConceptScreen id="brightness" n={1} of={3} minutes={1} />
 
-`light < THRESHOLD` asks "is this number smaller?" and the answer is `True` or `False`. Four pixels, four answers: a `True` square gets ink.
+<TryStep n={1} kind="predict" title="Ask a yes/no question" minutes={3} concept="brightness">
+
+`light < THRESHOLD` asks one yes/no question: is this pixel darker than the threshold? The answer is `True` or `False`.
+
+<Diagram folder="/try-media/fig" name="four-pixels" ext="webp" phoneHeight={1250} alt="The Dom photo with four pixels circled: stone in shadow, sky, green dome, stone. Each has three numbers, red, green and blue, and one brightness: 30, 200, 120 and 90." caption="The four numbers in the code are these four pixels." />
 
 <Task slot="task">Before you run: which numbers will print `True`? Run. Then change `THRESHOLD` on line 1 so exactly three squares get ink.</Task>
+
+<Theory slot="theory" title="Watch out" line="line 4" list="watch out: < is not ≤">
+
+`120 < 120` is `False`: a pixel exactly at the threshold stays paper.
+
+</Theory>
 
 <Hint>`30 < 100` is `True`; `200 < 100` is `False`. Do the other two the same way.</Hint>
 <Hint>The three darkest numbers are 30, 90 and 120. The threshold must be above 120 and no more than 200.</Hint>
 <Hint kind="solution">`THRESHOLD = 150`</Hint>
+<Hint kind="explain">A threshold is a mark on a ruler from 0 to 255. Every number left of the mark is `True` and gets ink; every number right of it stays paper.</Hint>
 
 <Cell slot="work" file="step1_compare.py" check />
 
 </TryStep>
 
-<TryStep n={2} kind="write" title="Ink the dark pixels" minutes={3}>
+<ConceptScreen id="threshold" n={2} of={3} minutes={1} />
 
-A rule is a small function: it gets one brightness and returns a colour. `paint` uses it to colour every pixel of the photo, all 144,000, and builds the poster.
+<TryStep n={2} kind="write" title="Ink the dark pixels" minutes={2} concept="threshold">
+
+A rule is a function: one brightness in, one colour out. `paint` asks it about every pixel, all 144,000, and builds the poster from the answers.
 
 <Task slot="task">Replace `___` so that dark pixels (below `THRESHOLD`) return the ink.</Task>
 
 <Hint>You wrote this question in step 1. Which two names does it compare?</Hint>
 <Hint>The name on line 6 is `light`; the number to compare it with is on line 2.</Hint>
 <Hint kind="solution">`if light < THRESHOLD:`</Hint>
+<Hint kind="explain">The rule works like a door check: each pixel shows its brightness, the rule asks one question and sends the pixel to the ink pile or the paper pile.</Hint>
 
 <Cell slot="work" file="step2_rule.py" check />
 
 </TryStep>
 
-<TryStep n={3} kind="fix" title="The blue that never shows" minutes={3}>
+<ConceptScreen id="bands" n={3} of={3} minutes={1} />
+
+<TryStep n={3} kind="fix" title="The blue that never shows" minutes={3} concept="bands">
+
+Three inks need two questions: below 90 blue, below 150 pink, the rest paper. Python reads the `if`s from the top.
 
 <Task slot="task">This rule should give three tones: blue ink, pink, paper. No blue shows. Change the order of the two `if`s so the blue appears.</Task>
 
-<div class="wb-wrap-status try-wrap" data-state="done">
-  <p><span class="wb-wrap-title">✓ Sample done.</span> That was one lesson in the workshop format: three new lessons per Saturday, one Saturday a month, six times from 5 Dec.</p>
-  <a class="wb-btn wb-btn--next" href="/workshops">See the workshops →</a>
-</div>
+<Theory slot="after" title="Why it worked" line="lines 7 and 9" list="why it worked: narrow first">
 
-<div class="try-own">
-  <span class="wb-label">In your own words</span>
-  <p>A pixel at brightness 10 is below 90 and below 150. Why did the blue ink never show when 150 came first?</p>
-</div>
+<Diagram folder="/try-media/fig" name="if-order" ext="webp" phoneHeight={1230} alt="Two rulers. With the below-90 question first: blue, pink and paper bands, and a pixel at 10 lands in blue. With the below-150 question first: only pink and paper; the pixel at 10 stops in pink." caption="The same two `if`s in both orders. A pixel at 10 stops at the first `True`." />
 
-Python reads the `if`s from the top and stops at the first one that is `True`. So the narrow question (below 90) must come before the wide one (below 150).
+In a chain of `if`s the first `True` wins, so the narrow question (below 90) goes before the wide one (below 150).
+
+</Theory>
 
 <Hint>Brightness 10 is below 150, so the first `if` already answers for it. Which `if` should come first?</Hint>
 <Hint>Check `light < 90` first, then `light < 150`. Keep the numbers.</Hint>
 <Hint kind="solution">Move `if light < 90:` and its `return INK` above `if light < 150:`.</Hint>
-
-<div class="try-after">
-  <p class="try-credit">Photo: Ansgar Koreng, Berliner Dom und Fernsehturm, 2017, CC0.</p>
-  <Hint kind="note" label="References (2)">
-    <ol>
-      <li>Harris, C. R., Millman, K. J., van der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., van Kerkwijk, M. H., Brett, M., Haldane, A., del Río, J. F., Wiebe, M., Peterson, P., … Oliphant, T. E. (2020). Array programming with NumPy. *Nature, 585*, 357–362. https://doi.org/10.1038/s41586-020-2649-2</li>
-      <li>Koreng, A. (2017). *Berliner Dom und Fernsehturm, 170117, ako.jpg* [Photograph]. Wikimedia Commons. https://commons.wikimedia.org/wiki/File:Berliner_Dom_und_Fernsehturm,_170117,_ako.jpg (CC0 1.0)</li>
-    </ol>
-  </Hint>
-</div>
+<Hint kind="explain">Picture two doors in a row. A pixel walks through the first door that lets it in. If the wide door (below 150) comes first, every dark pixel takes it and nobody reaches the narrow one.</Hint>
 
 <Cell slot="work" file="step3_fix.py" check />
 
 </TryStep>
+
+<TryWrap minutes={2} recall={["brightness", "threshold", "bands"]}>
+
+- A pixel is three numbers; their average is its brightness, 0 to 255.
+- `<` asks a yes/no question; a function turns the answer into an ink.
+- In a chain of `if`s the first `True` wins, so the narrow question comes first.
+
+<TheoryList><ConceptRows ids={["brightness", "threshold", "bands"]} /></TheoryList>
+
+<p class="try-credit">Photo: Ansgar Koreng, Berliner Dom und Fernsehturm, 2017, CC0.</p>
+
+<Hint kind="note" label="Sources (3)">
+  <ol data-sources="">
+    <li>Gonzalez, R. C., & Woods, R. E. (2018). *Digital image processing* (4th ed.). Pearson.</li>
+    <li>Kipphan, H. (Ed.). (2001). *Handbook of print media: Technologies and production methods*. Springer. https://doi.org/10.1007/978-3-540-29900-4</li>
+    <li>Koreng, A. (2017). *Berliner Dom und Fernsehturm, 170117, ako.jpg* [Photograph]. Wikimedia Commons. https://commons.wikimedia.org/wiki/File:Berliner_Dom_und_Fernsehturm,_170117,_ako.jpg (CC0 1.0)</li>
+  </ol>
+</Hint>
+
+</TryWrap>
+
+<TryDone />
