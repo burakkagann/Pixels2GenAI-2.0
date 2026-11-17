@@ -583,7 +583,8 @@ export function startLesson(root: HTMLElement) {
     const anyway = document.createElement('button');
     anyway.type = 'button';
     anyway.className = 'wb-link';
-    anyway.textContent = 'Move on anyway (we note it, so we can improve the lesson)';
+    // PUBLIC MODE (/try): nothing is sent, so no "we note it".
+    anyway.textContent = root.dataset.public ? 'Move on anyway' : 'Move on anyway (we note it, so we can improve the lesson)';
     anyway.addEventListener('click', () => {
       store.update(key, { anyway: true, anywayAt: Date.now() });
       window.location.href = arc;

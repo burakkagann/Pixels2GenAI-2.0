@@ -13,6 +13,7 @@ sup.wb-cite { font-size: .72em; line-height: 0; vertical-align: super; white-spa
   margin: 0;
   font: inherit;
   font-family: var(--mono);
+  line-height: 1;   /* the sup has line-height 0; without this the button is 0 px tall and its focus ring is a bar over the digits */
   color: var(--link);
   cursor: pointer;
 }

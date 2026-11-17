@@ -1359,6 +1359,7 @@
 /* BF-3: links in a panel are underlined. */
 .fmt-a p a,
 .fmt-a li > a,
+.fmt-faq-more a,
 .fmt-refs a {
   color: var(--link);
   text-decoration: underline;
@@ -1531,7 +1532,9 @@
 }
 
 @media (max-width: 640px) {
-  .series-hero .hero-new { margin: -16px 0 24px; }
+  /* One line from 360 px: a smaller line and a tighter chip (the chip stays at the 12 px phone floor). */
+  .series-hero .hero-new { margin: -16px 0 24px; font-size: clamp(12px, 3.4vw, 16px); }
+  .series-hero .hero-new .ws-chip { letter-spacing: 0; padding: 5px 6px; margin-right: 6px; }
   .try-band .fmt-sub { margin-top: 40px; }
   .ws .try-card { grid-template-columns: minmax(0, 1fr); padding: 14px; }
   .try-later { grid-template-columns: minmax(0, 1fr); gap: 18px; }
