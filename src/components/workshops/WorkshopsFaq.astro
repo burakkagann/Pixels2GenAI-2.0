@@ -113,11 +113,17 @@ const GROUPS: Group[] = [
       { q: "Is it for artists who don't want to code?", lines: ["You learn to write the code; that's the craft here. Your own photos and ideas drive the piece."] },
       { q: 'Are these the lessons on pixels2genai.art?', html: '<p>Some cover the same ideas, rebuilt for the series as short screens with code on every one. <a href="/try">Try a free sample lesson</a>.</p>' },
       {
-        q: "Can't I learn this from videos?",
-        lines: [
-          "Parts of it, yes. Here you get a clear order, you write the code yourself, you get help when you're stuck, and you leave with a finished piece.",
-          'The six workshops follow the Pixels2GenAI curriculum: foundations, then machine learning, then generative AI.',
-        ],
+        // FQ-A (18 Nov): replaces "Can't I learn this from videos?". Claims and refs 3–6 from
+        // workshop-planning/research/in-person-vs-home-2026-11-18 (lines L1–L3, L5); the curriculum-order line was dropped
+        // because the calendar arc and the cards already show Foundations, then Machine learning, then Generative AI.
+        q: 'Why come to the studio if I could do this at home?',
+        html:
+          '<ul class="fmt-points">' +
+          '<li>You could, and after the workshop you can: the lessons and the AI tutor stay open for 30 days.</li>' +
+          `<li>Most people who learn alone online stop: in Harvard's and MIT's open courses, about 3 in 100 finished.${cite(3)}</li>` +
+          `<li>What helps is guidance and other people. In a review of 45 studies, online learning only did better when it was guided or done together.${cite(4)}</li>` +
+          `<li>Beginners get stuck right after an error, and many don't ask.${cite(5)}<sup>,</sup>${cite(6)} Here you look up and the facilitator comes over, so you leave with a finished piece.</li>` +
+          '</ul>',
       },
     ],
   },
@@ -217,6 +223,10 @@ const numbered = GROUPS.map((g) => ({ ...g, items: g.items.map((it) => ({ ...it,
     <ol>
       <li id="fmt-ref-1">Freeman, S., Eddy, S. L., McDonough, M., Smith, M. K., Okoroafor, N., Jordt, H., &amp; Wenderoth, M. P. (2014). Active learning increases student performance in science, engineering, and mathematics. <i>PNAS, 111</i>(23), 8410–8415. <a href="https://doi.org/10.1073/pnas.1319030111">https://doi.org/10.1073/pnas.1319030111</a></li>
       <li id="fmt-ref-2">Sentance, S., Waite, J., &amp; Kallia, M. (2019). Teaching computer programming with PRIMM: A sociocultural perspective. <i>Computer Science Education, 29</i>(2–3), 136–176. <a href="https://doi.org/10.1080/08993408.2019.1608781">https://doi.org/10.1080/08993408.2019.1608781</a></li>
+      <li id="fmt-ref-3">Reich, J., &amp; Ruipérez-Valiente, J. A. (2019). The MOOC pivot. <i>Science, 363</i>(6423), 130–131. <a href="https://doi.org/10.1126/science.aav7958">https://doi.org/10.1126/science.aav7958</a></li>
+      <li id="fmt-ref-4">Means, B., Toyama, Y., Murphy, R., Bakia, M., &amp; Jones, K. (2010). <i>Evaluation of evidence-based practices in online learning: A meta-analysis and review of online learning studies</i>. U.S. Department of Education. <a href="https://internet.psych.wisc.edu/wp-content/uploads/532-Master/532-UnitPages/Unit-03/DOE_OnlineLearningMetaAnalysis_2010.pdf">https://internet.psych.wisc.edu/wp-content/uploads/532-Master/532-UnitPages/Unit-03/DOE_OnlineLearningMetaAnalysis_2010.pdf</a></li>
+      <li id="fmt-ref-5">Bosch, N., &amp; D'Mello, S. (2017). The affective experience of novice computer programmers. <i>International Journal of Artificial Intelligence in Education, 27</i>(1), 181–206. <a href="https://eric.ed.gov/?id=EJ1126594">https://eric.ed.gov/?id=EJ1126594</a></li>
+      <li id="fmt-ref-6">Marwan, S., Dombe, A., &amp; Price, T. W. (2020). Unproductive help-seeking in programming: What it is and how to address it. In <i>Proceedings of the 2020 ACM Conference on Innovation and Technology in Computer Science Education</i> (pp. 54–60). ACM. <a href="https://doi.org/10.1145/3341525.3387394">https://doi.org/10.1145/3341525.3387394</a></li>
     </ol>
   </div>
 </section>
