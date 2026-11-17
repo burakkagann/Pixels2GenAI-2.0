@@ -139,9 +139,6 @@
 .wb-concept-rowbody p { margin: 0; font-size: 15.5px; line-height: 1.55; }
 .wb-concept-rowbody .wb-concept-row-worked { font-family: var(--mono); font-size: 13px; color: var(--fg-2); }
 
-/* No code on a concept screen: the phone bar's Run steps aside. */
-.wb:has(.wb-screen[data-kind="concept"]:not([hidden])) .wb-phonebar [data-phone-run] { visibility: hidden; }
-
 @media (max-width: 900px) {
   .wb-concept-bench { padding: 16px; overflow: visible; }
   .wb-concept-explain p { font-size: 16px; }

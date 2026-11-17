@@ -24,11 +24,9 @@ interface Props {
   n: number;
   of: number;
   minutes: number;
-  /** The Next button's label; the task screen that follows. Default "step <n>". */
-  next?: string;
 }
 
-const { id, n, of, minutes, next = `step ${n}` } = Astro.props;
+const { id, n, of, minutes } = Astro.props;
 const entry = await getEntry('concepts', id);
 if (!entry) throw new Error(`ConceptScreen: unknown concept "${id}" (src/content/concepts/${id}.mdx)`);
 const exists = (relative: string) => fs.existsSync(path.join(process.cwd(), relative));
@@ -62,7 +60,7 @@ const lessonId = deeper?.match(/^\/lessons\/([\d.]+)/)?.[1];
     </div>
     <nav class="wb-nav" aria-label="Lesson navigation" data-nav hidden>
       <button type="button" class="wb-link wb-back" data-back>← Back</button>
-      <button type="button" class="wb-btn wb-btn--next" data-next>Next: {next} →</button>
+      <button type="button" class="wb-btn wb-btn--next" data-next>Next →</button>
     </nav>
   </div>
   <div class="wb-concept-bench">

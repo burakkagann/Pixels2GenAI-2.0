@@ -348,6 +348,9 @@
 .wb-btn--run { background: var(--c1); color: var(--bg); }
 .wb-btn--next { background: var(--bg); color: var(--fg); }
 .wb-btn--next[data-ready="true"] { background: var(--c1); color: var(--bg); }
+/* RB-1: one filled button at a time. Once the step passes and Next is filled, Run turns outlined. */
+.wb-screen:has([data-next][data-ready="true"]) .wb-btn--run,
+.wb-phonebar:has([data-phone-next][data-ready="true"]) .wb-btn--run { background: var(--bg); color: var(--fg); }
 
 .wb-btn--run:active,
 .wb-btn--next:active {
@@ -577,10 +580,12 @@
 .wb-wrap-status p { margin: 0; font-size: 16px; line-height: 1.5; }
 .wb-wrap-title { font-family: var(--mono); font-weight: 700; }
 .wb-wrap-status[data-state="done"] { border: 2px solid var(--fg); background: var(--c1); color: var(--bg); }
-.wb-wrap-status[data-state="done"] .wb-btn--next { background: var(--bg); color: var(--fg); }
 .wb-wrap-status[data-state="open"] { flex-direction: column; align-items: flex-start; border: 2px solid var(--warn); }
 .wb-wrap-status[data-state="open"] .wb-wrap-title { color: var(--warn); }
 .wb-wrap-status ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* NB-7: the screen's title takes the focus after Back or Next; no ring on the heading itself. */
+.wb-title:focus { outline: none; }
 
 /* ---------- Phone bar (hidden on wide screens) ---------- */
 .wb-phonebar { display: none; }
@@ -621,8 +626,12 @@
   }
 
   .wb-phonebar .wb-link { min-height: 44px; color: var(--fg-2); text-decoration: none; font-size: 14px; text-align: left; }
-  .wb-phonebar .wb-phone-next { text-align: right; color: var(--fg); font-weight: 700; }
-  .wb-phonebar .wb-btn--run { min-height: 44px; padding: 8px 10px; box-shadow: 3px 3px 0 var(--fg); }
+  .wb-phonebar .wb-btn--run,
+  .wb-phonebar .wb-btn--next { min-height: 44px; padding: 8px 10px; box-shadow: 3px 3px 0 var(--fg); line-height: 1.2; }
+  /* NB-4: one Run per screen. With the phone bar showing, its Run is the one; the cell's own steps aside. */
+  .wb:has(.wb-phonebar:not([hidden])) .wb-cell-bar [data-run] { display: none; }
+  /* ...and the bar's Run hides on a screen with no code (lesson.ts sets data-idle). */
+  .wb-phonebar [data-phone-run][data-idle="true"] { visibility: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {

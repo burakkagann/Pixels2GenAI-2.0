@@ -36,6 +36,17 @@ export function startLesson(root: HTMLElement) {
   if (!screens.length) return;
   root.classList.add('is-stepping');
 
+  // Phone bar (NB-4): its Run steps aside on a screen with no code; its Next is the exit on the last screen (NB-5).
+  const phoneBar = root.querySelector<HTMLElement>('[data-phonebar]');
+  const phoneRun = phoneBar?.querySelector<HTMLButtonElement>('[data-phone-run]') ?? null;
+  const phoneNext = phoneBar?.querySelector<HTMLButtonElement>('[data-phone-next]') ?? null;
+  const arcUrl = root.dataset.arc ?? '/workshops/my';
+  const exitLabel = root.dataset.doneLink || 'Back to the arc →'; // PUBLIC MODE (/try): "See the workshops →"
+  const syncPhoneRun = () => {
+    if (phoneRun) phoneRun.dataset.idle = String(!screens[current].querySelector('.wb-cell'));
+    if (phoneNext) phoneNext.textContent = current === screens.length - 1 ? exitLabel : 'Next →';
+  };
+
   // A "___" written in the brief looks like the blank in the editor.
   root.querySelectorAll<HTMLElement>('.wb-brief code').forEach((code) => {
     if (code.textContent?.trim() === '___') code.classList.add('wb-blank');
@@ -84,6 +95,8 @@ export function startLesson(root: HTMLElement) {
 
   // ---------- cells ----------
   const runners = new Map<HTMLElement, () => Promise<void>>();
+  // RB-1: a screen with code but no check counts as done after its first clean run.
+  const ranClean = new Set<HTMLElement>();
   root.querySelectorAll<HTMLElement>('.wb-cell').forEach((cell) => {
     const textarea = cell.querySelector<HTMLTextAreaElement>('[data-code]');
     const runButton = cell.querySelector<HTMLButtonElement>('[data-run]');
@@ -107,6 +120,7 @@ export function startLesson(root: HTMLElement) {
       }
       running = true;
       runButton.textContent = '■ Stop';
+      if (phoneRun) phoneRun.textContent = '■ Stop';
       verdict.dataset.state = 'running';
       verdict.textContent = 'Running…';
       const firstPass = !passed(cell);
@@ -115,11 +129,13 @@ export function startLesson(root: HTMLElement) {
       showResult({ verdict, output, hasCheck: Boolean(check), fileName: cell.dataset.file }, result);
       if (result.check?.passed) markCheck(cell);
       if (screen) outputs.add(screens.indexOf(screen), screenLabel(screen), result.images);
+      if (screen && !check && !result.error) ranClean.add(screen);
       if (screen) refreshNext(screen);
       if (screen && result.check?.passed) showOnceItWorks(screen, firstPass ? verdict : null);
       if (screen && !check && !result.error) showOnceItWorks(screen, null);
       running = false;
       runButton.textContent = '▶ Run';
+      if (phoneRun) phoneRun.textContent = '▶ Run';
     };
 
     try {
@@ -452,11 +468,24 @@ export function startLesson(root: HTMLElement) {
   function refreshNext(screen: HTMLElement) {
     const cell = screen.querySelector<HTMLElement>('.wb-cell[data-has-check]');
     const next = screen.querySelector<HTMLElement>('[data-next]');
-    if (next) next.dataset.ready = String(!cell || passed(cell));
+    // NB-5: on the last screen Next is the exit: filled once every check has passed, outlined while some are open.
+    // RB-1: Next fills once the step passes (or, with code but no check, after the first clean run); Run then turns outlined.
+    const hasCode = Boolean(screen.querySelector('.wb-cell'));
+    const stepDone = cell ? passed(cell) : !hasCode || ranClean.has(screen);
+    const ready = screen === screens[screens.length - 1] ? allChecksPassed() : stepDone;
+    if (next) next.dataset.ready = String(ready);
+    if (screen === screens[current] && phoneNext) phoneNext.dataset.ready = String(ready);
   }
 
   let current = 0;
-  function go(index: number) {
+  // NB-5: the last screen's Next is the one exit. Open checks are still noted (the old "Move on anyway").
+  function exit() {
+    if (!allChecksPassed()) store.update(key, { anyway: true, anywayAt: Date.now() });
+    window.location.href = arcUrl;
+  }
+  const lastNext = screens[screens.length - 1].querySelector<HTMLElement>('[data-next]');
+  if (lastNext) lastNext.textContent = exitLabel;
+  function go(index: number, moveFocus = false) {
     current = Math.max(0, Math.min(screens.length - 1, index));
     screens.forEach((screen, i) => { screen.hidden = i !== current; });
     const reached = Math.max(Number(record().reached ?? 0), current + 1);
@@ -476,6 +505,15 @@ export function startLesson(root: HTMLElement) {
     screens[current].querySelector<HTMLElement>('.wb-brief-scroll')?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
     refreshNext(screens[current]);
+    syncPhoneRun();
+    // NB-7: after Back or Next, Tab and screen readers start at the new screen's title.
+    if (moveFocus) {
+      const title = screens[current].querySelector<HTMLElement>('.wb-title');
+      if (title) {
+        title.tabIndex = -1;
+        title.focus({ preventScroll: true });
+      }
+    }
 
     const now = Date.now();
     const startedAt = typeof record().startedAt === 'number' ? record().startedAt : now;
@@ -494,21 +532,17 @@ export function startLesson(root: HTMLElement) {
     const next = screen.querySelector<HTMLButtonElement>('[data-next]');
     if (back) {
       back.disabled = i === 0;
-      back.addEventListener('click', () => go(i - 1));
+      back.addEventListener('click', () => go(i - 1, true));
     }
-    if (next) {
-      if (i === screens.length - 1) next.hidden = true;
-      next.addEventListener('click', () => go(i + 1));
-    }
+    if (next) next.addEventListener('click', () => (i === screens.length - 1 ? exit() : go(i + 1, true)));
   });
 
   // Phone bar: Back, Run (the current screen's cell), Next.
-  const phoneBar = root.querySelector<HTMLElement>('[data-phonebar]');
   if (phoneBar) {
     phoneBar.hidden = false;
-    phoneBar.querySelector('[data-phone-back]')?.addEventListener('click', () => go(current - 1));
-    phoneBar.querySelector('[data-phone-next]')?.addEventListener('click', () => go(current + 1));
-    phoneBar.querySelector('[data-phone-run]')?.addEventListener('click', async () => {
+    phoneBar.querySelector('[data-phone-back]')?.addEventListener('click', () => go(current - 1, true));
+    phoneNext?.addEventListener('click', () => (current === screens.length - 1 ? exit() : go(current + 1, true)));
+    phoneRun?.addEventListener('click', async () => {
       const cell = screens[current].querySelector<HTMLElement>('.wb-cell');
       if (!cell) return;
       // From the top of the page the verdict is out of view: a failed check would
@@ -525,8 +559,8 @@ export function startLesson(root: HTMLElement) {
   document.addEventListener('keydown', (event) => {
     const target = event.target as HTMLElement;
     if (target.closest('.cm-editor, textarea, input, select, [contenteditable]')) return;
-    if (event.key === 'ArrowRight') go(current + 1);
-    if (event.key === 'ArrowLeft') go(current - 1);
+    if (event.key === 'ArrowRight') go(current + 1, true);
+    if (event.key === 'ArrowLeft') go(current - 1, true);
   });
 
   // ---------- wrap up: done, or what is still open ----------
@@ -534,7 +568,6 @@ export function startLesson(root: HTMLElement) {
     const box = root.querySelector<HTMLElement>('[data-wrap-status]');
     if (!box) return;
     box.replaceChildren();
-    const arc = root.dataset.arc ?? '/workshops/my';
     const nextLabel = root.dataset.nextLabel ?? 'the next part';
     const p = (text: string, className?: string) => {
       const node = document.createElement('p');
@@ -542,14 +575,6 @@ export function startLesson(root: HTMLElement) {
       node.textContent = text;
       return node;
     };
-    const arcLink = () => {
-      const a = document.createElement('a');
-      a.className = 'wb-btn wb-btn--next';
-      a.href = arc;
-      a.textContent = root.dataset.doneLink || 'Back to the arc →'; // PUBLIC MODE (/try): "See the workshops →"
-      return a;
-    };
-
     if (allChecksPassed()) {
       store.update(key, { done: true });
       box.dataset.state = 'done';
@@ -559,7 +584,7 @@ export function startLesson(root: HTMLElement) {
         p(root.dataset.doneTitle || '✓ Lesson complete', 'wb-wrap-title'),
         p(root.dataset.doneText || `${nextLabel.replace(/,$/, '')} is now open on your arc.`),
       );
-      box.append(text, arcLink());
+      box.append(text);
       return;
     }
     box.dataset.state = 'open';
@@ -580,16 +605,6 @@ export function startLesson(root: HTMLElement) {
       list.append(item);
     });
     box.append(list);
-    const anyway = document.createElement('button');
-    anyway.type = 'button';
-    anyway.className = 'wb-link';
-    // PUBLIC MODE (/try): nothing is sent, so no "we note it".
-    anyway.textContent = root.dataset.public ? 'Move on anyway' : 'Move on anyway (we note it, so we can improve the lesson)';
-    anyway.addEventListener('click', () => {
-      store.update(key, { anyway: true, anywayAt: Date.now() });
-      window.location.href = arc;
-    });
-    box.append(anyway);
   }
 
   // Deep link: #s3 opens screen 3.

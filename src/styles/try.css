@@ -20,8 +20,3 @@
 
 /* The references hold long URLs: let them break, so the Wrap up does not scroll sideways on a phone. */
 .wb-idea .wb-hint[data-kind="note"] li { overflow-wrap: anywhere; }
-
-/* No code on Wrap up or on the last screen (TryDone): the phone bar's Run steps aside, and Next on the last screen,
-   as the brief's Next is hidden there (lesson.ts). */
-.wb:has(.wb-screen[data-phase="wrap"]:not([hidden])) .wb-phonebar [data-phone-run] { visibility: hidden; }
-.wb:has(.wb-main > .wb-screen:last-of-type:not([hidden])) .wb-phonebar [data-phone-next] { visibility: hidden; }
