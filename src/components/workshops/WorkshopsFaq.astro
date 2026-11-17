@@ -3,7 +3,10 @@
  * The /workshops FAQ (BLD-183, layout WL-1b, WL-2a: after the tickets, before the pilot). Final copy 1g,
  * "Why this format works" (1d) as "Why this format?" (the pilot result lives in the Pilot section only), "What comes after W6?" (CR-4) and the gap answers Q5, Q7, Q9, Q14, Q16,
  * Q20, Q22 and Q29 from the rollout map §3. FAQ review 17 Nov (FQ-1 to FQ-24, FQ-28): booking questions first,
- * new answers on minimum size, research, access, after the day and the certificate. Three groups, each with a riso chip; every question has a
+ * new answers on minimum size, research, access, after the day and the certificate. Access rule 17 Nov (terms v2.0 §4):
+ * lessons and AI tutor until 30 days after each workshop; the daily question cap is stated in the terms only. FAQ dedup
+ * 17 Nov (workshop-planning/review/faq-dedup-2026-11-17.md): each fact once; "miss one on the pass" folded into
+ * refunds and "after the day". Three groups, each with a riso chip; every question has a
  * numbered square in its group colour, as the lesson numbers on the cards. Long answers are bullets.
  * Rendered only with PUBLIC_WORKSHOP_SERIES=true (it lives inside brand/Series.astro).
  */
@@ -24,10 +27,9 @@ const GROUPS: Group[] = [
       {
         q: 'Do I need to know Python?',
         points: [
-          'Not for W1. It starts from zero, in small steps, with hints and the solution.',
+          'Not for W1. It starts from zero, in small steps.',
           'Never written code? Do the warm-up that comes with your code first: about an hour, in two parts (Python, then NumPy).',
           'From W2, beginner Python helps (variables, loops, functions).',
-          'Joining after W1 with a single ticket? You get a short recap page of the earlier workshops.',
         ],
       },
       {
@@ -42,6 +44,7 @@ const GROUPS: Group[] = [
         q: 'Can I come to just one?',
         lines: [
           'Yes. Each workshop stands on its own and starts with a 15-minute recap.',
+          'Joining after W1 with a single ticket? You also get a short recap page of the earlier workshops.',
           'Single tickets for W2 to W6 open later; until then the pass is the way to book them.',
         ],
       },
@@ -51,16 +54,9 @@ const GROUPS: Group[] = [
           '<ul class="fmt-points">' +
           '<li>Single ticket: full refund up to 7 days before the workshop.</li>' +
           '<li>Series pass: up to 7 days before your first workshop.</li>' +
-          '<li>After that, send someone in your place or move to another workshop with a free seat.</li>' +
+          '<li>After that, send someone in your place (tell us by 12:00 the day before) or move to another workshop with a free seat. With the pass, you can send someone to any workshop you miss.</li>' +
           `<li>Details in the <a href="${TICKETS.terms}">ticket terms</a>.</li>` +
           '</ul>',
-      },
-      {
-        q: 'What if I miss one on the pass?',
-        points: [
-          'Send someone in your place (tell us by 12:00 the day before).',
-          "Your code still opens that workshop's lessons from its day, for good. The AI tutor works until 30 days after W6.",
-        ],
       },
       {
         q: 'What if too few people book?',
@@ -103,20 +99,19 @@ const GROUPS: Group[] = [
         lines: [
           'Every step has two hints, then the solution, and errors come with a plain explanation. An AI tutor gives hints, not answers.',
           'Look up, and the facilitator comes over.',
+          'Still stuck after 10 minutes on one screen? You can move on.',
         ],
       },
       {
         q: "What if I'm faster or slower than the others?",
         points: [
           'Inside a lesson you go at your own pace.',
-          'If you\'re fast, there are "Go further" tasks.',
-          "If you're stuck on one screen for 10 minutes, you can move on.",
-          'Already code? The steps are short, and the open brief at the end goes as far as you like.',
+          'Fast, or already code? "Go further" tasks and the open brief at the end go as far as you like.',
           'The next lesson opens for everyone together.',
         ],
       },
-      { q: "Is it for artists who don't want to code?", lines: ["You learn to write the code; that's the craft here. Each step is small, and your own photos and ideas drive the piece."] },
-      { q: 'Are these the lessons on pixels2genai.art?', html: '<p>Some cover the same ideas, rebuilt for the series: short screens, code on every one, checks and hints. <a href="/try">Try a free sample lesson</a>.</p>' },
+      { q: "Is it for artists who don't want to code?", lines: ["You learn to write the code; that's the craft here. Your own photos and ideas drive the piece."] },
+      { q: 'Are these the lessons on pixels2genai.art?', html: '<p>Some cover the same ideas, rebuilt for the series as short screens with code on every one. <a href="/try">Try a free sample lesson</a>.</p>' },
       {
         q: "Can't I learn this from videos?",
         lines: [
@@ -144,7 +139,10 @@ const GROUPS: Group[] = [
       { q: 'Will I be photographed?', lines: ['We may photograph prints, screens and hands. Your face only if you say yes.'] },
       {
         q: 'Can I keep working after the day?',
-        lines: ['Yes. With your code, the lessons stay open for good. The AI tutor works until 30 days after the workshop (after W6 with the series pass), up to 30 questions a day.'],
+        lines: [
+          'Yes, for 30 days. With your code, the lessons and the AI tutor stay open until 30 days after the workshop.',
+          "With the series pass, each workshop's lessons and AI tutor open on its day and stay open until 30 days after it, even if you missed that day.",
+        ],
       },
       { q: 'Do I get a certificate?', lines: ["There's no official certificate. You get a beautifully designed certificate of participation."] },
     ],
