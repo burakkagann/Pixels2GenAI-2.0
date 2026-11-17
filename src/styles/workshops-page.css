@@ -69,7 +69,9 @@
 .hero-collage {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  /* Row gap clears the offsets below (tile 2 down 10px, tile 5 up 8px),
+     the tilt and the 4px shadow, so no tile covers another. */
+  gap: 36px 14px;
 }
 
 .hero-tile {
