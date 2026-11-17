@@ -45,6 +45,7 @@ export function startLesson(root: HTMLElement) {
   const syncPhoneRun = () => {
     if (phoneRun) phoneRun.dataset.idle = String(!screens[current].querySelector('.wb-cell'));
     if (phoneNext) phoneNext.textContent = current === screens.length - 1 ? exitLabel : 'Next →';
+    if (phoneBar) phoneBar.dataset.last = String(current === screens.length - 1); // the long exit label gets the width
   };
 
   // A "___" written in the brief looks like the blank in the editor.
@@ -128,7 +129,12 @@ export function startLesson(root: HTMLElement) {
       if (result.check) result.check.message = ladder.next(result.check);
       showResult({ verdict, output, hasCheck: Boolean(check), fileName: cell.dataset.file }, result);
       if (result.check?.passed) markCheck(cell);
-      if (screen) outputs.add(screens.indexOf(screen), screenLabel(screen), result.images);
+      if (screen) {
+        // OL-2: Before | After (or a row) replaces the plain image list in the output box.
+        const layout = outputs.add(screens.indexOf(screen), screenLabel(screen), result.images);
+        const plain = output.querySelector('.wb-images');
+        if (layout && plain) plain.replaceWith(layout);
+      }
       if (screen && !check && !result.error) ranClean.add(screen);
       if (screen) refreshNext(screen);
       if (screen && result.check?.passed) showOnceItWorks(screen, firstPass ? verdict : null);

@@ -630,6 +630,9 @@
   .wb-phonebar .wb-btn--next { min-height: 44px; padding: 8px 10px; box-shadow: 3px 3px 0 var(--fg); line-height: 1.2; }
   /* NB-4: one Run per screen. With the phone bar showing, its Run is the one; the cell's own steps aside. */
   .wb:has(.wb-phonebar:not([hidden])) .wb-cell-bar [data-run] { display: none; }
+  /* Last screen: Back and the long exit label ("See the workshops →") share the row; Run is idle there. */
+  .wb-phonebar[data-last="true"]:not([hidden]) { grid-template-columns: auto minmax(0, 1fr); }
+  .wb-phonebar[data-last="true"] [data-phone-run] { display: none; }
   /* ...and the bar's Run hides on a screen with no code (lesson.ts sets data-idle). */
   .wb-phonebar [data-phone-run][data-idle="true"] { visibility: hidden; }
 }

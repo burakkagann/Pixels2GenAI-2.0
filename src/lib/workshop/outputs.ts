@@ -23,6 +23,10 @@ interface Entry {
   label: string;
   caption: string;
   canvas: HTMLCanvasElement;
+  /** Which run of this screen drew it (1 = the first run this session). */
+  run: number;
+  /** True for the last picture of a run: the run's result. Earlier pictures are its inputs. */
+  result: boolean;
   /** True when restored from storage (a copy of at most SAVED_SIDE px). */
   saved?: boolean;
 }
@@ -33,12 +37,15 @@ interface StoredEntry {
   label: string;
   caption: string;
   png: string;
+  run?: number;
+  result?: boolean;
 }
 
 const SAVED_SIDE = 512;
 const STORE_PREFIX = 'p2g-outputs:';
 const PNG_PREFIX = 'data:image/png;base64,';
 const MAX_STORED = 24;              // images per lesson
+const MAX_RUNS = 6;                 // results kept per screen (the first run's inputs stay)
 const MAX_PNG_CHARS = 1_500_000;    // one stored image, base64 characters
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) {
@@ -92,6 +99,8 @@ function readStored(storeKey: string): StoredEntry[] {
       && Number.isInteger(item.screen) && item.screen >= 0 && item.screen < 100
       && typeof item.label === 'string' && item.label.length <= 80
       && typeof item.caption === 'string' && item.caption.length <= 200
+      && (item.run === undefined || (Number.isInteger(item.run) && item.run >= 1 && item.run < 1000))
+      && (item.result === undefined || typeof item.result === 'boolean')
       && typeof item.png === 'string' && item.png.startsWith(PNG_PREFIX) && item.png.length <= MAX_PNG_CHARS
     )).slice(0, MAX_STORED);
   } catch {
@@ -130,7 +139,7 @@ export function createOutputsRow(lessonId: string, lessonKey = lessonId, keepInB
   const storeKey = STORE_PREFIX + lessonKey;
   const pngs = new WeakMap<Entry, string>();
   const box = el('section', 'wb-outputs');
-  box.setAttribute('aria-label', 'Your outputs in this lesson');
+  box.setAttribute('aria-label', 'Every run this session');
   box.hidden = true;
   const head = el('div', 'wb-outputs-head');
   const title = el('span', 'wb-label');
@@ -205,7 +214,7 @@ export function createOutputsRow(lessonId: string, lessonKey = lessonId, keepInB
         png = savedCopy(entry.canvas);
         pngs.set(entry, png);
       }
-      return { screen: entry.screen, label: entry.label, caption: entry.caption, png };
+      return { screen: entry.screen, label: entry.label, caption: entry.caption, png, run: entry.run, result: entry.result };
     }).filter((item) => item.png.startsWith(PNG_PREFIX) && item.png.length <= MAX_PNG_CHARS);
     try {
       while (list.length) {
@@ -235,7 +244,7 @@ export function createOutputsRow(lessonId: string, lessonKey = lessonId, keepInB
       if (!canvas) continue;
       // A screen run in this visit before the restore finished wins.
       if (entries.some((e) => e.screen === item.screen && !e.saved)) continue;
-      const entry: Entry = { screen: item.screen, label: item.label, caption: item.caption, canvas, saved: true };
+      const entry: Entry = { screen: item.screen, label: item.label, caption: item.caption, canvas, run: item.run ?? 1, result: item.result ?? true, saved: true };
       pngs.set(entry, item.png);
       let at = entries.findIndex((e) => e.screen > item.screen);
       if (at < 0) at = entries.length;
@@ -258,39 +267,105 @@ export function createOutputsRow(lessonId: string, lessonKey = lessonId, keepInB
 
   function render() {
     row.replaceChildren();
-    entries.forEach((entry) => {
-      const item = el('li');
-      const button = el('button', 'wb-outputs-item');
-      button.type = 'button';
-      const thumb = copyCanvas(entry.canvas);
-      thumb.setAttribute('aria-hidden', 'true');
-      const text = entry.caption ? `${entry.label} · ${entry.caption}` : entry.label;
-      button.setAttribute('aria-label', `Open ${text} full width`);
-      button.append(thumb, el('span', 'wb-outputs-cap', text));
-      button.addEventListener('click', () => show(entry));
-      item.append(button);
-      row.append(item);
+    const screens = [...new Set(entries.map((e) => e.screen))];
+    screens.forEach((screen) => {
+      const mine = entries.filter((e) => e.screen === screen);
+      const multi = mine.some((e) => e.run > 1);
+      const group = el('li', 'wb-outputs-group');
+      group.append(el('span', 'wb-outputs-group-name', mine[0].label));
+      const thumbs = el('ol', 'wb-outputs-thumbs');
+      mine.forEach((entry) => {
+        const item = el('li');
+        const button = el('button', 'wb-outputs-item' + (entry === newest ? ' is-new' : ''));
+        button.type = 'button';
+        const thumb = copyCanvas(entry.canvas);
+        thumb.setAttribute('aria-hidden', 'true');
+        const caption = multi && entry.result ? `run ${entry.run} · ${entry.caption}` : entry.caption;
+        const text = caption ? `${entry.label} · ${caption}` : entry.label;
+        button.setAttribute('aria-label', `Open ${text} full width${entry === newest ? ' (newest)' : ''}`);
+        button.append(thumb, el('span', 'wb-outputs-cap', caption || entry.label));
+        button.addEventListener('click', () => show(entry));
+        item.append(button);
+        thumbs.append(item);
+      });
+      group.append(thumbs);
+      row.append(group);
     });
-    title.textContent = `Your outputs in this lesson · ${entries.length} image${entries.length === 1 ? '' : 's'}`;
+    title.textContent = `Every run this session · ${entries.length}`;
     box.hidden = entries.length === 0;
+  }
+
+  /** One picture of the run layout (a canvas copy, so the strip and the layout stay independent). */
+  function figure(canvas: HTMLCanvasElement, caption: string, tag?: string, tagClass?: string) {
+    const fig = el('figure', 'wb-run-fig');
+    const pic = copyCanvas(canvas);
+    pic.setAttribute('role', 'img');
+    pic.setAttribute('aria-label', tag ? `${tag}: ${caption || 'output image'}` : caption || 'Output image');
+    const cap = el('figcaption');
+    if (tag) cap.append(el('span', `wb-run-tag ${tagClass ?? ''}`, tag));
+    if (caption) cap.append(document.createTextNode(caption));
+    fig.append(pic, cap);
+    return fig;
   }
 
   void restore();
 
   return {
     element: box,
-    /** Replace the images of one screen with the ones from its newest run. */
-    add(screen: number, label: string, images: CellImage[]) {
-      if (!images.length) return;
-      for (let i = entries.length - 1; i >= 0; i--) if (entries[i].screen === screen) entries.splice(i, 1);
-      // Keep lesson order: insert after the last entry of an earlier screen.
+    /**
+     * Keep this run in the session strip and return the layout for the output box (OL-2):
+     * "Before" next to "After" for a run of one or two pictures (first run: the run's own
+     * input and result; later runs: the last run's result and this one's), a plain row for
+     * three or more. Null when the run drew nothing.
+     */
+    add(screen: number, label: string, images: CellImage[]): HTMLElement | null {
+      if (!images.length) return null;
+      const mine = entries.filter((e) => e.screen === screen);
+      const lastRun = mine.reduce((m, e) => Math.max(m, e.run), 0);
+      const before = mine.filter((e) => e.run === lastRun && e.result).pop() ?? null;
+      const run = lastRun + 1;
+      const canvases = images.map((image) => toCanvas(image));
+      // The strip keeps the first run's pictures, then each later run's result only.
+      const keep = run === 1 ? images.length : 1;
+      const first = images.length - keep;
+      const added: Entry[] = images.slice(first).map((image, i) => ({
+        screen, label, caption: image.caption, canvas: canvases[first + i], run, result: first + i === images.length - 1,
+      }));
+      // Older results beyond MAX_RUNS go (the first run's inputs stay).
+      const results = mine.filter((e) => e.result);
+      results.slice(0, Math.max(0, results.length + 1 - MAX_RUNS)).forEach((e) => entries.splice(entries.indexOf(e), 1));
+      // Keep lesson order: after the last entry of this or an earlier screen.
       let at = entries.findIndex((e) => e.screen > screen);
       if (at < 0) at = entries.length;
-      const added = images.map((image) => ({ screen, label, caption: image.caption, canvas: toCanvas(image) }));
       entries.splice(at, 0, ...added);
       newest = added[added.length - 1];
       render();
       persist();
+
+      const wrap = el('div', 'wb-run');
+      const grid = el('div', 'wb-run-grid');
+      const last = images[images.length - 1];
+      let heading = '';
+      if (images.length <= 2 && before) {
+        heading = `Run ${run} next to run ${before.run}`;
+        grid.append(
+          figure(before.canvas, before.caption ? `last run: ${before.caption}` : 'last run', 'Before', 'wb-run-tag--before'),
+          figure(canvases[canvases.length - 1], last.caption, 'After', 'wb-run-tag--after'),
+        );
+      } else if (images.length === 2) {
+        heading = 'Before and after';
+        grid.append(
+          figure(canvases[0], images[0].caption, 'Before', 'wb-run-tag--before'),
+          figure(canvases[1], last.caption, 'After', 'wb-run-tag--after'),
+        );
+      } else {
+        grid.style.setProperty('--cols', String(images.length === 1 ? 2 : Math.min(images.length, 4)));
+        grid.append(...images.map((image, i) => figure(canvases[i], image.caption)));
+      }
+      wrap.dataset.layout = heading ? 'pair' : 'row';
+      if (heading) wrap.append(el('span', 'wb-label', heading));
+      wrap.append(grid);
+      return wrap;
     },
     /** Put the row under the cell of the screen in view. */
     mountIn(container: HTMLElement | null) {
