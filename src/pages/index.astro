@@ -54,6 +54,10 @@ const organizationJsonLd = {
   url: SITE,
   logo: `${SITE}/icon-512.png`,
   founder: { '@id': AUTHOR_ID },
+  // Two mailboxes (EM-10a): kagan@ for the project, research and press; workshops@ for bookings and tickets.
+  email: 'kagan@pixels2genai.art',
+  contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support',
+    email: 'workshops@pixels2genai.art', availableLanguage: ['en'] }],
 };
 
 const websiteJsonLd = {

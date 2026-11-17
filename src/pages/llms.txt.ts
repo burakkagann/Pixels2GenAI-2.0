@@ -83,6 +83,11 @@ export async function GET(context: APIContext) {
       'techniques taught in the modules.',
   );
   lines.push('');
+  lines.push('## Contact');
+  lines.push('');
+  lines.push('- workshops@pixels2genai.art: workshop bookings, tickets, refunds and access.');
+  lines.push('- kagan@pixels2genai.art: imprint, privacy requests, research, press and everything else.');
+  lines.push('');
   lines.push('## Optional');
   lines.push('');
   lines.push(`- [RSS feed of new lessons](${site}/feed.xml)`);

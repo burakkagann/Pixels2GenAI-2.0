@@ -1346,17 +1346,7 @@
   color: var(--accent);
 }
 
-.foot .about-blurb {
-  font-family: var(--serif);
-  font-size: 15px;
-  color: var(--fg-2);
-  line-height: 1.5;
-  max-width: 42ch;
-  margin: 0 0 18px;
-  letter-spacing: 0;
-}
-
-/* Two-column key/value metadata under the about-blurb.
+/* Two-column key/value metadata under the footer title.
    `dt` is small mono uppercase labels; `dd` is italic serif. The
    author link inside `dd` gets its own explicit treatment so the
    generic .foot a rule (mono · 11 px) does not override it. */
