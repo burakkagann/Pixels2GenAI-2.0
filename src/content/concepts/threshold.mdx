@@ -24,10 +24,10 @@ predict:
     - { text: "Less", why: "A higher threshold lets more pixels fall below it: the inked part grows from about 19 % to 35 %." }
     - { text: "More", correct: true, why: "More pixels fall below 120 than below 60: the inked part grows from about 19 % to 35 % of the photo." }
 recall:
-  q: "The rule inks a pixel when light < 100. A pixel's brightness is exactly 100. Does it get ink?"
+  q: "The rule makes a pixel BLUE when light < 100. A pixel's brightness is exactly 100. Does it turn BLUE?"
   options:
-    - { text: "Yes, it gets ink", why: "< means strictly below, and 100 is not below 100; only <= would let it in." }
-    - { text: "No, it stays paper", correct: true, why: "100 < 100 is False, so the pixel stays paper." }
+    - { text: "Yes, it turns BLUE", why: "< means strictly below, and 100 is not below 100; only <= would let it in." }
+    - { text: "No, it stays PAPER", correct: true, why: "100 < 100 is False, so the pixel stays PAPER." }
 cite: ["Gonzalez & Woods, 2018"]
 ---
 
