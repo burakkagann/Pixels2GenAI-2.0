@@ -1,24 +1,17 @@
 ---
+/**
+ * RS-11 (19 Nov): page head for /research: eyebrow, title, a short lede, two
+ * thesis buttons and four facts. All text comes from research.mdx frontmatter.
+ */
 interface Props {
   eyebrow: string;
   headline: string;
   headlineEm?: string;
   lede: string;
-  sample: string;
-  method: string;
-  instruments: string;
-  analysis: string;
+  meta: { label: string; value: string }[];
 }
 
-const { eyebrow, headline, headlineEm, lede, sample, method, instruments, analysis } = Astro.props;
-
-// M-20: on phones, a 3 x 3 grid of jumps to the nine sections of /research
-// (the anchors in research.mdx). Wider screens have the side table of contents.
-const JUMPS = [
-  ['overview', 'I Overview'], ['method', 'II Method'], ['rq1', 'III Design'],
-  ['rq2', 'IV Load'], ['rq3', 'V Real-time'], ['rq4', 'VI Gains'],
-  ['rq5', 'VII Transfer'], ['themes', 'VIII Themes'], ['limits', 'IX Limits'],
-];
+const { eyebrow, headline, headlineEm, lede, meta } = Astro.props;
 ---
 
 <header class="research-head">
@@ -34,14 +27,12 @@ const JUMPS = [
 
   <p class="research-lede">{lede}</p>
 
-  <div class="research-meta">
-    <div><b>Method</b><span>{method}</span></div>
-    <div><b>Sample</b><span>{sample}</span></div>
-    <div><b>Instruments</b><span>{instruments}</span></div>
-    <div><b>Analysis</b><span>{analysis}</span></div>
+  <div class="rs-ctas">
+    <a class="btn btn-pri" href="/research/thesis.pdf">Read the thesis (PDF) →</a>
+    <a class="btn btn-sec" href="/research/evaluation-summary.pdf">Evaluation summary (PDF)</a>
   </div>
 
-  <nav class="jump-grid" aria-label="Sections of the study">
-    {JUMPS.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
-  </nav>
+  <div class="research-meta">
+    {meta.map((m) => <div><b>{m.label}</b><span>{m.value}</span></div>)}
+  </div>
 </header>

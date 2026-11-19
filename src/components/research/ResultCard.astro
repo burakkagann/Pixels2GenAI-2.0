@@ -1,0 +1,28 @@
+---
+/**
+ * RS-11 (19 Nov): one result card on /research: head strip, question, one or two
+ * plain sentences, a chart (slot) and the thesis page it comes from.
+ * `page` is the printed thesis page; the PDF page is printed + 11 (front matter).
+ */
+import { thesisHref } from '@/lib/thesisLink';
+
+interface Props {
+  head: string;
+  count: string;
+  title: string;
+  text: string;
+  source: string;  // e.g. "§5.2, p. 65–67"
+  page: number;    // first printed page
+}
+const { head, count, title, text, source, page } = Astro.props;
+---
+
+<article class="rs-card">
+  <div class="rs-head"><span class="rs-org">{head}</span><span class="rs-count">{count}</span></div>
+  <div class="rs-card-body">
+    <h3>{title}</h3>
+    <p>{text}</p>
+    <slot />
+    <p class="rs-src">Source: thesis <a href={thesisHref(page)}>{source}</a></p>
+  </div>
+</article>

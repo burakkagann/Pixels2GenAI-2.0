@@ -1,0 +1,34 @@
+---
+/**
+ * RS-11 (19 Nov): small bar chart drawn to scale, for the /research result
+ * cards. Same look as the home page chart (PilotResult.astro; .rsp-* rules in
+ * landing.css). The bars are decorative; one sentence in `summary` carries the
+ * numbers for screen readers.
+ */
+interface Row {
+  label: string;
+  value: number;
+  text?: string;      // printed value; defaults to the number
+  after?: boolean;    // accent fill
+  inside?: boolean;   // print the value inside the bar end
+}
+interface Props {
+  caption: string;
+  summary: string;
+  rows: Row[];
+  ticks: number[];
+  max: number;
+}
+const { caption, summary, rows, ticks, max } = Astro.props;
+const pct = (v: number) => (v / max) * 100;
+---
+
+<figure class="rsp-chart" role="img" aria-label={summary}>
+  <figcaption>{caption}</figcaption>
+  <div aria-hidden="true">
+    {rows.map((r) => (
+      <div class="rsp-row">{r.label}<div class="rsp-track"><div class:list={['rsp-fill', r.after && 'after']} style={`width:${pct(r.value)}%`}></div><span class:list={['rsp-val', r.inside && 'in', r.inside && !r.after && 'rsp-grey']} style={`left:${pct(r.value)}%`}>{r.text ?? r.value}</span></div></div>
+    ))}
+    <div class="rsp-axis"><span></span><div class="rsp-ticks">{ticks.map((t) => <span style={`left:${pct(t)}%`}>{t}</span>)}</div></div>
+  </div>
+</figure>

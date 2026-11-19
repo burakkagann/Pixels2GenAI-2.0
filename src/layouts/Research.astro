@@ -1,17 +1,11 @@
 ---
 import Base from './Base.astro';
 import Footer from '@/components/chrome/Footer.astro';
-import ResearchTOC from '@/components/research/ResearchTOC.astro';
 import ResearchHead from '@/components/research/ResearchHead.astro';
 import '@/styles/prose.css';
 import '@/styles/lesson-layout.css';
 import '@/styles/research.css';
-
-interface Heading {
-  depth: number;
-  slug: string;
-  text: string;
-}
+import '@/styles/research-summary.css';
 
 interface Props {
   frontmatter: {
@@ -20,19 +14,15 @@ interface Props {
     eyebrow?: string;
     headline: string;
     headlineEm?: string;   // italic span inside h1
-    lede: string;          // manuscript-register opener (~200 words)
-    sample: string;        // "9 participants · DBR pilot · 2026"
-    method: string;        // e.g. "DBR · Cycle ii"
-    instruments: string;   // e.g. "Pre/post · NASA-TLX · Exit tickets"
-    analysis: string;      // e.g. "Mixed-methods"
+    lede: string;          // short opener (about 45 words)
+    meta: { label: string; value: string }[]; // four facts under the lede
     author?: string;       // Article schema author (defaults to project)
     datePublished?: string; // ISO date, e.g. "2026-03-01"
     dateModified?: string;  // ISO date, e.g. "2026-06-17"
   };
-  headings: Heading[];
 }
 
-const { frontmatter, headings } = Astro.props;
+const { frontmatter } = Astro.props;
 const f = frontmatter;
 
 // Article (scholarly) structured data — marks this page as authored research,
@@ -63,24 +53,17 @@ const articleJsonLd = {
   description={f.description ?? f.lede.slice(0, 160)}
   jsonLd={articleJsonLd}
 >
-  <main id="main-content" class="page research-page">
-    <article class="col-main lesson research-main">
+  <main id="main-content" class="research-page rs">
+    <article class="lesson research-main rs-main">
       <ResearchHead
-        eyebrow={f.eyebrow ?? '§ Research · DBR pilot study'}
+        eyebrow={f.eyebrow ?? '§ Research · Pilot study'}
         headline={f.headline}
         headlineEm={f.headlineEm}
         lede={f.lede}
-        sample={f.sample}
-        method={f.method}
-        instruments={f.instruments}
-        analysis={f.analysis}
+        meta={f.meta}
       />
       <slot />
     </article>
-
-    <aside class="col-right">
-      <ResearchTOC headings={headings} />
-    </aside>
   </main>
 
   <Footer />

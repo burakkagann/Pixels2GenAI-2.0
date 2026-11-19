@@ -1,0 +1,27 @@
+---
+/**
+ * RS-11 (19 Nov): two correlation bars on a -1 to +1 scale, drawn to scale.
+ * Values are Spearman coefficients with prior experience (thesis §5.5, p. 73-75):
+ * norm. gain +.204 (not significant), mean NASA-TLX workload -.857 (p = .007).
+ */
+interface Props {
+  gain: number;
+  workload: number;
+}
+const { gain, workload } = Astro.props;
+const sign = (v: number) => (v < 0 ? '\u2212' : '+') + Math.abs(v).toFixed(2).replace(/^0/, '');
+const left = (v: number) => (v < 0 ? 50 + v * 50 : 50);
+const wide = (v: number) => Math.abs(v) * 50;
+const summary =
+  `Correlation with prior experience, scale minus 1 to plus 1. How much they learned: ${sign(gain)}, not significant. ` +
+  `How hard it felt: ${sign(workload)}, p = .007.`;
+---
+
+<figure class="rsp-chart" role="img" aria-label={summary}>
+  <figcaption>Link with prior experience (−1 to +1)</figcaption>
+  <div aria-hidden="true">
+    <div class="rs-div-row">How much they learned<div class="rs-div-track"><div class="rs-div-fill weak" style={`left:${left(gain)}%;width:${wide(gain)}%`}></div><span class="rs-div-val" style={`left:${50 + gain * 50}%`}>{sign(gain)}</span></div></div>
+    <div class="rs-div-row">How hard it felt<div class="rs-div-track"><div class="rs-div-fill" style={`left:${left(workload)}%;width:${wide(workload)}%`}></div><span class="rs-div-val in" style={`left:${left(workload)}%`}>{sign(workload)}</span></div></div>
+    <div class="rs-div-axis"><span></span><div class="rsp-ticks"><span style="left:0">−1</span><span style="left:50%">0</span><span style="left:100%">+1</span></div></div>
+  </div>
+</figure>

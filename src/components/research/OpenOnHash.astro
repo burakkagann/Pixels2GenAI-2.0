@@ -1,0 +1,21 @@
+---
+/**
+ * Opens the closed <details> that holds the target of the page's #hash, on load
+ * and when the hash changes, so links like /research#rq3 show the row they name.
+ */
+---
+
+<script>
+  const open = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const target = document.getElementById(id);
+    const details = target?.closest('details');
+    if (target && details && !details.open) {
+      details.open = true;
+      target.scrollIntoView();
+    }
+  };
+  open();
+  window.addEventListener('hashchange', open);
+</script>

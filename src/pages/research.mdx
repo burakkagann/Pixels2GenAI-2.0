@@ -2,157 +2,94 @@
 layout: '@/layouts/Research.astro'
 title: 'Research · DBR pilot study'
 description: 'Empirical findings from the design-based research pilot evaluating a visual-first NumPy-to-generative-AI curriculum. Nine participants, six modules, mixed-methods analysis. Cohen''s d = 1.615 on the conceptual instrument; ρ = −0.857 between prior experience and reported cognitive load.'
-eyebrow: '§ Research · DBR pilot study · n = 9'
+eyebrow: '§ Research · Pilot study · 12 Feb 2026'
 headline: 'Evidence behind'
 headlineEm: 'the curriculum.'
 lede: >
-  The thesis began with a suspicion: that the gap between opening a
-  NumPy notebook and prompting a diffusion model has less to do with
-  talent than with how the climb is staged. The pilot study was an
-  attempt to find out whether a particular staging — visual-first,
-  three-cycle, scaffolded from a single pixel toward a generative
-  model — could move a novice cohort across that distance in a
-  single day. Nine participants worked through six lessons, from
-  pixel colour to a diffusion model; pre- and post-tests measured what they
-  had learned, NASA-TLX measured what it had cost them, and exit
-  tickets recorded what they planned to take away. What follows is
-  the design, the instruments, the findings, and what those findings
-  argue.
-sample: 'DBR pilot · 9 participants'
-method: 'Design-Based Research'
-instruments: 'Pre/post · NASA-TLX · Exit tickets'
-analysis: 'Mixed-methods'
+  Nine volunteers took six lessons in one day, from pixel colour to a
+  diffusion model. They did a test before and after, and rated how hard each
+  lesson felt. This page gives the main results. The thesis has the full study.
+meta:
+  - { label: 'Date', value: '12 Feb 2026, one day' }
+  - { label: 'Learners', value: '9 volunteers (8 took both tests)' }
+  - { label: 'Lessons', value: '6, from Modules 1, 3, 4, 9 and 12' }
+  - { label: 'Method', value: 'Design-based research, cycle i' }
 # Article schema metadata (edit freely — author name and dates feed JSON-LD).
 author: 'Burak Kağan'
 datePublished: '2026-03-01'
-dateModified: '2026-11-13'
+dateModified: '2026-11-19'
 ---
 
-import SlopeChart from '@/components/research/SlopeChart.astro';
-import ResearchFigure from '@/components/research/ResearchFigure.astro';
-import StatCallout from '@/components/research/StatCallout.astro';
+import ResultCard from '@/components/research/ResultCard.astro';
+import BarChart from '@/components/research/BarChart.astro';
+import CorrChart from '@/components/research/CorrChart.astro';
+import NoteBox from '@/components/research/NoteBox.astro';
+import OpenOnHash from '@/components/research/OpenOnHash.astro';
 import Colophon from '@/components/research/Colophon.astro';
-import Admonition from '@/components/lesson/mdx/Admonition.astro';
-import Dropdown from '@/components/lesson/mdx/Dropdown.astro';
+import { PILOT, RQS } from '@/data/site/research';
+import { thesisHref } from '@/lib/thesisLink';
 
-## I · Overview <a id="overview"></a>
+export const one = (n) => n.toFixed(1);
+export const rqs = [
+  { id: 'rq1', status: 'yes', label: 'Answered', answer: 'Start a topic with code that makes an image. Theory-first works when a picture comes before the formula.', source: '§6.1, p. 87', page: 87 },
+  { id: 'rq2', status: 'yes', label: 'Answered', answer: 'Workload rose and fell lesson by lesson. Beginners paid a higher cost for a similar gain.', source: '§6.2, p. 89', page: 89 },
+  { id: 'rq3', status: 'no', label: 'Not tested', answer: 'The real-time lessons were not ready in time. The thesis argues it from the design only.', source: '§6.3, p. 90', page: 90 },
+  { id: 'rq4-answer', status: 'part', label: 'Partly', answer: 'The 24-question test proved reliable, and self-rated understanding tracked workload. Creative work was not scored.', source: '§6.4, p. 91', page: 91 },
+  { id: 'rq5', status: 'part', label: 'Partly', answer: 'Neural network questions rose, a sign of near transfer. Generative AI moved too little to say, and far transfer was not tested.', source: '§6.5, p. 92', page: 92 },
+];
 
-The study tested whether six lessons of the Pixels2GenAI curriculum, drawn from Modules 1, 3, 4, 9 and 12, could produce measurable conceptual change in a single one-day cohort, and whether the cognitive load of doing so stayed within tolerable bounds for novices. Five research questions framed the work; four are addressed empirically, the fifth — touchpoints with real-time systems — is addressed theoretically because the relevant content did not ship in this iteration of the curriculum. The headline finding is large in magnitude and hedged in interpretation: every participant who completed both tests gained ground, and the correlation between prior experience and reported cognitive load was strongly negative.
+<section class="rs-sec" id="findings">
+  <span id="overview" aria-hidden="true"></span><span id="themes" aria-hidden="true"></span><span id="rq4" aria-hidden="true"></span>
+  <h2>Four results</h2>
+  <p class="rs-sub">Each card links to the page in the thesis.</p>
+  <div class="rs-cards">
+    <ResultCard head="Learning" count={`${PILOT.paired} learners`} title="Did people learn in one day?" text={`All ${PILOT.paired} who took both tests scored higher. “I don’t know” answers fell from ${PILOT.idkBefore}% to ${PILOT.idkAfter}%.`} source="§5.2, p. 65–67" page={65}>
+      <BarChart caption="Test score, out of 24" summary={`Average test score out of 24, ${PILOT.paired} learners: before ${one(PILOT.before)}, after ${one(PILOT.after)}.`} max={24} ticks={[0, 6, 12, 18, 24]} rows={[{ label: 'Before', value: PILOT.before, text: one(PILOT.before) }, { label: 'After', value: PILOT.after, text: one(PILOT.after), after: true, inside: true }]} />
+    </ResultCard>
+    <ResultCard head="Experience" count="8 learners" title="Did beginners keep up?" text="Yes. Prior experience did not predict how much people learned. It did predict how hard the day felt: less experience, more effort." source="§5.5, p. 73–75" page={73}>
+      <CorrChart gain={0.204} workload={-0.857} />
+    </ResultCard>
+    <ResultCard head="Lesson format" count="6 lessons" title="Which lessons felt easier?" text="Lessons that start with code you run took less mental demand than lessons that start with theory. One theory-first lesson, Convolution, still got the best understanding rating." source="§5.4, p. 71–73" page={71}>
+      <BarChart caption="Mental demand, out of 20 (NASA-TLX)" summary="Average mental demand out of 20: lessons that start with code 9.7, lessons that start with theory 12.7." max={20} ticks={[0, 10, 20]} rows={[{ label: 'Code', value: 9.7, text: '9.7', after: true, inside: true }, { label: 'Theory', value: 12.7, text: '12.7', inside: true }]} />
+    </ResultCard>
+    <ResultCard head="Gaps" count="6 lessons · 1 day" title="Where did it fall short?" text="Generative AI moved least, and 56% of those answers were still “I don’t know”. 5 of 7 who gave feedback found the pace slightly fast or too fast." source="§5.2 and §5.7, p. 66, 82" page={66}>
+      <BarChart caption="Generative AI questions, out of 6" summary="Average score on the generative AI questions out of 6: before 0.5, after 1.9." max={6} ticks={[0, 2, 4, 6]} rows={[{ label: 'Before', value: 0.5, text: '0.5' }, { label: 'After', value: 1.9, text: '1.9', after: true }]} />
+    </ResultCard>
+  </div>
+</section>
 
-## II · Method <a id="method"></a>
-
-Design-Based Research (Cycle i of three) shaped both the curriculum and its evaluation. Nine participants — recruited through personal and university networks and posters, demographics ranging from 18 to 44 years and from high-school to master's-level education — completed a structured one-day workshop covering six lessons drawn from Modules 1, 3, 4, 9 and 12 (Pixel Fundamentals, Transformations, Fractals, Neural Networks and Generative AI). A 24-item conceptual instrument was administered before and after the workshop, organised into four six-item sections covering arrays and images (A), computational concepts: cellular automata, convolution, fractals (B), neural networks (C), and generative AI (D). The NASA Task Load Index was administered after every module to sample cognitive load on six dimensions; a five-prompt exit ticket after every module collected open-form reflection. One participant did not complete both test administrations, so the pre/post analysis is reported on n = 8 while NASA-TLX, exit-ticket, and demographic analyses use the full n = 9.
-
-<div class="stat-row">
-  <StatCallout eyebrow="Sample" value="9" label="Participants in the DBR pilot (n = 8 for paired pre/post)." />
-  <StatCallout eyebrow="Lessons" value="6" label="Drawn from Modules 1, 3, 4, 9 and 12 (Pixel Fundamentals to Generative AI)." />
-  <StatCallout eyebrow="Instruments" value="3" label="Conceptual pre/post · NASA-TLX × 6 modules · five-prompt exit ticket." />
+<div class="rs-two">
+  <NoteBox id="next" head="What changes next" source="§6.8, §7.3" page={98} intro="The thesis recommends:" ordered items={['Fewer lessons per session, or two days instead of one.', 'Restoring the middle lessons (Modules 7 to 9) before generative AI.', 'A second test weeks later, to see what lasts.']} foot={{ href: '/workshops', label: 'The workshop series is the next cycle →' }} />
+  <NoteBox id="limits" head="Read with care" source="§6.7" page={95} items={['9 volunteers and no comparison group.', 'All tests on the same day; no one was tested again later.', 'One researcher built the lessons and coded every answer.']} foot={{ href: thesisHref(95), label: 'All limits in the thesis, p. 95–96 →' }} />
 </div>
 
-The validation audit (post-collection) re-checked scoring keys, missing-data treatment, and instrument reliability before any inferential test was run. Reliability statistics are summarised below; the full audit and post-validation action plan are reported in the thesis.
+<section class="rs-sec" id="method">
+  <h2>How it was measured</h2>
+  <div class="rs-how">
+    <div><b>Test</b><span>24 questions, before and after the day.</span></div>
+    <div><b>Workload</b><span>A NASA-TLX rating after each lesson.</span></div>
+    <div><b>Exit tickets</b><span>Five short questions after each lesson.</span></div>
+  </div>
+  <p class="rs-src rs-src-after">Source: thesis <a href={thesisHref(35)}>§3.6, p. 35–37</a></p>
+</section>
 
-<Dropdown summary="Disclose · Reliability & validation audit">
-KR-20 internal consistency for the full 24-item conceptual instrument was acceptable at the pre-test and adequate at the post-test for a brief domain-spanning measure of this length. Section-level reliabilities (six items each) are necessarily lower; the per-section analyses below should be read as descriptive trajectories rather than separately validated subscales. A sensitivity analysis at p = .08 was run alongside the standard p = .05 threshold to acknowledge the pilot's reduced statistical power. None of the load-bearing findings change direction under the relaxed threshold.
-</Dropdown>
+<details class="dropdown rs-more" id="questions">
+  <summary>The five research questions</summary>
+  <div class="dropdown-body rs-rqs-body">
+    <OpenOnHash />
+    <ol class="rs-rqs">
+      {rqs.map((r, i) => (
+        <li class="rs-rq" id={r.id}>
+          <span class="tag">{RQS[i].tag}</span>
+          <div><h4>{RQS[i].gloss}</h4><p>{r.answer}</p></div>
+          <span class={`rs-status ${r.status}`}>{r.label}</span>
+          <p class="rs-src">Thesis <a href={thesisHref(r.page)}>{r.source}</a></p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</details>
 
-## III · Framework design <a id="rq1"></a>
-
-> **RQ 1 ·** What pedagogical principles and design patterns effectively scaffold learning progressions from basic array manipulation to generative AI in creative contexts?
-
-The framework that emerged from cycle i treats every lesson as a triangle: a visual artifact the learner produces, the array operation that generates it, and the conceptual claim the operation makes about the domain. Modules sequence by *what changes per step* — first values inside an array, then geometry across an array, then transformations between arrays, then learned transformations. This sequencing is the visible commitment of the curriculum; the empirical question is whether it scaffolds. The pilot points that way. Hands-on lessons carried lower mental demand than conceptual deep-dives (9.7 vs 12.7 on a 20-point scale, p = .016, d = 1.10), and self-rated understanding was highest for convolution, RGB basics and fractal square (3.9, 3.7 and 3.6 of 5). The knowledge gains in §VI and the exit-ticket themes in §VIII add to this; the experience-load correlation in §IV suggests the scaffolding is calibrated for the novice end of the experience distribution, with implications discussed in §IX.
-
-## IV · Cognitive load <a id="rq2"></a>
-
-> **RQ 2 ·** How can complex technical concepts be decomposed and sequenced to maintain optimal cognitive load while building toward advanced applications?
-
-Workload rose and fell in a sawtooth across the day rather than climbing steadily: lowest at RGB basics (7.7 of 20), highest at cellular automata (10.9), easing at convolution (9.9) and fractal square (8.6), then high again for the perceptron and DDPM (10.7 each). Mental demand varied most between modules (p < .001). Temporal demand also varied (p = .002), peaking at cellular automata and DDPM, so time pressure was part of the picture. By the last two modules participants worked harder, felt less successful and grew more frustrated.
-
-<ResearchFigure
-  src="/research/figures/tlx-trajectory.png"
-  alt="Line chart of mean NASA-TLX workload across the six workshop modules: lowest at RGB basics, highest at cellular automata, high again for perceptron and DDPM."
-  num="Fig. 1"
-  title="NASA-TLX trajectory across six modules."
-  caption="Mean overall workload per module (1–20, n = 9) with bootstrap 95% intervals; Friedman χ²(5) = 15.8, p = .008. Shading marks hands-on (blue) and conceptual (orange) lessons."
-  source="Phase 4 · figure 3 · workshop_data_processing/output"
-  id="fig-tlx"
-/>
-
-The more consequential finding sits sideways across this trajectory. A Spearman correlation between a prior-experience composite (programming years, Python proficiency, NumPy proficiency, image-processing exposure, ML basics) and mean NASA-TLX load across the workshop returned a strong negative coefficient — far larger than is usually reported in load research and significant despite the small sample.
-
-<div class="stat-row">
-  <StatCallout eyebrow="Experience × load" value="ρ = −0.857" label="Spearman rank correlation. Strong negative association." />
-  <StatCallout eyebrow="Significance" value="p = .007" label="Two-tailed, n = 8. The relationship got stronger without the flagged participant (ρ = −.893)." />
-  <StatCallout eyebrow="Direction" value="As expected" label="More prior experience predicts lower reported load. Magnitude is the surprise." />
+<div class="rs-thesis">
+  <Colophon />
 </div>
-
-<ResearchFigure
-  src="/research/figures/correlation-heatmap.png"
-  alt="Heat map of pairwise correlations between prior experience composites, knowledge gains, and NASA-TLX load measures across participants."
-  num="Fig. 2"
-  title="Correlation heat map · experience, gain, load."
-  caption="Pairwise Spearman correlations across the load-bearing measures. The experience × load cell (top-right cluster) is the dark band in the map."
-  source="Phase 4 · figure 8 · workshop_data_processing/output"
-  id="fig-corr"
-/>
-
-## V · Integration pathways <a id="rq3"></a>
-
-> **RQ 3 ·** What strategies effectively integrate real-time systems with progressive AI learning, and at what points in the curriculum should these integrations occur?
-
-The pilot did not include TouchDesigner content — Modules 10 and 11, where real-time integration would have been evaluated, had not been released at the time of the workshop. RQ 3 is therefore addressed theoretically: the curriculum reserves the integration question for Cycle ii and stages a hypothetical placement against three constraints (the learner's grasp of arrays as data structures, exposure to neural inference, and the conceptual cost of a second runtime). The theoretical argument and proposed empirical follow-up are developed in the thesis. The relevant disclosure here is that this research question, unlike the other four, lacks empirical receipts in cycle i.
-
-## VI · Assessment and gain <a id="rq4"></a>
-
-> **RQ 4 ·** How can learning outcomes in creative AI education be assessed across technical proficiency, creative expression, and conceptual understanding?
-
-Across the 24-item conceptual instrument, every participant who completed both administrations improved. The mean score rose from <em class="lit">M = 3.6</em> to <em class="lit">M = 12.1</em> out of 24 — a Cohen's <em class="lit">d</em> of 1.615. The Wilcoxon signed-rank test on paired pre/post scores returned a significant positive shift (W = 0, p = .008, exact); the normalised gain (Hake's g) averaged 0.43, classifying the cohort as a "medium" gainer in physics-education-research terminology. In a sample of this size these numbers are signals, not certainties — but the unanimity of the direction (no participant regressed; no participant gained zero) is the part that warrants the headline.
-
-<SlopeChart num="Fig. 3" />
-
-Per-section movement tells a sharper story than the aggregate. Arrays and images (A) moved most (d = 1.69); neural networks (C) and computational concepts (B) also improved significantly. Generative AI (D) moved least: from 0.5 to 1.9 of 6, not significant (p = .062), with 56% of answers still "I don't know". Most participants struggled to install PyTorch for the DDPM module late in the day, which the thesis treats as a design lesson for the next cycle.
-
-<Dropdown summary="Disclose · Per-section gain and item-level movement">
-Mean per-section scores (out of 6 items each, n = 8):
-Section A · Arrays and images · pre 1.25 → post 3.62 · d = 1.69, p = .008
-Section B · Computational concepts · pre 0.88 → post 3.12 · d = 1.14, p = .023
-Section C · Neural networks · pre 1.00 → post 3.50 · d = 1.48, p = .031
-Section D · Generative AI · pre 0.50 → post 1.88 · d = 0.69, p = .062, not significant
-
-22 of the 24 items became easier after the workshop. Five items still drew "I don't know" from at least half the participants; all five were in Sections C and D.
-</Dropdown>
-
-The assessment design itself is part of the answer to RQ 4. The instrument combines a forced-response conceptual measure (the 24 items reported here) with the exit-ticket free-response coding reported in §VIII, on the argument that creative-AI competence is not adequately measured by either alone. The pilot's evidence supports the joint instrument: the two strands agreed on the main points (learning gains, load rising at the conceptual modules, the weak transfer to generative AI) and are combined in the thesis's integration matrix.
-
-## VII · Transfer <a id="rq5"></a>
-
-> **RQ 5 ·** To what extent do learners successfully transfer foundational computational concepts to novel creative AI contexts, and what factors facilitate this transfer?
-
-Transfer was sampled rather than measured: the pilot was a single day, and follow-up administration was not part of cycle i. The thesis calls transfer to generative AI the weakest link (thesis §5.7) and RQ5 the question with the thinnest evidence (thesis §6.5, p. 92–93). Section C (neural networks) rose significantly (p = .031, d = 1.479) after a single perceptron module, which the thesis reads as near transfer; Section D (generative AI) did not reach significance (p = .062). In the feedback form, participants rated "foundational concepts connect to AI" at M = 4.17 (n = 6) but "confident applying concepts to my own projects" at only M = 3.50. In the exit tickets, explicit links to an earlier lesson clustered in modules 2 to 4 (12 of 16 code applications), while 8 applications recorded no connection (thesis §5.6). Far transfer and creative application were not tested. The integration matrix in §VIII shows the alignment between these results and the conceptual gains in §VI.
-
-## VIII · Themes <a id="themes"></a>
-
-The exit-ticket coding triangulates the quantitative findings from a register the test items cannot reach. 158 responses were coded with a 30-code codebook in five groups (learning, connections, challenges, engagement, experience), 204 code applications in all. The most frequent codes: naming a concept learned (31), an explicit link to an earlier lesson (16), a conceptual difficulty (12), and setup problems (8, half of them in the DDPM module).
-
-<ResearchFigure
-  src="/research/figures/theme-frequencies.png"
-  alt="Bar chart showing frequencies of the qualitative themes coded from exit-ticket responses across all participants."
-  num="Fig. 4"
-  title="Exit-ticket theme frequencies."
-  caption="Code frequencies from the exit tickets (158 coded responses, 30-code codebook). Naming a concept learned is by far the most frequent code."
-  source="Phase 5 · figure 10 · workshop_data_processing/output"
-  id="fig-themes"
-/>
-
-By the end of the day participants used *array*, *channel* and *kernel* in their own sentences, often without prompting: the qualitative counterpart of the knowledge gains in §VI. The curriculum's scaffold is Execute → Modify → Create, and the integration matrix in the thesis lines up both strands of evidence theme by theme.
-
-## IX · Limitations <a id="limits"></a>
-
-<Admonition type="note" title="Limitations">
-The findings above are pilot-stage. Three constraints qualify them at every step. First, the sample (n = 9; n = 8 for paired tests) is small by inferential-statistics standards; effect-size estimates carry wide confidence intervals and the *d* = 1.615 figure should be read as a strong directional signal rather than a population estimate. Second, the workshop was a single contiguous session; the gains and the load profile may reflect that intensity and not generalise to a distributed schedule. Third, transfer was not measured through delayed re-administration or downstream-task performance — the §VII evidence rests on test Sections C and D, feedback-form ratings and exit-ticket connection codes, not on what participants did after the workshop.
-
-The thesis discusses each limitation in detail and proposes empirical follow-up for cycle ii, the six-workshop series now running, including a delayed post-test, a distributed-schedule comparison, and new lesson content to address RQ 3 empirically.
-</Admonition>
-
-The page above is the page; receipts stand behind it.
-
-<Colophon />

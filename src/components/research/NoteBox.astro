@@ -1,0 +1,26 @@
+---
+/**
+ * RS-11 (19 Nov): short list box ("What changes next", "Read with care").
+ */
+import { thesisHref } from '@/lib/thesisLink';
+
+interface Props {
+  id: string;
+  head: string;
+  source: string;
+  page: number;
+  intro?: string;
+  items: string[];
+  ordered?: boolean;
+  foot: { href: string; label: string };
+}
+const { id, head, source, page, intro, items, ordered = false, foot } = Astro.props;
+const List = ordered ? 'ol' : 'ul';
+---
+
+<div class="rs-box" id={id}>
+  <div class="rs-head"><span class="rs-org">{head}</span><span class="rs-count"><a href={thesisHref(page)}>{source}</a></span></div>
+  {intro && <p class="rs-intro">{intro}</p>}
+  <List>{items.map((t) => <li>{t}</li>)}</List>
+  <p class="rs-foot"><a href={foot.href}>{foot.label}</a></p>
+</div>
