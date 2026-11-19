@@ -5,7 +5,7 @@ Creates a diagram showing three overlapping circles representing
 the primary colors (Red, Green, Blue) and their combinations
 (Cyan, Magenta, Yellow, White).
 
-Author: Generated with Claude - Opus 4.5
+Author: Pixels2GenAI Project
 """
 
 import numpy as np
