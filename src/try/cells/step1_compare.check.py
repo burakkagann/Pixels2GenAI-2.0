@@ -1,6 +1,6 @@
 def check():
     idea = "light < THRESHOLD is True for every number below it. Exactly three of the four numbers must be below THRESHOLD."
-    line = "Line 1: any THRESHOLD above 120 and up to 200, for example THRESHOLD = 150"
+    line = "Line 1: THRESHOLD must sit above the third-darkest number and at or below the lightest."
     inked = [n for n in [30, 200, 120, 90] if n < THRESHOLD]
     if len(inked) == 3:
         return True, f"30, 120 and 90 are below {THRESHOLD}: three squares of ink."
