@@ -1,6 +1,6 @@
 /**
  * Tickets for the series (DEC-51, DEC-55, DEC-74, DEC-75): pretix sells single tickets and the series pass
- * (5 seats per workshop), Luma sells single tickets only (3 seats). The shop links are filled in when the shops
+ * (4 seats per workshop), Luma sells single tickets only (4 seats). The shop links are filled in when the shops
  * go live; while a link is null its slot shows the notReady label below (not a link), so the page never shows a
  * dead button.
  */
