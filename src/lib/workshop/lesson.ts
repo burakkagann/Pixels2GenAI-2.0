@@ -63,7 +63,8 @@ export function startLesson(root: HTMLElement) {
 
   // ---------- progress ----------
   const record = () => store.record(key);
-  let mask = typeof record().checksMask === 'number' ? (record().checksMask as number) : 0;
+  // A stored mask from a lesson with another number of checks points at other screens: start again (MF-1 added a check).
+  let mask = typeof record().checksMask === 'number' && record().checksTotal === checkCells.length ? (record().checksMask as number) : 0;
   const passed = (cell: HTMLElement) => {
     const index = checkCells.indexOf(cell);
     return index >= 0 && Boolean(mask & (1 << index));

@@ -185,6 +185,18 @@ test('fails: feedback over 25 words', () => {
   failsWith(conceptErrors(concept, ALL_FILES), /feedback over 25 words/);
 });
 
+test('fails: recall feedback over one sentence, or over 25 words (R-3585-61)', () => {
+  const two = goodConcept();
+  two.data.recall.options[1].why = 'That is the sum. Divide it by 3.';
+  failsWith(conceptErrors(two, ALL_FILES), /recall option 2 .*feedback is more than one sentence/);
+  const long = goodConcept();
+  long.data.recall.options[1].why = `${Array.from({ length: 26 }, () => 'word').join(' ')}.`;
+  failsWith(conceptErrors(long, ALL_FILES), /recall option 2 .*feedback over 25 words/);
+  const missing = goodConcept();
+  missing.data.recall.options[1].why = '';
+  failsWith(conceptErrors(missing, ALL_FILES), /recall option 2 .*no feedback/);
+});
+
 test('fails: no recall question, or a recall question breaking the same rules', () => {
   const none = goodConcept();
   delete none.data.recall;

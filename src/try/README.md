@@ -103,6 +103,7 @@ holds /try to a 15-minute budget.
   a task's `source` is the stage before, its `solution` its own stage. Never run (skipped): the solution of the cell before loads and the tag
   says so. Last run ended in an error (or step 3's check failed): the learner's code loads with the strip "Use task n's solution". Reset
   puts back what the task opened with (with its tag and strip). Nothing is stored: a reload starts from the solutions.
+- Make it first (MF-1, R-3585-62) has a check that passes on any clean run (`poster_dom.check.py`), so it uses the same HD-3b row and G3 gate. The row shows only after an error (a clean run passes), where the two hints and the Solution (back to `DARK = 90`) help. It counts as a check: Next and the done box wait for it. `lesson.ts` drops a stored progress mask whose `checksTotal` differs from the page's.
 - Step 3 names the rule `colour_of` from the start (GFC-7 b); its check, label ("your poster") and `figures.py` follow.
 - Help row: the HD-3b row under the code (hint, then Solution after one more Run, G3). The Solution shows the whole stage code, lines new or
   changed marked with a bar and "+" (a line diff made by `Cell.astro` against `source`), and "Use this code".
