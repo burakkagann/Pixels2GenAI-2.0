@@ -10,25 +10,25 @@ figure:
   name: mask
   folder: /concepts/fig
   phoneHeight: 1340
-  alt: "Three 6 by 6 grids of the same Dom pixels: their brightness numbers, then T or F for light < 110, then blue ink where T and paper where F."
-  caption: "The same 36 pixels: brightness, one question each, ink or paper."
+  alt: "Three 6 by 6 grids of the same Dom pixels: their brightness numbers, then T or F for light < 110, then blue where T and paper where F."
+  caption: "The same 36 pixels three times: their brightness, the answer to `light < 110`, and the result in ink or paper."
   explore:
     image: /concepts/fig/dom-grey.png
     shares: src/content/concepts/dom-shares.json
     start: 110
-    alt: "The Dom printed in two inks at the chosen threshold: blue ink where a pixel's brightness is below it, paper elsewhere."
+    alt: "The Dom printed in two colours at the chosen threshold: blue where a pixel's brightness is below it, paper elsewhere."
 worked: "The marked pixel from concept 1: 87 < 110 is True, so it gets ink. A light stone pixel: 215 < 110 is False, so it stays paper."
 predict:
-  q: "The threshold goes from 60 to 120. Does the poster get more blue ink or less?"
+  q: "The threshold rises from 60 to 120. Does the poster get more blue or less?"
   options:
-    - { text: "More", correct: true, why: "More pixels fall below 120 than below 60: about 19 % of the photo becomes 35 %." }
-    - { text: "Less", why: "A higher threshold lets more pixels fall below it: about 19 % becomes 35 %." }
+    - { text: "Less", why: "A higher threshold lets more pixels fall below it: the inked part grows from about 19 % to 35 %." }
+    - { text: "More", correct: true, why: "More pixels fall below 120 than below 60: the inked part grows from about 19 % to 35 % of the photo." }
 recall:
   q: "The rule inks a pixel when light < 100. A pixel's brightness is exactly 100. Does it get ink?"
   options:
-    - { text: "No, it stays paper", correct: true, why: "100 < 100 is False, so the pixel stays paper." }
     - { text: "Yes, it gets ink", why: "< means strictly below, and 100 is not below 100; only <= would let it in." }
+    - { text: "No, it stays paper", correct: true, why: "100 < 100 is False, so the pixel stays paper." }
 cite: ["Gonzalez & Woods, 2018"]
 ---
 
-A threshold is one number on the brightness scale. The rule asks every pixel one yes/no question, `light < THRESHOLD`. True gets ink, False stays paper. The grid of answers is a mask: it marks where the ink goes. This is thresholding, a way to split a picture in two<Cite c="Gonzalez & Woods, 2018" />. Raise the threshold and more pixels fall below it.
+A threshold is one number on the brightness scale. The rule asks every pixel one yes/no question, `light < THRESHOLD`. True gets ink, False stays paper. The grid of True/False answers is called a mask: it shows where the ink goes. Splitting a picture in two like this is called thresholding<Cite c="Gonzalez & Woods, 2018" />. Raise the threshold and more pixels fall below it.

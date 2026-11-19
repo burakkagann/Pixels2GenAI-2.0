@@ -20,15 +20,15 @@ HELPERS = (MEDIA / "helpers.py").read_text(encoding="utf-8")
 
 # cell -> (solution as line swaps, [wrong answers as line swaps])
 FIX_OLD = """    if light < 150:
-        return TONE
+        return PINK
     if light < 90:
-        return INK                     # this never shows: why?"""
+        return BLUE                     # this never shows: why?"""
 FIX_NEW = """    if light < 90:
-        return INK
+        return BLUE
     if light < 150:
-        return TONE"""
-FIX_NO_INK = """    if light < 150:
-        return TONE
+        return PINK"""
+FIX_NO_BLUE = """    if light < 150:
+        return PINK
     return PAPER"""
 CASES = {
     "poster_dom.py": ([], []),
@@ -45,7 +45,7 @@ CASES = {
     "step3_fix.py": (
         [(FIX_OLD, FIX_NEW)],
         [[], [("light < 90", "light < 60")], [(FIX_OLD, FIX_NEW), ("light < 150", "light < 120")],
-         [(FIX_OLD, FIX_NO_INK)],
+         [(FIX_OLD, FIX_NO_BLUE)],
          [(FIX_OLD, FIX_NEW), ("light < 90", "light < 100")]],
     ),
 }

@@ -1,13 +1,13 @@
 photo = load_photo()
-INK = [32, 40, 120]
-TONE = [235, 80, 125]
+BLUE = [32, 40, 120]
+PINK = [235, 80, 125]
 PAPER = [246, 238, 222]
 
-def three_tones(light):
+def three_colours(light):
     if light < 150:
-        return TONE
+        return PINK
     if light < 90:
-        return INK                     # this never shows: why?
+        return BLUE                     # this never shows: why?
     return PAPER
 
-show(paint(photo, three_tones), "three tones?")
+show(paint(photo, three_colours), "three colours?")

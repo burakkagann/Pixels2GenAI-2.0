@@ -3,7 +3,7 @@
  * The concept link of a step (condition 3).
  * In the notes panel (CR-2, 16 Nov 2026; the first row of "Notes for step n", CL b): a 72 px thumbnail of the
  * concept's figure (light and dark; an interactive concept shows its static figure), the title, the key idea (one
- * sentence) and "Open the concept ↗", which opens the concept screen; there "Back to step n" returns
+ * sentence) and "Open the concept", which opens the concept screen; there "Back to step n" returns
  * (src/lib/workshop/concepts.ts). Without JavaScript the link is a plain jump to #concept-<id>, which stays on the page.
  * A concept first taught in an earlier lesson shows "Earlier: <short> (<label>) ↗" with its key idea; the link opens
  * its Go deeper page in a new tab.
@@ -40,7 +40,7 @@ const keyHtml = inlineMarkdownHtml(keyIdea);
       <p class="wb-concept-card-key" set:html={keyHtml} />
       {earlier
         ? <a class="wb-concept-card-open" href={deeper} target="_blank" rel="noopener">Earlier: {earlierLabel}<span aria-hidden="true">{" ↗"}</span><span class="sr-only"> (opens in a new tab)</span></a>
-        : <a class="wb-concept-card-open" href={`#concept-${id}`} data-concept-link={id}>Open the concept<span class="sr-only">: {title}</span><span aria-hidden="true">{" ↗"}</span></a>}
+        : <a class="wb-concept-card-open" href={`#concept-${id}`} data-concept-link={id}>Open the concept<span class="sr-only">: {title}</span></a>}
     </div>
   </div>
 ) : (

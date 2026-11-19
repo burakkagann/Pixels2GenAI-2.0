@@ -22,7 +22,7 @@ const questions = await Promise.all(ids.map(async (id) => {
 ---
 
 <section class="wb-recall" data-recall-block aria-label="Recall">
-  <p class="wb-recall-lead">From memory first: one question for each concept, no looking back.</p>
+  <p class="wb-recall-lead">Answer from memory first: one question for each concept. Try not to look back.</p>
   {questions.map((question, i) => (
     <Predict q={question.q} code={question.code} options={question.options} label={`Recall ${i + 1} of ${questions.length}`} recall />
   ))}

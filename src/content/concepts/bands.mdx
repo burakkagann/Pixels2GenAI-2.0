@@ -1,8 +1,8 @@
 ---
 id: bands
-title: "Two thresholds, three inks"
-short: "three inks"
-keyIdea: "Two thresholds split the brightness scale into three bands: blue ink, pink ink and paper."
+title: "Two thresholds, three colours"
+short: "three colours"
+keyIdea: "Two thresholds split the brightness scale into three bands: blue, pink and paper."
 covers: [K8, K9, K10]
 introduced: { lesson: try, label: "the free sample" }
 figure:
@@ -10,17 +10,17 @@ figure:
   name: three-bands
   folder: /concepts/fig
   phoneHeight: 970
-  alt: "The 0 to 255 brightness ruler with marks at 90 and 150: blue ink below 90, pink tone from 90 to 150, paper above. Next to it the three-colour poster of the Dom."
-  caption: "Two thresholds cut the ruler into three bands of ink."
+  alt: "The 0 to 255 brightness ruler with marks at 90 and 150: blue below 90, pink from 90 to 149, paper from 150. Next to it the three-colour poster of the Dom."
+  caption: "Two thresholds cut the ruler into three bands of colour."
 worked: "A pixel at 170: 170 < 90 is False, 170 < 150 is False, so the rule reaches its last line and returns PAPER."
 predict:
-  q: "The bands are at 90 and 150. Which ink does a pixel at 120 get?"
+  q: "The bands are at 90 and 150. Which colour does a pixel at 120 get?"
   options:
-    - { text: "Pink", correct: true, why: "120 is not below 90, but it is below 150." }
     - { text: "Blue", why: "Blue is below 90, and 120 is not below 90." }
+    - { text: "Pink", correct: true, why: "120 is not below 90, but it is below 150." }
     - { text: "Paper", why: "Paper is 150 and up, and 120 is below 150." }
 recall:
-  q: "Python reads these checks from the top. Which ink does a pixel at 50 get?"
+  q: "Python reads these checks from the top. Which colour does a pixel at 50 get?"
   code: |
     if light < 160:
         return PINK
@@ -28,10 +28,10 @@ recall:
         return BLUE
     return PAPER
   options:
-    - { text: "Pink", correct: true, why: "50 is below 160, so the first check answers and the blue check is never reached." }
     - { text: "Blue", why: "50 is below 80, but the first check already said True, and the first True wins." }
     - { text: "Paper", why: "50 is below both numbers, so it gets ink." }
+    - { text: "Pink", correct: true, why: "50 is below 160, so the first check answers and the blue check is never reached." }
 cite: ["Kipphan, 2001"]
 ---
 
-Two thresholds cut the brightness scale into three bands: below 90 blue ink, below 150 pink, the rest paper. In the rule each band is an `if` with a `return`. A `return` ends the rule for that pixel, so the lines below it never run. A screen print works in bands too: one stencil per ink, each printed flat<Cite c="Kipphan, 2001" />.
+Two thresholds cut the brightness scale into three bands: below 90 blue, from 90 to 149 pink, 150 and up paper. In the rule each band is an `if` with a `return`. A `return` ends the rule for that pixel, so the lines below it never run. A screen print works in bands too: one stencil per colour, each printed flat<Cite c="Kipphan, 2001" />.

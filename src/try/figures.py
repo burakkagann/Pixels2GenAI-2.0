@@ -3,7 +3,7 @@ Figures for the free sample lesson /try ("Print the Berliner Dom as a poster"), 
 
 Drawn with NumPy + Pillow from the real /try photo (public/try-media/dom-480.png) and the real lesson rule
 (the same if-chain as public/try-media/helpers.py screenprint()). Workshop diagram theme (CNT-07, P3): site
-colours for lines and text, the lesson's three inks only where a figure shows the print.
+colours for lines and text, the lesson's three colours only where a figure shows the print.
 
 Each figure is drawn twice per theme:
   <name>.<light|dark>.webp        1400 x 760 (700 x 380 at 2x), for wide screens
@@ -15,9 +15,9 @@ Each figure is drawn twice per theme:
 Concept figures (TRB-3 a, 16 Nov 2026: the concept library's figures, in public/concepts/fig/ because /try is public):
   grid-zoom     a photo is a grid of numbers: a 6 x 6 patch of the Dom, each square its real colour and brightness,
                 one pixel's three numbers worked out (concept "brightness", K1-K4)
-  mask          brightness -> light < 110 -> INK or PAPER on the same patch: the still behind the threshold slider
+  mask          brightness -> light < 110 -> BLUE or PAPER on the same patch: the still behind the threshold slider
                 (concept "threshold", K5-K6)
-  three-bands   two thresholds, three inks, and the poster they make (concept "bands", K8)
+  three-bands   two thresholds, three colours, and the poster they make (concept "bands", K8)
   dom-grey.png  the photo's brightness, 240 x 150, for the threshold slider (ThresholdExplorer)
   dom-shares.json  for every threshold 0-256, the share of the 144,000 pixels the lesson's rule inks
                 (light < threshold, light = (red + green + blue) / 3, as helpers.paint): the slider's percentage
@@ -43,8 +43,8 @@ SITE = {  # the workshop diagram theme (site colours)
     "light": {"background": "#FFFCF3", "text": "#141418", "muted": "#5B5B63", "line": "#BDB9AE", "pink": "#B02E64"},
     "dark": {"background": "#1B1B1F", "text": "#F2EEE6", "muted": "#8C8880", "line": "#3C3C43", "pink": "#F4669A"},
 }
-# The lesson's inks (src/try/cells/*.py): the print keeps them in both themes.
-INK, TONE, PAPER = (32, 40, 120), (235, 80, 125), (246, 238, 222)
+# The lesson's colours (src/try/cells/*.py): the print keeps them in both themes.
+BLUE, PINK, PAPER = (32, 40, 120), (235, 80, 125), (246, 238, 222)
 
 # The four numbers of step 1 ([30, 200, 120, 90]) are real pixels of the photo: (row, col).
 FOUR = [((143, 188), "shadow"), ((209, 440), "sky"), ((89, 256), "green dome"), ((143, 264), "stone")]
@@ -68,21 +68,21 @@ def brightness(photo):
     return photo.sum(axis=2) / 3
 
 
-def three_tones(light, dark=90, mid=150):
+def three_colours(light, dark=90, mid=150):
     """The lesson's rule, in the right order."""
     if light < dark:
-        return INK
+        return BLUE
     if light < mid:
-        return TONE
+        return PINK
     return PAPER
 
 
 def wrong_order(light):
-    """The lesson's rule as step 3 starts: the wide question first, so INK never shows."""
+    """The lesson's rule as step 3 starts: the wide question first, so BLUE never shows."""
     if light < 150:
-        return TONE
+        return PINK
     if light < 90:
-        return INK
+        return BLUE
     return PAPER
 
 
@@ -124,7 +124,7 @@ def ruler(image, draw, colours, x, y, width, thresholds, bands, labels):
     for (low, high), colour, label in zip(zip(edges, edges[1:]), bands, labels):
         x0, x1 = x + round(low / 256 * width), x + round(high / 256 * width)
         draw.rectangle([x0, y + 62, x1, y + 120], fill=colour)
-        text_colour = PAPER if colour in (INK, TONE) else (20, 20, 24)
+        text_colour = PAPER if colour in (BLUE, PINK) else (20, 20, 24)
         draw.text(((x0 + x1) / 2, y + 91), label, font=font(27, mono=True, bold=True), fill=text_colour, anchor="mm")
     draw.rectangle([x, y + 62, x + width, y + 120], outline=colours["line"], width=2)
     for value in thresholds:
@@ -185,17 +185,17 @@ def four_pixels(mode):
 
 def three_bands(mode):
     image, draw, c = canvas(mode, 1400, 760)
-    ruler(image, draw, c, 70, 90, 1260, [90, 150], [INK, TONE, PAPER], ["INK", "TONE", "PAPER"])
-    for i, (test, ink) in enumerate([("light < 90", "INK"), ("light < 150", "TONE"), ("otherwise", "PAPER")]):
+    ruler(image, draw, c, 70, 90, 1260, [90, 150], [BLUE, PINK, PAPER], ["BLUE", "PINK", "PAPER"])
+    for i, (test, ink) in enumerate([("light < 90", "BLUE"), ("light < 150", "PINK"), ("otherwise", "PAPER")]):
         draw.text((70, 270 + i * 52), f"{test:<12}→ {ink}", font=font(28, mono=True), fill=c["text"])
-    framed(image, draw, c, paint(load_photo(), three_tones), 800, 250, 530)
-    draw.text((70, 460), "two questions, three inks", font=font(27), fill=c["muted"])
+    framed(image, draw, c, paint(load_photo(), three_colours), 800, 250, 530)
+    draw.text((70, 460), "two questions, three colours", font=font(27), fill=c["muted"])
     return image
 
 
 IF_ORDERS = [
-    (three_tones, "if light < 90 first", [INK, TONE, PAPER], ["INK", "TONE", "PAPER"], [90, 150]),
-    (wrong_order, "if light < 150 first", [TONE, PAPER], ["TONE  (10 stops here)", "PAPER"], [150]),
+    (three_colours, "if light < 90 first", [BLUE, PINK, PAPER], ["BLUE", "PINK", "PAPER"], [90, 150]),
+    (wrong_order, "if light < 150 first", [PINK, PAPER], ["PINK  (10 stops here)", "PAPER"], [150]),
 ]
 
 
@@ -226,11 +226,11 @@ def four_pixels_phone(mode):
 
 def three_bands_phone(mode):
     image, draw, c = canvas(mode, 800, 970)
-    ruler(image, draw, c, 40, 90, 720, [90, 150], [INK, TONE, PAPER], ["INK", "TONE", "PAPER"])
-    for i, (test, ink) in enumerate([("light < 90", "INK"), ("light < 150", "TONE"), ("otherwise", "PAPER")]):
+    ruler(image, draw, c, 40, 90, 720, [90, 150], [BLUE, PINK, PAPER], ["BLUE", "PINK", "PAPER"])
+    for i, (test, ink) in enumerate([("light < 90", "BLUE"), ("light < 150", "PINK"), ("otherwise", "PAPER")]):
         draw.text((40, 250 + i * 52), f"{test:<12}→ {ink}", font=font(28, mono=True), fill=c["text"])
-    draw.text((40, 420), "two questions, three inks", font=font(27), fill=c["muted"])
-    framed(image, draw, c, paint(load_photo(), three_tones), 40, 480, 720)
+    draw.text((40, 420), "two questions, three colours", font=font(27), fill=c["muted"])
+    framed(image, draw, c, paint(load_photo(), three_colours), 40, 480, 720)
     return image
 
 
@@ -332,9 +332,9 @@ def mask(mode, phone=False, threshold=MASK_THRESHOLD):
     truth = light < threshold
     tf = [["T" if t else "F" for t in row] for row in truth]
     tf_fill = [[(205, 205, 210) if t else (90, 90, 96) for t in row] for row in truth]
-    inks = [[INK if t else PAPER for t in row] for row in truth]
+    inks = [[BLUE if t else PAPER for t in row] for row in truth]
     blank = [["" for _ in row] for row in truth]
-    panels = [(grey, light, "light"), (tf_fill, tf, f"light < {threshold}"), (inks, blank, "INK or PAPER")]
+    panels = [(grey, light, "light"), (tf_fill, tf, f"light < {threshold}"), (inks, blank, "BLUE or PAPER")]
     if not phone:
         image, draw, c = canvas(mode, 1400, 760)
         cell = 64

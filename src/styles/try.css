@@ -3,15 +3,13 @@
 /* Public mode has no tutor: the error box's "Ask about this error" button (cells.ts, unchanged) stays hidden. */
 .wb [data-tutor-error] { display: none; }
 
-/* "Best on a laptop" and the photo credit: quiet, mono. */
-.wb-idea .try-note { margin: 0; font-family: var(--mono); font-size: 13px; color: var(--fg-3); }
+/* The photo credit: quiet. */
 .wb-idea .try-credit { margin: 0; font-size: 13.5px; color: var(--fg-3); }
 
 /* The colour-swatch figure: wide, crisp pixels. */
 .wb-idea .try-swatch { display: block; }
 .wb-idea .try-swatch img { width: 100%; max-width: 420px; height: auto; image-rendering: pixelated; }
 
-.try-draft { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px dashed currentColor; padding: 0 4px; opacity: .8; }
 
 /* The bar title is "Free sample · Dom poster"; on phones only "Free sample" fits next to the back link. */
 @media (max-width: 520px) {
@@ -20,3 +18,7 @@
 
 /* The references hold long URLs: let them break, so the Wrap up does not scroll sideways on a phone. */
 .wb-idea .wb-hint[data-kind="note"] li { overflow-wrap: anywhere; }
+
+/* Task boxes may hold a short numbered list: the base styles only cover paragraphs. */
+.wb-task-body ol { margin: 4px 0; padding-left: 22px; }
+.wb-task-body * + p { margin-top: 6px; }
