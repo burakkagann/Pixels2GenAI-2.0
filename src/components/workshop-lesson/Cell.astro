@@ -6,6 +6,17 @@
  *   <Cell slot="work" file="step2_kernel.py" />          code only
  *   <Cell slot="work" file="step2_kernel.py" check />    with step2_kernel.check.py
  *
+ * One code across screens (GFC-2 c, GFC-3 a, GFC-4 b, GFC-5 a; Go further, 19 Nov 2026). Cells with the same `chain` are
+ * one piece of work: each opens with the learner's code from the cell before it (lesson.ts). Props:
+ *   file      the name shown and used in errors (my_poster.py); the code is read from `source` when that is given
+ *   source    the file in `folder` that holds the code this cell starts from (the cell before's solution)
+ *   solution  the file with this stage's whole code. It loads when the cell before was skipped, or on
+ *             "Use task n's solution" when that cell's last run ended in an error
+ *   label     how the stage is named in the strip and the tag ("task 1", "step 3")
+ *   solutionCode  the Solution hint shows `solution` whole, new lines marked +, with "Use this code" (the lines
+ *             that differ from `source`, by a line diff)
+ *   <Cell slot="work" file="my_poster.py" source="stage1.py" solution="stage2.py" chain="poster" label="task 2" solutionCode />
+ *
  * Code and check are real files in `folder` (public mode, /try: src/try/cells/, never copied to the
  * site), read at build time (tested offline by tests/try/run_try.py). Without
  * JavaScript the code shows in a plain textarea; lesson.ts adds the editor.
@@ -17,12 +28,21 @@ import path from 'node:path';
 interface Props {
   file: string;
   check?: boolean;
+  source?: string;
+  solution?: string;
+  chain?: string;
+  label?: string;
+  solutionCode?: boolean;
   /** PUBLIC MODE: the folder of the cell files, relative to the repo root (the player copy read workshop-media/<workshop>/<lesson>/). */
   folder?: string;
 }
 
-const { file, check = false, folder = 'src/try/cells' } = Astro.props;
-if (!/^[\w.-]+\.py$/.test(file)) throw new Error(`Cell file must be a plain .py name: ${file}`);
+const { file, check = false, folder = 'src/try/cells', source = file, solution, chain, label, solutionCode = false } = Astro.props;
+for (const name of [file, source, solution ?? 'x.py']) {
+  if (!/^[\w.-]+\.py$/.test(name)) throw new Error(`Cell file must be a plain .py name: ${name}`);
+}
+if (chain && (!solution || !label)) throw new Error(`A chained cell needs a solution file and a label: ${file}`);
+if (solutionCode && !solution) throw new Error(`solutionCode needs a solution file: ${file}`);
 
 if (!/^src\/[\w/-]+$/.test(folder)) throw new Error(`Cell folder must be a plain path under src/: ${folder}`);
 const dir = path.join(process.cwd(), folder);
@@ -31,23 +51,56 @@ const read = (name: string) => {
   if (!fs.existsSync(full)) throw new Error(`Missing cell file: ${folder}/${name}`);
   return fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n').trimEnd();
 };
-const code = read(file);
-const checkSource = check ? read(file.replace(/\.py$/, '.check.py')) : '';
+const code = read(source);
+const checkSource = check ? read(source.replace(/\.py$/, '.check.py')) : '';
+const solutionText = solution ? read(solution) : '';
+
+// Lines of the solution that are not in the starting code, by the longest common run of lines. Blank lines never carry a mark.
+function changedLines(from: string[], to: string[]) {
+  const table = Array.from({ length: from.length + 1 }, () => new Array<number>(to.length + 1).fill(0));
+  for (let i = from.length - 1; i >= 0; i--) {
+    for (let j = to.length - 1; j >= 0; j--) {
+      table[i][j] = from[i] === to[j] ? table[i + 1][j + 1] + 1 : Math.max(table[i + 1][j], table[i][j + 1]);
+    }
+  }
+  const same = new Set<number>();
+  for (let i = 0, j = 0; i < from.length && j < to.length;) {
+    if (from[i] === to[j]) { same.add(j); i++; j++; }
+    else if (table[i + 1][j] >= table[i][j + 1]) i++;
+    else j++;
+  }
+  return to.map((line, j) => !same.has(j) && line.trim() !== '');
+}
+const solutionLines = solutionText.split('\n');
+const marked = solutionCode ? changedLines(code.split('\n'), solutionLines) : [];
 ---
 
-<div class="wb-cell" data-file={file} data-has-check={check ? '' : undefined}>
+<div class="wb-cell" data-file={file} data-has-check={check ? '' : undefined} data-chain={chain} data-label={label}>
   <div class="wb-cell-bar">
     <span class="wb-file">{file}</span>
+    {chain && <span class="wb-chip" data-chip aria-live="polite" hidden></span>}
     <span class="wb-keys">Ctrl+Enter runs</span>
-    <button type="button" class="wb-btn wb-btn--quiet" data-reset title="Put the original code back">Reset</button>
+    <button type="button" class="wb-btn wb-btn--quiet" data-reset title={chain ? 'Put back the code this task opened with' : 'Put the original code back'}>Reset</button>
     <button type="button" class="wb-btn wb-btn--run" data-run>▶ Run</button>
   </div>
   <div class="wb-editor">
     <textarea class="wb-code" data-code spellcheck="false" rows="14" aria-label={`Code: ${file}`}>{code}</textarea>
   </div>
+  {solution && <textarea data-solution hidden aria-hidden="true" tabindex="-1">{solutionText}</textarea>}
+  {solutionCode && (
+    <div hidden data-solution-code>
+      <pre class="wb-solpre">{solutionLines.map((line, i) => <span class:list={['wb-solline', { 'is-new': marked[i] }]}>{line || ' '}</span>)}</pre>
+      <p class="wb-solnote">Lines marked + are new or changed.</p>
+      <p class="wb-soluse"><button type="button" class="wb-btn wb-btn--small" data-use-solution>Use this code</button> <span>Reset puts back the code this task opened with.</span></p>
+    </div>
+  )}
   {check && <textarea data-check hidden aria-hidden="true" tabindex="-1">{checkSource}</textarea>}
-  <div class="wb-verdict" data-verdict data-state="idle" role="status">
-    {check ? 'Run your code to check it.' : 'No check on this screen: run it and play with it.'}
+  <!-- HD-3b: the result and the hints are one unit. lesson.ts adds the help control to the verdict row and fills data-hh with the hints (one level per click). -->
+  <div class="wb-vbox">
+    <div class="wb-verdict" data-verdict data-state="idle" role="status" aria-atomic="false">
+      {check ? 'Run your code to check it.' : 'No check on this screen: run it and play with it.'}
+    </div>
+    <div class="wb-hh" data-hh hidden></div>
   </div>
   <div class="wb-output">
     <span class="wb-label">Output</span>

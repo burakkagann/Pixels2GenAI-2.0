@@ -135,7 +135,12 @@ self.onmessage = async ({ data }) => {
     timings.loadMs = Math.round(performance.now() - started);
     const helpers = await loadHelpers(helpersUrl);
     writePhoto(pyodide, data.photo);
-    await pyodide.loadPackagesFromImports(`${helpers}\n${code}`, { messageCallback: () => {} });
+    // Two calls on purpose: Pyodide finds imports by parsing the source, and a source with a syntax error yields none.
+    // Joined, a typo in the learner's code also skipped the helpers' Pillow, the helpers then failed to import and the
+    // page said "Python could not start". Apart, the helpers always get their packages and the typo reaches the
+    // learner's run below as a SyntaxError.
+    await pyodide.loadPackagesFromImports(helpers, { messageCallback: () => {} });
+    await pyodide.loadPackagesFromImports(code, { messageCallback: () => {} });
 
     // A fresh namespace per run: cells re-create what they need, so steps work
     // in any order and nothing from an earlier run leaks in.

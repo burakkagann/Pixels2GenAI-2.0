@@ -1,0 +1,39 @@
+---
+/**
+ * One Go further task (GF-2, picks 19 Nov 2026; later 19 Nov: each task is its own screen, Kağan's /try review).
+ * An optional run of 1 to 3 screens after Wrap up, easy to hard. Wrap up offers "Finish" or "Go further"; Next on a
+ * task opens the next task, and Next on the last one opens Finish. No check (GFR-5). Generic: /try and W1 lessons
+ * both use it; the lesson owns the Task, Diagram, Hint and Cell it passes in.
+ *
+ *   <GoFurther n={1} of={3} kind="Extend" title="A fourth colour">
+ *     <Task slot="task">…</Task>                          at most 40 words
+ *     text, <Diagram … /> (the target picture)
+ *     <Hint>…</Hint>                                      hints, then the solution: the player's help row
+ *     <Hint kind="solution">…</Hint>                      (HD-3b): "Hint 1 of N ›", then "Solution" after one more Run
+ *     <Cell slot="work" file="my_poster.py" source="stage0.py" solution="stage1.py" chain="poster" label="task 1" solutionCode />
+ *
+ * The tasks are one piece of work (R-3585-46, GFC-1 to GFC-5): the cells share `chain` and one file name; task n opens with the
+ * learner's code from task n-1 (task 1 from the lesson's last step, a cell with the same chain). Never run: the solution before loads.
+ * Last run in error: the learner's code plus a "Use task n-1's solution" strip. The Solution shows the whole code, new lines marked, and
+ * "Use this code". Reset puts back what the task opened with. See Cell.astro and lesson.ts (chainLinks).
+ *   </GoFurther>
+ *
+ * Progress: dashed segments, the count reads "Go further n of N"; never in done, minutes or the exit ticket (lesson.ts).
+ */
+import Screen from './Screen.astro';
+
+interface Props {
+  n: number;
+  of: number;
+  kind: 'Extend' | 'Combine' | 'Generalise' | 'Open';
+  title: string;
+}
+
+const { n, of, kind, title } = Astro.props;
+---
+
+<Screen phase="further" kind="further" kicker={`Go further ${n} of ${of} · ${kind} · optional`} title={title}>
+  <slot />
+  <slot name="task" slot="task" />
+  <slot name="work" slot="work" />
+</Screen>

@@ -14,12 +14,14 @@ interface Props {
   minutes: number;
   /** The concept ids of the lesson's concept screens, in order. */
   recall: string[];
+  /** A Go further run follows: Wrap up ends in two buttons, Finish and Go further (GF-2). */
+  branch?: boolean;
 }
 
-const { title = 'What you can do now', minutes, recall } = Astro.props;
+const { title = 'What you can do now', minutes, recall, branch = false } = Astro.props;
 ---
 
-<Screen phase="wrap" kind="wrap" kicker={`Wrap up · ${minutes} min`} title={title}>
+<Screen phase="wrap" kind="wrap" kicker={`Wrap up · ${minutes} min`} title={title} branch={branch}>
   <div data-recall-rest><slot /></div>
   <Recall slot="task" ids={recall} />
 </Screen>

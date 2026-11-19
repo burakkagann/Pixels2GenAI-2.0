@@ -24,7 +24,7 @@ import { createCheckLadder } from './cell-result.js';
 import { createOutputsRow } from './outputs';
 import { startPixelWindow } from './pixel-window';
 
-const PHASE_ORDER = ['first', 'steps', 'yours', 'wrap'];
+const PHASE_ORDER = ['first', 'steps', 'yours', 'wrap', 'further'];
 const popcount = (n: number) => n.toString(2).replace(/0/g, '').length;
 
 export function startLesson(root: HTMLElement) {
@@ -42,9 +42,17 @@ export function startLesson(root: HTMLElement) {
   const phoneNext = phoneBar?.querySelector<HTMLButtonElement>('[data-phone-next]') ?? null;
   const arcUrl = root.dataset.arc ?? '/workshops/my';
   const exitLabel = root.dataset.doneLink || 'Back to the arc →'; // PUBLIC MODE (/try): "See the workshops →"
+  // GF-2: Wrap up with a Go further run after it ends in two buttons. The phone bar follows: Go further in the Run place, Finish in Next.
+  const isBranch = (screen: HTMLElement) => Boolean(screen.querySelector('[data-finish]'));
   const syncPhoneRun = () => {
-    if (phoneRun) phoneRun.dataset.idle = String(!screens[current].querySelector('.wb-cell'));
-    if (phoneNext) phoneNext.textContent = current === screens.length - 1 ? exitLabel : 'Next →';
+    const branch = isBranch(screens[current]);
+    if (phoneBar) phoneBar.dataset.branch = String(branch);   // CSS: Go further is the filled pink button, Finish the outline one
+    if (phoneRun) {
+      phoneRun.dataset.idle = String(!branch && !screens[current].querySelector('.wb-cell'));
+      if (branch) phoneRun.textContent = 'Go further';
+      else if (phoneRun.textContent === 'Go further') phoneRun.textContent = '▶ Run';
+    }
+    if (phoneNext) phoneNext.textContent = current === screens.length - 1 ? exitLabel : branch ? 'Finish →' : 'Next →';
     if (phoneBar) phoneBar.dataset.last = String(current === screens.length - 1); // the long exit label gets the width
   };
 
@@ -98,6 +106,26 @@ export function startLesson(root: HTMLElement) {
   const runners = new Map<HTMLElement, () => Promise<void>>();
   // RB-1: a screen with code but no check counts as done after its first clean run.
   const ranClean = new Set<HTMLElement>();
+  // HD-3b: per screen, the hint row under the code. `ran` counts a Run (G3) and redraws; `sync` only redraws.
+  const helpHooks = new Map<HTMLElement, { ran: (counts: boolean) => void; sync: () => void; reset: () => void }>();
+
+  // One code across screens (GFC-2 c, GFC-4 b, GFC-5 a). Cells with the same data-chain are one piece of work, in page order:
+  // a cell opens with the learner's code from the cell before it. Nothing is stored; a reload starts from the solutions.
+  // Never run: the cell before's solution loads, and the tag says so. Last run ended in an error (or its check failed):
+  // the learner's code loads with a strip, "Use <label>'s solution". Reset puts back what the cell opened with.
+  // 'used': a solution was loaded by hand (Use this code, or the strip's button), so the code is no longer the one that failed.
+  type LastRun = 'none' | 'ok' | 'error' | 'notyet' | 'used';
+  interface Link {
+    cell: HTMLElement;
+    label: string;
+    solution: string;
+    last: LastRun;
+    everRan: boolean;
+    getCode: () => string;
+    arrive: () => void;
+  }
+  const chainLinks = new Map<HTMLElement, Link>();
+  const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
   root.querySelectorAll<HTMLElement>('.wb-cell').forEach((cell) => {
     const textarea = cell.querySelector<HTMLTextAreaElement>('[data-code]');
     const runButton = cell.querySelector<HTMLButtonElement>('[data-run]');
@@ -114,6 +142,66 @@ export function startLesson(root: HTMLElement) {
     const ladder = createCheckLadder();   // failed checks escalate (OD-18)
     let editor: CellEditor | null = null;
 
+    // ---- chain (see chainLinks) ----
+    const chainId = cell.dataset.chain;
+    const chip = cell.querySelector<HTMLElement>('[data-chip]');
+    const label = cell.dataset.label ?? 'this task';
+    const solutionText = cell.querySelector<HTMLTextAreaElement>('[data-solution]')?.value ?? '';
+    const opening = { code: original, chip: '', warn: '' as '' | 'error' | 'notyet', from: '', fromSolution: '' };
+    let last: LastRun = 'none';
+    let everRan = false;   // Reset clears `last`, not this: a cell the learner ran is never "skipped"
+    let strip: HTMLElement | null = null;
+    const showChip = (text: string) => {
+      if (!chip) return;
+      chip.textContent = text;
+      chip.hidden = !text;
+    };
+    const dropStrip = () => { strip?.remove(); strip = null; };
+    // What the editor, the tag and the strip show when the cell opens, and after Reset.
+    const applyOpening = () => {
+      editor?.setCode(opening.code);
+      showChip(opening.chip);
+      dropStrip();
+      if (!opening.warn) return;
+      strip = document.createElement('div');
+      strip.className = 'wb-carry';
+      strip.setAttribute('role', 'status');
+      const text = document.createElement('p');
+      const lead = document.createElement('b');
+      lead.textContent = opening.warn === 'error'
+        ? `Your code from ${opening.from} stops with an error.`
+        : `Your code from ${opening.from} does not pass its check yet.`;
+      text.append(lead, ` Fix it here, or start from ${opening.from}'s solution.`);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'wb-btn wb-btn--small';
+      button.textContent = `Use ${opening.from}'s solution`;
+      const fromSolution = opening.fromSolution;
+      const from = opening.from;
+      button.addEventListener('click', () => {
+        editor?.setCode(fromSolution);
+        showChip(`${cap(from)}'s solution`);
+        last = 'used';
+        dropStrip();
+        editor?.focus();
+      });
+      strip.append(text, button);
+      cell.querySelector('.wb-editor')?.before(strip);
+    };
+    // Called each time the screen opens, until the learner has run or changed the code here.
+    const arrive = () => {
+      const earlier = chainId ? previousLink(cell) : undefined;
+      const before = earlier ? chainLinks.get(earlier) : undefined;
+      if (!before || last !== 'none' || (editor?.getCode() ?? textarea.value) !== opening.code) return;
+      const skipped = before.last === 'none' && !before.everRan;
+      opening.code = skipped ? before.solution : before.getCode();
+      opening.chip = skipped ? `${cap(before.label)}'s solution · you skipped ${before.label}` : `Your code from ${before.label}`;
+      opening.warn = before.last === 'error' || before.last === 'notyet' ? before.last : '';
+      opening.from = before.label;
+      opening.fromSolution = before.solution;
+      applyOpening();
+    };
+
     const run = async () => {
       if (running) {
         stopRun();
@@ -128,6 +216,10 @@ export function startLesson(root: HTMLElement) {
       const result = await runCell({ code: editor?.getCode() ?? textarea.value, check, helpersUrl, fileName: cell.dataset.file });
       if (result.check) result.check.message = ladder.next(result.check);
       showResult({ verdict, output, hasCheck: Boolean(check), fileName: cell.dataset.file }, result);
+      if (screen) helpHooks.get(screen)?.ran(result.error?.kind !== 'Stopped');
+      if (result.error?.kind !== 'Stopped') everRan = true;
+      if (result.error?.kind !== 'Stopped') last = result.error ? 'error' : result.check && !result.check.passed ? 'notyet' : 'ok';
+      if (last === 'ok') dropStrip();   // the learner fixed it: the "use the solution" strip has done its job
       if (result.check?.passed) markCheck(cell);
       if (screen) {
         // OL-2: Before | After (or a row) replaces the plain image list in the output box.
@@ -142,6 +234,7 @@ export function startLesson(root: HTMLElement) {
       running = false;
       runButton.textContent = '▶ Run';
       if (phoneRun) phoneRun.textContent = '▶ Run';
+      syncPhoneRun();   // a branch screen keeps its "Go further" label if the learner moved on mid-run
     };
 
     try {
@@ -152,7 +245,10 @@ export function startLesson(root: HTMLElement) {
     runners.set(cell, run);
     runButton.addEventListener('click', run);
     resetButton?.addEventListener('click', () => {
-      editor?.setCode(original);
+      if (chainId) {
+        applyOpening();   // GFC-5 a: the code this task opened with, with its tag and strip
+        last = 'none';
+      } else editor?.setCode(original);
       ladder.reset();
       verdict.dataset.state = 'idle';
       verdict.textContent = idleVerdict;
@@ -160,8 +256,24 @@ export function startLesson(root: HTMLElement) {
       quiet.className = 'wb-quiet';
       quiet.textContent = idleOutput;
       output.replaceChildren(quiet);
+      if (screen) helpHooks.get(screen)?.reset();
     });
+    // Use this code (GFC-4 b): the Solution hint's button loads this stage's whole code.
+    cell.querySelector<HTMLElement>('[data-use-solution]')?.addEventListener('click', () => {
+      editor?.setCode(solutionText);
+      showChip(`${cap(label)}'s solution`);
+      last = 'used';
+      dropStrip();
+      editor?.focus();
+    });
+    if (chainId) {
+      chainLinks.set(cell, { cell, label, solution: solutionText, get last() { return last; }, get everRan() { return everRan; }, getCode: () => editor?.getCode() ?? textarea.value, arrive });
+    }
   });
+  function previousLink(cell: HTMLElement): HTMLElement | undefined {
+    const same = [...root.querySelectorAll<HTMLElement>('.wb-cell[data-chain]')].filter((other) => other.dataset.chain === cell.dataset.chain);
+    return same[same.indexOf(cell) - 1];
+  }
 
   // ---------- help: hints one level at a time, explain, tutor ----------
   const tutorClosers = new Map<HTMLElement, () => void>();
@@ -174,38 +286,141 @@ export function startLesson(root: HTMLElement) {
     const reveal = help.querySelector<HTMLButtonElement>('[data-reveal]');
     const explainToggle = help.querySelector<HTMLButtonElement>('[data-explain-toggle]');
 
-    // Move the hints into the help area, closed and hidden until asked for.
-    for (const level of levels) {
-      level.hidden = true;
-      level.open = true;
-      items.append(level);
-    }
-    if (explain) {
-      explain.hidden = true;
-      explain.open = true;
-      items.append(explain);
-    }
     let shown = 0;
     const hintCount = levels.filter((l) => l.dataset.kind === 'hint').length;
-    const labelFor = (index: number) => {
-      const level = levels[index];
-      if (!level) return '';
-      if (level.dataset.kind === 'solution') return index === 0 ? 'Show the solution' : 'Still stuck? Show the solution';
-      return index === 0 ? 'Stuck? Show a hint' : `Show hint ${index + 1}`;
-    };
     levels.forEach((level, index) => {
       const summary = level.querySelector('summary');
       if (summary && level.dataset.kind === 'hint' && hintCount > 1) summary.textContent = `Hint ${index + 1} of ${hintCount}`;
     });
-    if (reveal && levels.length) {
+
+    // HD-3b: on a screen with a check, the hints sit under the code, in one unit with the verdict.
+    // GF-2: a Go further screen has no check, so its row shows from the start and after every run (`always`).
+    const always = screen.dataset.phase === 'further';
+    const checkCell = screen.querySelector<HTMLElement>(always ? '.wb-cell' : '.wb-cell[data-has-check]');
+    const stack = checkCell?.querySelector<HTMLElement>('[data-hh]') ?? null;
+    const verdictRow = checkCell?.querySelector<HTMLElement>('[data-verdict]') ?? null;
+    if (levels.length && checkCell && stack && verdictRow) {
+      const hints = levels.filter((l) => l.dataset.kind === 'hint');
+      const solution = levels.find((l) => l.dataset.kind === 'solution') ?? null;
+      for (const level of levels) {
+        level.hidden = true;
+        level.open = false;
+        stack.append(level);
+      }
+      // GFC-4 b: the Solution shows the whole code, new lines marked, and "Use this code" (built by Cell.astro, hidden there).
+      const solutionCode = checkCell.querySelector<HTMLElement>('[data-solution-code]');
+      const solutionBody = solution?.querySelector<HTMLElement>('.wb-hint-body');
+      if (solutionCode && solutionBody) {
+        const parts = [...solutionCode.children];
+        solutionBody.prepend(...parts.filter((part) => !part.classList.contains('wb-soluse')));
+        solutionBody.append(...parts.filter((part) => part.classList.contains('wb-soluse')));
+        solutionCode.remove();
+      }
+      let hintsShown = 0;
+      let solutionShown = false;
+      // G3: the solution unlocks on the first Run after the last hint was shown.
+      let unlocked = false;
+
+      const sync = () => {
+        verdictRow.querySelector('.wb-vhelp')?.remove();
+        const state = verdictRow.dataset.state;
+        const live = always || state === 'notyet' || state === 'error';
+        stack.hidden = !live || (hintsShown === 0 && !solutionShown);
+        if (!live) return;
+
+        const bar = document.createElement('span');
+        bar.className = 'wb-vhelp';
+        if (hints.length) {
+          const dots = document.createElement('span');
+          dots.className = 'wb-dots';
+          dots.setAttribute('aria-hidden', 'true');
+          hints.forEach((_, i) => {
+            const dot = document.createElement('i');
+            if (i < hintsShown) dot.className = 'on';
+            dots.append(dot);
+          });
+          bar.append(dots);
+        }
+        const make = (label: string, onClick: () => void) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'wb-link wb-hint-next';
+          button.textContent = `${label} `;
+          const arrow = document.createElement('span');
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.textContent = '›';
+          button.append(arrow);
+          button.addEventListener('click', onClick);
+          return button;
+        };
+        const text = (className: string, label: string) => {
+          const node = document.createElement('span');
+          node.className = className;
+          node.textContent = label;
+          return node;
+        };
+        if (hintsShown < hints.length) {
+          bar.append(make(hints.length > 1 ? `Hint ${hintsShown + 1} of ${hints.length}` : 'Hint', () => open(hints[hintsShown])));
+        } else if (solution && !solutionShown) {
+          bar.append(unlocked
+            ? make('Show the solution', () => open(solution))
+            : text('wb-lock', 'Solution: run once more first'));
+        } else {
+          bar.append(text('wb-lock', solutionShown ? 'Solution shown' : `All ${hints.length} hints shown`));
+        }
+        // Before the optional "Why?" paragraph, which takes a line of its own.
+        verdictRow.insertBefore(bar, verdictRow.querySelector('.wb-verdict-why'));
+      };
+
+      // One level per click; the newest is open, the earlier ones fold to a line.
+      const open = (level: HTMLDetailsElement) => {
+        if (!level.hidden) return;   // never past the last level
+        if (level === solution) solutionShown = true;
+        else hintsShown += 1;
+        levels.forEach((other) => { other.open = false; });
+        level.hidden = false;
+        level.open = true;
+        sync();
+        level.querySelector('summary')?.focus();
+      };
+
+      helpHooks.set(screen, {
+        ran: (counts) => {
+          if (counts && hintsShown >= hints.length) unlocked = true;
+          sync();
+        },
+        sync,
+        // Reset puts the code back: the learner must Run again after the last hint before the solution opens.
+        reset: () => { unlocked = false; sync(); },
+      });
+      if (always) sync();   // GF-2: the help row is there before the first Run
+    } else if (reveal && levels.length) {
+      // No check on this screen, so no failed run to hang the hints on: they open from the brief, one level per click.
+      for (const level of levels) {
+        level.hidden = true;
+        level.open = true;
+        items.append(level);
+      }
+      const labelFor = (index: number) => {
+        const level = levels[index];
+        if (!level) return '';
+        if (level.dataset.kind === 'solution') return index === 0 ? 'Show the solution' : 'Still stuck? Show the solution';
+        return index === 0 ? 'Stuck? Show a hint' : `Show hint ${index + 1}`;
+      };
       reveal.hidden = false;
       reveal.textContent = labelFor(0);
       reveal.addEventListener('click', () => {
+        if (shown >= levels.length) return;   // the last level is shown: nothing more to open
         levels[shown].hidden = false;
         shown += 1;
         if (shown >= levels.length) reveal.hidden = true;
         else reveal.textContent = labelFor(shown);
       });
+    }
+    if (explain) {
+      explain.hidden = true;
+      explain.open = true;
+      items.append(explain);
     }
     if (explainToggle && explain) {
       explainToggle.hidden = false;
@@ -214,7 +429,8 @@ export function startLesson(root: HTMLElement) {
         explainToggle.setAttribute('aria-expanded', String(!explain.hidden));
       });
     }
-    help.hidden = false;
+    // The brief's help row is only worth showing when it holds something: hints (no-check screens), "explain", or the tutor.
+    help.hidden = !(help.querySelector('[data-reveal]:not([hidden])') || (explain && explainToggle) || help.querySelector('[data-tutor-open]'));
 
     // The tutor panel: opens in the brief; the idea and help step aside.
     const tutor = screen.querySelector<HTMLElement>('[data-tutor]');
@@ -463,7 +679,9 @@ export function startLesson(root: HTMLElement) {
       button.type = 'button';
       button.className = 'wb-seg';
       button.dataset.phase = PHASE_ORDER.includes(phase) ? phase : 'steps';
-      button.setAttribute('aria-label', `Screen ${i + 1}: ${screen.dataset.title ?? ''}`);
+      const optional = phase === 'further';   // GF-2: dashed segments, named optional
+      button.setAttribute('aria-label', `Screen ${i + 1}: ${screen.dataset.title ?? ''}${optional ? ' (optional)' : ''}`);
+      if (optional) button.title = 'Optional: Go further';
       button.addEventListener('click', () => go(i));
       item.append(button);
       progress.append(item);
@@ -478,7 +696,8 @@ export function startLesson(root: HTMLElement) {
     // RB-1: Next fills once the step passes (or, with code but no check, after the first clean run); Run then turns outlined.
     const hasCode = Boolean(screen.querySelector('.wb-cell'));
     const stepDone = cell ? passed(cell) : !hasCode || ranClean.has(screen);
-    const ready = screen === screens[screens.length - 1] ? allChecksPassed() : stepDone;
+    // GF-2: Go further is optional, so Next on it is always ready (it never waits for a run).
+    const ready = screen === screens[screens.length - 1] ? allChecksPassed() : screen.dataset.phase === 'further' || stepDone;
     if (next) next.dataset.ready = String(ready);
     if (screen === screens[current] && phoneNext) phoneNext.dataset.ready = String(ready);
   }
@@ -500,12 +719,16 @@ export function startLesson(root: HTMLElement) {
       if (i === current) seg.setAttribute('aria-current', 'step');
       else seg.removeAttribute('aria-current');
     });
-    if (where) where.textContent = `${current + 1} / ${screens.length}`;
+    // GF-2: on a Go further task the count names the run ("Go further 2 of 3"), not the screen number.
+    const furtherRun = screens.filter((screen) => screen.dataset.phase === 'further');
+    const furtherAt = furtherRun.indexOf(screens[current]);
+    if (where) where.textContent = furtherAt >= 0 ? `Go further ${furtherAt + 1} of ${furtherRun.length}` : `${current + 1} / ${screens.length}`;
     theories.forEach((theory, screen) => {
       closeTheory(screen);
       syncLock(screen);
       if (theory.after && !heldBack(screen) && screen.querySelector('.wb-cell[data-has-check]')) theory.after.open = true;
     });
+    screens[current].querySelectorAll<HTMLElement>('.wb-cell[data-chain]').forEach((cell) => chainLinks.get(cell)?.arrive());
     outputs.mountIn(screens[current].querySelector<HTMLElement>('.wb-bench'));
     history.replaceState(null, '', `#s${current + 1}`);
     screens[current].querySelector<HTMLElement>('.wb-brief-scroll')?.scrollTo({ top: 0 });
@@ -531,6 +754,18 @@ export function startLesson(root: HTMLElement) {
   // Concept framework (16 Nov 2026): concepts.ts asks for a screen by index (a step's ConceptLink, Back to step n).
   root.addEventListener('wb:go', (event) => go((event as CustomEvent<number>).detail));
 
+  // GF-2: Wrap up's two buttons. Finish skips the optional run; Go further opens its first task. Next on a task opens the next one.
+  const goFurther = () => go(current + 1, true);
+  const finish = () => {
+    const to = screens.findIndex((screen, k) => k > current && screen.dataset.phase !== 'further');
+    if (to < 0) exit();   // a lesson that ends on Go further: Finish leaves the lesson
+    else go(to, true);
+  };
+  screens.forEach((screen) => {
+    screen.querySelector('[data-go-further]')?.addEventListener('click', goFurther);
+    screen.querySelector('[data-finish]')?.addEventListener('click', finish);
+  });
+
   screens.forEach((screen, i) => {
     const nav = screen.querySelector<HTMLElement>('[data-nav]');
     if (nav) nav.hidden = false;
@@ -547,8 +782,9 @@ export function startLesson(root: HTMLElement) {
   if (phoneBar) {
     phoneBar.hidden = false;
     phoneBar.querySelector('[data-phone-back]')?.addEventListener('click', () => go(current - 1, true));
-    phoneNext?.addEventListener('click', () => (current === screens.length - 1 ? exit() : go(current + 1, true)));
+    phoneNext?.addEventListener('click', () => (current === screens.length - 1 ? exit() : isBranch(screens[current]) ? finish() : go(current + 1, true)));
     phoneRun?.addEventListener('click', async () => {
+      if (isBranch(screens[current])) { goFurther(); return; }
       const cell = screens[current].querySelector<HTMLElement>('.wb-cell');
       if (!cell) return;
       // From the top of the page the verdict is out of view: a failed check would

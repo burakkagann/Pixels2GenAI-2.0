@@ -91,3 +91,27 @@ holds /try to a 15-minute budget.
 - Wrap up is recall only: the own-words task is gone (TRB-2; rule: no `<Task>` in Wrap up).
 - The done box is its own last screen (`TryDone.astro`, phase `wrap`, so `lesson.ts` fills it unchanged). The phone bar hides Run on Wrap up
   and the done screen, and Next on the last screen (`try.css`).
+
+## Go further (GF-2 + GF-S a + GF-T a, 19 Nov 2026; one screen per task; framework 03e §14)
+
+- Wrap up ends in two buttons (`TryWrap branch`): "Finish" (to the done screen) and "Go further". Go further is 3 task screens
+  (a fourth colour, grain, any number of colours: GFC-1 b), phase `further`: Next goes task 1, 2, 3, then Finish.
+  Not in the 15 minutes (no `minutes`). Progress: dashed segments, the count reads "Go further n of 3", Next is always ready.
+- One code across the screens (R-3585-46, picks GFC-1 b, GFC-2 c, GFC-3 a, GFC-4 b, GFC-5 a, GFC-6 a, GFC-7 b, GFC-8 a): step 3 and the three
+  tasks are one chain (`<Cell chain="poster" ...>`), the three tasks on one file, `my_poster.py`. Each task opens with the learner's code
+  from the cell before it. Stage files in `cells/`: `chain_step3.py` (step 3 solved), `chain_four.py`, `chain_grain.py`, `chain_bands.py`;
+  a task's `source` is the stage before, its `solution` its own stage. Never run (skipped): the solution of the cell before loads and the tag
+  says so. Last run ended in an error (or step 3's check failed): the learner's code loads with the strip "Use task n's solution". Reset
+  puts back what the task opened with (with its tag and strip). Nothing is stored: a reload starts from the solutions.
+- Step 3 names the rule `colour_of` from the start (GFC-7 b); its check, label ("your poster") and `figures.py` follow.
+- Help row: the HD-3b row under the code (hint, then Solution after one more Run, G3). The Solution shows the whole stage code, lines new or
+  changed marked with a bar and "+" (a line diff made by `Cell.astro` against `source`), and "Use this code".
+- Generic, for W1 lessons too: `GoFurther.astro`, the chain props of `Cell.astro` (`source`, `solution`, `chain`, `label`, `solutionCode`), CSS at the
+  end of `workshop-lesson-b.css`, rules `goFurtherErrors` in `rules.mjs` (GFR-1, 2, 4, 5, 7 and the chain rules; tests in `check-concepts.test.mjs`).
+  Edits to carry at the merge: `lesson.ts` (PHASE_ORDER, `always`, the branch buttons, the "Go further n of N" count, the chain links),
+  `Screen.astro` (phase/kind types, `branch` prop), `Cell.astro`.
+- Targets: `go-further-<four|grain|bands>.<light|dark>[.phone].webp`, drawn by `figures.py` from the stage files with the real `helpers.py`.
+- Tests: `npm run test:try` runs every stage on top of the last (3, 4, 4, 5 colours), checks step 3's solved code is `chain_step3.py`, each task's
+  `source` is the solution before it, a four-colour list in task 3 and a broken task 1.
+- `public/runner/cell-worker.mjs`: packages for the helpers and for the learner's code load in two calls. A syntax error in the learner's code
+  used to skip the helpers' Pillow too, and the page said "Python could not start". Carry this fix to the workshop-area copy.

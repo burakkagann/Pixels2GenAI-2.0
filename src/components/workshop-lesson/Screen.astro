@@ -7,7 +7,7 @@
  * slot "task", the one strong box), the idea (default slot), help (hints,
  * "explain it another way", the tutor), then Back / Next.
  * Right, the WORKBENCH (named slot "work"): the code cell.
- * Used through MakeItFirst, Step, MakeItYours and WrapUp, not directly.
+ * Used through MakeItFirst, Step, MakeItYours, WrapUp and GoFurther (phase "further": the optional screen after Wrap up), not directly.
  * Without JavaScript the hints stay plain <details> inside the idea.
  *
  * Theory on the step (TH1, approved 5 Nov): the parts in the named slots
@@ -20,8 +20,8 @@
  * flow and the strip stays hidden.
  */
 interface Props {
-  phase: 'first' | 'steps' | 'yours' | 'wrap';
-  kind: 'first' | 'predict' | 'change' | 'write' | 'fix' | 'make' | 'yours' | 'wrap';
+  phase: 'first' | 'steps' | 'yours' | 'wrap' | 'further';
+  kind: 'first' | 'predict' | 'change' | 'write' | 'fix' | 'make' | 'yours' | 'wrap' | 'further';
   kicker: string;
   title: string;
   /** Names the screen in "Theory for step 4". */
@@ -29,9 +29,11 @@ interface Props {
   earlier?: [string, string][];
   /** PUBLIC MODE (/try, SN-1, 16 Nov 2026): the panel is "Notes for step n": rows "Watch out" (before running) and "Why it worked" (after a pass). */
   notes?: boolean;
+  /** Wrap up with a Go further run after it: two buttons, "Finish" and "Go further", instead of Next (lesson.ts). */
+  branch?: boolean;
 }
 
-const { phase, kind, kicker, title, theoryFor, earlier = [], notes = false } = Astro.props;
+const { phase, kind, kicker, title, theoryFor, earlier = [], notes = false, branch = false } = Astro.props;
 const panelName = notes ? 'Notes' : 'Theory';
 const hasWork = Astro.slots.has('work');
 // PUBLIC MODE (/try): no tutor. The button and the panel are not rendered (HA-1, 16 Nov: the tutor is named once, in the done box).
@@ -125,7 +127,14 @@ const noteCount = (onceItWorks.match(/data-part/g) ?? []).length;
 
     <nav class="wb-nav" aria-label="Lesson navigation" data-nav hidden>
       <button type="button" class="wb-link wb-back" data-back>← Back</button>
-      <button type="button" class="wb-btn wb-btn--next" data-next>Next →</button>
+      {branch ? (
+        <span class="wb-nav-branch">
+          <button type="button" class="wb-btn wb-btn--further" data-go-further>Go further</button>
+          <button type="button" class="wb-btn wb-btn--next" data-finish>Finish →</button>
+        </span>
+      ) : (
+        <button type="button" class="wb-btn wb-btn--next" data-next>Next →</button>
+      )}
     </nav>
   </div>
   {hasWork && <div class="wb-bench"><slot name="work" /></div>}

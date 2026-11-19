@@ -372,6 +372,58 @@ def explorer_assets(photo):
     print("ink share at 60, 90, 110, 120:", [round(shares[t] * 100, 1) for t in (60, 90, 110, 120)], "%")
 
 
+# ---- Go further targets (GF-2, 19 Nov 2026; chained 19 Nov, GFC-1 b): the end picture of each task, drawn from the task's
+# solution file (cells/chain_*.py) with the real helpers, so the target is what the solution makes ----
+YELLOW = (245, 200, 60)
+PURPLE = (120, 60, 140)
+
+
+def helper_poster(stage):
+    """Run cells/<stage>.py as the page does (helpers + np in scope) and return the last image it shows."""
+    import sys
+    sys.path.insert(0, str(ROOT / "public" / "try-media"))
+    import helpers
+    helpers._P2G_MEDIA_ROOT = str(ROOT / "public" / "try-media")
+    shown = []
+    scope = {name: getattr(helpers, name) for name in dir(helpers) if not name.startswith("__")}
+    scope.update(np=np, show=lambda image, label="": shown.append(np.asarray(image)))
+    exec(compile((ROOT / "src" / "try" / "cells" / f"{stage}.py").read_text(encoding="utf-8"), stage, "exec"), scope)
+    return shown[-1]
+
+
+TARGETS = {  # figure name: (stage file, title, subtitle, legend)
+    "four": ("chain_four", "four colours", "", [("BLUE", BLUE), ("PINK", PINK), ("YELLOW", YELLOW), ("PAPER", PAPER)]),
+    "grain": ("chain_grain", "four colours", "GRAIN = 20", [("BLUE", BLUE), ("PINK", PINK), ("YELLOW", YELLOW), ("PAPER", PAPER)]),
+    "bands": ("chain_bands", "five colours", "GRAIN = 20", [("BLUE", BLUE), ("PURPLE", PURPLE), ("PINK", PINK), ("YELLOW", YELLOW), ("PAPER", PAPER)]),
+}
+
+
+def swatch(draw, c, x, y, size, colour, label):
+    draw.rectangle([x, y, x + size, y + size], fill=colour, outline=c["line"], width=2)
+    draw.text((x + size + 18, y + size / 2), label, font=font(30, mono=True, bold=True), fill=c["text"], anchor="lm")
+
+
+def further_target(which, mode, phone=False):
+    stage, title, subtitle, legend = TARGETS[which]
+    poster = helper_poster(stage)
+    if phone:
+        image, draw, c = canvas(mode, 800, 700)
+        framed(image, draw, c, poster, 40, 90, 720)
+        draw.text((40, 36), f"Target: {title}" + (f", {subtitle}" if subtitle else ""), font=font(30, mono=True, bold=True), fill=c["text"])
+        for i, (label, colour) in enumerate(legend):
+            swatch(draw, c, 40 + (i % 3) * 250, 580 + (i // 3) * 56, 36, colour, label)
+        return image
+    image, draw, c = canvas(mode, 1400, 560)
+    framed(image, draw, c, poster, 60, 30, 820)
+    draw.text((980, 70), "Target", font=font(26), fill=c["muted"])
+    draw.text((980, 112), title, font=font(34, mono=True, bold=True), fill=c["text"])
+    if subtitle:
+        draw.text((980, 156), subtitle, font=font(26, mono=True), fill=c["muted"])
+    for i, (label, colour) in enumerate(legend):
+        swatch(draw, c, 980, 210 + i * 62, 40, colour, label)
+    return image
+
+
 def save_all(folder, figures):
     folder.mkdir(parents=True, exist_ok=True)
     for name, wide, phone in figures:
@@ -387,6 +439,8 @@ def main():
     save_all(CONCEPT_OUT, [("grid-zoom", grid_zoom, lambda mode: grid_zoom(mode, phone=True)),
                            ("mask", mask, lambda mode: mask(mode, phone=True)),
                            ("three-bands", three_bands, three_bands_phone)])
+    save_all(OUT, [(f"go-further-{which}", lambda mode, which=which: further_target(which, mode),
+                    lambda mode, which=which: further_target(which, mode, phone=True)) for which in TARGETS])
     photo = load_photo()
     explorer_assets(photo)
     print("step 1 pixels:", [round(photo[r, k].sum() / 3) for (r, k), _ in FOUR])

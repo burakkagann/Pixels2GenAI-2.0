@@ -122,6 +122,19 @@ function errorLine(full: string, fileName?: string): number | null {
   return lines.length ? Number(lines[lines.length - 1][2]) : null;
 }
 
+let whyCount = 0;
+
+/** The first sentence of a check message, and what follows it ("e.g." and "i.e." do not end a sentence). */
+export function splitPointer(message: string): [string, string] {
+  const text = message.trim();
+  // Same length, so the cut index still fits the original text.
+  const masked = text.replace(/\b(e\.g|i\.e)\./gi, (m) => m.replace(/\./g, '_'));
+  const match = /^(.+?[.!?])(?:\s+(?=\S)|$)/s.exec(masked);
+  if (!match) return [text, ''];
+  const cut = match[1].length;
+  return [text.slice(0, cut), text.slice(cut).trim()];
+}
+
 /** Show a validated result: the verdict in its fixed place, then the output. */
 export function showResult(view: CellView, result: CellResult) {
   const { verdict, output } = view;
@@ -152,10 +165,28 @@ export function showResult(view: CellView, result: CellResult) {
     }
   } else if (result.check) {
     verdict.dataset.state = result.check.passed ? 'pass' : 'notyet';
-    verdict.append(
-      el('span', 'wb-verdict-tag', result.check.passed ? (view.passLabel ?? '✓ Passed') : 'Not yet'),
-      el('span', 'wb-verdict-text', result.check.message),
-    );
+    if (result.check.passed) {
+      verdict.append(el('span', 'wb-verdict-tag', view.passLabel ?? '✓ Passed'), el('span', 'wb-verdict-text', result.check.message));
+    } else {
+      // HD-3b: one line, "Not yet · <pointer>"; the rest of the message waits behind "Why?".
+      const [pointer, more] = splitPointer(result.check.message);
+      verdict.append(el('span', 'wb-verdict-tag', 'Not yet'), el('span', 'wb-verdict-text', pointer));
+      if (more) {
+        whyCount += 1;
+        const why = el('p', 'wb-verdict-why', more);
+        why.id = `wb-why-${whyCount}`;
+        why.hidden = true;
+        const toggle = el('button', 'wb-link wb-why', 'Why?');
+        toggle.type = 'button';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', why.id);
+        toggle.addEventListener('click', () => {
+          why.hidden = !why.hidden;
+          toggle.setAttribute('aria-expanded', String(!why.hidden));
+        });
+        verdict.append(toggle, why);
+      }
+    }
   } else {
     verdict.dataset.state = 'ran';
     const seconds = ((result.timings.runMs ?? 0) / 1000).toFixed(1);

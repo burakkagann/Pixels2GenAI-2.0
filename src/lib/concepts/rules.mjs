@@ -189,6 +189,7 @@ export function lessonErrors(lesson, concepts) {
   const where = lesson.file;
   const errors = [];
   const screens = parseLessonScreens(lesson.source);
+  errors.push(...goFurtherErrors(lesson));
   const conceptScreens = screens.filter((s) => s.tag === 'ConceptScreen');
   const tasks = screens.filter((s) => TASK_TAGS.has(s.tag));
   const usesConcepts = conceptScreens.length > 0 || tasks.some((s) => s.concept);
@@ -296,6 +297,70 @@ export function lessonErrors(lesson, concepts) {
     }
     if (lesson.public && String(data.figure?.folder ?? '').startsWith('/workshop-media/')) {
       errors.push(`${where}: public page uses concept "${id}", whose figure is under /workshop-media/ (TRB-3 a)`);
+    }
+  }
+  return errors;
+}
+
+/**
+ * GFR rules (framework 03e §14, GF-2; 19 Nov: one screen per task): the optional Go further run after Wrap up.
+ * 1 to 3 <GoFurther n of kind title> screens; each has a task of at most 40 words, a target picture, 1 or more hints,
+ * a <Hint kind="solution"> and its own cell with no check; Wrap up carries `branch` (Finish / Go further buttons);
+ * a public page has no `deeper` link (WS-13). A lesson with no <GoFurther> passes (the run is optional).
+ */
+export function goFurtherErrors(lesson) {
+  const where = lesson.file;
+  const source = String(lesson.source);
+  const screens = [...source.matchAll(/<GoFurther\b([^>]*)>([\s\S]*?)<\/GoFurther>/g)];
+  const wrapTag = source.match(/<(TryWrap|WrapUp)\b[^>]*>/);
+  const branch = Boolean(wrapTag && /\bbranch\b/.test(wrapTag[0]));
+  if (!screens.length) return branch ? [`${where}: Wrap up has the "branch" prop but the lesson has no <GoFurther> (GFR-1)`] : [];
+  const errors = [];
+  const wrapAt = source.search(/<(TryWrap|WrapUp)\b/);
+  if (screens.length > 3) errors.push(`${where}: Go further has ${screens.length} tasks, 1 to 3 (GFR-1)`);
+  if (!branch) errors.push(`${where}: Wrap up needs the "branch" prop: it ends in Finish and Go further buttons (GFR-1)`);
+  screens.forEach((match, i) => {
+    const [, attrs, body] = match;
+    const name = `Go further task ${i + 1}`;
+    if (wrapAt < 0 || match.index < wrapAt) errors.push(`${where}: ${name} must come after Wrap up (GFR-1)`);
+    if (Number(attr(attrs, 'n')) !== i + 1 || Number(attr(attrs, 'of')) !== screens.length) errors.push(`${where}: ${name} must be n={${i + 1}} of={${screens.length}} (GFR-1)`);
+    if (!['Extend', 'Combine', 'Generalise', 'Open'].includes(attr(attrs, 'kind'))) errors.push(`${where}: ${name} has kind "${attr(attrs, 'kind')}", not Extend, Combine, Generalise or Open (GFR-2)`);
+    const task = body.match(/<Task\b[^>]*>([\s\S]*?)<\/Task>/);
+    if (!task) errors.push(`${where}: ${name} has no <Task slot="task"> (GFR-4)`);
+    else {
+      const words = task[1].replace(/^\s*\d+\.\s/gm, '').replace(/[`]/g, '').split(/\s+/).filter(Boolean).length;
+      if (words > 40) errors.push(`${where}: ${name} task is ${words} words, at most 40 (GFR-4)`);
+    }
+    if (!/<(Diagram|Preview)\b/.test(body)) errors.push(`${where}: ${name} has no target picture (<Diagram> or <Preview>) (GFR-4)`);
+    if (!/<Hint>/.test(body)) errors.push(`${where}: ${name} has no hint (<Hint>) (GFR-4)`);
+    if (!/<Hint kind="solution">/.test(body)) errors.push(`${where}: ${name} has no <Hint kind="solution"> (GFR-5)`);
+    const cell = body.match(/<Cell\b[^>]*>/);
+    if (!cell || !/slot="work"/.test(cell[0])) errors.push(`${where}: ${name} has no <Cell slot="work"> (GFR-4)`);
+    else if (/\bcheck\b/.test(cell[0])) errors.push(`${where}: ${name} has a check; Go further has none unless one exists for the same code (GFR-5)`);
+    else {
+      // GFC-2 c, GFC-3 a, GFC-4 b (19 Nov): the tasks are one piece of work, one file, each opening with the code before it.
+      for (const need of ['chain', 'source', 'solution', 'label']) {
+        if (!attr(cell[0], need)) errors.push(`${where}: ${name} cell has no ${need}="..." (it continues the code before it, GFC-2)`);
+      }
+      if (!/\bsolutionCode\b/.test(cell[0])) errors.push(`${where}: ${name} cell has no solutionCode: the Solution shows the whole code with "Use this code" (GFC-4)`);
+    }
+    if (lesson.public && /deeper/i.test(body)) errors.push(`${where}: ${name} has a deeper link; a public page has none (GFR-7, WS-13)`);
+  });
+  // One chain, one file name for the run, and the chain starts on an earlier cell (task 1 starts from the lesson's last code, GFR-4).
+  const runCells = screens.map((match) => (match[2].match(/<Cell\b[^>]*>/) ?? [''])[0]);
+  const chains = new Set(runCells.map((cell) => attr(cell, 'chain')));
+  const files = new Set(runCells.map((cell) => attr(cell, 'file')));
+  if (chains.size > 1) errors.push(`${where}: the Go further cells use ${chains.size} different chains; they are one piece of work, one chain (GFC-3)`);
+  if (files.size > 1) errors.push(`${where}: the Go further cells use ${files.size} different file names; one file for the run (GFR-4)`);
+  const chain = attr(runCells[0], 'chain');
+  const before = source.slice(0, screens[0].index);
+  if (chain && !new RegExp(`<Cell\\b[^>]*\\bchain="${chain}"`).test(before)) errors.push(`${where}: no cell before Go further has chain="${chain}"; task 1 must start from the lesson's last code (GFR-4)`);
+  // Each task starts from the stage before: its `source` is the earlier cell's `solution` (task 1: the last chained cell before Go further).
+  const earlierCells = [...before.matchAll(/<Cell\b[^>]*>/g)].map((m) => m[0]).filter((cell) => chain && attr(cell, 'chain') === chain);
+  const line = [...earlierCells.slice(-1), ...runCells];
+  for (let i = 1; i < line.length; i++) {
+    if (attr(line[i], 'source') && attr(line[i - 1], 'solution') && attr(line[i], 'source') !== attr(line[i - 1], 'solution')) {
+      errors.push(`${where}: Go further task ${i} starts from ${attr(line[i], 'source')}, not the solution before it, ${attr(line[i - 1], 'solution')} (GFC-2)`);
     }
   }
   return errors;

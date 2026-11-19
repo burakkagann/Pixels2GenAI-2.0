@@ -140,11 +140,11 @@ Which door must come first?
 
 </Hint>
 
-<Cell slot="work" file="step3_fix.py" check />
+<Cell slot="work" file="step3_fix.py" check solution="chain_step3.py" chain="poster" label="step 3" />
 
 </TryStep>
 
-<TryWrap minutes={2} recall={["brightness", "threshold", "bands"]}>
+<TryWrap minutes={2} recall={["brightness", "threshold", "bands"]} branch>
 
 - A pixel is three numbers; their average is its brightness, 0 to 255.
 - `<` asks a yes/no question; a function turns the answer into a colour.
@@ -163,5 +163,76 @@ Which door must come first?
 </Hint>
 
 </TryWrap>
+
+<GoFurther n={1} of={3} kind="Extend" title="A fourth colour">
+
+<Task slot="task">
+
+1. Under `PINK`, add `YELLOW = [245, 200, 60]`.
+2. Add one `if` so that pixels from 150 to 199 get `YELLOW`.
+
+</Task>
+
+Your rule from step 3 gives three colours. The target below has four.
+
+<Diagram folder="/try-media/fig" name="go-further-four" ext="webp" phoneHeight={700} width={700} height={280} alt="The Dom poster in four colours: blue, pink, yellow and cream paper. The sky is mostly yellow; the stone is mostly blue and pink, with yellow highlights." caption="The target: four colours." />
+
+<Hint>Copy the shape of the `if` above it. The new `if` goes after `light < 150` and before `return PAPER`.</Hint>
+<Hint kind="solution">Pixels from 150 to 199 now get `YELLOW`.</Hint>
+
+<Cell slot="work" file="my_poster.py" source="chain_step3.py" solution="chain_four.py" chain="poster" label="task 1" solutionCode />
+
+</GoFurther>
+
+<GoFurther n={2} of={3} kind="Combine" title="Grain, like a real print">
+
+<Task slot="task">
+
+1. Copy the four grain lines into your code, above `show`.
+2. In `show`, change `photo` to `grainy`.
+3. Run with `GRAIN` at 0, 40 and 80.
+
+Where does the grain show most?
+
+</Task>
+
+```python
+GRAIN = 20                              # try 0, 40, 80
+rng = np.random.default_rng(1)
+noise = rng.integers(-GRAIN, GRAIN + 1, (300, 480, 1))
+grainy = np.clip(photo + noise, 0, 255)
+```
+
+`rng.integers` gives every pixel its own number from `-GRAIN` to `GRAIN`. The code adds it to the pixel's red, green and blue before your rule runs. `np.clip` keeps the sums between 0 and 255.
+
+<Diagram folder="/try-media/fig" name="go-further-grain" ext="webp" phoneHeight={700} width={700} height={280} alt="The Dom poster in four colours with fine grain: the sky flickers between pink, yellow and cream paper, and the edges between colours are speckled." caption="The target at `GRAIN = 20`." />
+
+<Hint>Your rule stays the same. Only the picture it gets changes: `grainy` instead of `photo`.</Hint>
+<Hint kind="solution">The sky is close to 150, so its pixels flip between `PINK` and `YELLOW` most.</Hint>
+
+<Cell slot="work" file="my_poster.py" source="chain_four.py" solution="chain_grain.py" chain="poster" label="task 2" solutionCode />
+
+</GoFurther>
+
+<GoFurther n={3} of={3} kind="Generalise" title="Any number of colours">
+
+<Task slot="task">
+
+1. Under `PAPER`, add `COLOURS = [BLUE, PINK, YELLOW, PAPER]`.
+2. Replace the `if`s in `colour_of` with one line that finds `band`, then `return COLOURS[band]`.
+3. Add `PURPLE = [120, 60, 140]` under `BLUE` and put it in the list after `BLUE`.
+
+</Task>
+
+`len(COLOURS)` is the number of colours in the list, and `COLOURS[band]` is the colour at that place in it, counting from 0. Your line works for any length.
+
+<Diagram folder="/try-media/fig" name="go-further-bands" ext="webp" phoneHeight={700} width={700} height={280} alt="The Dom poster in five colours with fine grain, from dark blue through purple and pink to yellow and cream paper." caption="The target: five colours, `GRAIN = 20`." />
+
+<Hint>With 4 colours, each band is 64 brightness numbers wide. `int(...)` cuts off the decimals.</Hint>
+<Hint kind="solution">Brightness times the number of colours, divided by 256, is a number from 0 up to just below `len(COLOURS)`.</Hint>
+
+<Cell slot="work" file="my_poster.py" source="chain_grain.py" solution="chain_bands.py" chain="poster" label="task 3" solutionCode />
+
+</GoFurther>
 
 <TryDone />

@@ -3,6 +3,7 @@
  * /try: the free sample lesson "Print the Berliner Dom as a poster" (picks TP-4, RT-1, MK-1, 15 Nov 2026;
  * TF-3 + HA-1, 16 Nov 2026: an idea and a figure per step, theory one tap away, its own Wrap up, explain texts;
  * TT-A + FW-1..6, 16 Nov 2026: three concept screens between the steps, a recall on Wrap up; screens sum to 15 min, as the public pages say;
+ * GF-2 + GF-S a + GF-T a, 19 Nov 2026: an optional Go further run (3 task screens) after Wrap up, which ends in Finish / Go further buttons, one screen per task; not in the 15 minutes;
  * 16 Nov test run: recall only on Wrap up, the done box on its own last screen, TryDone).
  * Public, in the workbench layout, no login, no tutor, no stored answers. Python runs in the browser.
  * Linked from the /workshops sample card and the home workshop row. Copy is Draft until Kağan's
@@ -21,6 +22,7 @@ import Diagram from '@/components/workshop-lesson/Diagram.astro';
 import TryStep from '@/try/TryStep.astro';
 import TryWrap from '@/try/TryWrap.astro';
 import TryDone from '@/try/TryDone.astro';
+import GoFurther from '@/components/workshop-lesson/GoFurther.astro';
 import ConceptScreen from '@/components/workshop-lesson/ConceptScreen.astro';
 import ConceptRows from '@/components/workshop-lesson/ConceptRows.astro';
 import Lesson from '@/try/print-the-berliner-dom.mdx';
@@ -30,5 +32,5 @@ import Lesson from '@/try/print-the-berliner-dom.mdx';
   title="Print the Berliner Dom as a poster"
   description="A free 15-minute sample of a Pixels2GenAI workshop lesson: predict, write and fix real Python in your browser, and print a photo of the Berliner Dom as a three-colour poster."
 >
-  <Lesson components={{ MakeItFirst, Task, Hint, Cell, Preview, Theory, TheoryList, Diagram, TryStep, TryWrap, TryDone, ConceptScreen, ConceptRows, Cite }} />
+  <Lesson components={{ MakeItFirst, Task, Hint, Cell, Preview, Theory, TheoryList, Diagram, TryStep, TryWrap, TryDone, ConceptScreen, ConceptRows, Cite, GoFurther }} />
 </TryLesson>

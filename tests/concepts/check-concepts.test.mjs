@@ -345,3 +345,90 @@ test('fails: Wrap up recall not matching the concept screens (FW-3)', () => {
   const source = lessonSource(GOOD_SCREENS, '<TryWrap minutes={3} recall={["a", "c"]}>');
   failsWith(lessonErrors(lesson(source), library()), /Wrap up recall \[a, c\] must list the concept screens in order \[a, b, c\]/);
 });
+
+// ---------- Go further (GF-2, framework 03e §14: GFR-1 to GFR-7; one screen per task) ----------
+
+const task = (n, count, extra = '') => `
+<GoFurther n={${n}} of={${count}} kind="Extend" title="x">
+<Task slot="task">
+1. Run the code.
+2. Add one line.
+</Task>
+<Diagram name="t" alt="x" caption="x" />
+<Hint>Look above.</Hint>
+<Hint kind="solution">One line.</Hint>
+${extra}
+<Cell slot="work" file="f.py" source="s${n}.py" solution="s${n + 1}.py" chain="c" label="task ${n}" solutionCode />
+</GoFurther>`;
+const furtherRun = (count = 1, extra = '') => [1, 2, 3, 4].slice(0, count).map((n) => task(n, count, extra)).join('\n');
+const BRANCH_WRAP = '<TryWrap minutes={2} recall={["a", "b", "c"]} branch>';
+// The cell the run continues from (the lesson's last step), with the same chain.
+const CHAIN_STEP = '<Cell slot="work" file="s3.py" check solution="s1.py" chain="c" label="step 3" />';
+const withFurther = (run, wrap = BRANCH_WRAP) => lessonSource(GOOD_SCREENS + CHAIN_STEP, wrap) + run;
+
+test('a lesson with a valid Go further run passes; one without it passes too (optional)', () => {
+  assert.deepEqual(lessonErrors(lesson(withFurther(furtherRun(3))), library()), []);
+  assert.deepEqual(lessonErrors(lesson(lessonSource(GOOD_SCREENS)), library()), []);
+});
+
+test('fails: Wrap up without the branch prop (GFR-1)', () => {
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(1), '<TryWrap minutes={2} recall={["a", "b", "c"]}>')), library()), /needs the "branch" prop/);
+});
+
+test('fails: Go further before Wrap up (GFR-1)', () => {
+  const source = lessonSource(GOOD_SCREENS, BRANCH_WRAP).replace('<TryWrap', `${furtherRun(1)}\n<TryWrap`);
+  failsWith(lessonErrors(lesson(source), library()), /must come after Wrap up/);
+});
+
+test('fails: four Go further tasks, or numbering that does not match (GFR-1)', () => {
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(4))), library()), /4 tasks, 1 to 3/);
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(2).replace('n={2} of={2}', 'n={3} of={2}'))), library()), /must be n=\{2\} of=\{2\}/);
+});
+
+test('fails: a task with no target picture, no hint or no solution (GFR-4, GFR-5)', () => {
+  const run = furtherRun(1);
+  failsWith(lessonErrors(lesson(withFurther(run.replace('<Diagram name="t" alt="x" caption="x" />', ''))), library()), /no target picture/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace('<Hint>', '<Hint kind="note">'))), library()), /no hint/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace('<Hint kind="solution">', '<Hint kind="note">'))), library()), /no <Hint kind="solution">/);
+});
+
+test('fails: a task over 40 words (GFR-4)', () => {
+  const long = 'word '.repeat(41);
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(1).replace('2. Add one line.', long))), library()), /task is \d+ words, at most 40/);
+});
+
+test('fails: a task with no cell, or a cell with a check (GFR-4, GFR-5)', () => {
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(1).replace('slot="work"', 'slot="other"'))), library()), /no <Cell slot="work">/);
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(1).replace('file="f.py"', 'file="f.py" check'))), library()), /has a check/);
+});
+
+test('fails: a deeper link on a public page; allowed on a workshop lesson (GFR-7, WS-13)', () => {
+  const source = withFurther(furtherRun(1, '<a class="wb-deeper">Go deeper</a>'));
+  failsWith(lessonErrors(lesson(source), library()), /deeper link/);
+  assert.ok(!lessonErrors(lesson(source, { public: false }), library()).some((error) => /deeper/.test(error)));
+});
+
+test('fails: Wrap up has the branch prop but the lesson has no Go further (GFR-1)', () => {
+  failsWith(lessonErrors(lesson(lessonSource(GOOD_SCREENS, BRANCH_WRAP)), library()), /no <GoFurther>/);
+});
+
+test('fails: a Go further cell that does not continue the code before it (GFC-2, GFC-4)', () => {
+  const run = furtherRun(2);
+  failsWith(lessonErrors(lesson(withFurther(run.replace(' chain="c"', ''))), library()), /cell has no chain=/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace(' source="s1.py"', ''))), library()), /cell has no source=/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace(' solution="s2.py"', ''))), library()), /cell has no solution=/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace(' label="task 1"', ''))), library()), /cell has no label=/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace(' solutionCode', ''))), library()), /no solutionCode/);
+});
+
+test('fails: the tasks use two chains or two file names, or nothing before them has the chain (GFC-3, GFR-4)', () => {
+  const run = furtherRun(2);
+  failsWith(lessonErrors(lesson(withFurther(run.replace('chain="c" label="task 2"', 'chain="d" label="task 2"'))), library()), /2 different chains/);
+  failsWith(lessonErrors(lesson(withFurther(run.replace('file="f.py" source="s2.py"', 'file="g.py" source="s2.py"'))), library()), /2 different file names/);
+  const orphan = lessonSource(GOOD_SCREENS, BRANCH_WRAP) + run;
+  failsWith(lessonErrors(lesson(orphan), library()), /no cell before Go further has chain="c"/);
+});
+
+test('fails: a task whose source is not the solution before it (GFC-2)', () => {
+  failsWith(lessonErrors(lesson(withFurther(furtherRun(2).replace('source="s2.py"', 'source="other.py"'))), library()), /starts from other\.py/);
+});

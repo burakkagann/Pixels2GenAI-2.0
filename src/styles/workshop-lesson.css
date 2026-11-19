@@ -499,7 +499,9 @@
 }
 
 .wb-verdict[data-state="ran"] { border-style: solid; color: var(--fg); background: var(--bg); }
-.wb-verdict[data-state="notyet"] { border: 2px solid var(--warn); background: var(--bg); color: var(--fg); }
+/* HD-3b: "Not yet" is one slim row (tag, pointer, Why?, help control); the hints open under it. */
+.wb-verdict[data-state="notyet"] { border: 1px solid var(--line-2); border-left: 4px solid var(--warn); background: var(--bg); color: var(--fg); padding: 9px 14px; gap: 4px 12px; font-size: 15px; }
+.wb-verdict[data-state="notyet"] .wb-verdict-tag { font-size: 13px; }
 .wb-verdict[data-state="pass"] { border: 2px solid var(--fg); background: var(--c1); color: var(--bg); }
 .wb-verdict[data-state="error"] { border: 2px solid var(--c3); background: var(--bg); color: var(--fg); flex-direction: column; align-items: stretch; }
 
@@ -509,7 +511,31 @@
 
 .wb-verdict-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
 .wb-verdict-code { font-family: var(--mono); font-size: 13.5px; overflow-wrap: anywhere; }
-.wb-verdict-text { margin: 0; }
+.wb-verdict-text { margin: 0; min-width: 0; }
+.wb-verdict[data-state="notyet"] .wb-link { font-size: 12.5px; }
+.wb-verdict-why { flex-basis: 100%; margin: 0; padding-top: 6px; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--fg-2); }
+
+/* HD-3b: the help control, right of the row (under it on a narrow screen). */
+.wb-vhelp { margin-left: auto; display: inline-flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-family: var(--mono); font-size: 12.5px; }
+.wb-verdict[data-state="error"] .wb-vhelp { align-self: flex-end; }
+.wb-lock { color: var(--fg-3); }
+.wb-dots { display: inline-flex; gap: 4px; align-items: center; align-self: center; }
+.wb-dots i { width: 8px; height: 8px; box-sizing: border-box; border: 1px solid var(--fg-2); display: inline-block; }
+.wb-dots i.on { background: var(--fg); border-color: var(--fg); }
+.wb-hint-next { white-space: nowrap; }
+
+/* HD-3b: the hints, attached to the row. The newest is open; earlier ones fold to a line. */
+.wb-vbox { display: flex; flex-direction: column; }
+.wb-hh { display: flex; flex-direction: column; }
+.wb-hh[hidden] { display: none; }
+.wb-hh .wb-hint { padding: 10px 14px; background: var(--bg); border: 1px solid var(--line-2); border-top: 0; }
+.wb-hh .wb-hint[hidden] { display: none; }
+.wb-hh .wb-hint:not([open]) { padding-block: 6px; }
+.wb-hh .wb-hint > summary { list-style: none; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--fg-3); }
+.wb-hh .wb-hint > summary::-webkit-details-marker { display: none; }
+.wb-hh .wb-hint[open] > summary { margin-bottom: 2px; }
+.wb-hh .wb-hint:not([open]) > summary::after { content: " · open"; }
+.wb-hh .wb-hint-body { font-size: 15px; }
 
 .wb-verdict-actions {
   display: flex;
@@ -645,4 +671,13 @@
 .wb code.wb-blank {
   background: var(--ws-yellow);
   color: var(--ws-on-yellow);
+}
+
+/* Tap targets (R-3585-50): the hint row's small controls stay compact to look at but get at least 24 px to hit,
+   and 32 px on phones and touch screens. */
+.wb-hint-next, .wb-hh .wb-hint > summary, .wb-btn--small { min-height: 24px; }
+.wb-hint-next, .wb-btn--small { display: inline-flex; align-items: center; }
+.wb-hh .wb-hint > summary { display: flex; align-items: center; }
+@media (max-width: 640px), (pointer: coarse) {
+  .wb-hint-next, .wb-hh .wb-hint > summary, .wb-btn--small { min-height: 32px; }
 }

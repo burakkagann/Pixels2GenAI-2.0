@@ -400,3 +400,44 @@ details.wb-theory-group > .wb-part + .wb-part { margin-top: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .wb-part { transition: none; }
 }
+
+/* ---------- Go further (GF-2, 19 Nov 2026): the optional screen after Wrap up ---------- */
+/* Its progress segment is dashed: optional work, never counted in done. */
+.wb-seg[data-phase="further"] { background: transparent; border: 1px dashed var(--fg-3); box-sizing: border-box; }
+.wb-seg[data-seen][data-phase="further"] { border-color: var(--fg); }
+
+.wb-nav-branch { display: inline-flex; gap: 12px; align-items: center; }
+
+/* Wrap up with a Go further run: "Go further" is the one filled button (brand pink, page-colour text: 5.5:1 light, 6.4:1 dark),
+   "Finish" stays the quiet outline Next. Same on the phone bar. */
+.wb-btn--further {
+  padding: 10px 20px; border: 2px solid var(--fg);
+  font-size: 14px; font-weight: 700;
+  background: var(--c3); color: var(--bg);
+  box-shadow: 4px 4px 0 var(--fg);
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.wb-btn--further:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--fg); }
+.wb-phonebar[data-branch="true"] .wb-btn--run[data-phone-run] { background: var(--c3); color: var(--bg); }
+.wb-phonebar[data-branch="true"] .wb-btn--next[data-phone-next][data-ready="true"] { background: var(--bg); color: var(--fg); }
+@media (prefers-reduced-motion: reduce) {
+  .wb-btn--further { transition: none; }
+}
+
+/* ---------- One code across Go further screens (GFC-2 c, GFC-4 b, 19 Nov 2026) ---------- */
+/* The tag in the cell bar: where the code in the editor came from. */
+.wb-chip { font: 600 11.5px/1.4 var(--mono); padding: 2px 8px; border: 1px solid var(--c1); color: var(--c1); border-radius: 2px; }
+.wb-chip[hidden] { display: none; }
+
+/* The strip over the editor when the cell before ended in an error: keep the code and fix it, or swap in the solution. */
+.wb-carry { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; margin-bottom: 10px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-2); color: var(--fg); font-size: 14px; }
+.wb-carry p { margin: 0; min-width: 0; }
+.wb-carry b { font-weight: 600; }
+
+/* The Solution: the whole code, new lines marked with a bar and a + (not colour alone). */
+.wb-solpre { display: flex; flex-direction: column; margin: 0 0 8px; padding: 8px 0; overflow-x: auto; border: 1px solid var(--line); background: var(--code-surface); font: 12.5px/1.6 var(--mono); }
+.wb-solline { position: relative; padding: 0 12px 0 26px; white-space: pre; }
+.wb-solline.is-new { background: var(--bg-2); box-shadow: inset 3px 0 0 var(--c1); }
+.wb-solline.is-new::before { content: "+"; position: absolute; left: 10px; color: var(--c1); font-weight: 700; }
+.wb-solnote { margin: 0 0 8px; font-size: 13px; color: var(--fg-3); }
+.wb-soluse { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 8px 0 0; font-size: 13px; color: var(--fg-3); }
