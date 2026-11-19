@@ -27,7 +27,8 @@ const currentLabel = inSection('/workshops') ? 'Workshops'
 
 const navItems = [
   { label: 'Curriculum', href: `${prefix}#curriculum` },
-  { label: 'Workshops', href: `${prefix}#workshops` },
+  // Workshops goes to its own page (Kağan, 19 Nov), not the landing-page section.
+  { label: 'Workshops', href: '/workshops' },
   { label: 'Exhibition', href: `${prefix}#exhibition` },
   // Research nav scrolls to the §5 teaser on the landing page rather than
   // jumping straight to /research. The teaser ends in a "Read the full
@@ -133,7 +134,7 @@ const navItems = [
   </a>
   <nav class="nav-mid" aria-label="Primary">
     {navItems.map(item => (
-      <a href={item.href} aria-current={item.label === currentLabel ? 'true' : undefined}>{item.label}</a>
+      <a href={item.href} aria-current={item.href === path ? 'page' : item.label === currentLabel ? 'true' : undefined}>{item.label}</a>
     ))}
   </nav>
   <div class="nav-r">
